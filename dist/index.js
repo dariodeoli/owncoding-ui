@@ -2560,6 +2560,7 @@ var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
 var ROTULO_SECCION = "text-xs font-bold uppercase tracking-wider text-mute";
 var CELDA_DATO = "truncate text-xs text-mute";
 var CELDA_NUMERO = "text-right tabular-nums";
+var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
 
 // src/utils/nombre.js
 var PARTICULAS = /* @__PURE__ */ new Set(["de", "del", "la", "las", "los", "y", "e", "da", "das", "do", "dos", "van", "von", "san", "santa"]);
@@ -3174,6 +3175,7 @@ export {
   CATEGORIAS_ACCESORIOS,
   CELDA_DATO,
   CELDA_ENCABEZADO,
+  CELDA_IDENTIDAD,
   CELDA_NUMERO,
   CIUDADES_PARAGUAY,
   CODIGOS_PAIS,

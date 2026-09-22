@@ -56,19 +56,50 @@ Cada app pisa sus colores en `:root` (y `.dark`) sin tocar la librería; el
 acento es el token `fono` (borde `--c-fono`, etc.). La paleta de referencia es
 la de MobOS.
 
-### Notas de release v0.2.x
+### Notas de release
 
-- **v0.2.2** — documentación de consumo (versión fija por tag) y CHANGELOG en el
-  paquete. Sin cambios de API.
-- **v0.2.1** — `exports` expone `./package.json`; `engines.node >= 18`; CI de
-  build/tests. Sin cambios de API.
+- **v0.6.0** — `CELDA_IDENTIDAD` (celda de nombre en tablas) y consumo más
+  simple: el preset ya incluye el bundle de la librería en el `content` de
+  Tailwind (si no, las clases de los componentes se purgan).
+- **v0.5.0** — catálogos por defecto (263 ciudades con departamento, modelos de
+  iPhone y accesorios), tamaños de campo (`TAMANOS_CAMPO`) y modelos de
+  impresión (`crearTicket` ESC/POS + `paginaDePrueba`).
+- **v0.4.0** — impresión LAN/USB (`AjustesImpresion`, `BotonImprimir`),
+  navegación (`NavLateral`, `MenuDesplegable`), ajustes (`PanelDerecho`,
+  `TarjetaAjuste`) y bancos de Paraguay.
+- **v0.3.0** — familia de acceso (Google, `AuthLayout`, `ProductFooter`,
+  `LoadingScreen`, `PegarEnlaceToken`) y campos ampliados (correo, teléfono,
+  serial, Instagram), sin API.
+- **v0.2.2 / v0.2.1** — documentación de consumo y robustez (`exports`,
+  `engines`, CI).
 - **v0.2.0 (cambio incompatible)** — se retiró el alias `Toggle` (#186).
   **Actualizar:** reemplazar `Toggle` por `Switch`; el callback ahora recibe el
   evento (`onChange={(event) => setValor(event.target.checked)}`) en vez del
   booleano. Los alias de compatibilidad no viven en esta librería.
-- Para subir de versión en una app: cambiar el tag de la dependencia, buscar
-  usos del objeto cambiado, correr los checks de la app (lint, tests, build,
-  smoke) y commitear en la rama del slot.
+- Detalle completo por versión: `CHANGELOG.md`.
+
+### Ejemplo completo de consumo
+
+```jsx
+// main.jsx (Vite o Next.js cliente)
+import 'owncoding-ui/styles.css' // después de las directivas de Tailwind
+
+// pantalla
+import { AjustesImpresion, BotonImprimir, Card, CELDA_IDENTIDAD, CityAutocomplete, MoneyInput, montoTexto } from 'owncoding-ui'
+
+export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad }) {
+  return (
+    <Card className="space-y-3">
+      <p className="tabular-nums">{montoTexto(1250000)}</p>
+      <MoneyInput value={0} onValueChange={() => {}} />
+      <CityAutocomplete value={ciudad} onSelect={(c, d) => setCiudad(c, d)} />
+      <span className={CELDA_IDENTIDAD}>Cliente de prueba</span>
+      <AjustesImpresion impresoras={impresoras} onGuardar={onGuardar} />
+      <BotonImprimir onImprimir={onImprimir} />
+    </Card>
+  )
+}
+```
 
 ### Adopción en una app (checklist)
 

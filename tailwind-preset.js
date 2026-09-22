@@ -12,6 +12,10 @@
  */
 export default {
   darkMode: 'class',
+  // La app debe escanear también el bundle de la librería: si no, Tailwind
+  // purga las clases de los componentes compartidos. Un preset puede declarar
+  // `content` y Tailwind lo combina con el de la app.
+  content: ['./node_modules/owncoding-ui/dist/**/*.js'],
   theme: {
     extend: {
       colors: {

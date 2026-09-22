@@ -70,7 +70,7 @@ export { default as BancoLogo } from './components/BancoLogo.jsx'
 export { default as CityAutocomplete } from './components/CityAutocomplete.jsx'
 
 // Clases de tabla/listado
-export { ROTULO_DATO, CELDA_ENCABEZADO, ROTULO_SECCION, CELDA_DATO, CELDA_NUMERO } from './utils/tabla.js'
+export { ROTULO_DATO, CELDA_ENCABEZADO, ROTULO_SECCION, CELDA_DATO, CELDA_NUMERO, CELDA_IDENTIDAD } from './utils/tabla.js'
 
 // Lógica compartida
 export { cn, primerNombre } from './utils/cn.js'

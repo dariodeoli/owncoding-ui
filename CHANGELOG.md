@@ -4,6 +4,15 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.6.0 — 2026-09-22
+
+- `CELDA_IDENTIDAD` (`truncate text-[13px] font-semibold`) para la celda de
+  nombre en tablas y listados.
+- Consumo: el preset de Tailwind ya incluye el bundle de la librería en
+  `content` (si no, las clases de los componentes se purgan); el README suma
+  notas de release hasta v0.6 y un ejemplo completo de consumo.
+- Sin cambios incompatibles.
+
 ## v0.5.0 — 2026-09-22
 
 - **Ciudades de Paraguay:** catálogo `CIUDADES_PARAGUAY` (263 municipios + 18

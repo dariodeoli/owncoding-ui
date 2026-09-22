@@ -19,3 +19,5 @@ export const ROTULO_SECCION = 'text-xs font-bold uppercase tracking-wider text-m
 export const CELDA_DATO = 'truncate text-xs text-mute'
 
 export const CELDA_NUMERO = 'text-right tabular-nums'
+
+export const CELDA_IDENTIDAD = 'truncate text-[13px] font-semibold'
