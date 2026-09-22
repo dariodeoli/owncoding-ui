@@ -2937,6 +2937,102 @@ function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
   }) });
 }
 
+// src/components/CodigoQr.jsx
+import { useEffect as useEffect5, useState as useState10 } from "react";
+
+// src/utils/qr.js
+import QRCode from "qrcode";
+var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
+async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES.nivel, margen = QR_OPCIONES.margen } = {}) {
+  const texto = String(valor ?? "").trim();
+  if (!texto) return "";
+  try {
+    return await QRCode.toDataURL(texto, { errorCorrectionLevel: nivel, margin: margen, width: ancho });
+  } catch {
+    return "";
+  }
+}
+
+// src/components/CodigoQr.jsx
+import { jsx as jsx37 } from "react/jsx-runtime";
+function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
+  const [imagen, setImagen] = useState10("");
+  useEffect5(() => {
+    let activo = true;
+    qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
+      if (activo) setImagen(data);
+    });
+    return () => {
+      activo = false;
+    };
+  }, [valor, ancho, nivel, margen]);
+  if (!imagen) return null;
+  return /* @__PURE__ */ jsx37("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
+}
+
+// src/components/FichaCertificado.jsx
+import { jsx as jsx38, jsxs as jsxs30 } from "react/jsx-runtime";
+function FichaCertificado({
+  empresa,
+  modelo,
+  imei,
+  grado,
+  bateria,
+  ciclos,
+  locks = [],
+  aprobados,
+  total,
+  verificadoPor,
+  verificadoAt,
+  enlace,
+  etiquetaQr = "Escane\xE1 para ver el informe completo",
+  acciones,
+  className
+}) {
+  const hayChecklist = Number(total) > 0;
+  const completo = hayChecklist && Number(aprobados) === Number(total);
+  return /* @__PURE__ */ jsxs30("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
+    /* @__PURE__ */ jsxs30("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
+      /* @__PURE__ */ jsxs30("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsx38("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
+        /* @__PURE__ */ jsx38("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
+      ] }),
+      /* @__PURE__ */ jsx38(ChipEstado, { estado: "pass" })
+    ] }),
+    /* @__PURE__ */ jsxs30("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
+      /* @__PURE__ */ jsxs30("div", { className: "min-w-0 space-y-3", children: [
+        /* @__PURE__ */ jsxs30("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
+          /* @__PURE__ */ jsx38(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
+          /* @__PURE__ */ jsx38(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx38(GradoBadge, { grado }) : "Sin grado asignado" }),
+          /* @__PURE__ */ jsx38(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx38(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
+          /* @__PURE__ */ jsx38(
+            FilaDato,
+            {
+              etiqueta: "Checklist",
+              valor: hayChecklist ? /* @__PURE__ */ jsxs30("span", { className: completo ? "text-pass" : "text-mute", children: [
+                aprobados,
+                " de ",
+                total,
+                " pass"
+              ] }) : "Sin verificaci\xF3n f\xEDsica"
+            }
+          )
+        ] }),
+        locks.length ? /* @__PURE__ */ jsx38(ChipsLocks, { locks, conEstado: true }) : null,
+        /* @__PURE__ */ jsxs30("p", { className: "text-xs text-mute", children: [
+          verificadoPor ? `Verificado por ${verificadoPor}` : "Verificaci\xF3n pendiente",
+          verificadoAt ? ` \xB7 ${verificadoAt}` : ""
+        ] })
+      ] }),
+      enlace ? /* @__PURE__ */ jsxs30("div", { className: "flex flex-col items-center gap-2", children: [
+        /* @__PURE__ */ jsx38(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
+        /* @__PURE__ */ jsx38("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
+      ] }) : null
+    ] }),
+    acciones ? /* @__PURE__ */ jsx38("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
+  ] });
+}
+
 // src/utils/nombre.js
 var PARTICULAS = /* @__PURE__ */ new Set(["de", "del", "la", "las", "los", "y", "e", "da", "das", "do", "dos", "van", "von", "san", "santa"]);
 var titulo = (palabra) => {
@@ -3576,6 +3672,7 @@ export {
   ChipEstado,
   ChipsLocks,
   CityAutocomplete,
+  CodigoQr,
   ConfirmDialog,
   ConteoChecklist,
   CurrencySelect,
@@ -3594,6 +3691,7 @@ export {
   EmptyState,
   ErrorState,
   Eyebrow,
+  FichaCertificado,
   FilaChecklist,
   FilaDato,
   FormField,
@@ -3638,6 +3736,7 @@ export {
   PhoneField,
   PinInput,
   ProductFooter,
+  QR_OPCIONES,
   ROTULO_DATO,
   ROTULO_SECCION,
   SearchField_default as SearchField,
@@ -3730,6 +3829,7 @@ export {
   parseUsdInput,
   partirSerial,
   primerNombre,
+  qrDataUrl,
   repartirLinea,
   serialEnmascarado,
   soloDigitos,

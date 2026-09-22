@@ -183,6 +183,9 @@ así el resto de la app no cambia.
 | `TileEquipo` | `modelo`, `imei`, `detalle`, `foto`, `estado`, `grado`, `bateria`, `ciclos`, `locks`, `acciones`, `onOpen` | Compone chip, grado, batería, locks e icono de categoría; `onOpen` lo vuelve botón |
 | `Stepper` | `pasos` = `[{ id, etiqueta, detalle? }]`, `actual`, `hechos`, `className` | Hecho verde `pass`, actual con anillo, pendiente gris |
 | `IconoCategoria` | `categoria` (texto libre) o `icono`, `className` | Glifos `mobile`/`laptop`/`tablet`/`watch`/`buds`/`cable`; `servicio`/`otro` delegan en `Icon` |
+| `CodigoQr` | `valor`, `ancho` (220), `nivel` (`M`), `margen` (1), `alt`, `className` | QR del informe/enlace; sin valor no renderiza nada. Requiere `qrcode` (peer opcional) |
+| `qrDataUrl` | `valor`, `{ ancho, nivel, margen }` | Data URL del QR para HTML impreso o previews; vacío → `''`, nunca lanza |
+| `FichaCertificado` | `empresa`, `modelo`, `imei`, `grado`, `bateria`, `ciclos`, `locks`, `aprobados`, `total`, `verificadoPor`, `verificadoAt`, `enlace`, `etiquetaQr`, `acciones`, `className` | Tarjeta del informe público: compone chip, grado, batería, conteo del checklist, locks y QR |
 | `CATEGORIAS_PRODUCTO` | — | iPhone/MacBook/iPad/Watch/AirPods/Accesorios/Servicio/Otro con `etiqueta`, `icono` y `alias` |
 | `ICONO_CATEGORIA` | — | Mapa `categoría → glifo` para filtros y chips |
 | `normalizarCategoria` / `categoriaDe` / `iconoDeCategoria` / `etiquetaDeCategoria` | `texto` | "Funda iPhone" → accesorios; "CELULAR" → iPhone; desconocido → Otro |

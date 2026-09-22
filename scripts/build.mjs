@@ -13,7 +13,7 @@ await build({
   platform: 'neutral',
   jsx: 'automatic',
   sourcemap: true,
-  external: ['react', 'react-dom', 'clsx', 'tailwind-merge'],
+  external: ['react', 'react-dom', 'clsx', 'tailwind-merge', 'qrcode'],
   banner: { js: '"use client"' },
   logLevel: 'info',
 })

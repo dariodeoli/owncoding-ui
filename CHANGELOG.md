@@ -4,6 +4,16 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.12.0 — 2026-09-22
+
+- **Informe público (#240):** `FichaCertificado` — tarjeta del informe de
+  dispositivo (empresa, modelo, IMEI enmascarado, grado, batería, "x de y pass",
+  chips de locks, quién/cuándo verificó y QR) que compone los objetos del
+  checklist. `CodigoQr` + `qrDataUrl` unifican la generación del QR (nivel M,
+  margen 1, ancho 220 por defecto) que antes se repetía en cada pantalla con
+  opciones distintas; `qrcode` queda como peer dependency **opcional**.
+  En MobOS se migraron 16 llamadas en 7 pantallas.
+
 ## v0.11.0 — 2026-09-22
 
 - **Tokens v2 del piloto (promovidos desde `slot/diseno`, #241):** scope

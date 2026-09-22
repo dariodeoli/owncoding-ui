@@ -84,6 +84,9 @@ export { default as MedidorBateria } from './components/MedidorBateria.jsx'
 export { default as GradoBadge } from './components/GradoBadge.jsx'
 export { default as TileEquipo } from './components/TileEquipo.jsx'
 export { default as Stepper } from './components/Stepper.jsx'
+export { default as CodigoQr } from './components/CodigoQr.jsx'
+export { default as FichaCertificado } from './components/FichaCertificado.jsx'
+export { QR_OPCIONES, qrDataUrl } from './utils/qr.js'
 export {
   ESTADOS_ITEM,
   ESTADOS_CHIP,

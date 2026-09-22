@@ -13,6 +13,7 @@ import {
   ConteoChecklist,
   EmptyState,
   ErrorState,
+  FichaCertificado,
   FilaChecklist,
   FilaDato,
   GradoBadge,
@@ -180,5 +181,37 @@ describe('render de los objetos base', () => {
     expect(icono).toContain('M7 3.5a3 3 0 0 1 3 3v7')
     expect(renderToStaticMarkup(<IconoCategoria categoria="Servicio" />)).toContain('<svg')
     expect(renderToStaticMarkup(<IconoCategoria icono="mobile" />)).toContain('M8 2h8a2 2 0 0 1 2 2v16')
+  })
+
+  test('la ficha de certificado compone los objetos del informe (#240)', () => {
+    const ficha = renderToStaticMarkup(
+      <FichaCertificado
+        empresa="Tienda Demo"
+        modelo="iPhone 13"
+        imei="•••• 1234"
+        grado="B"
+        bateria={86}
+        ciclos={412}
+        locks={[{ clave: 'icloud', estado: 'libre' }, { clave: 'mdm', estado: 'desconocido' }]}
+        aprobados={11}
+        total={12}
+        verificadoPor="Ana"
+        verificadoAt="22/09/2026 10:30"
+        enlace="https://moboss.online/u/DEMO0001"
+      />,
+    )
+    expect(ficha).toContain('iPhone 13')
+    expect(ficha).toContain('•••• 1234')
+    expect(ficha).toContain('Grado B')
+    expect(ficha).toContain('86%')
+    expect(ficha).toContain('412 ciclos')
+    expect(ficha).toContain('11 de 12 pass')
+    expect(ficha).toContain('iCloud / Find My: Libre')
+    expect(ficha).toContain('MDM: Sin dato')
+    expect(ficha).toContain('Verificado por Ana · 22/09/2026 10:30')
+    expect(ficha).toContain('Certificado')
+    // El QR se genera en el cliente (useEffect): en SSR no aparece la imagen.
+    expect(ficha).not.toContain('<img')
+    expect(renderToStaticMarkup(<FichaCertificado modelo="iPad" total={0} />)).toContain('Sin verificación física')
   })
 })

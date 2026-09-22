@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.11.0
+npm install github:dariodeoli/owncoding-ui#v0.12.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.11.0
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.12.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -62,6 +62,9 @@ la de MobOS.
 
 ### Notas de release
 
+- **v0.12.0** — informe público: `FichaCertificado` (tarjeta del informe de
+  dispositivo) y `CodigoQr` + `qrDataUrl` (QR unificado, peer opcional
+  `qrcode`).
 - **v0.11.0** — tokens v2 del piloto promovidos desde el rediseño:
   `.tema-v2` (alias `.v2-piloto`) con variante clara y oscura del lenguaje
   consola, azul acción como `info` y `.v2-numero` para números grandes.
@@ -135,7 +138,7 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 5. Correr lint + tests + build + e2e smoke de la app.
 6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
-## Qué incluye (v0.11.0)
+## Qué incluye (v0.12.0)
 
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
