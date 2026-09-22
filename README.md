@@ -30,6 +30,10 @@ mismo paquete en GitHub Packages (`npm.pkg.github.com`) y consumirlo con
 
 Requisitos: **React 18+** y **Tailwind CSS 3.4+**.
 
+> **Sistema v2 (tokens + iconos):** guía de adopción paso a paso en
+> **`docs/V2.md`** — scope `tema-v2` (alias `v2-piloto`), verde pass, azul
+> acción, `.v2-numero` e iconos de categoría con `IconoCategoria`.
+
 ```js
 // tailwind.config.js
 import preset from 'owncoding-ui/tailwind-preset'
@@ -131,7 +135,7 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 5. Correr lint + tests + build + e2e smoke de la app.
 6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
-## Qué incluye (v0.10.0)
+## Qué incluye (v0.11.0)
 
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
@@ -199,7 +203,7 @@ src/components/   objetos portables (ui.jsx = primitivas y objetos)
 src/utils/        lógica compartida pura (moneda, fechas, teléfono, nombre, bancos, tabla, cn)
 src/printing/     estado de impresoras y trabajos (puro)
 src/styles/       tokens.css
-docs/             REGLAS.md · MODOS-DE-TRABAJO.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
+docs/             REGLAS.md · V2.md · MODOS-DE-TRABAJO.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
 scripts/build.mjs build (esbuild → dist/index.js + dist/styles.css)
 test/             smoke de render (vitest + renderToStaticMarkup) y lógica
 ```
