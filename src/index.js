@@ -70,6 +70,19 @@ export { default as SerialTexto } from './components/SerialTexto.jsx'
 export { default as CampoSeriales } from './components/CampoSeriales.jsx'
 export { default as EstadoBadge } from './components/EstadoBadge.jsx'
 export { default as SeccionColapsable } from './components/SeccionColapsable.jsx'
+export { default as TaxIdField } from './components/TaxIdField.jsx'
+export {
+  PATRON_RUC,
+  PATRON_TAX_ID_GENERICO,
+  MENSAJE_RUC,
+  MENSAJE_RUC_SIN_DATOS,
+  MENSAJE_RUC_CONSULTA,
+  taxIdValid,
+  taxIdGenericoValid,
+  taxIdValidoParaPais,
+  normalizeTaxId,
+  limpiarTaxId,
+} from './utils/taxId.js'
 
 // Acceso y shell (sin API: todo por props)
 export { default as GoogleButton, GoogleMark, OAuthDivider } from './components/GoogleButton.jsx'

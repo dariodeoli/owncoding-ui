@@ -33,6 +33,7 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | Serial (lectura) | `SerialTexto` | el serial completo si entra y, si la columna queda corta, se recorta la cabeza y los **últimos 4** siguen visibles; vacío → `—` |
 | Seriales por lote (pegar/escanear) | `CampoSeriales` (+`imeiValido`, `separarSeriales`, `normalizarSeriales`) | textarea que normaliza al vuelo y entrega **solo los válidos únicos** por `onCambio`, con conteos de repetidos e inválidos; para IMEI se pasa `validar={imeiValido}` (15 dígitos + Luhn) |
 | Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el texto libre sigue permitido |
+| RUC/identificación fiscal | `TaxIdField` | RUC PY de 5 a 8 dígitos, con o sin verificador (`taxIdValid`); el resto de los países usa el patrón genérico. Se guarda con `normalizeTaxId`; la consulta de razón social es un callback de la app (`onBuscarRazonSocial`): la librería no consulta nada |
 
 ### Tamaños recomendados (#148, portable)
 
@@ -54,9 +55,12 @@ si hay espacio libre, se lo lleva el layout, no el input.
 
 Transversales: error **o** hint (nunca ambos), `aria-invalid` +
 `aria-describedby`, error con `role="alert"`, teclado móvil correcto y nada de
-máscaras que rompan pegado/autofill. El servidor revalida siempre. El
-interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
-`Toggle` y la librería no expone alias de compatibilidad).
+máscaras que rompan pegado/autofill. `FormField` dibuja el mensaje con `id`
+(derivado de `htmlFor` o pasado como `descripcionId`) para que el campo lo
+declare en `aria-describedby` incluso cuando el id es generado (`useId`). El
+servidor revalida siempre. El interruptor booleano es **`Switch`** (un solo
+objeto; #186 retiró el alias `Toggle` y la librería no expone alias de
+compatibilidad).
 
 ## 2. Botones y acciones
 

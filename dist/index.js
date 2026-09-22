@@ -18,16 +18,6 @@ var GS_FORMATTER = new Intl.NumberFormat("es-PY", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0
 });
-var SIMBOLO_PYG = "Gs";
-var SIMBOLOS_MONEDA = { PYG: "Gs", USD: "US$", BRL: "R$", EUR: "\u20AC", USDT: "USDT" };
-function simboloDe(opciones) {
-  const crudo = typeof opciones === "string" ? opciones : opciones?.simbolo;
-  return String(crudo ?? "").trim() || SIMBOLO_PYG;
-}
-function opcionesDeVacio(vacio, opciones) {
-  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio ?? "\u2014", simbolo: vacio.simbolo };
-  return { vacio: vacio ?? "\u2014", simbolo: opciones?.simbolo };
-}
 var LIMITE_MONTO_GENERAL = 1e10;
 var LIMITE_MONTO_VENTAS = 99e9;
 function excedeMonto(value, limite = LIMITE_MONTO_GENERAL) {
@@ -36,22 +26,13 @@ function excedeMonto(value, limite = LIMITE_MONTO_GENERAL) {
   const numero = Number(texto);
   return Number.isFinite(numero) && Math.abs(numero) > limite;
 }
-var LIMITE_MONTO_ALMACENABLE = 2147483647;
-function limiteMonto(max = LIMITE_MONTO_GENERAL) {
-  const valor = Number(max);
-  return Number.isFinite(valor) && valor > 0 ? Math.min(valor, LIMITE_MONTO_ALMACENABLE) : LIMITE_MONTO_ALMACENABLE;
-}
-function errorMonto(value, max = LIMITE_MONTO_GENERAL) {
-  const limite = limiteMonto(max);
-  return excedeMonto(value, limite) ? `El monto supera el m\xE1ximo que el sistema puede guardar (Gs ${formatoNumero(limite)}).` : "";
-}
 var USD_FORMATTER = new Intl.NumberFormat("es-PY", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
-function formatGs(value, opciones) {
+function formatGs(value) {
   const amount = Number(value);
-  return `${simboloDe(opciones)} ${GS_FORMATTER.format(Number.isFinite(amount) ? Math.round(amount) : 0)}`;
+  return `Gs ${GS_FORMATTER.format(Number.isFinite(amount) ? Math.round(amount) : 0)}`;
 }
 function formatGsInput(value) {
   const digits = String(value ?? "").replace(/\D/g, "");
@@ -82,22 +63,19 @@ function formatUsd(value) {
   const amount = Number(value);
   return `USD ${USD_FORMATTER.format(Number.isFinite(amount) ? amount : 0)}`;
 }
-function formatMoney(value, currency = "PYG", opciones) {
-  return currency === "USD" ? formatUsd(value) : formatGs(value, opciones);
+function formatMoney(value, currency = "PYG") {
+  return currency === "USD" ? formatUsd(value) : formatGs(value);
 }
-function montoGs(value, vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal, simbolo } = opcionesDeVacio(vacio, opciones);
+function montoGs(value, vacio = "\u2014") {
   const amount = numeroDe(value);
-  return amount === null ? vacioFinal : formatGs(amount, { simbolo });
+  return amount === null ? vacio : formatGs(amount);
 }
-function montoUsd(value, vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal, simbolo } = opcionesDeVacio(vacio, opciones);
+function montoUsd(value, vacio = "\u2014") {
   const amount = numeroDe(value);
-  const prefijo = String(simbolo ?? "").trim() || SIMBOLOS_MONEDA.USD;
-  return amount === null ? vacioFinal : `${prefijo} ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  return amount === null ? vacio : `US$ ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 }
-function montoTexto(value, currency = "PYG", vacio = "\u2014", opciones) {
-  return currency === "USD" ? montoUsd(value, vacio, opciones) : montoGs(value, vacio, opciones);
+function montoTexto(value, currency = "PYG", vacio = "\u2014") {
+  return currency === "USD" ? montoUsd(value, vacio) : montoGs(value, vacio);
 }
 function numeroDe(value) {
   if (value === null || value === void 0 || value === "") return null;
@@ -108,32 +86,6 @@ function largoMaximoMonto(max = LIMITE_MONTO_GENERAL, { decimales = false } = {}
   const digitos = String(Math.trunc(Math.abs(Number(max) || 0))).length;
   const separadores = Math.floor((digitos - 1) / 3);
   return digitos + separadores + (decimales ? 3 : 0);
-}
-var NUMEROS_FORMATTER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 0 });
-var NUMEROS_DECIMALES = /* @__PURE__ */ new Map();
-function formateadorNumero(decimales) {
-  const clave = Number(decimales) || 0;
-  if (clave <= 0) return NUMEROS_FORMATTER;
-  if (!NUMEROS_DECIMALES.has(clave)) {
-    NUMEROS_DECIMALES.set(clave, new Intl.NumberFormat("es-PY", { minimumFractionDigits: clave, maximumFractionDigits: clave }));
-  }
-  return NUMEROS_DECIMALES.get(clave);
-}
-function formatoNumero(value, { decimales = 0, vacio = "\u2014" } = {}) {
-  const amount = numeroDe(value);
-  return amount === null ? vacio : formateadorNumero(decimales).format(amount);
-}
-function signoDe(value) {
-  const amount = numeroDe(value);
-  if (amount === null || amount === 0) return "";
-  return amount > 0 ? "+" : "\u2212";
-}
-function montoConSigno(value, currency = "PYG", vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal } = opcionesDeVacio(vacio, opciones);
-  const amount = numeroDe(value);
-  if (amount === null) return vacioFinal;
-  const signo = signoDe(amount);
-  return signo ? `${signo} ${montoTexto(Math.abs(amount), currency, "\u2014", opciones)}` : montoTexto(amount, currency, "\u2014", opciones);
 }
 
 // src/utils/tamanos.js
@@ -180,62 +132,6 @@ var TAMANOS_MODAL = {
 };
 var TAMANO_MODAL_PREDETERMINADO = "formulario";
 
-// src/utils/tonos.js
-var TONOS = {
-  punto: {
-    ok: "bg-ok/15 text-ok",
-    warn: "bg-warn/15 text-warn",
-    bad: "bg-bad/15 text-bad",
-    mute: "bg-ink-700 text-mute",
-    info: "bg-info/15 text-info",
-    pass: "bg-pass/15 text-pass",
-    fono: "bg-fono/15 text-fono-light"
-  },
-  chip: {
-    ok: "border-ok/30 bg-ok/10 text-ok",
-    warn: "border-warn/30 bg-warn/10 text-warn",
-    bad: "border-bad/30 bg-bad/10 text-bad",
-    mute: "border-ink-600 bg-ink-800/40 text-mute",
-    info: "border-info/30 bg-info/10 text-info",
-    pass: "border-pass/30 bg-pass/10 text-pass",
-    fono: "border-fono/30 bg-fono/10 text-fono-light"
-  },
-  texto: {
-    ok: "text-ok",
-    warn: "text-warn",
-    bad: "text-bad",
-    mute: "text-mute",
-    info: "text-info",
-    pass: "text-pass",
-    fono: "text-fono-light"
-  }
-};
-var TONOS_ALIAS = {
-  neutral: "mute",
-  neutro: "mute",
-  accent: "info",
-  acento: "info",
-  danger: "bad",
-  error: "bad",
-  success: "ok",
-  warning: "warn"
-};
-function tonoCanonico(valor) {
-  const clave = String(valor ?? "").trim().toLowerCase();
-  if (!clave) return "mute";
-  const canonico = TONOS_ALIAS[clave] || clave;
-  return TONOS.punto[canonico] ? canonico : "mute";
-}
-function puntoDeTono(valor) {
-  return TONOS.punto[tonoCanonico(valor)];
-}
-function chipDeTono(valor) {
-  return TONOS.chip[tonoCanonico(valor)];
-}
-function textoDeTono(valor) {
-  return TONOS.texto[tonoCanonico(valor)];
-}
-
 // src/components/Icon.jsx
 import { jsx } from "react/jsx-runtime";
 var PATHS = {
@@ -271,10 +167,8 @@ var PATHS = {
   // Acciones
   search: "M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM21 21l-4.3-4.3",
   copy: "M9 9h11a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2ZM5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1",
-  share: "M8.6 13.5l6.8 3.5M15.4 7L8.6 10.5M18.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM5.5 15a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM18.5 22a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z",
   plus: "M12 5v14M5 12h14",
   trash: "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6",
-  backspace: "M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2ZM18 9l-6 6M12 9l6 6",
   save: "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2ZM17 21v-8H7v8M7 3v5h8",
   edit: "M11 4H4v16h16v-7M18.5 2.5a2.1 2.1 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z",
   eye: "M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7ZM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6",
@@ -301,37 +195,8 @@ var PATHS = {
   package: "M16.5 9.4 7.5 4.2M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z",
   list: "M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01",
   cart: "M2.5 3h1.6l2.2 10.4a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.3L19.5 7H6M9 19.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM18 19.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z",
-  grid: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z",
-  // ── Módulos y acciones portados del panel de LedBox (AdminIcons, 22-09-2026)
-  // Los nombres son estables y la app no necesita un mapa propio; el mapa
-  // LedBox → librería está en el README.
-  overview: "M4.5 3h6A1.5 1.5 0 0 1 12 4.5v6A1.5 1.5 0 0 1 10.5 12h-6A1.5 1.5 0 0 1 3 10.5v-6A1.5 1.5 0 0 1 4.5 3ZM15 3h6a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 21 12h-6a1.5 1.5 0 0 1-1.5-1.5v-6A1.5 1.5 0 0 1 15 3ZM15 13.5h6a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5ZM4.5 13.5h6A1.5 1.5 0 0 1 12 15v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 3 21v-6a1.5 1.5 0 0 1 1.5-1.5Z",
-  events: "M4.5 5h15A1.5 1.5 0 0 1 21 6.5v14a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-14A1.5 1.5 0 0 1 4.5 5ZM8 3v4M16 3v4M3 10.5h18",
-  clients: "M12.2 8a3.2 3.2 0 1 1-6.4 0 3.2 3.2 0 0 1 6.4 0ZM3.5 20a5.5 5.5 0 0 1 11 0M16 10.8a3 3 0 1 0 0-5.6M18 19.8a5.4 5.4 0 0 0-2.8-4.6",
-  leads: "M4 5h16l-6.2 7.2V20l-3.6-2v-5.8z",
-  budgets: "M6 3h8l4 4v14H6zM14 3v4h4M9 12.5h6M9 16h4",
-  finance: "M4.5 6h15A2 2 0 0 1 21.5 8v8a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2ZM12 14.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2ZM6 9.8v4.4M18 9.8v4.4",
-  inventory: "M3.5 8 12 4l8.5 4v8L12 20l-8.5-4zM3.5 8 12 12l8.5-4M12 12v8",
-  suppliers: "M3 7h11v9H3zM14 10h3.6L21 13.2V16h-7zM8.7 18.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0ZM18.7 18.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0Z",
-  promoters: "M4 10v4h2.6l7.4 4V6l-7.4 4H4zM17 9.2a4 4 0 0 1 0 5.6",
-  building: "M5 20V5.5A1.5 1.5 0 0 1 6.5 4h7A1.5 1.5 0 0 1 15 5.5V20M15 10h3.5A1.5 1.5 0 0 1 20 11.5V20M3 20h18M8 8h4M8 12h4M8 16h4",
-  plan: "M12 3.6 20 8l-8 4.4L4 8zM4 12.4 12 16.8l8-4.4M4 16.4 12 20.8l8-4.4",
-  audit: "M7 4h8.5L19 7.5V20H7zM15.5 4v3.5H19M9.8 13.6l1.7 1.8 3-3.6M9.8 17.6h4.4",
-  arrowRight: "M4 12h15M13.5 6.5 19.5 12l-6 5.5",
-  arrowLeft: "M20 12H5M10.5 6.5 4.5 12l6 5.5",
-  sun: "M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6",
-  moon: "M20 14.6A8.6 8.6 0 0 1 9.4 4 8.6 8.6 0 1 0 20 14.6z",
-  power: "M12 4v7.5M7.6 7a6.8 6.8 0 1 0 8.8 0",
-  // `mail` conserva el trazo que la app ya tenía en producción (esquinas
-  // rectas); el redondeado anterior queda reemplazado por paridad (#253).
-  mail: "M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm0 2 8 6 8-6",
-  bank: "M3.5 9.5 12 4l8.5 5.5M5.5 10v8M10 10v8M14 10v8M18.5 10v8M3 19.5h18",
-  checkin: "M4 12h11M10.5 7.5 15 12l-4.5 4.5M20 4.5v15",
-  globe: "M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM4 12h16M15.6 12a3.6 8 0 1 1-7.2 0 3.6 8 0 0 1 7.2 0Z",
-  database: "M19.6 6.2a7.6 2.9 0 1 1-15.2 0 7.6 2.9 0 0 1 15.2 0ZM4.4 6.2v11.6c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9V6.2M4.4 12c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9",
-  instagram: "M8.1 3.5h7.8a4.6 4.6 0 0 1 4.6 4.6v7.8a4.6 4.6 0 0 1-4.6 4.6H8.1a4.6 4.6 0 0 1-4.6-4.6V8.1a4.6 4.6 0 0 1 4.6-4.6ZM16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM17.2 6.9h.01"
+  grid: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"
 };
-var ICONOS = Object.keys(PATHS);
 function Icon({ name, className, ...props }) {
   const d = PATHS[name];
   if (!d) return null;
@@ -443,9 +308,10 @@ function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, 
     )) })
   ] });
 }
+var MONEY_SYMBOL = { PYG: "Gs.", USD: "US$", BRL: "R$", EUR: "\u20AC", USDT: "USDT" };
 function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
   const isPyg = currency === "PYG";
-  const prefix = String(symbol ?? "").trim() || SIMBOLOS_MONEDA[currency] || currency;
+  const prefix = symbol || MONEY_SYMBOL[currency] || currency;
   const display = isPyg ? formatGsInput(value) : formatUsdInput(value);
   const excede = excedeMonto(value, max);
   const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !isPyg });
@@ -469,10 +335,10 @@ function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className,
     )
   ] });
 }
-function Money({ value, currency = "PYG", simbolo, className }) {
+function Money({ value, currency = "PYG", className }) {
   const amount = Number(value);
   if (!Number.isFinite(amount)) return /* @__PURE__ */ jsx2("span", { className, children: "\u2014" });
-  return /* @__PURE__ */ jsx2("span", { className, children: currency === "USD" ? `${String(simbolo ?? "").trim() || SIMBOLOS_MONEDA.USD} ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : formatGs(amount, { simbolo }) });
+  return /* @__PURE__ */ jsx2("span", { className, children: currency === "USD" ? `US$ ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : formatGs(amount) });
 }
 function Select({ className, children, ...props }) {
   return /* @__PURE__ */ jsx2(
@@ -526,7 +392,7 @@ function Eyebrow({ className, ...props }) {
   );
 }
 function Card({ className, ...props }) {
-  return /* @__PURE__ */ jsx2("div", { className: cn("rounded-2xl border border-ink-600 bg-ink p-5 shadow-card", className), ...props });
+  return /* @__PURE__ */ jsx2("div", { className: cn("rounded-xl border border-fono/30 bg-ink-800 p-5", className), ...props });
 }
 function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
   const dialog = useRef(null);
@@ -564,10 +430,10 @@ function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_
     };
   }, [open]);
   if (!open) return null;
-  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className), children: [
+  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink-800 p-4 shadow-2xl sm:p-6", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className), children: [
     /* @__PURE__ */ jsxs("div", { className: "mb-4 flex items-center justify-between gap-3", children: [
       /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-      /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
+      /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
     ] }),
     children
   ] }) });
@@ -605,8 +471,6 @@ function Badge({ className, color = "slate", ...props }) {
     {
       className: cn(
         "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium",
-        // Dentro del scope v2 el chip va tipo pill (micro-rótulo), como el mock.
-        "v2-chip",
         BADGE[color],
         className
       ),
@@ -614,7 +478,7 @@ function Badge({ className, color = "slate", ...props }) {
     }
   );
 }
-var DOT = { green: "bg-ok", red: "bg-bad", blue: "bg-fono", slate: "bg-mute", orange: "bg-warn", ok: "bg-ok", warn: "bg-warn", bad: "bg-bad", info: "bg-info", mute: "bg-mute" };
+var DOT = { green: "bg-ok", red: "bg-bad", blue: "bg-fono", slate: "bg-mute", orange: "bg-warn" };
 function Dot({ color = "slate", pulse = false, className }) {
   return /* @__PURE__ */ jsxs("span", { className: cn("relative inline-flex h-2 w-2 shrink-0", className), children: [
     pulse && /* @__PURE__ */ jsx2(
@@ -636,7 +500,7 @@ var ICON_ACTION_TONE = {
   bad: "border-bad/30 text-bad hover:bg-bad/10",
   mute: "border-transparent text-mute hover:bg-ink-700 hover:text-fore"
 };
-function IconAction({ icon, label, tone = "mute", onClick, disabled = false, size = "sm" }) {
+function IconAction({ icon, label, tone = "mute", onClick, disabled = false }) {
   return /* @__PURE__ */ jsx2(
     "button",
     {
@@ -646,8 +510,7 @@ function IconAction({ icon, label, tone = "mute", onClick, disabled = false, siz
       disabled,
       onClick,
       className: cn(
-        "inline-flex items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40",
-        size === "touch" ? "toque-44 h-9 w-9" : "h-7 w-7",
+        "inline-flex h-7 w-7 items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40",
         ICON_ACTION_TONE[tone]
       ),
       children: /* @__PURE__ */ jsx2(Icon, { name: icon, className: "h-4 w-4" })
@@ -699,14 +562,14 @@ function Drawer({ open, onClose, title, children, side = "right", className }) {
       "aria-modal": "true",
       "aria-labelledby": titleId,
       className: cn(
-        "absolute inset-y-0 flex max-h-full w-full max-w-md flex-col overflow-hidden border-ink-600 bg-ink shadow-float",
+        "absolute inset-y-0 flex max-h-full w-full max-w-md flex-col overflow-hidden border-ink-600 bg-ink-800 shadow-2xl",
         side === "left" ? "left-0 border-r" : "right-0 border-l",
         className
       ),
       children: [
         /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
           /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
+          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
         ] }),
         /* @__PURE__ */ jsx2("div", { className: "flex-1 overflow-y-auto p-4 sm:p-5", children })
       ]
@@ -818,8 +681,7 @@ function Nota({ tono = "warn", como = "p", compact = false, className, children,
     }
   );
 }
-function PageHeader({ title, subtitle, actions, backTo, eyebrow, migas }) {
-  const camino = Array.isArray(migas) ? migas.filter((paso) => paso?.etiqueta) : [];
+function PageHeader({ title, subtitle, actions, backTo, eyebrow }) {
   return /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-center gap-3", children: [
       backTo && /* @__PURE__ */ jsx2(
@@ -833,13 +695,6 @@ function PageHeader({ title, subtitle, actions, backTo, eyebrow, migas }) {
         }
       ),
       /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
-        camino.length > 0 && /* @__PURE__ */ jsx2("nav", { "aria-label": "Miga de secci\xF3n", className: "mb-0.5 flex min-w-0 items-center gap-1.5 text-xs text-mute", children: camino.map((paso, indice) => {
-          const ultimo = indice === camino.length - 1;
-          return /* @__PURE__ */ jsxs("span", { className: "flex min-w-0 items-center gap-1.5", children: [
-            paso.href && !ultimo ? /* @__PURE__ */ jsx2("a", { href: paso.href, className: "truncate transition hover:text-fore", children: paso.etiqueta }) : /* @__PURE__ */ jsx2("span", { className: cn("truncate", ultimo && "font-semibold text-fore"), "aria-current": ultimo ? "page" : void 0, children: paso.etiqueta }),
-            !ultimo && /* @__PURE__ */ jsx2(Icon, { name: "chevron", className: "h-3 w-3 shrink-0 -rotate-90 text-mute", "aria-hidden": true })
-          ] }, `${paso.etiqueta}-${indice}`);
-        }) }),
         eyebrow && /* @__PURE__ */ jsx2(Eyebrow, { children: eyebrow }),
         /* @__PURE__ */ jsx2("h1", { className: "truncate text-2xl font-bold", children: title }),
         subtitle && /* @__PURE__ */ jsx2("p", { className: "mt-1 truncate text-sm text-mute", children: subtitle })
@@ -866,17 +721,16 @@ function DataTable({ columns, rows, emptyLabel = "Sin datos para mostrar.", load
     /* @__PURE__ */ jsx2("div", { className: "grid grid-cols-1 gap-2 p-2.5 md:hidden", children: mobileCard ? rows.map((row) => /* @__PURE__ */ jsx2("div", { children: mobileCard(row) }, row.id ?? row.key ?? JSON.stringify(row))) : /* @__PURE__ */ jsx2(EmptyState, { icon: "filter", title: emptyLabel }) })
   ] });
 }
-function FormField({ label, hint, error, children, htmlFor }) {
+function FormField({ label, hint, error, children, htmlFor, descripcionId }) {
+  const mensajeId = descripcionId || (htmlFor ? `${htmlFor}-descripcion` : void 0);
   return /* @__PURE__ */ jsxs("div", { children: [
     label && /* @__PURE__ */ jsx2(Label, { htmlFor, children: label }),
     children,
-    error ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "mt-1.5 text-xs text-bad", children: error }) : hint ? /* @__PURE__ */ jsx2("p", { className: "mt-1.5 text-xs text-mute", children: hint }) : null
+    error ? /* @__PURE__ */ jsx2("p", { id: mensajeId, role: "alert", className: "mt-1.5 text-xs text-bad", children: error }) : hint ? /* @__PURE__ */ jsx2("p", { id: mensajeId, className: "mt-1.5 text-xs text-mute", children: hint }) : null
   ] });
 }
-function Stat({ label, valor, delta, sub, nota, tono, destacado = false, deltaComo = "texto", barra, className }) {
+function Stat({ label, valor, delta, sub, destacado = false, className }) {
   const sube = typeof delta === "number" && delta >= 0;
-  const colorValor = destacado ? "text-onbrand" : tono ? textoDeTono(tono) : "text-fore";
-  const colorBarra = { fono: "bg-fono", ok: "bg-ok", bad: "bg-bad", warn: "bg-warn", info: "bg-info" }[barra] || "bg-fono";
   return /* @__PURE__ */ jsxs(
     "div",
     {
@@ -887,51 +741,37 @@ function Stat({ label, valor, delta, sub, nota, tono, destacado = false, deltaCo
       ),
       children: [
         /* @__PURE__ */ jsx2("div", { className: cn("text-[11px] font-medium uppercase tracking-wider", destacado ? "text-onbrand/75" : "text-mute"), children: label }),
-        /* @__PURE__ */ jsx2("div", { className: cn("v2-numero mt-1.5 text-2xl font-semibold md:text-3xl", colorValor), children: valor }),
+        /* @__PURE__ */ jsx2("div", { className: cn("mt-1.5 text-2xl font-semibold tracking-tight md:text-3xl", destacado ? "text-onbrand" : "text-fore"), children: valor }),
         /* @__PURE__ */ jsxs("div", { className: "mt-1.5 flex items-center gap-2 text-xs", children: [
-          typeof delta === "number" && (deltaComo === "chip" ? /* @__PURE__ */ jsxs("span", { className: cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium", sube ? "bg-ok/15 text-ok" : "bg-bad/15 text-bad"), children: [
-            sube ? "\u2191" : "\u2193",
+          typeof delta === "number" && /* @__PURE__ */ jsxs("span", { className: cn("font-medium", sube ? "text-ok" : "text-bad"), children: [
+            sube ? "" : "",
             " ",
             Math.abs(delta).toFixed(1),
             "%"
-          ] }) : /* @__PURE__ */ jsxs("span", { className: cn("font-medium", sube ? "text-ok" : "text-bad"), children: [
-            sube ? "\u2191" : "\u2193",
-            " ",
-            Math.abs(delta).toFixed(1),
-            "%"
-          ] })),
-          typeof delta !== "number" && barra && /* @__PURE__ */ jsx2("span", { className: cn("h-0.5 w-4 rounded-full", colorBarra), "aria-hidden": "true" }),
+          ] }),
           sub && /* @__PURE__ */ jsx2("span", { className: destacado ? "text-onbrand/75" : "text-mute", children: sub })
-        ] }),
-        nota && /* @__PURE__ */ jsx2("div", { className: cn("mt-1 text-[11px]", destacado ? "text-onbrand/75" : "text-mute"), children: nota })
+        ] })
       ]
     }
   );
 }
 function Subtabs({ value, onChange, items = [], className }) {
   if (!items.length) return null;
-  return /* @__PURE__ */ jsx2("div", { className: cn("mb-5 flex flex-wrap gap-2 rounded-2xl border border-fore/10 bg-ink p-2", className), role: "tablist", children: items.map(([id, label, contador]) => {
-    const numero = Number(contador);
-    const tieneContador = contador !== void 0 && contador !== null && contador !== "" && Number.isFinite(numero);
-    return /* @__PURE__ */ jsxs(
-      "button",
-      {
-        type: "button",
-        role: "tab",
-        "aria-selected": value === id,
-        onClick: () => onChange(id),
-        className: cn(
-          "min-h-11 rounded-xl px-3 py-2 text-sm font-medium transition",
-          value === id ? "bg-fono text-onbrand" : "text-mute hover:bg-fore/5 hover:text-fore"
-        ),
-        children: [
-          label,
-          tieneContador && /* @__PURE__ */ jsx2("span", { className: cn("ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums", value === id ? "bg-black/10" : "bg-ink-700 text-mute"), children: numero })
-        ]
-      },
-      id
-    );
-  }) });
+  return /* @__PURE__ */ jsx2("div", { className: cn("mb-5 flex flex-wrap gap-2 rounded-2xl border border-fore/10 bg-ink p-2", className), role: "tablist", children: items.map(([id, label]) => /* @__PURE__ */ jsx2(
+    "button",
+    {
+      type: "button",
+      role: "tab",
+      "aria-selected": value === id,
+      onClick: () => onChange(id),
+      className: cn(
+        "rounded-xl px-3 py-2 text-sm font-medium transition",
+        value === id ? "bg-fono text-onbrand" : "text-mute hover:bg-fore/5 hover:text-fore"
+      ),
+      children: label
+    },
+    id
+  )) });
 }
 var TONOS_VALOR = { ok: "text-ok", warn: "text-warn", bad: "text-bad", mute: "text-mute" };
 function FilaDato({ etiqueta, valor, tono = "", etiquetaComo: Etiqueta = "span", valorComo: Valor = "span", className, valorClassName, children }) {
@@ -940,9 +780,9 @@ function FilaDato({ etiqueta, valor, tono = "", etiquetaComo: Etiqueta = "span",
     /* @__PURE__ */ jsx2(Valor, { className: cn("shrink-0 font-semibold tabular-nums", TONOS_VALOR[tono], valorClassName), children: valor })
   ] });
 }
-function CeldaMoneda({ valor, tono = "", currency = "PYG", simbolo, className, children }) {
+function CeldaMoneda({ valor, tono = "", currency = "PYG", className, children }) {
   return /* @__PURE__ */ jsxs("span", { className: cn("inline-flex shrink-0 items-center justify-end gap-1 font-semibold tabular-nums", TONOS_VALOR[tono], className), children: [
-    /* @__PURE__ */ jsx2(Money, { value: Number(valor || 0), currency, simbolo }),
+    /* @__PURE__ */ jsx2(Money, { value: Number(valor || 0), currency }),
     children
   ] });
 }
@@ -1008,89 +848,17 @@ function Switch({ checked, onChange, disabled = false, id, ariaLabel, className,
   ] });
 }
 
-// src/components/Checkbox.jsx
-import { useId as useId2 } from "react";
-import { jsx as jsx4, jsxs as jsxs3 } from "react/jsx-runtime";
-function Checkbox({
-  checked,
-  onChange,
-  label,
-  descripcion,
-  variante = "simple",
-  tono = "fono",
-  disabled = false,
-  id,
-  ariaLabel,
-  className,
-  ...props
-}) {
-  const generado = useId2();
-  const campoId = id || generado;
-  const control = /* @__PURE__ */ jsx4(
-    "input",
-    {
-      id: campoId,
-      type: "checkbox",
-      checked: Boolean(checked),
-      disabled,
-      onChange,
-      "aria-label": label ? void 0 : ariaLabel,
-      className: cn(
-        "h-4 w-4 shrink-0 rounded border-ink-500 accent-fono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fono/40 disabled:cursor-not-allowed disabled:opacity-50",
-        tono === "bad" && "accent-bad"
-      ),
-      ...props
-    }
-  );
-  if (!label) return /* @__PURE__ */ jsx4("span", { className: cn("inline-flex items-center", className), children: control });
-  if (variante === "tarjeta") {
-    return /* @__PURE__ */ jsxs3(
-      "label",
-      {
-        htmlFor: campoId,
-        className: cn(
-          "flex min-h-11 cursor-pointer items-start gap-3 rounded-xl border border-ink-600 p-3 transition has-[:focus-visible]:border-fono",
-          disabled && "cursor-not-allowed opacity-60",
-          className
-        ),
-        children: [
-          /* @__PURE__ */ jsx4("span", { className: "mt-0.5 flex shrink-0", children: control }),
-          /* @__PURE__ */ jsxs3("span", { className: "min-w-0", children: [
-            /* @__PURE__ */ jsx4("span", { className: "block text-sm font-semibold", children: label }),
-            descripcion && /* @__PURE__ */ jsx4("span", { className: "mt-0.5 block text-xs text-mute", children: descripcion })
-          ] })
-        ]
-      }
-    );
-  }
-  return /* @__PURE__ */ jsxs3(
-    "label",
-    {
-      htmlFor: campoId,
-      className: cn(
-        "flex min-h-11 cursor-pointer items-center gap-2 text-sm",
-        disabled && "cursor-not-allowed opacity-60",
-        className
-      ),
-      children: [
-        control,
-        /* @__PURE__ */ jsx4("span", { className: "min-w-0", children: label })
-      ]
-    }
-  );
-}
-
 // src/components/SearchField.jsx
 import { forwardRef as forwardRef2 } from "react";
-import { jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
+import { jsx as jsx4, jsxs as jsxs3 } from "react/jsx-runtime";
 var SearchField = forwardRef2(function SearchField2({ value = "", onChange, onClear, placeholder, ariaLabel, className, disabled = false, ...props }, ref) {
   function limpiar() {
     if (onClear) onClear();
     else onChange?.({ target: { value: "" } });
   }
-  return /* @__PURE__ */ jsxs4("div", { className: cn("relative min-w-0", className), children: [
-    /* @__PURE__ */ jsx5(Icon, { name: "search", className: "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute", "aria-hidden": "true" }),
-    /* @__PURE__ */ jsx5(
+  return /* @__PURE__ */ jsxs3("div", { className: cn("relative min-w-0", className), children: [
+    /* @__PURE__ */ jsx4(Icon, { name: "search", className: "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsx4(
       Input,
       {
         ref,
@@ -1103,7 +871,7 @@ var SearchField = forwardRef2(function SearchField2({ value = "", onChange, onCl
         ...props
       }
     ),
-    value ? /* @__PURE__ */ jsx5(
+    value ? /* @__PURE__ */ jsx4(
       "button",
       {
         type: "button",
@@ -1112,7 +880,7 @@ var SearchField = forwardRef2(function SearchField2({ value = "", onChange, onCl
         className: "absolute right-1.5 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-mute transition hover:bg-ink-700 hover:text-fore disabled:opacity-40",
         "aria-label": "Limpiar b\xFAsqueda",
         title: "Limpiar b\xFAsqueda",
-        children: /* @__PURE__ */ jsx5(Icon, { name: "close", className: "h-3.5 w-3.5" })
+        children: /* @__PURE__ */ jsx4(Icon, { name: "close", className: "h-3.5 w-3.5" })
       }
     ) : null
   ] });
@@ -1120,7 +888,7 @@ var SearchField = forwardRef2(function SearchField2({ value = "", onChange, onCl
 var SearchField_default = SearchField;
 
 // src/components/BotonDentroCampo.jsx
-import { Fragment, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
+import { Fragment, jsx as jsx5, jsxs as jsxs4 } from "react/jsx-runtime";
 function BotonDentroCampo({
   etiqueta,
   titulo: titulo2,
@@ -1131,7 +899,7 @@ function BotonDentroCampo({
   onClick,
   className = ""
 }) {
-  return /* @__PURE__ */ jsx6(
+  return /* @__PURE__ */ jsx5(
     "button",
     {
       type: "button",
@@ -1146,21 +914,21 @@ function BotonDentroCampo({
         ocupado ? "gap-2 bg-ink-700 px-3 text-xs font-semibold text-fono-light" : "w-11 justify-center",
         className
       ),
-      children: ocupado ? /* @__PURE__ */ jsxs5(Fragment, { children: [
-        /* @__PURE__ */ jsx6("span", { "aria-hidden": "true", className: "h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink-500 border-t-fono-light" }),
+      children: ocupado ? /* @__PURE__ */ jsxs4(Fragment, { children: [
+        /* @__PURE__ */ jsx5("span", { "aria-hidden": "true", className: "h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink-500 border-t-fono-light" }),
         etiquetaOcupada
-      ] }) : /* @__PURE__ */ jsx6(Icon, { name: icono, className: "h-4 w-4" })
+      ] }) : /* @__PURE__ */ jsx5(Icon, { name: icono, className: "h-4 w-4" })
     }
   );
 }
 
 // src/components/SegmentedField.jsx
-import { jsx as jsx7, jsxs as jsxs6 } from "react/jsx-runtime";
+import { jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
 function SegmentedField({ value, onChange, options = [], ariaLabel, className }) {
   if (!options.length) return null;
-  return /* @__PURE__ */ jsx7("div", { className: cn("flex flex-wrap gap-1 rounded-xl border border-ink-600 bg-ink-800 p-1", className), role: "group", "aria-label": ariaLabel, children: options.map(([id, label, icon, contador]) => {
+  return /* @__PURE__ */ jsx6("div", { className: cn("flex flex-wrap gap-1 rounded-xl border border-ink-600 bg-ink-800 p-1", className), role: "group", "aria-label": ariaLabel, children: options.map(([id, label, icon, contador]) => {
     const activo = value === id;
-    return /* @__PURE__ */ jsxs6(
+    return /* @__PURE__ */ jsxs5(
       "button",
       {
         type: "button",
@@ -1169,13 +937,13 @@ function SegmentedField({ value, onChange, options = [], ariaLabel, className })
         title: label,
         onClick: () => onChange(id),
         className: cn(
-          "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition",
+          "inline-flex min-h-8 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition",
           activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-fore/5 hover:text-fore"
         ),
         children: [
-          icon && /* @__PURE__ */ jsx7(Icon, { name: icon, className: "h-4 w-4 shrink-0" }),
-          /* @__PURE__ */ jsx7("span", { className: "min-w-0 truncate", children: label }),
-          contador !== void 0 && /* @__PURE__ */ jsx7("span", { className: "text-xs opacity-75", children: contador })
+          icon && /* @__PURE__ */ jsx6(Icon, { name: icon, className: "h-4 w-4 shrink-0" }),
+          /* @__PURE__ */ jsx6("span", { className: "min-w-0 truncate", children: label }),
+          contador !== void 0 && /* @__PURE__ */ jsx6("span", { className: "text-xs opacity-75", children: contador })
         ]
       },
       id
@@ -1184,7 +952,7 @@ function SegmentedField({ value, onChange, options = [], ariaLabel, className })
 }
 
 // src/components/PercentField.jsx
-import { jsx as jsx8 } from "react/jsx-runtime";
+import { jsx as jsx7 } from "react/jsx-runtime";
 function parsePercent(valor) {
   const texto = String(valor ?? "").trim().replace(",", ".");
   if (texto === "" || texto === ".") return null;
@@ -1214,7 +982,7 @@ function PercentField({
   id,
   ...props
 }) {
-  return /* @__PURE__ */ jsx8(
+  return /* @__PURE__ */ jsx7(
     Input,
     {
       id,
@@ -1233,7 +1001,7 @@ function PercentField({
 }
 
 // src/components/CurrencySelect.jsx
-import { jsx as jsx9 } from "react/jsx-runtime";
+import { jsx as jsx8 } from "react/jsx-runtime";
 var MONEDAS = [
   ["PYG", "PYG \xB7 Gs"],
   ["USD", "USD \xB7 D\xF3lares"],
@@ -1243,17 +1011,17 @@ var MONEDAS = [
 ];
 function CurrencySelect({ value, onChange, className, excluir = [], ...props }) {
   const monedas = MONEDAS.filter(([code]) => !excluir.includes(code));
-  return /* @__PURE__ */ jsx9(Select, { value, onChange, className, ...props, children: monedas.map(([code, label]) => /* @__PURE__ */ jsx9("option", { value: code, children: label }, code)) });
+  return /* @__PURE__ */ jsx8(Select, { value, onChange, className, ...props, children: monedas.map(([code, label]) => /* @__PURE__ */ jsx8("option", { value: code, children: label }, code)) });
 }
 
 // src/components/ListGridToggle.jsx
-import { jsx as jsx10 } from "react/jsx-runtime";
+import { jsx as jsx9 } from "react/jsx-runtime";
 var OPTIONS = [
   { key: "list", icon: "list", label: "Ver como lista" },
   { key: "grid", icon: "grid", label: "Ver como cuadr\xEDcula" }
 ];
 function ListGridToggle({ value, onChange, className }) {
-  return /* @__PURE__ */ jsx10("div", { className: cn("flex overflow-hidden rounded-lg border border-ink-600 bg-ink-800", className), role: "group", "aria-label": "Cambiar vista", children: OPTIONS.map((option) => /* @__PURE__ */ jsx10(
+  return /* @__PURE__ */ jsx9("div", { className: cn("flex overflow-hidden rounded-lg border border-ink-600 bg-ink-800", className), role: "group", "aria-label": "Cambiar vista", children: OPTIONS.map((option) => /* @__PURE__ */ jsx9(
     "button",
     {
       type: "button",
@@ -1261,74 +1029,16 @@ function ListGridToggle({ value, onChange, className }) {
       "aria-label": option.label,
       "aria-pressed": value === option.key,
       onClick: () => onChange(option.key),
-      className: cn("toque-44 grid h-9 w-9 place-items-center transition", value === option.key ? "bg-fono/15 text-fono-light" : "text-mute hover:text-fore"),
-      children: /* @__PURE__ */ jsx10(Icon, { name: option.icon, className: "h-4 w-4" })
+      className: cn("grid h-9 w-9 place-items-center transition", value === option.key ? "bg-fono/15 text-fono-light" : "text-mute hover:text-fore"),
+      children: /* @__PURE__ */ jsx9(Icon, { name: option.icon, className: "h-4 w-4" })
     },
     option.key
   )) });
 }
 
-// src/components/PeriodoTabs.jsx
-import { jsx as jsx11 } from "react/jsx-runtime";
-var PERIODOS = [
-  ["dia", "D\xEDa"],
-  ["semana", "Semana"],
-  ["mes", "Mes"],
-  ["anio", "A\xF1o"]
-];
-function PeriodoTabs({ periodo, setPeriodo, periodos = PERIODOS, ariaLabel = "Per\xEDodo", className }) {
-  return /* @__PURE__ */ jsx11(SegmentedField, { value: periodo, onChange: setPeriodo, options: periodos, ariaLabel, className });
-}
-
-// src/components/NumericKeypad.jsx
-import { jsx as jsx12, jsxs as jsxs7 } from "react/jsx-runtime";
-var TECLAS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "00", "0"];
-function NumericKeypad({ value = "", onChange, max, className, ariaLabel = "Teclado num\xE9rico de cobro" }) {
-  function agregar(tecla) {
-    const siguiente = `${value || ""}${tecla}`.replace(/^0+(?=\d)/, "");
-    onChange(max ? siguiente.slice(0, max) : siguiente);
-  }
-  return /* @__PURE__ */ jsxs7("div", { className: className ?? "mt-2 grid max-w-[19rem] grid-cols-3 gap-2", "aria-label": ariaLabel, children: [
-    TECLAS.map((tecla) => /* @__PURE__ */ jsx12(
-      "button",
-      {
-        type: "button",
-        onClick: () => agregar(tecla),
-        className: "min-h-11 rounded-xl border border-fore/10 bg-fore/[.04] text-lg font-semibold text-fore transition hover:border-fono/60 hover:bg-fono/10 active:scale-[.97]",
-        "aria-label": `Agregar ${tecla}`,
-        children: tecla
-      },
-      tecla
-    )),
-    /* @__PURE__ */ jsx12(
-      "button",
-      {
-        type: "button",
-        onClick: () => onChange((value || "").slice(0, -1)),
-        className: "min-h-11 rounded-xl border border-fore/10 bg-fore/[.04] text-mute transition hover:border-fono/60 hover:bg-fono/10 active:scale-[.97]",
-        "aria-label": "Borrar \xFAltimo d\xEDgito",
-        children: /* @__PURE__ */ jsx12(Icon, { name: "backspace", className: "mx-auto h-5 w-5" })
-      }
-    )
-  ] });
-}
-
-// src/components/BarraLote.jsx
-import { jsx as jsx13, jsxs as jsxs8 } from "react/jsx-runtime";
-function BarraLote({ cantidad = 0, onLimpiar, children, etiqueta, className }) {
-  if (!cantidad) return null;
-  return /* @__PURE__ */ jsxs8("div", { className: className ?? "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-fono/30 bg-fono/5 px-3 py-2 text-sm", children: [
-    /* @__PURE__ */ jsx13("span", { className: "font-medium", children: etiqueta ?? `${cantidad} seleccionada(s)` }),
-    /* @__PURE__ */ jsxs8("span", { className: "flex flex-wrap items-center gap-2", children: [
-      children,
-      onLimpiar ? /* @__PURE__ */ jsx13(Button, { variant: "ghost", className: "h-8 px-2 text-xs", onClick: onLimpiar, children: "Limpiar" }) : null
-    ] })
-  ] });
-}
-
 // src/components/EmailField.jsx
 import { useRef as useRef2, useState as useState2 } from "react";
-import { jsx as jsx14, jsxs as jsxs9 } from "react/jsx-runtime";
+import { jsx as jsx10, jsxs as jsxs6 } from "react/jsx-runtime";
 var DOMINIOS_EMAIL = [
   "gmail.com",
   "hotmail.com",
@@ -1403,8 +1113,8 @@ function EmailField({
     tecleando.current = false;
     setOpen(false);
   }
-  return /* @__PURE__ */ jsxs9("div", { className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx14(
+  return /* @__PURE__ */ jsxs6("div", { className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx10(
       Input,
       {
         ...props,
@@ -1419,13 +1129,13 @@ function EmailField({
         onBlur: perderFoco
       }
     ),
-    open && tecleando.current && sugerencias.length > 0 && /* @__PURE__ */ jsx14(
+    open && tecleando.current && sugerencias.length > 0 && /* @__PURE__ */ jsx10(
       "ul",
       {
         role: "listbox",
         "aria-label": "Sugerencias de correo",
-        className: "absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-ink-500 bg-ink shadow-float",
-        children: sugerencias.map((sugerencia) => /* @__PURE__ */ jsx14("li", { children: /* @__PURE__ */ jsx14(
+        className: "absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-ink-500 bg-paper shadow-xl",
+        children: sugerencias.map((sugerencia) => /* @__PURE__ */ jsx10("li", { children: /* @__PURE__ */ jsx10(
           "button",
           {
             type: "button",
@@ -1488,7 +1198,7 @@ function telefonoValido(value, countryCode = "+595") {
 var MENSAJE_TELEFONO = "Tel\xE9fono inv\xE1lido. Para Paraguay us\xE1 un m\xF3vil de 9 d\xEDgitos, ej: 981 123 456 o +595 971 234567.";
 
 // src/components/PhoneField.jsx
-import { jsx as jsx15, jsxs as jsxs10 } from "react/jsx-runtime";
+import { jsx as jsx11, jsxs as jsxs7 } from "react/jsx-runtime";
 var MAX_CODIGO = 6;
 var MAX_NUMERO = 30;
 var CODIGOS_PAIS = ["+595", "+55", "+54", "+56", "+591", "+598", "+1", "+34", "+44", "+351"];
@@ -1526,9 +1236,9 @@ function PhoneField({
 }) {
   const [tocado, setTocado] = useState3(false);
   const invalido = tocado && Boolean(String(phone).trim()) && !telefonoValido(phone, countryCode);
-  return /* @__PURE__ */ jsxs10("div", { className, children: [
-    /* @__PURE__ */ jsxs10("div", { className: "flex gap-2", children: [
-      /* @__PURE__ */ jsx15(
+  return /* @__PURE__ */ jsxs7("div", { className, children: [
+    /* @__PURE__ */ jsxs7("div", { className: "flex gap-2", children: [
+      /* @__PURE__ */ jsx11(
         Input,
         {
           inputMode: "numeric",
@@ -1540,8 +1250,8 @@ function PhoneField({
           className: "w-[92px] shrink-0 text-center"
         }
       ),
-      /* @__PURE__ */ jsx15("datalist", { id, children: codigos.map((codigo) => /* @__PURE__ */ jsx15("option", { value: codigo }, codigo)) }),
-      /* @__PURE__ */ jsx15(
+      /* @__PURE__ */ jsx11("datalist", { id, children: codigos.map((codigo) => /* @__PURE__ */ jsx11("option", { value: codigo }, codigo)) }),
+      /* @__PURE__ */ jsx11(
         Input,
         {
           type: "tel",
@@ -1557,86 +1267,25 @@ function PhoneField({
         }
       )
     ] }),
-    invalido && /* @__PURE__ */ jsx15("span", { className: "block pt-1 text-[11px] text-bad", children: mensajeInvalido })
+    invalido && /* @__PURE__ */ jsx11("span", { className: "block pt-1 text-[11px] text-bad", children: mensajeInvalido })
   ] });
 }
 
-// src/utils/serial.js
-function normalizarSerial(value = "") {
-  return String(value ?? "").trim().replace(/^MOBOS:/i, "").replace(/[\s-]+/g, "").toUpperCase();
-}
-function ultimos4(serial) {
-  return String(serial ?? "").slice(-4);
-}
-function partirSerial(serial) {
-  const texto = String(serial ?? "");
-  if (!texto) return { cabeza: "", cola: "" };
-  return { cabeza: texto.slice(0, -4), cola: texto.slice(-4) };
-}
-function serialEnmascarado(serial) {
-  const cola = ultimos4(serial);
-  return cola ? `\u2022\u2022\u2022\u2022${cola}` : "";
-}
-function imeiValido(valor) {
-  const imei = String(valor ?? "").replace(/\D/g, "");
-  if (imei.length !== 15) return false;
-  let suma = 0;
-  for (let i = 0; i < 15; i += 1) {
-    let digito = Number(imei[14 - i]);
-    if (i % 2 === 1) {
-      digito *= 2;
-      if (digito > 9) digito -= 9;
-    }
-    suma += digito;
-  }
-  return suma % 10 === 0;
-}
-function separarSeriales(texto, { maxLargo = 32 } = {}) {
-  const vistos = /* @__PURE__ */ new Set();
-  const seriales = [];
-  for (const bruto of String(texto ?? "").split(/[\s,;|]+/)) {
-    const serial = normalizarSerial(bruto).slice(0, maxLargo);
-    if (!serial || vistos.has(serial)) continue;
-    vistos.add(serial);
-    seriales.push(serial);
-  }
-  return seriales;
-}
-function normalizarSeriales(texto, { validar, limite = 9999, maxLargo = 32 } = {}) {
-  const vistos = /* @__PURE__ */ new Set();
-  const repetidos = [];
-  const invalidos = [];
-  const seriales = [];
-  for (const bruto of String(texto ?? "").split(/[\s,;|]+/)) {
-    const serial = normalizarSerial(bruto).slice(0, maxLargo);
-    if (!serial) continue;
-    if (vistos.has(serial)) {
-      repetidos.push(serial);
-      continue;
-    }
-    vistos.add(serial);
-    if (typeof validar === "function" && !validar(serial)) {
-      invalidos.push(serial);
-      continue;
-    }
-    if (seriales.length >= limite) continue;
-    seriales.push(serial);
-  }
-  return { seriales, repetidos, invalidos };
-}
-
 // src/components/SerialField.jsx
-import { jsx as jsx16 } from "react/jsx-runtime";
+import { jsx as jsx12 } from "react/jsx-runtime";
+function normalizarSerial(value = "") {
+  return String(value ?? "").trim().replace(/[\s-]+/g, "").toUpperCase();
+}
 function SerialField({
   value = "",
   onChange,
   disabled = false,
   placeholder = "IMEI o serial",
-  normalizar: normalizar2 = normalizarSerial,
+  normalizar = normalizarSerial,
   maxLength = 32,
   ...props
 }) {
-  return /* @__PURE__ */ jsx16(
+  return /* @__PURE__ */ jsx12(
     Input,
     {
       autoCapitalize: "characters",
@@ -1646,23 +1295,23 @@ function SerialField({
       disabled,
       placeholder,
       ...props,
-      value: normalizar2(value),
-      onChange: (event) => onChange?.(normalizar2(event.target.value))
+      value: normalizar(value),
+      onChange: (event) => onChange?.(normalizar(event.target.value))
     }
   );
 }
 
 // src/components/InstagramField.jsx
-import { jsx as jsx17, jsxs as jsxs11 } from "react/jsx-runtime";
+import { jsx as jsx13, jsxs as jsxs8 } from "react/jsx-runtime";
 var MAX_USERNAME = 30;
 function normalizarInstagram(value) {
   const texto = String(value || "").trim().replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/^instagram\.com\//i, "").replace(/^@+/, "");
   return texto.split(/[/?#]/)[0].replace(/\s+/g, "").replace(/[^A-Za-z0-9._]/g, "").slice(0, MAX_USERNAME);
 }
 function InstagramField({ value = "", onChange, disabled = false, placeholder = "usuario", className }) {
-  return /* @__PURE__ */ jsxs11("div", { className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx17("span", { "aria-hidden": "true", className: "pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-mute", children: "@" }),
-    /* @__PURE__ */ jsx17(
+  return /* @__PURE__ */ jsxs8("div", { className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx13("span", { "aria-hidden": "true", className: "pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-mute", children: "@" }),
+    /* @__PURE__ */ jsx13(
       Input,
       {
         maxLength: MAX_USERNAME,
@@ -1676,813 +1325,160 @@ function InstagramField({ value = "", onChange, disabled = false, placeholder = 
   ] });
 }
 
-// src/components/ProductCombobox.jsx
-import { useCallback as useCallback2, useEffect as useEffect2, useId as useId3, useMemo as useMemo2, useRef as useRef3, useState as useState4 } from "react";
+// src/components/TaxIdField.jsx
+import { useId as useId2, useState as useState4 } from "react";
 
-// src/utils/categorias.js
-var CATEGORIAS_PRODUCTO = [
-  { clave: "iphone", etiqueta: "iPhone", icono: "mobile", alias: ["iphone", "mobile", "celular", "telefono", "smartphone"] },
-  { clave: "macbook", etiqueta: "MacBook", icono: "laptop", alias: ["macbook", "mac", "laptop", "notebook", "computadora"] },
-  { clave: "ipad", etiqueta: "iPad", icono: "tablet", alias: ["ipad", "tablet", "tableta"] },
-  { clave: "watch", etiqueta: "Watch", icono: "watch", alias: ["watch", "reloj", "apple watch"] },
-  { clave: "airpods", etiqueta: "AirPods", icono: "buds", alias: ["airpods", "auriculares", "audifonos", "buds", "earbuds"] },
-  { clave: "accesorios", etiqueta: "Accesorios", icono: "cable", alias: ["accesorios", "cable", "cables", "cargador", "cargadores", "funda", "fundas", "vidrio", "lamina", "templado", "adaptador"] },
-  { clave: "servicio", etiqueta: "Servicio", icono: "wrench", alias: ["servicio", "servicios", "reparacion"] },
-  { clave: "otro", etiqueta: "Otro", icono: "box", alias: [] }
-];
-var ICONO_CATEGORIA = Object.fromEntries(CATEGORIAS_PRODUCTO.map(({ clave, icono }) => [clave, icono]));
-var PALABRAS_ACCESORIO = ["funda", "cable", "cargador", "vidrio", "lamina", "templado", "adaptador", "protector", "soporte", "auriculares genericos"];
-var sinAcentos = (texto) => String(texto ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
-function normalizarCategoria(texto) {
-  const limpio = sinAcentos(texto);
-  const buscar = (clave) => CATEGORIAS_PRODUCTO.find((categoria) => categoria.clave === clave);
-  if (!limpio) return buscar("otro");
-  if (PALABRAS_ACCESORIO.some((palabra) => limpio.includes(palabra))) return buscar("accesorios");
-  const exacta = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.includes(limpio));
-  if (exacta) return exacta;
-  const contiene = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.some((alias) => alias.length > 3 && limpio.includes(alias)));
-  return contiene || buscar("otro");
+// src/utils/taxId.js
+var PATRON_RUC = /^\d{5,8}(-\d)?$/;
+var PATRON_TAX_ID_GENERICO = /^[\p{L}\p{N}./-]{3,32}$/u;
+var MENSAJE_RUC = "RUC inv\xE1lido: us\xE1 5 a 8 d\xEDgitos, con o sin d\xEDgito verificador (ej: 80012345-6).";
+var MENSAJE_RUC_SIN_DATOS = "No encontramos la raz\xF3n social de este RUC.";
+var MENSAJE_RUC_CONSULTA = "No pudimos consultar el RUC. Intent\xE1 nuevamente.";
+function taxIdValid(value) {
+  return PATRON_RUC.test(String(value ?? "").trim());
 }
-var categoriaDe = (texto) => normalizarCategoria(texto).clave;
-var iconoDeCategoria = (texto) => normalizarCategoria(texto).icono;
-var etiquetaDeCategoria = (texto) => normalizarCategoria(texto).etiqueta;
-
-// src/components/IconoCategoria.jsx
-import { jsx as jsx18 } from "react/jsx-runtime";
-var GLIFOS_CATEGORIA = {
-  // Celular: marco redondeado con parlante y botón.
-  mobile: "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM10 5h4M11 18.5h2",
-  // Laptop: pantalla arriba, base ancha.
-  laptop: "M5 5h14v10H5zM2.5 19h19M9 15l-.5 4M15 15l.5 4",
-  // Tablet: marco redondeado más ancho que el celular.
-  tablet: "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM11 18.5h2",
-  // Reloj: caja central con correas.
-  watch: "M9 2h6l.8 4H8.2L9 2ZM8.2 18h7.6l-.8 4H9l-.8-4ZM6 8h12v8H6zM12 10.5v3l2 1",
-  // Auriculares: dos buds con su tallo.
-  buds: "M7 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM7 16.5V21M17 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM17 16.5V21",
-  // Cable: curva con conectores en los extremos.
-  cable: "M4 3v5a4 4 0 0 0 4 4h4a4 4 0 0 1 4 4v5M2 3h4M18 21h4"
-};
-function IconoCategoria({ categoria, icono, className, ...props }) {
-  const glifo = icono || iconoDeCategoria(categoria);
-  const clases = cn("shrink-0", className || "h-5 w-5");
-  if (!GLIFOS_CATEGORIA[glifo]) return /* @__PURE__ */ jsx18(Icon, { name: glifo, className: clases, ...props });
-  return /* @__PURE__ */ jsx18(
-    "svg",
-    {
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "1.7",
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      "aria-hidden": "true",
-      className: clases,
-      ...props,
-      children: /* @__PURE__ */ jsx18("path", { d: GLIFOS_CATEGORIA[glifo] })
-    }
-  );
+function taxIdGenericoValid(value) {
+  return PATRON_TAX_ID_GENERICO.test(String(value ?? "").trim());
+}
+function taxIdValidoParaPais(value, pais = "PY") {
+  return String(pais).trim().toUpperCase() === "PY" ? taxIdValid(value) : taxIdGenericoValid(value);
+}
+function normalizeTaxId(value) {
+  if (typeof value !== "string") return null;
+  const taxId = value.replace(/[.\s]/g, "").trim();
+  return taxId || null;
+}
+function limpiarTaxId(value, max = 32) {
+  return String(value ?? "").replace(/[^\p{L}\p{N}./-]/gu, "").slice(0, max);
 }
 
-// src/components/ProductCombobox.jsx
-import { jsx as jsx19, jsxs as jsxs12 } from "react/jsx-runtime";
-var MAX_SUGGESTIONS = 8;
-function productName(product) {
-  return product?.nombre || product?.name || "";
-}
-function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, onQueryChange, placeholder = "Buscar producto\u2026", disabled = false, className }) {
-  const [query, setQuery] = useState4("");
-  const [open, setOpen] = useState4(false);
-  const [highlight, setHighlight] = useState4(0);
-  const [creating, setCreating] = useState4(false);
-  const listId = useId3();
-  const rootRef = useRef3(null);
-  useEffect2(() => {
-    const cerrarFuera = (event) => {
-      if (event.target instanceof Node && rootRef.current?.contains(event.target)) return;
-      close();
-    };
-    document.addEventListener("click", cerrarFuera);
-    return () => document.removeEventListener("click", cerrarFuera);
-  }, []);
-  const setearQuery = useCallback2((next) => {
-    setQuery(next);
-    onQueryChange?.(next);
-  }, [onQueryChange]);
-  useEffect2(() => {
-    if (!selectedId) return;
-    const selected = products.find((product) => product.id === selectedId);
-    if (selected) setearQuery(productName(selected));
-  }, [selectedId, products, setearQuery]);
-  const term = query.trim().toLowerCase();
-  const suggestions = useMemo2(() => {
-    if (!term) return [];
-    const coincide = (product) => [productName(product), product.sku, product.model, product.capacity, product.color].some((valor) => String(valor || "").toLowerCase().includes(term));
-    return products.filter(coincide).slice(0, MAX_SUGGESTIONS);
-  }, [products, term]);
-  const canCreate = Boolean(term && onCreate && suggestions.length === 0);
-  const optionCount = suggestions.length + (canCreate ? 1 : 0);
-  function close() {
-    setOpen(false);
-    setHighlight(0);
-  }
-  function choose(product) {
-    setearQuery(productName(product));
-    setOpen(false);
-    setHighlight(0);
-    onSelect?.(product);
-  }
-  async function createNew() {
-    if (!onCreate || creating) return;
-    setCreating(true);
-    try {
-      const created = await onCreate(query.trim());
-      if (created?.id) {
-        setearQuery(productName(created));
-        onSelect?.(created);
-      }
-      setOpen(false);
-    } catch {
-      setOpen(false);
-    } finally {
-      setCreating(false);
-    }
-  }
-  function onKeyDown(event) {
-    if (event.key === "Escape") {
-      close();
-      return;
-    }
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      if (!open) {
-        setOpen(true);
-        return;
-      }
-      if (!optionCount) return;
-      const delta = event.key === "ArrowDown" ? 1 : -1;
-      setHighlight((current) => (current + delta + optionCount) % optionCount);
-      return;
-    }
-    if (event.key === "Enter") {
-      event.preventDefault();
-      if (!open || !term) return;
-      if (canCreate && highlight >= suggestions.length) {
-        createNew();
-        return;
-      }
-      const product = suggestions[highlight];
-      if (product) choose(product);
-    }
-  }
-  return /* @__PURE__ */ jsxs12("div", { ref: rootRef, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx19(
-      Input,
-      {
-        type: "text",
-        role: "combobox",
-        "aria-expanded": open,
-        "aria-controls": listId,
-        "aria-autocomplete": "list",
-        autoComplete: "off",
-        disabled,
-        value: query,
-        placeholder,
-        onChange: (event) => {
-          setearQuery(event.target.value);
-          setOpen(true);
-          setHighlight(0);
-        },
-        onFocus: () => setOpen(true),
-        onBlur: () => setTimeout(close, 120),
-        onKeyDown
-      }
-    ),
-    open && term && /* @__PURE__ */ jsxs12("ul", { id: listId, role: "listbox", className: "mt-1 max-h-48 w-full overflow-auto rounded-lg border border-ink-500 bg-ink py-1 shadow-float", children: [
-      suggestions.map((product, index) => /* @__PURE__ */ jsx19("li", { children: /* @__PURE__ */ jsxs12(
-        "button",
-        {
-          type: "button",
-          role: "option",
-          "aria-selected": index === highlight,
-          tabIndex: -1,
-          className: cn("flex w-full items-baseline justify-between gap-2 px-3 py-2 text-left text-sm transition", index === highlight ? "bg-ink-700" : ""),
-          onMouseDown: (event) => {
-            event.preventDefault();
-            choose(product);
-          },
-          onMouseEnter: () => setHighlight(index),
-          children: [
-            /* @__PURE__ */ jsxs12("span", { className: "flex min-w-0 items-center gap-2", children: [
-              /* @__PURE__ */ jsx19(IconoCategoria, { categoria: product.category || productName(product), className: "h-4 w-4 text-mute" }),
-              /* @__PURE__ */ jsx19("span", { className: "truncate text-fore", children: productName(product) })
-            ] }),
-            product.sku ? /* @__PURE__ */ jsx19("span", { className: "shrink-0 text-xs text-mute", children: product.sku }) : null
-          ]
-        }
-      ) }, product.id)),
-      canCreate && /* @__PURE__ */ jsx19("li", { children: /* @__PURE__ */ jsx19(
-        "button",
-        {
-          type: "button",
-          role: "option",
-          "aria-selected": highlight >= suggestions.length,
-          tabIndex: -1,
-          disabled: creating,
-          className: cn("flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-fono-light transition disabled:opacity-50", highlight >= suggestions.length ? "bg-ink-700" : ""),
-          onMouseDown: (event) => {
-            event.preventDefault();
-            createNew();
-          },
-          onMouseEnter: () => setHighlight(suggestions.length),
-          children: creating ? "Creando\u2026" : `\uFF0B Agregar \xAB${query.trim()}\xBB como producto nuevo`
-        }
-      ) })
-    ] })
-  ] });
-}
-
-// src/components/BuscadorDispositivo.jsx
-import { useEffect as useEffect3, useId as useId4, useMemo as useMemo3, useRef as useRef4, useState as useState5 } from "react";
-
-// src/catalog/productos.js
-var MODELOS_IPHONE = [
-  // Generación actual y anteriores (del más nuevo al más viejo)
-  "iPhone 17 Pro Max",
-  "iPhone 17 Pro",
-  "iPhone 17 Plus",
-  "iPhone 17",
-  "iPhone 16 Pro Max",
-  "iPhone 16 Pro",
-  "iPhone 16 Plus",
-  "iPhone 16",
-  "iPhone 15 Pro Max",
-  "iPhone 15 Pro",
-  "iPhone 15 Plus",
-  "iPhone 15",
-  "iPhone 14 Pro Max",
-  "iPhone 14 Pro",
-  "iPhone 14 Plus",
-  "iPhone 14",
-  "iPhone 13 Pro Max",
-  "iPhone 13 Pro",
-  "iPhone 13 mini",
-  "iPhone 13",
-  "iPhone 12 Pro Max",
-  "iPhone 12 Pro",
-  "iPhone 12 mini",
-  "iPhone 12",
-  "iPhone 11 Pro Max",
-  "iPhone 11 Pro",
-  "iPhone 11",
-  "iPhone XS Max",
-  "iPhone XS",
-  "iPhone XR",
-  "iPhone X",
-  "iPhone 8 Plus",
-  "iPhone 8",
-  "iPhone 7 Plus",
-  "iPhone 7",
-  "iPhone SE (3.\xAA generaci\xF3n)",
-  "iPhone SE (2.\xAA generaci\xF3n)"
-];
-var CAPACIDADES_IPHONE = ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"];
-var COLORES_IPHONE = [
-  "Negro",
-  "Blanco",
-  "Plata",
-  "Gris espacial",
-  "Dorado",
-  "Azul",
-  "Verde",
-  "Rojo",
-  "Rosa",
-  "Morado",
-  "Amarillo",
-  "Titanio natural",
-  "Titanio azul",
-  "Titanio blanco",
-  "Titanio negro",
-  "Titanio desierto"
-];
-var CATEGORIAS_ACCESORIOS = [
-  "Fundas",
-  "Vidrios templados",
-  "Cargadores",
-  "Cables",
-  "Auriculares",
-  "Bater\xEDas",
-  "Parlantes",
-  "Relojes y correas",
-  "Soportes",
-  "Power banks",
-  "Adaptadores",
-  "L\xE1pices y stylus",
-  "Memorias y almacenamiento",
-  "C\xE1maras y accesorios",
-  "Repuestos",
-  "Otros accesorios"
-];
-var MARCAS_ACCESORIOS = [
-  "Apple",
-  "Samsung",
-  "Xiaomi",
-  "JBL",
-  "Baseus",
-  "Anker",
-  "Hoco",
-  "Generic",
-  "Otro"
-];
-function normalizarBusqueda(texto = "") {
-  return String(texto || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-}
-function buscarEnCatalogo(catalogo = [], texto = "") {
-  const q = normalizarBusqueda(texto);
-  if (!q) return catalogo;
-  return catalogo.filter((item) => normalizarBusqueda(item).includes(q));
-}
-
-// src/catalog/dispositivos.js
-var CONECTIVIDADES_MOVIL = ["5G", "4G LTE", "WiFi", "WiFi + Cellular", "Bluetooth", "eSIM"];
-var DISPOSITIVOS_MOBILE = MODELOS_IPHONE.map((nombre) => ({ nombre }));
-var PERFILES_DISPOSITIVO = {
-  // Celulares: modelo → capacidad, color y conectividad.
-  mobile: {
-    campos: ["capacidad", "color", "conectividad"],
-    etiquetas: { modelo: "Modelo", capacidad: "Capacidad", color: "Color", conectividad: "Conectividad" },
-    catalogo: { modelos: DISPOSITIVOS_MOBILE, capacidades: CAPACIDADES_IPHONE, colores: COLORES_IPHONE, conectividades: CONECTIVIDADES_MOVIL }
-  },
-  // Accesorios: marca → categoría (el modelo compatible es opcional).
-  accesorios: {
-    campos: ["marca", "categoria"],
-    etiquetas: { modelo: "Producto o modelo compatible", marca: "Marca", categoria: "Categor\xEDa" },
-    catalogo: { modelos: [], marcas: MARCAS_ACCESORIOS, categorias: CATEGORIAS_ACCESORIOS }
-  },
-  // Servicio técnico: modelo → capacidad y color (sin conectividad).
-  servicio: {
-    campos: ["capacidad", "color"],
-    etiquetas: { modelo: "Modelo", capacidad: "Capacidad", color: "Color" },
-    catalogo: { modelos: DISPOSITIVOS_MOBILE, capacidades: CAPACIDADES_IPHONE, colores: COLORES_IPHONE }
-  }
-};
-var CAMPOS_DISPOSITIVO = ["capacidad", "color", "conectividad", "marca", "categoria"];
-var CLAVES_DEPENDIENTE = { capacidad: "capacidades", color: "colores", conectividad: "conectividades", marca: "marcas", categoria: "categorias" };
-function nombreDeDispositivo(modelo) {
-  return typeof modelo === "string" ? modelo : modelo?.nombre || "";
-}
-function codigoDeDispositivo(modelo) {
-  return typeof modelo === "string" ? "" : modelo?.codigo || "";
-}
-function buscarDispositivo(modelos = [], texto = "", { porCodigo = true, limite = 8 } = {}) {
-  const q = normalizarBusqueda(texto);
-  const lista = Array.isArray(modelos) ? modelos : [];
-  if (!q) return lista.slice(0, limite);
-  return lista.filter((modelo) => {
-    const nombre = normalizarBusqueda(nombreDeDispositivo(modelo));
-    if (nombre.includes(q)) return true;
-    return porCodigo !== false && normalizarBusqueda(codigoDeDispositivo(modelo)).includes(q);
-  }).slice(0, limite);
-}
-function opcionesDependiente(modelo, campo, perfil = PERFILES_DISPOSITIVO.mobile) {
-  const clave = CLAVES_DEPENDIENTE[campo] || campo;
-  const propias = typeof modelo === "object" && modelo ? modelo[clave] : null;
-  if (Array.isArray(propias) && propias.length) return propias;
-  return perfil?.catalogo?.[clave] || [];
-}
-function limpiarDependientes(valor = {}, modelo, perfil = PERFILES_DISPOSITIVO.mobile) {
-  const siguiente = { ...valor, modelo: nombreDeDispositivo(modelo) };
-  const mismosCampos = nombreDeDispositivo(modelo) && normalizarBusqueda(nombreDeDispositivo(modelo)) === normalizarBusqueda(valor.modelo);
-  for (const campo of perfil?.campos || []) {
-    if (!mismosCampos) {
-      siguiente[campo] = "";
-      continue;
-    }
-    const opciones = opcionesDependiente(modelo, campo, perfil);
-    if (opciones.length && valor[campo] && !opciones.includes(valor[campo])) siguiente[campo] = "";
-  }
-  return siguiente;
-}
-function etiquetaDispositivo(valor = {}, { separador = " \xB7 " } = {}) {
-  const partes = [valor.modelo, valor.capacidad, valor.color, valor.conectividad, valor.marca, valor.categoria];
-  return partes.filter(Boolean).join(separador);
-}
-
-// src/components/BuscadorDispositivo.jsx
-import { jsx as jsx20, jsxs as jsxs13 } from "react/jsx-runtime";
-function BuscadorDispositivo({
-  valor = {},
-  onCambio,
-  tipo = "mobile",
-  perfil,
-  catalogo,
-  buscarPorCodigo = true,
-  permitirLibre = true,
-  limite = 8,
-  disabled = false,
-  etiquetas,
-  className
-}) {
-  const base = perfil || PERFILES_DISPOSITIVO[tipo] || PERFILES_DISPOSITIVO.mobile;
-  const config = useMemo3(() => ({
-    ...base,
-    catalogo: { ...base.catalogo || {}, ...catalogo || {} },
-    etiquetas: { ...base.etiquetas || {}, ...etiquetas || {} }
-  }), [base, catalogo, etiquetas]);
-  const modelos = config.catalogo.modelos || [];
-  const campos = config.campos || [];
-  const etiqueta = (campo) => config.etiquetas?.[campo] || campo.charAt(0).toUpperCase() + campo.slice(1);
-  const [texto, setTexto] = useState5(() => valor.modelo || "");
-  const [abierto, setAbierto] = useState5(false);
-  const [resaltado, setResaltado] = useState5(0);
-  const listaId = useId4();
-  const raiz = useRef4(null);
-  useEffect3(() => {
-    setTexto(valor.modelo || "");
-  }, [valor.modelo]);
-  useEffect3(() => {
-    const cerrarFuera = (event) => {
-      if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
-      setAbierto(false);
-    };
-    document.addEventListener("click", cerrarFuera);
-    return () => document.removeEventListener("click", cerrarFuera);
-  }, []);
-  const sugerencias = useMemo3(() => buscarDispositivo(modelos, texto, { porCodigo: buscarPorCodigo, limite }), [modelos, texto, buscarPorCodigo, limite]);
-  const modeloElegido = useMemo3(() => {
-    const q = String(valor.modelo || "").trim().toLowerCase();
-    return modelos.find((modelo) => nombreDeDispositivo(modelo).toLowerCase() === q) || null;
-  }, [modelos, valor.modelo]);
-  function emitir(siguiente, campo) {
-    onCambio?.(siguiente, campo ? { campo } : void 0);
-  }
-  function elegir(modelo) {
-    emitir(limpiarDependientes(valor, modelo, config));
-    setTexto(nombreDeDispositivo(modelo));
-    setAbierto(false);
-    setResaltado(0);
-  }
-  function confirmarLibre() {
-    if (!permitirLibre) return;
-    const limpio = texto.trim();
-    if (!limpio || limpio === valor.modelo) return;
-    emitir(limpiarDependientes(valor, limpio, config));
-  }
-  function cambiarDependiente(campo, valorCampo) {
-    emitir({ ...valor, [campo]: valorCampo }, campo);
-  }
-  function onKeyDown(event) {
-    if (event.key === "Escape") {
-      setAbierto(false);
-      return;
-    }
-    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-      event.preventDefault();
-      if (!abierto) {
-        setAbierto(true);
-        return;
-      }
-      if (!sugerencias.length) return;
-      const delta = event.key === "ArrowDown" ? 1 : -1;
-      setResaltado((actual) => (actual + delta + sugerencias.length) % sugerencias.length);
-      return;
-    }
-    if (event.key === "Enter") {
-      event.preventDefault();
-      const modelo = sugerencias[resaltado];
-      if (abierto && modelo) elegir(modelo);
-      else confirmarLibre();
-    }
-  }
-  return /* @__PURE__ */ jsxs13("div", { className: cn("space-y-3", className), children: [
-    /* @__PURE__ */ jsxs13("div", { ref: raiz, className: "relative", children: [
-      /* @__PURE__ */ jsx20(Label, { htmlFor: listaId, children: etiqueta("modelo") }),
-      /* @__PURE__ */ jsx20(
-        Input,
-        {
-          id: listaId,
-          type: "text",
-          role: "combobox",
-          "aria-expanded": abierto,
-          "aria-controls": `${listaId}-lista`,
-          "aria-autocomplete": "list",
-          autoComplete: "off",
-          disabled,
-          value: texto,
-          placeholder: permitirLibre ? "Buscar por nombre o c\xF3digo\u2026" : "Buscar modelo\u2026",
-          onChange: (event) => {
-            setTexto(event.target.value);
-            setAbierto(true);
-            setResaltado(0);
-            if (!event.target.value) emitir(limpiarDependientes(valor, "", config));
-          },
-          onFocus: () => setAbierto(true),
-          onBlur: () => {
-            setTimeout(() => {
-              setAbierto(false);
-              confirmarLibre();
-            }, 120);
-          },
-          onKeyDown
-        }
-      ),
-      abierto && texto.trim() && sugerencias.length > 0 && /* @__PURE__ */ jsx20("ul", { id: `${listaId}-lista`, role: "listbox", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-ink-500 bg-ink py-1 shadow-float", children: sugerencias.map((modelo, indice) => /* @__PURE__ */ jsx20("li", { children: /* @__PURE__ */ jsxs13(
-        "button",
-        {
-          type: "button",
-          role: "option",
-          "aria-selected": indice === resaltado,
-          tabIndex: -1,
-          className: cn("flex w-full items-baseline justify-between gap-2 px-3 py-2 text-left text-sm transition", indice === resaltado && "bg-ink-700"),
-          onMouseDown: (event) => {
-            event.preventDefault();
-            elegir(modelo);
-          },
-          onMouseEnter: () => setResaltado(indice),
-          children: [
-            /* @__PURE__ */ jsx20("span", { className: "min-w-0 truncate", children: nombreDeDispositivo(modelo) }),
-            codigoDeDispositivo(modelo) ? /* @__PURE__ */ jsx20("span", { className: "shrink-0 font-mono text-[11px] text-mute", children: codigoDeDispositivo(modelo) }) : null
-          ]
-        }
-      ) }, nombreDeDispositivo(modelo))) }),
-      abierto && texto.trim() && permitirLibre && sugerencias.length === 0 && /* @__PURE__ */ jsxs13("p", { className: "mt-1 text-xs text-mute", children: [
-        "No est\xE1 en el cat\xE1logo: se guarda \xAB",
-        texto.trim(),
-        "\xBB tal cual."
-      ] })
-    ] }),
-    valor.modelo && campos.length > 0 && /* @__PURE__ */ jsx20("div", { className: "grid gap-3 sm:grid-cols-2 lg:grid-cols-3", children: campos.map((campo) => {
-      const opciones = opcionesDependiente(modeloElegido, campo, config);
-      const id = `${listaId}-${campo}`;
-      return /* @__PURE__ */ jsxs13("div", { className: "space-y-1", children: [
-        /* @__PURE__ */ jsx20(Label, { htmlFor: id, children: etiqueta(campo) }),
-        /* @__PURE__ */ jsxs13(Select, { id, value: valor[campo] || "", disabled, onChange: (event) => cambiarDependiente(campo, event.target.value), children: [
-          /* @__PURE__ */ jsx20("option", { value: "", children: "Elegir\u2026" }),
-          opciones.map((opcion) => /* @__PURE__ */ jsx20("option", { value: opcion, children: opcion }, opcion))
-        ] })
-      ] }, campo);
-    }) })
-  ] });
-}
-
-// src/components/RucField.jsx
-import { useState as useState6 } from "react";
-import { jsx as jsx21, jsxs as jsxs14 } from "react/jsx-runtime";
-function RucField({
-  id,
-  value,
+// src/components/TaxIdField.jsx
+import { jsx as jsx14, jsxs as jsxs9 } from "react/jsx-runtime";
+function TaxIdField({
+  label = "RUC / identificaci\xF3n fiscal",
+  value = "",
   onChange,
-  onAplicar,
-  consultar,
+  pais = "PY",
+  onBuscarRazonSocial,
+  onAplicarRazonSocial,
+  etiquetaConsulta = "Consultar RUC",
+  mensajeInvalido = MENSAJE_RUC,
+  mensajeSinDatos = MENSAJE_RUC_SIN_DATOS,
+  mensajeError = MENSAJE_RUC_CONSULTA,
+  hint,
+  error,
+  required = false,
   disabled = false,
-  consultarDisabled = false,
-  mostrarExtractor = true,
-  maxLength = 100,
-  placeholder = "80012345-6",
-  autoComplete = "off",
-  ariaLabel,
-  textoAyuda = "La raz\xF3n social se aplica solo si la confirm\xE1s."
+  maxLength = 32,
+  id,
+  name,
+  className,
+  ...props
 }) {
-  const [resultado, setResultado] = useState6(null);
-  const [consultando, setConsultando] = useState6(false);
-  const [error, setError] = useState6("");
-  const hayRuc = Boolean(String(value || "").trim());
-  const puedeExtraer = mostrarExtractor && typeof consultar === "function";
-  async function extraer() {
-    const ruc = String(value || "").trim();
-    if (!ruc || consultando || !puedeExtraer) return;
-    setConsultando(true);
-    setError("");
-    setResultado(null);
+  const generado = useId2();
+  const inputId = id || generado;
+  const descripcionId = `${inputId}-descripcion`;
+  const [tocado, setTocado] = useState4(false);
+  const [consulta, setConsulta] = useState4({ estado: "inicial" });
+  const esRucPy = String(pais).trim().toUpperCase() === "PY";
+  const normalizado = normalizeTaxId(value);
+  const invalido = normalizado !== null && !taxIdValidoParaPais(normalizado, pais);
+  const errorVisible = error ?? (tocado && invalido ? mensajeInvalido : null);
+  const consultando = consulta.estado === "consultando";
+  const consultable = Boolean(normalizado) && !invalido;
+  async function consultar() {
+    const taxId = normalizeTaxId(value);
+    if (!taxId || !taxIdValidoParaPais(taxId, pais)) {
+      setConsulta({ estado: "error", mensaje: mensajeInvalido });
+      return;
+    }
+    setConsulta({ estado: "consultando" });
     try {
-      const datos = await consultar(ruc);
-      if (!datos?.name) throw new Error("No encontramos datos para ese RUC.");
-      setResultado(datos);
-    } catch (causa) {
-      setError(causa?.message || "No se pudo consultar el RUC. Pod\xE9s completar los datos manualmente.");
-    } finally {
-      setConsultando(false);
+      const razonSocial = await onBuscarRazonSocial(taxId);
+      const texto = typeof razonSocial === "string" ? razonSocial.trim() : "";
+      if (!texto) {
+        setConsulta({ estado: "error", mensaje: mensajeSinDatos });
+        return;
+      }
+      setConsulta({ estado: "encontrada", razonSocial: texto });
+    } catch {
+      setConsulta({ estado: "error", mensaje: mensajeError });
     }
   }
-  return /* @__PURE__ */ jsxs14("div", { className: "space-y-2", children: [
-    /* @__PURE__ */ jsxs14("div", { className: "relative", children: [
-      /* @__PURE__ */ jsx21(
+  function aplicar() {
+    onAplicarRazonSocial?.(consulta.razonSocial);
+    setConsulta({ estado: "inicial" });
+  }
+  return /* @__PURE__ */ jsxs9(FormField, { label, hint, error: errorVisible, htmlFor: inputId, descripcionId, children: [
+    /* @__PURE__ */ jsxs9("div", { className: "relative", children: [
+      /* @__PURE__ */ jsx14(
         Input,
         {
-          id,
-          "aria-label": ariaLabel,
-          className: puedeExtraer ? consultando ? "pr-32" : "pr-11" : void 0,
-          maxLength,
-          autoComplete,
-          disabled,
+          id: inputId,
+          name,
           value,
+          disabled,
+          required,
+          inputMode: esRucPy ? "numeric" : "text",
+          autoComplete: "off",
+          spellCheck: false,
+          placeholder: esRucPy ? "80012345-6" : "",
+          onBlur: () => setTocado(true),
+          "aria-invalid": errorVisible ? true : void 0,
+          "aria-describedby": errorVisible || hint ? descripcionId : void 0,
           onChange: (event) => {
-            onChange(event.target.value);
-            setResultado(null);
-            setError("");
+            setConsulta({ estado: "inicial" });
+            onChange?.(limpiarTaxId(event.target.value, maxLength));
           },
-          placeholder
+          className: cn(onBuscarRazonSocial && (consultando ? "pr-32" : "pr-11"), className),
+          ...props
         }
       ),
-      puedeExtraer && /* @__PURE__ */ jsx21(
+      onBuscarRazonSocial ? /* @__PURE__ */ jsx14(
         BotonDentroCampo,
         {
-          etiqueta: "Extraer los datos del RUC",
-          titulo: hayRuc ? "Extraer los datos del RUC" : "Ingres\xE1 el RUC para extraer los datos",
-          etiquetaOcupada: "Consultando\u2026",
-          disabled: disabled || consultarDisabled || !hayRuc,
+          etiqueta: etiquetaConsulta,
+          titulo: etiquetaConsulta,
           ocupado: consultando,
-          onClick: extraer
+          disabled: disabled || !consultable,
+          onClick: () => void consultar()
         }
-      )
+      ) : null
     ] }),
-    puedeExtraer && textoAyuda && /* @__PURE__ */ jsx21("span", { className: "block text-xs text-mute", children: textoAyuda }),
-    resultado && /* @__PURE__ */ jsxs14("div", { className: "flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fono/25 bg-fono/5 p-3 text-sm", children: [
-      /* @__PURE__ */ jsxs14("span", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs14("span", { className: "flex flex-wrap items-center gap-2", children: [
-          /* @__PURE__ */ jsx21("b", { className: "truncate", children: resultado.name }),
-          resultado.simulado && /* @__PURE__ */ jsx21(Badge, { color: "blue", children: "Simulada en demo" })
-        ] }),
-        /* @__PURE__ */ jsxs14("span", { className: "block text-mute", children: [
-          "RUC ",
-          resultado.fullRuc
-        ] }),
-        resultado.simulado && /* @__PURE__ */ jsx21("span", { className: "block text-xs text-mute", children: "Resultado ficticio: la demo no consulta registros reales." })
+    consulta.estado === "encontrada" ? /* @__PURE__ */ jsxs9("div", { role: "status", className: "mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-600 bg-ink-800/60 px-3 py-2 text-xs", children: [
+      /* @__PURE__ */ jsxs9("span", { className: "text-mute", children: [
+        "Raz\xF3n social: ",
+        /* @__PURE__ */ jsx14("b", { className: "font-semibold text-fore", children: consulta.razonSocial })
       ] }),
-      /* @__PURE__ */ jsx21("button", { type: "button", className: "font-semibold text-fono-light", onClick: () => {
-        onAplicar?.(resultado);
-        setResultado(null);
-      }, children: "Usar estos datos" })
-    ] }),
-    error && /* @__PURE__ */ jsx21("p", { role: "alert", className: "text-sm text-bad", children: error })
-  ] });
-}
-
-// src/utils/ruc.js
-var RUC_RE = /\d[\d.\s]{2,}-\d+/;
-function extraerRuc(texto) {
-  const encontrado = String(texto || "").match(RUC_RE);
-  return encontrado ? encontrado[0].trim() : "";
-}
-function esRuc(valor) {
-  return RUC_RE.test(String(valor || "").trim());
-}
-
-// src/components/SerialTexto.jsx
-import { jsx as jsx22, jsxs as jsxs15 } from "react/jsx-runtime";
-function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u2014" }) {
-  const { cabeza, cola } = partirSerial(serial);
-  if (!cola) return /* @__PURE__ */ jsx22("span", { className: cn("font-mono", className), children: vacio });
-  return /* @__PURE__ */ jsxs15("span", { className: cn("flex min-w-0 font-mono", className), title: String(serial), children: [
-    /* @__PURE__ */ jsx22("span", { className: "min-w-0 truncate", children: cabeza }),
-    /* @__PURE__ */ jsx22("b", { className: cn("shrink-0", tonoCola), children: cola })
-  ] });
-}
-
-// src/components/CampoSeriales.jsx
-import { useMemo as useMemo4, useState as useState7 } from "react";
-import { jsx as jsx23, jsxs as jsxs16 } from "react/jsx-runtime";
-function CampoSeriales({
-  valor,
-  onCambio,
-  validar,
-  limite = 9999,
-  maxLargo = 32,
-  etiqueta = "Seriales / IMEI",
-  placeholder = "Peg\xE1 o escane\xE1 los seriales (uno por l\xEDnea)",
-  ayuda,
-  disabled = false,
-  className
-}) {
-  const [texto, setTexto] = useState7(() => Array.isArray(valor) ? valor.join("\n") : valor || "");
-  const resultado = useMemo4(() => normalizarSeriales(texto, { validar, limite, maxLargo }), [texto, validar, limite, maxLargo]);
-  function cambiar(siguiente) {
-    setTexto(siguiente);
-    const limpio = normalizarSeriales(siguiente, { validar, limite, maxLargo });
-    onCambio?.(limpio.seriales, limpio);
-  }
-  const hay = resultado.seriales.length > 0;
-  return /* @__PURE__ */ jsxs16("div", { className: cn("space-y-2", className), children: [
-    etiqueta ? /* @__PURE__ */ jsx23("span", { className: "block text-xs font-semibold text-mute", children: etiqueta }) : null,
-    /* @__PURE__ */ jsx23(
-      Textarea,
-      {
-        rows: 4,
-        value: texto,
-        disabled,
-        placeholder,
-        onChange: (event) => cambiar(event.target.value),
-        spellCheck: false,
-        autoCapitalize: "characters"
-      }
-    ),
-    /* @__PURE__ */ jsxs16("p", { className: "flex flex-wrap items-center gap-x-3 gap-y-1 text-xs", role: "status", children: [
-      /* @__PURE__ */ jsxs16("span", { className: hay ? "font-semibold text-ok" : "text-mute", children: [
-        resultado.seriales.length,
-        " listo(s) para cargar"
-      ] }),
-      resultado.repetidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-warn", children: [
-        resultado.repetidos.length,
-        " repetido(s)"
-      ] }),
-      resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-bad", children: [
-        resultado.invalidos.length,
-        " inv\xE1lido(s)"
-      ] })
-    ] }),
-    resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs16("p", { className: "break-words text-[11px] text-mute", title: resultado.invalidos.join(" \xB7 "), children: [
-      "Revis\xE1: ",
-      resultado.invalidos.slice(0, 5).join(" \xB7 "),
-      resultado.invalidos.length > 5 ? " \u2026" : ""
-    ] }),
-    ayuda ? /* @__PURE__ */ jsx23("p", { className: "text-[11px] text-mute", children: ayuda }) : null
-  ] });
-}
-
-// src/components/EstadoBadge.jsx
-import { jsx as jsx24 } from "react/jsx-runtime";
-function EstadoBadge({ mapa, valor, vacio = "Sin estado" }) {
-  const item = mapa?.[valor];
-  if (item) return /* @__PURE__ */ jsx24(Badge, { color: item.color, children: item.label });
-  return /* @__PURE__ */ jsx24(Badge, { children: valor || vacio });
-}
-
-// src/components/SeccionColapsable.jsx
-import { useId as useId5, useState as useState8 } from "react";
-
-// src/utils/tabla.js
-var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
-var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
-var ROTULO_SECCION = "text-xs font-bold uppercase tracking-wider text-mute";
-var CELDA_DATO = "truncate text-xs text-mute";
-var CELDA_NUMERO = "text-right tabular-nums";
-var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
-var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
-
-// src/components/SeccionColapsable.jsx
-import { jsx as jsx25, jsxs as jsxs17 } from "react/jsx-runtime";
-function SeccionColapsable({ id, titulo: titulo2, resumen, icono, abierta = false, clave = id, className = "", children }) {
-  const autoId = useId5();
-  const panelId = `seccion-panel-${autoId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const [expandida, setExpandida] = useState8(() => {
-    if (!clave) return abierta;
-    try {
-      const guardado = window.sessionStorage.getItem(clave);
-      return guardado == null ? abierta : guardado === "1";
-    } catch {
-      return abierta;
-    }
-  });
-  function alternar() {
-    setExpandida((actual) => {
-      const siguiente = !actual;
-      if (clave) {
-        try {
-          window.sessionStorage.setItem(clave, siguiente ? "1" : "0");
-        } catch {
+      onAplicarRazonSocial ? /* @__PURE__ */ jsx14(
+        "button",
+        {
+          type: "button",
+          onClick: aplicar,
+          className: "rounded-md px-2 py-1 text-xs font-semibold text-fono-light transition hover:bg-fono/10",
+          children: "Usar raz\xF3n social"
         }
-      }
-      return siguiente;
-    });
-  }
-  return /* @__PURE__ */ jsxs17("section", { className: cn("rounded-2xl border border-ink-600 bg-ink-900", className), children: [
-    /* @__PURE__ */ jsxs17(
-      "button",
-      {
-        type: "button",
-        "aria-expanded": expandida,
-        "aria-controls": panelId,
-        onClick: alternar,
-        className: "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-ink-800/60",
-        children: [
-          icono ? /* @__PURE__ */ jsx25(Icon, { name: icono, className: "h-4 w-4 shrink-0 text-mute" }) : null,
-          /* @__PURE__ */ jsxs17("span", { className: "min-w-0 flex-1", children: [
-            /* @__PURE__ */ jsx25("span", { className: cn("block", ROTULO_SECCION), children: titulo2 }),
-            resumen ? /* @__PURE__ */ jsx25("span", { className: "mt-0.5 block truncate text-sm", children: resumen }) : null
-          ] }),
-          /* @__PURE__ */ jsx25(Icon, { name: "chevron", className: cn("h-4 w-4 shrink-0 text-mute transition-transform", expandida && "rotate-180") })
-        ]
-      }
-    ),
-    /* @__PURE__ */ jsx25("div", { id: panelId, hidden: !expandida, className: "border-t border-ink-600/70 px-4 pb-4 pt-3", children })
+      ) : null
+    ] }) : null,
+    consulta.estado === "error" ? /* @__PURE__ */ jsx14("p", { role: "alert", className: "mt-1.5 text-xs text-bad", children: consulta.mensaje }) : null
   ] });
 }
 
 // src/components/GoogleButton.jsx
-import { jsx as jsx26, jsxs as jsxs18 } from "react/jsx-runtime";
+import { jsx as jsx15, jsxs as jsxs10 } from "react/jsx-runtime";
 function GoogleMark({ className }) {
-  return /* @__PURE__ */ jsxs18("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
-    /* @__PURE__ */ jsx26("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
-    /* @__PURE__ */ jsx26("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
-    /* @__PURE__ */ jsx26("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
-    /* @__PURE__ */ jsx26("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
+  return /* @__PURE__ */ jsxs10("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
+    /* @__PURE__ */ jsx15("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
+    /* @__PURE__ */ jsx15("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
+    /* @__PURE__ */ jsx15("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
+    /* @__PURE__ */ jsx15("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
   ] });
 }
 function OAuthDivider({ texto = "o", className }) {
-  return /* @__PURE__ */ jsxs18("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
-    /* @__PURE__ */ jsx26("span", { className: "h-px flex-1 bg-fore/10" }),
+  return /* @__PURE__ */ jsxs10("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
+    /* @__PURE__ */ jsx15("span", { className: "h-px flex-1 bg-fore/10" }),
     texto,
-    /* @__PURE__ */ jsx26("span", { className: "h-px flex-1 bg-fore/10" })
+    /* @__PURE__ */ jsx15("span", { className: "h-px flex-1 bg-fore/10" })
   ] });
 }
 function GoogleButton({
@@ -2494,7 +1490,7 @@ function GoogleButton({
   etiquetaBusy = "Conectando con Google\u2026",
   className
 }) {
-  return /* @__PURE__ */ jsxs18(
+  return /* @__PURE__ */ jsxs10(
     "button",
     {
       type: "button",
@@ -2509,32 +1505,32 @@ function GoogleButton({
         className
       ),
       children: [
-        busy ? /* @__PURE__ */ jsx26("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx26(GoogleMark, {}),
-        /* @__PURE__ */ jsx26("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
+        busy ? /* @__PURE__ */ jsx15("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx15(GoogleMark, {}),
+        /* @__PURE__ */ jsx15("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
       ]
     }
   );
 }
 
 // src/components/AuthLayout.jsx
-import { jsx as jsx27, jsxs as jsxs19 } from "react/jsx-runtime";
+import { jsx as jsx16, jsxs as jsxs11 } from "react/jsx-runtime";
 function AuthLayout({ logo, aside, acciones, pie, children, className }) {
-  return /* @__PURE__ */ jsxs19("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
-    acciones && /* @__PURE__ */ jsx27("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
-    /* @__PURE__ */ jsx27("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
-    /* @__PURE__ */ jsxs19("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
-      /* @__PURE__ */ jsxs19("section", { className: "hidden lg:block", children: [
+  return /* @__PURE__ */ jsxs11("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
+    acciones && /* @__PURE__ */ jsx16("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
+    /* @__PURE__ */ jsx16("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
+    /* @__PURE__ */ jsxs11("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
+      /* @__PURE__ */ jsxs11("section", { className: "hidden lg:block", children: [
         logo,
         aside
       ] }),
       children
     ] }),
-    pie && /* @__PURE__ */ jsx27("div", { className: "shrink-0", children: pie })
+    pie && /* @__PURE__ */ jsx16("div", { className: "shrink-0", children: pie })
   ] });
 }
 
 // src/components/ProductFooter.jsx
-import { Fragment as Fragment2, jsx as jsx28, jsxs as jsxs20 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx17, jsxs as jsxs12 } from "react/jsx-runtime";
 function ProductFooter({
   nombre = "",
   version = "",
@@ -2545,9 +1541,9 @@ function ProductFooter({
   children,
   className
 }) {
-  return /* @__PURE__ */ jsxs20("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
+  return /* @__PURE__ */ jsxs12("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
     leading,
-    /* @__PURE__ */ jsxs20("span", { children: [
+    /* @__PURE__ */ jsxs12("span", { children: [
       "\xA9 ",
       anio,
       " ",
@@ -2555,23 +1551,23 @@ function ProductFooter({
       ". Todos los derechos reservados.",
       version ? ` \xB7 ${version}` : ""
     ] }),
-    children && /* @__PURE__ */ jsxs20(Fragment2, { children: [
+    children && /* @__PURE__ */ jsxs12(Fragment2, { children: [
       " \xB7 ",
       children
     ] }),
-    credito && /* @__PURE__ */ jsxs20(Fragment2, { children: [
+    credito && /* @__PURE__ */ jsxs12(Fragment2, { children: [
       " \xB7 ",
-      /* @__PURE__ */ jsx28("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
+      /* @__PURE__ */ jsx17("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
     ] })
   ] });
 }
 
 // src/components/LoadingScreen.jsx
-import { jsx as jsx29, jsxs as jsxs21 } from "react/jsx-runtime";
+import { jsx as jsx18, jsxs as jsxs13 } from "react/jsx-runtime";
 function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etiqueta = "", className }) {
   const nombreTienda = tienda?.nombre || "";
   const imagenTienda = tienda?.logo || "";
-  return /* @__PURE__ */ jsxs21(
+  return /* @__PURE__ */ jsxs13(
     "div",
     {
       className: cn("relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-paper px-6 text-fore", className),
@@ -2579,17 +1575,17 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
       "aria-busy": "true",
       "aria-label": mensaje,
       children: [
-        /* @__PURE__ */ jsx29("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
-        /* @__PURE__ */ jsx29("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
-        /* @__PURE__ */ jsxs21("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
-          /* @__PURE__ */ jsx29("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
-          /* @__PURE__ */ jsx29("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
-          /* @__PURE__ */ jsx29("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx29("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
+        /* @__PURE__ */ jsx18("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
+        /* @__PURE__ */ jsx18("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
+        /* @__PURE__ */ jsxs13("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
+          /* @__PURE__ */ jsx18("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
+          /* @__PURE__ */ jsx18("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
+          /* @__PURE__ */ jsx18("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx18("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
         ] }),
-        nombreTienda && /* @__PURE__ */ jsx29("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs21("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
-          imagenTienda ? /* @__PURE__ */ jsx29("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx29("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
-          /* @__PURE__ */ jsx29("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
-          etiqueta && /* @__PURE__ */ jsx29("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
+        nombreTienda && /* @__PURE__ */ jsx18("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs13("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
+          imagenTienda ? /* @__PURE__ */ jsx18("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx18("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
+          /* @__PURE__ */ jsx18("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
+          etiqueta && /* @__PURE__ */ jsx18("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
         ] }) })
       ]
     }
@@ -2597,7 +1593,7 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { useState as useState9 } from "react";
+import { useState as useState5 } from "react";
 
 // src/utils/token.js
 var RUTA_CON_TOKEN = /(?:^|\/)([^/?#]+)\/([a-f0-9]{64})(?:[/?#]|$)/i;
@@ -2619,7 +1615,7 @@ function esToken(value) {
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { jsx as jsx30, jsxs as jsxs22 } from "react/jsx-runtime";
+import { jsx as jsx19, jsxs as jsxs14 } from "react/jsx-runtime";
 function PegarEnlaceToken({
   onToken,
   etiqueta = "Peg\xE1 tu enlace completo",
@@ -2628,8 +1624,8 @@ function PegarEnlaceToken({
   id = "pegar-enlace",
   className
 }) {
-  const [enlace, setEnlace] = useState9("");
-  const [error, setError] = useState9("");
+  const [enlace, setEnlace] = useState5("");
+  const [error, setError] = useState5("");
   function aplicar(event) {
     event.preventDefault();
     setError("");
@@ -2637,10 +1633,10 @@ function PegarEnlaceToken({
     if (!token) return setError(errorMensaje);
     onToken?.(token);
   }
-  return /* @__PURE__ */ jsxs22("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
-    /* @__PURE__ */ jsxs22("div", { children: [
-      /* @__PURE__ */ jsx30(Label, { htmlFor: id, children: etiqueta }),
-      /* @__PURE__ */ jsx30(
+  return /* @__PURE__ */ jsxs14("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
+    /* @__PURE__ */ jsxs14("div", { children: [
+      /* @__PURE__ */ jsx19(Label, { htmlFor: id, children: etiqueta }),
+      /* @__PURE__ */ jsx19(
         Input,
         {
           id,
@@ -2655,41 +1651,15 @@ function PegarEnlaceToken({
         }
       )
     ] }),
-    error && /* @__PURE__ */ jsx30(Aviso, { tono: "error", children: error }),
-    /* @__PURE__ */ jsx30(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
+    error && /* @__PURE__ */ jsx19(Aviso, { tono: "error", children: error }),
+    /* @__PURE__ */ jsx19(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
   ] });
 }
 
 // src/components/NavLateral.jsx
-import { useState as useState10 } from "react";
-import { jsx as jsx31, jsxs as jsxs23 } from "react/jsx-runtime";
-function ItemNav({ item, activo, colapsado, onSelect }) {
-  return /* @__PURE__ */ jsx31("li", { children: /* @__PURE__ */ jsxs23(
-    "button",
-    {
-      type: "button",
-      onClick: () => onSelect?.(item.id),
-      "aria-current": activo ? "page" : void 0,
-      title: colapsado ? item.label : void 0,
-      className: cn(
-        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
-        activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore",
-        colapsado && "justify-center px-2"
-      ),
-      children: [
-        item.icono && /* @__PURE__ */ jsx31(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-        !colapsado && /* @__PURE__ */ jsx31("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
-        !colapsado && item.contador != null && /* @__PURE__ */ jsx31("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
-        colapsado && item.contador != null && /* @__PURE__ */ jsx31("span", { className: "sr-only", children: item.contador })
-      ]
-    }
-  ) });
-}
+import { jsx as jsx20, jsxs as jsxs15 } from "react/jsx-runtime";
 function NavLateral({
   items = [],
-  grupos,
-  gruposPlegados,
-  onToggleGrupo,
   activeId,
   onSelect,
   colapsado = false,
@@ -2700,22 +1670,15 @@ function NavLateral({
   ariaLabel = "Navegaci\xF3n principal",
   className
 }) {
-  const [plegadosInterno, setPlegadosInterno] = useState10({});
-  const plegados = gruposPlegados ?? plegadosInterno;
-  const alternarGrupo = (titulo2) => {
-    if (onToggleGrupo) onToggleGrupo(titulo2);
-    else setPlegadosInterno((previos) => ({ ...previos, [titulo2]: !previos[titulo2] }));
-  };
-  const lista = (listaItems) => /* @__PURE__ */ jsx31("ul", { className: "space-y-1", children: listaItems.map((item) => /* @__PURE__ */ jsx31(ItemNav, { item, activo: item.id === activeId, colapsado, onSelect }, item.id)) });
-  return /* @__PURE__ */ jsxs23(
+  return /* @__PURE__ */ jsxs15(
     "nav",
     {
       "aria-label": ariaLabel,
       className: cn("flex h-dvh flex-col border-r border-ink-600 bg-ink-900 transition-[width] duration-200", colapsado ? "w-[4.5rem]" : ancho, className),
       children: [
-        /* @__PURE__ */ jsxs23("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
-          cabecera && /* @__PURE__ */ jsx31("div", { className: "min-w-0 flex-1", children: cabecera }),
-          onToggle && /* @__PURE__ */ jsx31(
+        /* @__PURE__ */ jsxs15("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
+          cabecera && /* @__PURE__ */ jsx20("div", { className: "min-w-0 flex-1", children: cabecera }),
+          onToggle && /* @__PURE__ */ jsx20(
             "button",
             {
               type: "button",
@@ -2723,53 +1686,46 @@ function NavLateral({
               "aria-label": colapsado ? "Expandir men\xFA" : "Contraer men\xFA",
               "aria-expanded": !colapsado,
               className: cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg text-mute transition hover:bg-ink-700 hover:text-fore", colapsado && "w-full"),
-              children: /* @__PURE__ */ jsx31(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
+              children: /* @__PURE__ */ jsx20(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
             }
           )
         ] }),
-        /* @__PURE__ */ jsx31("div", { className: "min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2", children: grupos ? grupos.map(({ titulo: titulo2, items: itemsGrupo = [] }) => {
-          const plegado = Boolean(plegados[titulo2]);
-          const tieneActivo = itemsGrupo.some((item) => item.id === activeId);
-          return /* @__PURE__ */ jsxs23("div", { className: "flex flex-col", children: [
-            !colapsado && /* @__PURE__ */ jsxs23(
-              "button",
-              {
-                type: "button",
-                onClick: () => alternarGrupo(titulo2),
-                "aria-expanded": !plegado,
-                title: plegado ? `Mostrar ${titulo2}` : `Ocultar ${titulo2}`,
-                className: "mb-0.5 flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-0.5 text-left transition hover:bg-fore/5",
-                children: [
-                  /* @__PURE__ */ jsxs23("span", { className: "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute", children: [
-                    titulo2,
-                    plegado && tieneActivo && /* @__PURE__ */ jsx31("span", { className: "h-1.5 w-1.5 rounded-full bg-fono", "aria-hidden": true })
-                  ] }),
-                  /* @__PURE__ */ jsx31(
-                    Icon,
-                    {
-                      name: "chevron",
-                      className: cn("h-3 w-3 shrink-0 text-mute transition-transform duration-200", plegado && "-rotate-90")
-                    }
-                  )
-                ]
-              }
-            ),
-            (!plegado || colapsado) && lista(itemsGrupo)
-          ] }, titulo2);
-        }) : lista(items) }),
-        pie && /* @__PURE__ */ jsx31("div", { className: "border-t border-ink-600 p-2", children: pie })
+        /* @__PURE__ */ jsx20("ul", { className: "min-h-0 flex-1 space-y-1 overflow-y-auto px-2 py-2", children: items.map((item) => {
+          const activo = item.id === activeId;
+          return /* @__PURE__ */ jsx20("li", { children: /* @__PURE__ */ jsxs15(
+            "button",
+            {
+              type: "button",
+              onClick: () => onSelect?.(item.id),
+              "aria-current": activo ? "page" : void 0,
+              title: colapsado ? item.label : void 0,
+              className: cn(
+                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
+                activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore",
+                colapsado && "justify-center px-2"
+              ),
+              children: [
+                item.icono && /* @__PURE__ */ jsx20(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+                !colapsado && /* @__PURE__ */ jsx20("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
+                !colapsado && item.contador != null && /* @__PURE__ */ jsx20("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
+                colapsado && item.contador != null && /* @__PURE__ */ jsx20("span", { className: "sr-only", children: item.contador })
+              ]
+            }
+          ) }, item.id);
+        }) }),
+        pie && /* @__PURE__ */ jsx20("div", { className: "border-t border-ink-600 p-2", children: pie })
       ]
     }
   );
 }
 
 // src/components/MenuDesplegable.jsx
-import { useEffect as useEffect4, useRef as useRef5, useState as useState11 } from "react";
-import { jsx as jsx32, jsxs as jsxs24 } from "react/jsx-runtime";
+import { useEffect as useEffect2, useRef as useRef3, useState as useState6 } from "react";
+import { jsx as jsx21, jsxs as jsxs16 } from "react/jsx-runtime";
 function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel = "Men\xFA", className }) {
-  const [abierto, setAbierto] = useState11(false);
-  const raiz = useRef5(null);
-  useEffect4(() => {
+  const [abierto, setAbierto] = useState6(false);
+  const raiz = useRef3(null);
+  useEffect2(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -2785,8 +1741,8 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
       document.removeEventListener("keydown", cerrarEsc);
     };
   }, [abierto]);
-  return /* @__PURE__ */ jsxs24("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx32(
+  return /* @__PURE__ */ jsxs16("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx21(
       "button",
       {
         type: "button",
@@ -2797,15 +1753,15 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
         children: trigger
       }
     ),
-    abierto && /* @__PURE__ */ jsx32(
+    abierto && /* @__PURE__ */ jsx21(
       "div",
       {
         role: "menu",
         "aria-label": ariaLabel,
-        className: cn("absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-ink p-1 shadow-float", alineacion === "right" ? "right-0" : "left-0"),
+        className: cn("absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-paper p-1 shadow-xl", alineacion === "right" ? "right-0" : "left-0"),
         children: items.map((item, indice) => {
-          if (item.separador) return /* @__PURE__ */ jsx32("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
-          return /* @__PURE__ */ jsxs24(
+          if (item.separador) return /* @__PURE__ */ jsx21("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
+          return /* @__PURE__ */ jsxs16(
             "button",
             {
               type: "button",
@@ -2821,8 +1777,8 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
                 item.disabled && "cursor-not-allowed opacity-40"
               ),
               children: [
-                item.icono && /* @__PURE__ */ jsx32(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-                /* @__PURE__ */ jsx32("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
+                item.icono && /* @__PURE__ */ jsx21(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+                /* @__PURE__ */ jsx21("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
                 item.extra
               ]
             },
@@ -2835,41 +1791,34 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
 }
 
 // src/components/PanelDerecho.jsx
-import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
+import { jsx as jsx22, jsxs as jsxs17 } from "react/jsx-runtime";
 function PanelDerecho({ children, panel, id, className, classNamePanel }) {
-  return /* @__PURE__ */ jsxs25("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
-    /* @__PURE__ */ jsx33("div", { className: "min-w-0 space-y-4", children }),
-    /* @__PURE__ */ jsx33("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
+  return /* @__PURE__ */ jsxs17("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
+    /* @__PURE__ */ jsx22("div", { className: "min-w-0 space-y-4", children }),
+    /* @__PURE__ */ jsx22("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
   ] });
 }
 
 // src/components/TarjetaAjuste.jsx
-import { jsx as jsx34, jsxs as jsxs26 } from "react/jsx-runtime";
-function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, tono = "normal", children, className, id }) {
-  const peligro = tono === "peligro";
-  return /* @__PURE__ */ jsxs26(Card, { id, className: cn("space-y-3", peligro && "border-bad/30", className), children: [
-    /* @__PURE__ */ jsxs26("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs26("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs26("h2", { className: cn("flex items-center gap-2 font-semibold", peligro && "text-bad"), children: [
-          icono && /* @__PURE__ */ jsx34(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
+import { jsx as jsx23, jsxs as jsxs18 } from "react/jsx-runtime";
+function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, children, className, id }) {
+  return /* @__PURE__ */ jsxs18(Card, { id, className: cn("space-y-3", className), children: [
+    /* @__PURE__ */ jsxs18("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs18("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs18("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          icono && /* @__PURE__ */ jsx23(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
           titulo2
         ] }),
-        descripcion && /* @__PURE__ */ jsx34("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        descripcion && /* @__PURE__ */ jsx23("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      accion && /* @__PURE__ */ jsx34("div", { className: "shrink-0", children: accion })
+      accion && /* @__PURE__ */ jsx23("div", { className: "shrink-0", children: accion })
     ] }),
     children
   ] });
 }
 
-// src/components/EstadoGuardado.jsx
-import { jsx as jsx35 } from "react/jsx-runtime";
-function EstadoGuardado({ testId, estado, className }) {
-  return /* @__PURE__ */ jsx35("div", { "data-testid": testId, "aria-live": "polite", className: cn("min-w-0", className), children: estado && (estado.ok ? /* @__PURE__ */ jsx35(Badge, { color: "green", children: estado.texto }) : /* @__PURE__ */ jsx35(Aviso, { tono: "error", compact: true, className: "max-w-xl", children: estado.texto })) });
-}
-
 // src/components/AjustesImpresion.jsx
-import { useState as useState12 } from "react";
+import { useState as useState7 } from "react";
 
 // src/printing/estadoImpresoras.js
 var ESTADO_IMPRESORA = Object.freeze({
@@ -2966,7 +1915,7 @@ function agregarEstado(impresoras = [], estados = {}) {
 }
 
 // src/components/AjustesImpresion.jsx
-import { jsx as jsx36, jsxs as jsxs27 } from "react/jsx-runtime";
+import { jsx as jsx24, jsxs as jsxs19 } from "react/jsx-runtime";
 var VACIO = () => ({
   id: null,
   nombre: "",
@@ -3014,7 +1963,7 @@ function AjustesImpresion({
   descripcion = "Eleg\xED c\xF3mo sale el papel: por red (LAN) o por una cola local (USB). La app verifica cada impresora antes de usarla.",
   className
 }) {
-  const [form, setForm] = useState12(null);
+  const [form, setForm] = useState7(null);
   const resumen = agregarEstado(impresoras, estado);
   function cambiar(campo, valor) {
     setForm((actual) => ({ ...actual, [campo]: valor }));
@@ -3027,40 +1976,40 @@ function AjustesImpresion({
     onGuardar?.({ ...form, destino, copias: Number(form.copias) || 1 });
     setForm(null);
   }
-  return /* @__PURE__ */ jsxs27(Card, { className: cn("space-y-4", className), children: [
-    /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs27("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs27("h2", { className: "flex items-center gap-2 font-semibold", children: [
-          /* @__PURE__ */ jsx36(Icon, { name: "printer", className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs19(Card, { className: cn("space-y-4", className), children: [
+    /* @__PURE__ */ jsxs19("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs19("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs19("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          /* @__PURE__ */ jsx24(Icon, { name: "printer", className: "h-4 w-4" }),
           titulo2
         ] }),
-        /* @__PURE__ */ jsx36("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        /* @__PURE__ */ jsx24("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap items-center gap-2", children: [
-        /* @__PURE__ */ jsx36(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
-        onVerificar && /* @__PURE__ */ jsxs27(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
-          /* @__PURE__ */ jsx36(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
+      /* @__PURE__ */ jsxs19("div", { className: "flex flex-wrap items-center gap-2", children: [
+        /* @__PURE__ */ jsx24(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
+        onVerificar && /* @__PURE__ */ jsxs19(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
+          /* @__PURE__ */ jsx24(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
           "Verificar"
         ] }),
-        /* @__PURE__ */ jsxs27(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
-          /* @__PURE__ */ jsx36(Icon, { name: "plus", className: "h-4 w-4" }),
+        /* @__PURE__ */ jsxs19(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
+          /* @__PURE__ */ jsx24(Icon, { name: "plus", className: "h-4 w-4" }),
           "Agregar impresora"
         ] })
       ] })
     ] }),
-    impresoras.length === 0 && /* @__PURE__ */ jsx36("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
-    /* @__PURE__ */ jsx36("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
+    impresoras.length === 0 && /* @__PURE__ */ jsx24("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
+    /* @__PURE__ */ jsx24("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
       const registro = estado?.[impresora.id];
       const tono = TONO_ESTADO[registro?.estado] || "slate";
-      return /* @__PURE__ */ jsxs27("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
-        /* @__PURE__ */ jsxs27("div", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsxs27("p", { className: "flex items-center gap-2 font-medium", children: [
-            /* @__PURE__ */ jsx36(Dot, { color: tono }),
+      return /* @__PURE__ */ jsxs19("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
+        /* @__PURE__ */ jsxs19("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsxs19("p", { className: "flex items-center gap-2 font-medium", children: [
+            /* @__PURE__ */ jsx24(Dot, { color: tono }),
             impresora.nombre || "Impresora",
-            impresora.predeterminada && /* @__PURE__ */ jsx36(Badge, { color: "fono", children: "Predeterminada" }),
-            impresora.activa === false && /* @__PURE__ */ jsx36(Badge, { color: "slate", children: "Inactiva" })
+            impresora.predeterminada && /* @__PURE__ */ jsx24(Badge, { color: "fono", children: "Predeterminada" }),
+            impresora.activa === false && /* @__PURE__ */ jsx24(Badge, { color: "slate", children: "Inactiva" })
           ] }),
-          /* @__PURE__ */ jsxs27("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
+          /* @__PURE__ */ jsxs19("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
             conexionDeDestino(impresora.destino) === "cups" ? "USB / cola local" : "LAN",
             " \xB7 ",
             impresora.destino || "sin destino",
@@ -3070,79 +2019,79 @@ function AjustesImpresion({
             registro ? ` \xB7 ${textoVerificacion(registro)}` : ""
           ] })
         ] }),
-        /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap items-center gap-1", children: [
-          onProbar && /* @__PURE__ */ jsx36(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
-          /* @__PURE__ */ jsx36(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
-          onEliminar && /* @__PURE__ */ jsx36(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
+        /* @__PURE__ */ jsxs19("div", { className: "flex flex-wrap items-center gap-1", children: [
+          onProbar && /* @__PURE__ */ jsx24(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
+          /* @__PURE__ */ jsx24(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
+          onEliminar && /* @__PURE__ */ jsx24(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
         ] })
       ] }, impresora.id);
     }) }),
-    form && /* @__PURE__ */ jsxs27("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
-      /* @__PURE__ */ jsxs27("div", { className: "grid gap-3 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsxs27("div", { children: [
-          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
-          /* @__PURE__ */ jsx36(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
+    form && /* @__PURE__ */ jsxs19("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
+      /* @__PURE__ */ jsxs19("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs19("div", { children: [
+          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
+          /* @__PURE__ */ jsx24(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
         ] }),
-        /* @__PURE__ */ jsxs27("div", { children: [
-          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
-          /* @__PURE__ */ jsx36(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
+        /* @__PURE__ */ jsxs19("div", { children: [
+          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
+          /* @__PURE__ */ jsx24(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs27("div", { className: "grid gap-3 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsxs27("div", { children: [
-          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
-          /* @__PURE__ */ jsxs27(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
-            /* @__PURE__ */ jsx36("option", { value: "lan", children: "LAN (impresora de red)" }),
-            /* @__PURE__ */ jsx36("option", { value: "cups", children: "USB / cola local (CUPS)" })
+      /* @__PURE__ */ jsxs19("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs19("div", { children: [
+          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
+          /* @__PURE__ */ jsxs19(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
+            /* @__PURE__ */ jsx24("option", { value: "lan", children: "LAN (impresora de red)" }),
+            /* @__PURE__ */ jsx24("option", { value: "cups", children: "USB / cola local (CUPS)" })
           ] })
         ] }),
-        form.conexion === "lan" ? /* @__PURE__ */ jsxs27("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
-          /* @__PURE__ */ jsxs27("div", { children: [
-            /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-ip", children: "IP" }),
-            /* @__PURE__ */ jsx36(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
+        form.conexion === "lan" ? /* @__PURE__ */ jsxs19("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
+          /* @__PURE__ */ jsxs19("div", { children: [
+            /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-ip", children: "IP" }),
+            /* @__PURE__ */ jsx24(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
           ] }),
-          /* @__PURE__ */ jsxs27("div", { children: [
-            /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
-            /* @__PURE__ */ jsx36(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
+          /* @__PURE__ */ jsxs19("div", { children: [
+            /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
+            /* @__PURE__ */ jsx24(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
           ] })
-        ] }) : /* @__PURE__ */ jsxs27("div", { children: [
-          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-cola", children: "Cola local" }),
-          /* @__PURE__ */ jsx36(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
-          /* @__PURE__ */ jsx36("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
+        ] }) : /* @__PURE__ */ jsxs19("div", { children: [
+          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-cola", children: "Cola local" }),
+          /* @__PURE__ */ jsx24(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
+          /* @__PURE__ */ jsx24("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs27("div", { className: "grid gap-3 sm:grid-cols-3", children: [
-        /* @__PURE__ */ jsxs27("div", { children: [
-          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
-          /* @__PURE__ */ jsx36(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx36("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
+      /* @__PURE__ */ jsxs19("div", { className: "grid gap-3 sm:grid-cols-3", children: [
+        /* @__PURE__ */ jsxs19("div", { children: [
+          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
+          /* @__PURE__ */ jsx24(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx24("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
         ] }),
-        /* @__PURE__ */ jsxs27("div", { children: [
-          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-copias", children: "Copias" }),
-          /* @__PURE__ */ jsx36(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
+        /* @__PURE__ */ jsxs19("div", { children: [
+          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-copias", children: "Copias" }),
+          /* @__PURE__ */ jsx24(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
         ] }),
-        /* @__PURE__ */ jsxs27("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
-          /* @__PURE__ */ jsx36("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
+        /* @__PURE__ */ jsxs19("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
+          /* @__PURE__ */ jsx24("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
           "Predeterminada"
         ] })
       ] }),
-      /* @__PURE__ */ jsx36("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
-      /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap justify-end gap-2", children: [
-        /* @__PURE__ */ jsx36(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
-        /* @__PURE__ */ jsx36(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
+      /* @__PURE__ */ jsx24("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
+      /* @__PURE__ */ jsxs19("div", { className: "flex flex-wrap justify-end gap-2", children: [
+        /* @__PURE__ */ jsx24(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
+        /* @__PURE__ */ jsx24(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs27("p", { className: "text-xs text-mute", children: [
+    /* @__PURE__ */ jsxs19("p", { className: "text-xs text-mute", children: [
       "La impresi\xF3n sale por el ",
-      /* @__PURE__ */ jsx36("b", { className: "text-fore", children: "agente local" }),
+      /* @__PURE__ */ jsx24("b", { className: "text-fore", children: "agente local" }),
       ": instalalo en la computadora que tiene la impresora (LAN o USB conectada) y vinculala con el c\xF3digo. Con el agente ca\xEDdo, los trabajos quedan en cola; nunca se pierden. Ver ",
-      /* @__PURE__ */ jsx36("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
+      /* @__PURE__ */ jsx24("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
       "."
     ] })
   ] });
 }
 
 // src/components/BotonImprimir.jsx
-import { jsx as jsx37, jsxs as jsxs28 } from "react/jsx-runtime";
+import { jsx as jsx25, jsxs as jsxs20 } from "react/jsx-runtime";
 function BotonImprimir({
   onImprimir,
   estado = null,
@@ -3154,17 +2103,17 @@ function BotonImprimir({
 }) {
   const enCurso = estado === "pendiente" || estado === "reclamado";
   const texto = enCurso ? etiquetaTrabajo(estado) : etiqueta;
-  return /* @__PURE__ */ jsxs28("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsxs28(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
-      /* @__PURE__ */ jsx37(Icon, { name: icono, className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs20("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsxs20(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
+      /* @__PURE__ */ jsx25(Icon, { name: icono, className: "h-4 w-4" }),
       texto
     ] }),
-    estado && !enCurso && /* @__PURE__ */ jsx37(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
+    estado && !enCurso && /* @__PURE__ */ jsx25(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
   ] });
 }
 
 // src/components/BancoCombobox.jsx
-import { useEffect as useEffect5, useId as useId6, useMemo as useMemo5, useRef as useRef6, useState as useState14 } from "react";
+import { useEffect as useEffect3, useId as useId3, useMemo as useMemo2, useRef as useRef4, useState as useState9 } from "react";
 
 // src/utils/bancos.js
 var BANCOS_PARAGUAY = [
@@ -3254,21 +2203,21 @@ function sugerenciasDeBanco(texto, catalogo = BANCOS_PARAGUAY) {
 }
 
 // src/components/BancoLogo.jsx
-import { useState as useState13 } from "react";
-import { jsx as jsx38 } from "react/jsx-runtime";
+import { useState as useState8 } from "react";
+import { jsx as jsx26 } from "react/jsx-runtime";
 function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseAssets = "/bancos", marcas = {} }) {
-  const [fallo, setFallo] = useState13(false);
+  const [fallo, setFallo] = useState8(false);
   const texto = String(banco || "").trim();
   const registro = logoDeBanco(texto);
   if (!registro) return null;
   const marca = registro.tipo === "marca" ? registro.marca : null;
   if (marca && marcas[marca]) {
     const Logo = marcas[marca];
-    return /* @__PURE__ */ jsx38("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx38(Logo, {}) });
+    return /* @__PURE__ */ jsx26("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx26(Logo, {}) });
   }
   if (soloCatalogo && registro.generico) return null;
   if (registro.tipo === "archivo" && !fallo) {
-    return /* @__PURE__ */ jsx38("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx38(
+    return /* @__PURE__ */ jsx26("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx26(
       "img",
       {
         src: baseAssets ? `${baseAssets.replace(/\/$/, "")}/${registro.archivo}` : registro.archivo,
@@ -3281,7 +2230,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
   }
   const iniciales = registro.iniciales || inicialesDeBanco(texto);
   const color = registro.color || colorDeBanco(texto);
-  return /* @__PURE__ */ jsx38("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx38(
+  return /* @__PURE__ */ jsx26("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx26(
     "span",
     {
       "aria-hidden": "true",
@@ -3293,7 +2242,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
 }
 
 // src/components/BancoCombobox.jsx
-import { jsx as jsx39, jsxs as jsxs29 } from "react/jsx-runtime";
+import { jsx as jsx27, jsxs as jsxs21 } from "react/jsx-runtime";
 function BancoCombobox({
   id,
   value = "",
@@ -3305,12 +2254,12 @@ function BancoCombobox({
   catalogo = BANCOS_PARAGUAY,
   logoProps
 }) {
-  const [abierto, setAbierto] = useState14(false);
-  const [resaltado, setResaltado] = useState14(0);
-  const listaId = useId6();
-  const raiz = useRef6(null);
-  const lista = useRef6(null);
-  useEffect5(() => {
+  const [abierto, setAbierto] = useState9(false);
+  const [resaltado, setResaltado] = useState9(0);
+  const listaId = useId3();
+  const raiz = useRef4(null);
+  const lista = useRef4(null);
+  useEffect3(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -3318,8 +2267,8 @@ function BancoCombobox({
     document.addEventListener("click", cerrarFuera);
     return () => document.removeEventListener("click", cerrarFuera);
   }, []);
-  const sugerencias = useMemo5(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
-  useEffect5(() => {
+  const sugerencias = useMemo2(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
+  useEffect3(() => {
     if (!abierto) return;
     lista.current?.querySelector(`#${CSS.escape(`${listaId}-${resaltado}`)}`)?.scrollIntoView({ block: "nearest" });
   }, [abierto, resaltado, listaId]);
@@ -3350,8 +2299,8 @@ function BancoCombobox({
     }
   }
   const listaVisible = abierto && sugerencias.length > 0;
-  return /* @__PURE__ */ jsxs29("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx39(
+  return /* @__PURE__ */ jsxs21("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx27(
       Input,
       {
         id,
@@ -3374,15 +2323,15 @@ function BancoCombobox({
         onKeyDown: alTeclear
       }
     ),
-    listaVisible && /* @__PURE__ */ jsx39(
+    listaVisible && /* @__PURE__ */ jsx27(
       "ul",
       {
         id: listaId,
         ref: lista,
         role: "listbox",
         "aria-label": "Bancos",
-        className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-ink p-1 shadow-float",
-        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx39("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs29(
+        className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-paper p-1 shadow-xl",
+        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx27("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs21(
           "button",
           {
             type: "button",
@@ -3391,8 +2340,8 @@ function BancoCombobox({
             onMouseDown: (event) => event.preventDefault(),
             onClick: () => elegir(banco),
             children: [
-              /* @__PURE__ */ jsx39(BancoLogo, { banco, alto: "h-4", ...logoProps }),
-              /* @__PURE__ */ jsx39("span", { className: "min-w-0 flex-1 truncate", children: banco })
+              /* @__PURE__ */ jsx27(BancoLogo, { banco, alto: "h-4", ...logoProps }),
+              /* @__PURE__ */ jsx27("span", { className: "min-w-0 flex-1 truncate", children: banco })
             ]
           }
         ) }, banco))
@@ -3402,7 +2351,7 @@ function BancoCombobox({
 }
 
 // src/components/CityAutocomplete.jsx
-import { useEffect as useEffect6, useRef as useRef7, useState as useState15 } from "react";
+import { useEffect as useEffect4, useRef as useRef5, useState as useState10 } from "react";
 
 // src/catalog/ciudades.js
 var CIUDADES_PARAGUAY = [
@@ -3708,7 +2657,7 @@ function buscarCiudad(texto, limite = 8) {
 }
 
 // src/components/CityAutocomplete.jsx
-import { jsx as jsx40, jsxs as jsxs30 } from "react/jsx-runtime";
+import { jsx as jsx28, jsxs as jsxs22 } from "react/jsx-runtime";
 function CityAutocomplete({
   value = "",
   onSelect,
@@ -3718,15 +2667,13 @@ function CityAutocomplete({
   buscar,
   limite = 8,
   maxLength = 100,
-  inputProps,
-  mensajeError = "No se pudieron cargar las sugerencias."
+  inputProps
 }) {
-  const [sugerencias, setSugerencias] = useState15([]);
-  const [abierto, setAbierto] = useState15(false);
-  const [error, setError] = useState15("");
-  const timer = useRef7(null);
-  const raiz = useRef7(null);
-  useEffect6(() => {
+  const [sugerencias, setSugerencias] = useState10([]);
+  const [abierto, setAbierto] = useState10(false);
+  const timer = useRef5(null);
+  const raiz = useRef5(null);
+  useEffect4(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -3734,7 +2681,7 @@ function CityAutocomplete({
     document.addEventListener("mousedown", cerrarFuera);
     return () => document.removeEventListener("mousedown", cerrarFuera);
   }, []);
-  useEffect6(() => () => {
+  useEffect4(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
   function resolver(texto) {
@@ -3742,13 +2689,11 @@ function CityAutocomplete({
     if (q.length < 2) {
       setSugerencias([]);
       setAbierto(false);
-      setError("");
       return;
     }
     if (!buscar) {
       setSugerencias(buscarCiudad(q, limite));
       setAbierto(true);
-      setError("");
       return;
     }
     if (timer.current) clearTimeout(timer.current);
@@ -3757,11 +2702,9 @@ function CityAutocomplete({
         const filas = await buscar(q);
         setSugerencias(Array.isArray(filas) ? filas.slice(0, limite) : []);
         setAbierto(true);
-        setError("");
       } catch {
         setSugerencias([]);
         setAbierto(false);
-        setError(mensajeError);
       }
     }, 250);
   }
@@ -3779,8 +2722,8 @@ function CityAutocomplete({
     const departamento = departamentoDe(value);
     if (departamento) onSelect?.(value, departamento);
   }
-  return /* @__PURE__ */ jsxs30("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx40(
+  return /* @__PURE__ */ jsxs22("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx28(
       Input,
       {
         maxLength,
@@ -3799,7 +2742,7 @@ function CityAutocomplete({
         ...inputProps
       }
     ),
-    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx40("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-ink shadow-float", children: sugerencias.map((fila) => /* @__PURE__ */ jsx40("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs30(
+    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx28("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx28("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs22(
       "button",
       {
         type: "button",
@@ -3807,14 +2750,22 @@ function CityAutocomplete({
         onMouseDown: (event) => event.preventDefault(),
         onClick: () => elegir(fila),
         children: [
-          /* @__PURE__ */ jsx40("span", { className: "truncate font-medium text-fore", children: fila.city }),
-          /* @__PURE__ */ jsx40("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
+          /* @__PURE__ */ jsx28("span", { className: "truncate font-medium text-fore", children: fila.city }),
+          /* @__PURE__ */ jsx28("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
         ]
       }
-    ) }, `${fila.city}-${fila.department}`)) }),
-    error ? /* @__PURE__ */ jsx40("p", { role: "alert", className: "mt-1 text-xs text-bad", children: error }) : null
+    ) }, `${fila.city}-${fila.department}`)) })
   ] });
 }
+
+// src/utils/tabla.js
+var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
+var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
+var ROTULO_SECCION = "text-xs font-bold uppercase tracking-wider text-mute";
+var CELDA_DATO = "truncate text-xs text-mute";
+var CELDA_NUMERO = "text-right tabular-nums";
+var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
+var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
 
 // src/utils/estadoEquipo.js
 var ESTADOS_ITEM = {
@@ -3824,42 +2775,13 @@ var ESTADOS_ITEM = {
   sinVerificar: { etiqueta: "Sin verificar", tono: "mute", icono: "clock" }
 };
 var estadoItem = (clave) => ESTADOS_ITEM[clave] || ESTADOS_ITEM.sinVerificar;
-var REVISION = { etiqueta: "En revisi\xF3n", tono: "info", icono: "refresh" };
-var POR_COBRAR = { etiqueta: "Por cobrar", tono: "warn", icono: "clock" };
 var ESTADOS_CHIP = {
-  // — Dispositivos (#241) —
   pass: { etiqueta: "Certificado", tono: "pass", icono: "check" },
-  revision: REVISION,
-  enrevision: REVISION,
+  revision: { etiqueta: "En revisi\xF3n", tono: "info", icono: "refresh" },
   pendiente: { etiqueta: "Pendiente", tono: "mute", icono: "clock" },
-  falla: { etiqueta: "Con fallas", tono: "bad", icono: "alert" },
-  // — Documentos y pipelines —
-  borrador: { etiqueta: "Borrador", tono: "mute", icono: "edit" },
-  enviado: { etiqueta: "Enviado", tono: "info", icono: "send" },
-  aprobado: { etiqueta: "Aprobado", tono: "ok", icono: "check" },
-  rechazado: { etiqueta: "Rechazado", tono: "bad", icono: "close" },
-  anulado: { etiqueta: "Anulado", tono: "mute", icono: "close" },
-  cancelado: { etiqueta: "Cancelado", tono: "bad", icono: "close" },
-  // — Cobros y cuentas —
-  cobrado: { etiqueta: "Cobrado", tono: "pass", icono: "money" },
-  porcobrar: POR_COBRAR,
-  pagado: { etiqueta: "Pagado", tono: "pass", icono: "check" },
-  vencido: { etiqueta: "Vencido", tono: "bad", icono: "alert" },
-  activo: { etiqueta: "Activo", tono: "ok", icono: "check" },
-  pausado: { etiqueta: "Pausado", tono: "warn", icono: "clock" }
+  falla: { etiqueta: "Con fallas", tono: "bad", icono: "alert" }
 };
-function claveDeEstado(valor) {
-  return String(valor ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-}
-function estadoChip(clave) {
-  const normalizada = claveDeEstado(clave);
-  if (ESTADOS_CHIP[normalizada]) return ESTADOS_CHIP[normalizada];
-  if (normalizada.endsWith("a")) {
-    const masculina = `${normalizada.slice(0, -1)}o`;
-    if (ESTADOS_CHIP[masculina]) return ESTADOS_CHIP[masculina];
-  }
-  return ESTADOS_CHIP.pendiente;
-}
+var estadoChip = (clave) => ESTADOS_CHIP[clave] || ESTADOS_CHIP.pendiente;
 var LOCKS_DISPOSITIVO = {
   icloud: "iCloud / Find My",
   mdm: "MDM",
@@ -3891,28 +2813,28 @@ var GRADOS_CONDICION = {
 var gradoCondicion = (clave) => GRADOS_CONDICION[String(clave || "").trim().toUpperCase()] || null;
 var COLOR_BADGE = { ok: "green", warn: "orange", bad: "red", mute: "slate", info: "blue", pass: "green" };
 var colorBadge = (tono) => COLOR_BADGE[tono] || "slate";
-var CONDICION_UNIDAD = { NEW: "Nuevo", USED: "Seminuevo", REFURBISHED: "Reacondicionado" };
-var etiquetaCondicion = (clave) => {
-  const texto = String(clave ?? "").trim();
-  return CONDICION_UNIDAD[texto.toUpperCase()] || texto || "\u2014";
+var TONOS = {
+  punto: { ok: "bg-ok/15 text-ok", warn: "bg-warn/15 text-warn", bad: "bg-bad/15 text-bad", mute: "bg-ink-700 text-mute", info: "bg-info/15 text-info", pass: "bg-pass/15 text-pass" },
+  chip: { ok: "border-ok/30 bg-ok/10 text-ok", warn: "border-warn/30 bg-warn/10 text-warn", bad: "border-bad/30 bg-bad/10 text-bad", mute: "border-ink-600 bg-ink-800/40 text-mute", info: "border-info/30 bg-info/10 text-info", pass: "border-pass/30 bg-pass/10 text-pass" },
+  texto: { ok: "text-ok", warn: "text-warn", bad: "text-bad", mute: "text-mute", info: "text-info", pass: "text-pass" }
 };
 
 // src/components/SemaforoItem.jsx
-import { jsx as jsx41, jsxs as jsxs31 } from "react/jsx-runtime";
+import { jsx as jsx29, jsxs as jsxs23 } from "react/jsx-runtime";
 function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li", className, ...props }) {
   const config = estadoItem(estado);
   const Etiqueta = como === "div" ? "div" : "li";
-  return /* @__PURE__ */ jsxs31(
+  return /* @__PURE__ */ jsxs23(
     Etiqueta,
     {
       className: cn("flex items-center gap-2.5", className),
       "aria-label": etiqueta ? `${etiqueta}: ${config.etiqueta}` : config.etiqueta,
       ...props,
       children: [
-        /* @__PURE__ */ jsx41("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx41(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
-        /* @__PURE__ */ jsxs31("span", { className: "min-w-0 flex-1", children: [
-          /* @__PURE__ */ jsx41("span", { className: "block truncate text-sm", children: etiqueta }),
-          detalle && /* @__PURE__ */ jsx41("span", { className: "block truncate text-xs text-mute", children: detalle })
+        /* @__PURE__ */ jsx29("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx29(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+        /* @__PURE__ */ jsxs23("span", { className: "min-w-0 flex-1", children: [
+          /* @__PURE__ */ jsx29("span", { className: "block truncate text-sm", children: etiqueta }),
+          detalle && /* @__PURE__ */ jsx29("span", { className: "block truncate text-xs text-mute", children: detalle })
         ] })
       ]
     }
@@ -3920,30 +2842,30 @@ function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li",
 }
 
 // src/components/FilaChecklist.jsx
-import { jsx as jsx42, jsxs as jsxs32 } from "react/jsx-runtime";
+import { jsx as jsx30, jsxs as jsxs24 } from "react/jsx-runtime";
 function FilaChecklist({ etiqueta, estado = "sinVerificar", nota, accion, className }) {
   const config = estadoItem(estado);
-  return /* @__PURE__ */ jsxs32("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
-    /* @__PURE__ */ jsx42("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx42(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs32("div", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx42("p", { className: "truncate text-sm", children: etiqueta }),
-      nota && /* @__PURE__ */ jsx42("p", { className: "mt-0.5 text-xs text-mute", children: nota })
+  return /* @__PURE__ */ jsxs24("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
+    /* @__PURE__ */ jsx30("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx30(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs24("div", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx30("p", { className: "truncate text-sm", children: etiqueta }),
+      nota && /* @__PURE__ */ jsx30("p", { className: "mt-0.5 text-xs text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx42("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
+    /* @__PURE__ */ jsx30("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
     accion
   ] });
 }
 function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass", className }) {
   const completo = total > 0 && pasan === total;
-  return /* @__PURE__ */ jsxs32("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
-    /* @__PURE__ */ jsxs32("span", { className: completo ? "text-pass" : "text-mute", children: [
+  return /* @__PURE__ */ jsxs24("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
+    /* @__PURE__ */ jsxs24("span", { className: completo ? "text-pass" : "text-mute", children: [
       pasan,
       " de ",
       total,
       " ",
       sustantivo
     ] }),
-    fallas > 0 && /* @__PURE__ */ jsxs32("span", { className: "text-bad", children: [
+    fallas > 0 && /* @__PURE__ */ jsxs24("span", { className: "text-bad", children: [
       fallas,
       " ",
       fallas === 1 ? "falla" : "fallas"
@@ -3952,38 +2874,29 @@ function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass"
 }
 
 // src/components/ChipEstado.jsx
-import { jsx as jsx43, jsxs as jsxs33 } from "react/jsx-runtime";
-function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, title, className }) {
+import { jsx as jsx31, jsxs as jsxs25 } from "react/jsx-runtime";
+function ChipEstado({ estado = "pendiente", etiqueta, icono, className }) {
   const config = estadoChip(estado);
-  const texto = etiqueta || config.etiqueta;
-  return /* @__PURE__ */ jsxs33(
-    "span",
-    {
-      "data-estado": estado,
-      title: title ?? texto,
-      className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[tonoCanonico(tono || config.tono)], className),
-      children: [
-        /* @__PURE__ */ jsx43(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
-        texto
-      ]
-    }
-  );
+  return /* @__PURE__ */ jsxs25("span", { className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono], className), children: [
+    /* @__PURE__ */ jsx31(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+    etiqueta || config.etiqueta
+  ] });
 }
 
 // src/components/ChipsLocks.jsx
-import { jsx as jsx44, jsxs as jsxs34 } from "react/jsx-runtime";
+import { jsx as jsx32, jsxs as jsxs26 } from "react/jsx-runtime";
 function ChipsLocks({ locks = [], conEstado = false, className }) {
   if (!locks.length) return null;
-  return /* @__PURE__ */ jsx44("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
+  return /* @__PURE__ */ jsx32("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
     const config = estadoLock(lock.estado);
     const etiqueta = lock.etiqueta || LOCKS_DISPOSITIVO[lock.clave] || lock.clave;
-    return /* @__PURE__ */ jsxs34(
+    return /* @__PURE__ */ jsxs26(
       "li",
       {
         className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono]),
         title: lock.detalle || `${etiqueta}: ${config.etiqueta}`,
         children: [
-          /* @__PURE__ */ jsx44(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx32(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
           etiqueta,
           conEstado ? ` \xB7 ${config.etiqueta}` : ""
         ]
@@ -3994,955 +2907,103 @@ function ChipsLocks({ locks = [], conEstado = false, className }) {
 }
 
 // src/components/MedidorBateria.jsx
-import { jsx as jsx45, jsxs as jsxs35 } from "react/jsx-runtime";
-function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, mostrarEtiqueta = false, className }) {
+import { jsx as jsx33, jsxs as jsxs27 } from "react/jsx-runtime";
+function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, className }) {
   const hay = porcentaje !== null && porcentaje !== void 0 && porcentaje !== "" && Number.isFinite(Number(porcentaje));
   const valor = hay ? Number(porcentaje) : null;
   const tono = tonoBateria(hay ? valor : null);
   const texto = hay ? `${valor}%` : "\u2014";
   const title = hay ? `${etiqueta}: ${valor}%${ciclos ? ` \xB7 ${ciclos} ciclos` : ""}` : `${etiqueta}: sin dato`;
   if (variante === "chip") {
-    return /* @__PURE__ */ jsxs35("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: [
-      texto,
-      mostrarEtiqueta ? ` ${etiqueta.toLowerCase()}` : ""
-    ] });
+    return /* @__PURE__ */ jsx33("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: texto });
   }
-  return /* @__PURE__ */ jsxs35("div", { className: cn("space-y-1", className), title, children: [
-    /* @__PURE__ */ jsxs35("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx45("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
-      /* @__PURE__ */ jsx45("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
+  return /* @__PURE__ */ jsxs27("div", { className: cn("space-y-1", className), title, children: [
+    /* @__PURE__ */ jsxs27("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx33("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
+      /* @__PURE__ */ jsx33("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
     ] }),
-    hay ? /* @__PURE__ */ jsx45(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx45(Badge, { color: "slate", children: "Sin dato" })
-  ] });
-}
-
-// src/components/MedidorStock.jsx
-import { jsx as jsx46, jsxs as jsxs36 } from "react/jsx-runtime";
-function MedidorStock({
-  stock,
-  umbral,
-  variante = "texto",
-  etiqueta,
-  mostrarUmbral = true,
-  vacio = "Sin dato",
-  className
-}) {
-  const sinDato = stock === null || stock === void 0 || stock === "";
-  const n = Number(stock);
-  const u = Number(umbral);
-  if (sinDato || !Number.isFinite(n)) {
-    return /* @__PURE__ */ jsx46("span", { className: cn("text-xs text-mute", className), children: vacio });
-  }
-  const tieneUmbral = Number.isFinite(u);
-  const agotado = n <= 0;
-  const bajo = !agotado && tieneUmbral && n <= u;
-  const tono = agotado ? "bad" : bajo ? "warn" : "ok";
-  const texto = agotado ? "Agotado" : bajo ? "Reponer" : "En stock";
-  const detalle = tieneUmbral ? `${n} de ${u}` : String(n);
-  if (variante === "barra") {
-    const techo = tieneUmbral ? Math.max(u, n) : n;
-    const porcentaje = techo > 0 ? Math.min(100, Math.round(n / techo * 100)) : 0;
-    return /* @__PURE__ */ jsxs36("span", { className: cn("block min-w-0 space-y-1", className), children: [
-      /* @__PURE__ */ jsxs36("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx46("span", { className: cn("font-semibold", tono === "bad" ? "text-bad" : tono === "warn" ? "text-warn" : "text-ok"), children: texto }),
-        /* @__PURE__ */ jsx46("span", { className: "tabular-nums text-mute", children: detalle })
-      ] }),
-      /* @__PURE__ */ jsx46("span", { role: "progressbar", "aria-label": etiqueta ?? `Stock ${detalle}`, "aria-valuenow": porcentaje, "aria-valuemin": 0, "aria-valuemax": 100, className: "block h-1.5 overflow-hidden rounded-full bg-ink-700", children: /* @__PURE__ */ jsx46("span", { className: cn("block h-full rounded-full transition-[width]", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), style: { width: `${porcentaje}%` } }) })
-    ] });
-  }
-  return /* @__PURE__ */ jsxs36(
-    "span",
-    {
-      className: cn(
-        "inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold",
-        variante === "chip" && "rounded-lg border px-2 py-0.5",
-        variante === "chip" && (tono === "bad" ? "border-bad/30 bg-bad/10 text-bad" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn" : "border-ok/30 bg-ok/10 text-ok"),
-        variante === "texto" && (tono === "bad" ? "text-bad" : tono === "warn" ? "text-warn" : "text-ok"),
-        className
-      ),
-      title: etiqueta ?? `${texto} \xB7 ${detalle}`,
-      children: [
-        variante !== "chip" && /* @__PURE__ */ jsx46("span", { className: cn("h-1.5 w-1.5 rounded-full", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx46("span", { className: "tabular-nums", children: detalle }),
-        mostrarUmbral && /* @__PURE__ */ jsx46("span", { className: "font-normal text-mute", children: texto })
-      ]
-    }
-  );
-}
-
-// src/components/ContadorLote.jsx
-import { jsx as jsx47, jsxs as jsxs37 } from "react/jsx-runtime";
-function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFaltan = false, vacio = "Sin dato", className }) {
-  const r = Number(recibidos);
-  const t = Number(total);
-  if (recibidos === null || recibidos === void 0 || !Number.isFinite(t) || t <= 0 || !Number.isFinite(r)) {
-    return /* @__PURE__ */ jsx47("span", { className: cn("text-xs text-mute", className), children: vacio });
-  }
-  const hechas = Math.max(0, Math.min(t, Math.trunc(r)));
-  const completo = hechas >= t;
-  const tono = completo ? "ok" : hechas > 0 ? "warn" : "mute";
-  const faltan = t - hechas;
-  const texto = sufijo ? `${hechas} de ${t} ${sufijo}` : `${hechas} de ${t}`;
-  if (variante === "barra") {
-    const porcentaje = Math.round(hechas / t * 100);
-    return /* @__PURE__ */ jsxs37("span", { className: cn("block min-w-0 space-y-1", className), children: [
-      /* @__PURE__ */ jsxs37("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx47("span", { className: cn("font-semibold", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
-        mostrarFaltan && !completo && /* @__PURE__ */ jsxs37("span", { className: "text-mute", children: [
-          "faltan ",
-          faltan
-        ] })
-      ] }),
-      /* @__PURE__ */ jsx47(
-        "span",
-        {
-          role: "progressbar",
-          "aria-label": sufijo ? `${hechas} de ${t} ${sufijo}` : `${hechas} de ${t}`,
-          "aria-valuenow": hechas,
-          "aria-valuemin": 0,
-          "aria-valuemax": t,
-          className: "block h-1.5 overflow-hidden rounded-full bg-ink-700",
-          children: /* @__PURE__ */ jsx47("span", { className: cn("block h-full rounded-full transition-[width]", tono === "ok" ? "bg-ok" : tono === "warn" ? "bg-warn" : "bg-mute"), style: { width: `${porcentaje}%` } })
-        }
-      )
-    ] });
-  }
-  if (variante === "chip") {
-    return /* @__PURE__ */ jsxs37(
-      "span",
-      {
-        className: cn(
-          "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold",
-          tono === "ok" ? "border-ok/30 bg-ok/10 text-ok" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn" : "border-ink-500 bg-ink-700 text-mute",
-          className
-        ),
-        title: texto,
-        children: [
-          /* @__PURE__ */ jsx47("span", { className: "tabular-nums", children: texto }),
-          mostrarFaltan && !completo && /* @__PURE__ */ jsxs37("span", { className: "font-normal", children: [
-            "\xB7 faltan ",
-            faltan
-          ] })
-        ]
-      }
-    );
-  }
-  return /* @__PURE__ */ jsxs37("span", { className: cn("inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs", className), title: texto, children: [
-    /* @__PURE__ */ jsx47("span", { className: cn("font-semibold tabular-nums", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
-    mostrarFaltan && !completo && /* @__PURE__ */ jsxs37("span", { className: "text-mute", children: [
-      "faltan ",
-      faltan
-    ] })
-  ] });
-}
-
-// src/utils/abastecimiento.js
-var normalizarClave = (clave) => String(clave ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, "_");
-var PRIORIDADES_COMPRA = {
-  urgente: { etiqueta: "Urgente", tono: "bad", orden: 0 },
-  alta: { etiqueta: "Alta", tono: "warn", orden: 1 },
-  normal: { etiqueta: "Normal", tono: "info", orden: 2 },
-  baja: { etiqueta: "Baja", tono: "mute", orden: 3 }
-};
-var ALIAS_PRIORIDAD = { media: "normal", media_alta: "alta", media_baja: "baja" };
-function claveDePrioridad(clave) {
-  const k = normalizarClave(clave);
-  return ALIAS_PRIORIDAD[k] || (PRIORIDADES_COMPRA[k] ? k : "normal");
-}
-var prioridadDe = (clave) => PRIORIDADES_COMPRA[claveDePrioridad(clave)];
-var etiquetaPrioridad = (clave) => prioridadDe(clave).etiqueta;
-var tonoPrioridad = (clave) => prioridadDe(clave).tono;
-var ordenDePrioridad = (clave) => prioridadDe(clave).orden;
-function ordenarPorPrioridad(lista = [], clave = "prioridad") {
-  return [...Array.isArray(lista) ? lista : []].sort(
-    (a, b) => ordenDePrioridad(a?.[clave]) - ordenDePrioridad(b?.[clave])
-  );
-}
-var ORIGENES_NECESIDAD = {
-  sale_no_stock: { etiqueta: "Venta sin stock", tono: "warn", icono: "cart" },
-  reservation_no_stock: { etiqueta: "Reserva sin unidad", tono: "info", icono: "clock" },
-  quantity_over_stock: { etiqueta: "Venta sobre stock", tono: "info", icono: "trending" },
-  below_reorder: { etiqueta: "Bajo reposici\xF3n", tono: "warn", icono: "inventory" },
-  order_committed: { etiqueta: "Pedido comprometido", tono: "info", icono: "receipt" },
-  manual: { etiqueta: "Manual", tono: "mute", icono: "edit" }
-};
-function origenDe(clave) {
-  const k = normalizarClave(clave);
-  if (ORIGENES_NECESIDAD[k]) return ORIGENES_NECESIDAD[k];
-  const texto = String(clave ?? "").trim();
-  return { etiqueta: texto || "Sin origen", tono: "mute", icono: "tag" };
-}
-var etiquetaOrigen = (clave) => origenDe(clave).etiqueta;
-var tonoOrigen = (clave) => origenDe(clave).tono;
-var iconoOrigen = (clave) => origenDe(clave).icono;
-var ESTADOS_NECESIDAD = {
-  abierta: { etiqueta: "Por comprar", tono: "warn", icono: "cart" },
-  asignada: { etiqueta: "Asignada", tono: "info", icono: "user" },
-  comprada: { etiqueta: "Comprada", tono: "ok", icono: "check" },
-  preparar_envio: { etiqueta: "Preparar env\xEDo", tono: "info", icono: "package" },
-  en_transito: { etiqueta: "En tr\xE1nsito", tono: "info", icono: "truck" },
-  recepcion: { etiqueta: "En recepci\xF3n", tono: "warn", icono: "box" },
-  recibida: { etiqueta: "Recibida", tono: "ok", icono: "box" },
-  incidencia: { etiqueta: "Con incidencia", tono: "bad", icono: "alert" },
-  cancelada: { etiqueta: "Cancelada", tono: "mute", icono: "close" }
-};
-var ALIAS_ESTADO = {
-  por_comprar: "abierta",
-  comprando: "asignada",
-  asignado: "asignada",
-  comprado: "comprada",
-  recibido: "recibida"
-};
-function claveDeEstado2(clave) {
-  const k = normalizarClave(clave);
-  return ALIAS_ESTADO[k] || (ESTADOS_NECESIDAD[k] ? k : "abierta");
-}
-var estadoNecesidad = (clave) => ESTADOS_NECESIDAD[claveDeEstado2(clave)];
-var etiquetaNecesidad = (clave) => estadoNecesidad(clave).etiqueta;
-var tonoNecesidad = (clave) => estadoNecesidad(clave).tono;
-var PASOS_NECESIDAD = ["abierta", "asignada", "comprada", "preparar_envio", "en_transito", "recepcion", "recibida"];
-function conClaves(mapa, defecto) {
-  const porClave = new Map(Object.keys(mapa).map((clave) => [normalizarClave(clave), clave]));
-  const canonica = (valor) => porClave.get(normalizarClave(valor)) || defecto;
-  return { canonica, de: (valor) => mapa[canonica(valor)] };
-}
-var ESTADOS_COMPRA = {
-  comprada: { etiqueta: "Comprada", tono: "info", icono: "check" },
-  preparando: { etiqueta: "Preparando", tono: "info", icono: "package" },
-  en_transito: { etiqueta: "En tr\xE1nsito", tono: "info", icono: "truck" },
-  recibida: { etiqueta: "Recibida", tono: "ok", icono: "box" },
-  cancelada: { etiqueta: "Cancelada", tono: "mute", icono: "close" }
-};
-var COMPRA = conClaves(ESTADOS_COMPRA, "comprada");
-var claveDeEstadoCompra = COMPRA.canonica;
-var estadoCompra = COMPRA.de;
-var etiquetaCompra = (clave) => estadoCompra(clave).etiqueta;
-var tonoCompra = (clave) => estadoCompra(clave).tono;
-var ESTADOS_ENVIO = {
-  borrador: { etiqueta: "Borrador", tono: "mute", icono: "edit" },
-  preparando: { etiqueta: "Preparando", tono: "info", icono: "package" },
-  despachado: { etiqueta: "Despachado", tono: "info", icono: "truck" },
-  en_transito: { etiqueta: "En tr\xE1nsito", tono: "info", icono: "truck" },
-  recepcion_parcial: { etiqueta: "Recepci\xF3n parcial", tono: "warn", icono: "box" },
-  recibido: { etiqueta: "Recibido", tono: "ok", icono: "check" },
-  con_incidencia: { etiqueta: "Con incidencia", tono: "bad", icono: "alert" },
-  cancelado: { etiqueta: "Cancelado", tono: "mute", icono: "close" }
-};
-var ENVIO = conClaves(ESTADOS_ENVIO, "borrador");
-var claveDeEstadoEnvio = ENVIO.canonica;
-var estadoEnvio = ENVIO.de;
-var etiquetaEnvio = (clave) => estadoEnvio(clave).etiqueta;
-var tonoEnvio = (clave) => estadoEnvio(clave).tono;
-var PASOS_ENVIO = ["borrador", "preparando", "despachado", "en_transito", "recibido"];
-var METODOS_ENVIO = {
-  bus: { etiqueta: "Bus", icono: "truck" },
-  transportadora: { etiqueta: "Transportadora", icono: "truck" },
-  aex: { etiqueta: "AEX", icono: "send" },
-  importacion: { etiqueta: "Importaci\xF3n", icono: "globe" }
-};
-var METODO = conClaves(METODOS_ENVIO, "bus");
-var claveDeMetodoEnvio = METODO.canonica;
-var metodoEnvio = METODO.de;
-var etiquetaMetodoEnvio = (clave) => metodoEnvio(clave).etiqueta;
-var iconoMetodoEnvio = (clave) => metodoEnvio(clave).icono;
-var ESTADOS_RECEPCION = {
-  borrador: { etiqueta: "Borrador", tono: "mute", icono: "edit" },
-  confirmada: { etiqueta: "Confirmada", tono: "ok", icono: "check" },
-  cancelada: { etiqueta: "Cancelada", tono: "mute", icono: "close" }
-};
-var RECEPCION = conClaves(ESTADOS_RECEPCION, "borrador");
-var claveDeEstadoRecepcion = RECEPCION.canonica;
-var estadoRecepcion = RECEPCION.de;
-var etiquetaRecepcion = (clave) => estadoRecepcion(clave).etiqueta;
-var tonoRecepcion = (clave) => estadoRecepcion(clave).tono;
-var COLOR_DE_TONO = { ok: "green", bad: "red", warn: "orange", info: "blue", mute: "slate" };
-var colorDeTono = (tono) => COLOR_DE_TONO[tono] || "slate";
-
-// src/components/ChipPrioridad.jsx
-import { jsx as jsx48 } from "react/jsx-runtime";
-function ChipPrioridad({ prioridad = "media", etiqueta, title, className }) {
-  const tono = tonoPrioridad(prioridad);
-  const texto = etiqueta || etiquetaPrioridad(prioridad);
-  const CLASES3 = {
-    bad: "border-bad/30 bg-bad/10 text-bad",
-    warn: "border-warn/30 bg-warn/10 text-warn",
-    ok: "border-ok/30 bg-ok/10 text-ok",
-    info: "border-info/30 bg-info/10 text-info",
-    mute: "border-ink-500 bg-ink-700 text-mute"
-  };
-  return /* @__PURE__ */ jsx48(
-    "span",
-    {
-      className: cn("inline-flex items-center whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES3[tono] || CLASES3.mute, className),
-      title: title || `Prioridad ${String(texto).toLowerCase()}`,
-      children: texto
-    }
-  );
-}
-
-// src/components/ChipOrigen.jsx
-import { jsx as jsx49, jsxs as jsxs38 } from "react/jsx-runtime";
-function ChipOrigen({ origen, etiqueta, title, className }) {
-  const tono = tonoOrigen(origen);
-  const texto = etiqueta || etiquetaOrigen(origen);
-  const CLASES3 = {
-    bad: "border-bad/30 bg-bad/10 text-bad",
-    warn: "border-warn/30 bg-warn/10 text-warn",
-    ok: "border-ok/30 bg-ok/10 text-ok",
-    info: "border-info/30 bg-info/10 text-info",
-    mute: "border-ink-500 bg-ink-700 text-mute"
-  };
-  return /* @__PURE__ */ jsxs38(
-    "span",
-    {
-      className: cn("inline-flex min-w-0 items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES3[tono] || CLASES3.mute, className),
-      title: title || texto,
-      children: [
-        /* @__PURE__ */ jsx49(Icon, { name: iconoOrigen(origen), className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx49("span", { className: "truncate", children: texto })
-      ]
-    }
-  );
-}
-
-// src/components/ContadoresCompra.jsx
-import { jsx as jsx50, jsxs as jsxs39 } from "react/jsx-runtime";
-function ContadoresCompra({ pendiente = 0, comprado = 0, faltan = 0, variante = "texto", className }) {
-  const conteo = (valor) => Math.max(0, Math.trunc(Number(valor) || 0));
-  const datos = [
-    { clave: "pendiente", etiqueta: "pendiente", valor: conteo(pendiente), tono: conteo(pendiente) > 0 ? "text-warn" : "text-mute" },
-    { clave: "comprado", etiqueta: "comprado", valor: conteo(comprado), tono: "text-ok" },
-    { clave: "faltan", etiqueta: "faltan", valor: conteo(faltan), tono: conteo(faltan) > 0 ? "text-bad" : "text-mute" }
-  ];
-  if (variante === "chips") {
-    return /* @__PURE__ */ jsx50("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), children: datos.map((dato) => /* @__PURE__ */ jsxs39("span", { className: "inline-flex items-center gap-1 rounded-lg border border-ink-600 bg-ink-800 px-2 py-0.5 text-[11px] text-mute", children: [
-      /* @__PURE__ */ jsx50("b", { className: cn("tabular-nums", dato.tono), children: dato.valor }),
-      dato.etiqueta
-    ] }, dato.clave)) });
-  }
-  return /* @__PURE__ */ jsx50("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", className), "aria-label": "Conteo de la necesidad", children: datos.map((dato) => /* @__PURE__ */ jsxs39("span", { children: [
-    /* @__PURE__ */ jsx50("b", { className: cn("tabular-nums", dato.tono), children: dato.valor }),
-    " ",
-    dato.etiqueta
-  ] }, dato.clave)) });
-}
-
-// src/components/ResumenDestinos.jsx
-import { jsx as jsx51, jsxs as jsxs40 } from "react/jsx-runtime";
-function ResumenDestinos({ destinos = [], ariaLabel = "Destinos", onElegir, className }) {
-  const lista = (Array.isArray(destinos) ? destinos : []).filter((destino) => destino && Number(destino.cantidad) > 0);
-  if (!lista.length) return null;
-  return /* @__PURE__ */ jsx51("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-mute", className), "aria-label": ariaLabel, children: lista.map((destino, indice) => /* @__PURE__ */ jsxs40("span", { className: "flex min-w-0 items-center gap-1.5", children: [
-    indice > 0 && /* @__PURE__ */ jsx51("span", { "aria-hidden": "true", children: "\xB7" }),
-    onElegir ? /* @__PURE__ */ jsxs40(
-      "button",
-      {
-        type: "button",
-        onClick: () => onElegir(destino),
-        title: destino.detalle || void 0,
-        className: "min-w-0 truncate transition hover:text-fore",
-        children: [
-          /* @__PURE__ */ jsx51("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
-          " ",
-          destino.etiqueta
-        ]
-      }
-    ) : /* @__PURE__ */ jsxs40("span", { className: "min-w-0 truncate", title: destino.detalle || void 0, children: [
-      /* @__PURE__ */ jsx51("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
-      " ",
-      destino.etiqueta
-    ] })
-  ] }, destino.id ?? `${destino.etiqueta}-${indice}`)) });
-}
-
-// src/utils/fecha.js
-var ES_PY = "es-PY";
-var OPCIONES_HORA = { hour12: false };
-var SOLO_DIA = /^(\d{4})-(\d{2})-(\d{2})$/;
-function diaDeCalendario(value) {
-  if (typeof value !== "string") return null;
-  const partes = SOLO_DIA.exec(value.trim());
-  if (!partes) return null;
-  const anio = Number(partes[1]);
-  const mes = Number(partes[2]);
-  const dia = Number(partes[3]);
-  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
-  const real = fecha.getUTCFullYear() === anio && fecha.getUTCMonth() === mes - 1 && fecha.getUTCDate() === dia;
-  return real ? fecha : null;
-}
-function fechaValida(value) {
-  if (!value) return null;
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
-  if (typeof value === "string") {
-    const partes = SOLO_DIA.exec(value.trim());
-    if (partes) {
-      const anio = Number(partes[1]);
-      const mes = Number(partes[2]);
-      const dia = Number(partes[3]);
-      const fecha2 = new Date(anio, mes - 1, dia);
-      const real = fecha2.getFullYear() === anio && fecha2.getMonth() === mes - 1 && fecha2.getDate() === dia;
-      return real ? fecha2 : null;
-    }
-  }
-  const fecha = new Date(value);
-  return Number.isNaN(fecha.getTime()) ? null : fecha;
-}
-function opcionesDe(vacio, opciones) {
-  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio, timeZone: vacio.timeZone };
-  return { vacio, timeZone: opciones?.timeZone };
-}
-function formateador(formato, timeZone) {
-  return new Intl.DateTimeFormat(ES_PY, timeZone ? { ...formato, timeZone } : formato);
-}
-function textoFormateado(value, formato, { vacio = "\u2014", timeZone } = {}) {
-  const dia = diaDeCalendario(value);
-  if (dia) return formateador(formato, "UTC").format(dia);
-  const fecha = fechaValida(value);
-  if (!fecha) return vacio;
-  return formateador(formato, timeZone).format(fecha);
-}
-function fechaHora(value, vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
-  return textoFormateado(value, { dateStyle: "short", timeStyle: "short", ...OPCIONES_HORA }, { vacio: vacioFinal ?? "\u2014", timeZone });
-}
-function fechaDia(value, vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
-  return textoFormateado(value, {}, { vacio: vacioFinal ?? "\u2014", timeZone });
-}
-function fechaHoraCorta(value, vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
-  return textoFormateado(value, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, { vacio: vacioFinal ?? "\u2014", timeZone });
-}
-function fechaCorta(value, vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
-  const vacioReal = vacioFinal ?? "\u2014";
-  const dia = diaDeCalendario(value);
-  const fecha = dia || fechaValida(value);
-  if (!fecha) return vacioReal;
-  const zona = dia ? "UTC" : timeZone;
-  const parteDia = formateador({ day: "2-digit", month: "short" }, zona).format(fecha);
-  const parteHora = formateador({ hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, zona).format(fecha);
-  return `${parteDia} \xB7 ${parteHora}`;
-}
-
-// src/components/Vencimiento.jsx
-import { jsx as jsx52 } from "react/jsx-runtime";
-function estadoVencimiento(fecha, { hoy = /* @__PURE__ */ new Date(), diasAviso = 7 } = {}) {
-  const vence = fecha ? new Date(fecha) : null;
-  if (!vence || Number.isNaN(vence.getTime())) return { texto: "\u2014", tono: "mute", vencido: false, dias: null, titulo: "Sin vencimiento cargado" };
-  const titulo2 = `Vence el ${vence.toLocaleDateString("es-PY")}`;
-  const dias = Math.ceil((vence.getTime() - hoy.getTime()) / 864e5);
-  if (dias < 0) return { texto: "venci\xF3", tono: "bad", vencido: true, dias, titulo: titulo2 };
-  if (dias <= diasAviso) return { texto: `en ${dias} d`, tono: "warn", vencido: false, dias, titulo: titulo2 };
-  return { texto: fechaCorta(vence), tono: "mute", vencido: false, dias, titulo: titulo2 };
-}
-var CLASES = {
-  bad: "text-bad",
-  warn: "text-warn",
-  ok: "text-ok",
-  mute: "text-mute"
-};
-var CHIP = {
-  bad: "border-bad/30 bg-bad/10 text-bad",
-  warn: "border-warn/30 bg-warn/10 text-warn",
-  ok: "border-ok/30 bg-ok/10 text-ok",
-  mute: "border-ink-500 bg-ink-700 text-mute"
-};
-function Vencimiento({ fecha, variante = "texto", diasAviso = 7, hoy, texto, vacio = "\u2014", className }) {
-  if (!fecha) return /* @__PURE__ */ jsx52("span", { className: cn("text-xs text-mute", className), children: vacio });
-  const estado = estadoVencimiento(fecha, { hoy, diasAviso });
-  const contenido = texto || estado.texto;
-  if (variante === "chip") {
-    return /* @__PURE__ */ jsx52("span", { className: cn("inline-flex items-center whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold tabular-nums", CHIP[estado.tono] || CHIP.mute, className), title: estado.titulo, children: contenido });
-  }
-  return /* @__PURE__ */ jsx52("span", { className: cn("whitespace-nowrap text-xs font-medium tabular-nums", CLASES[estado.tono] || CLASES.mute, className), title: estado.titulo, children: contenido });
-}
-
-// src/components/TarjetaNecesidad.jsx
-import { Fragment as Fragment3, jsx as jsx53, jsxs as jsxs41 } from "react/jsx-runtime";
-function TarjetaNecesidad({
-  producto,
-  variante,
-  prioridad,
-  estado,
-  origen,
-  centro,
-  fechaPrometida,
-  diasAviso,
-  vinculo,
-  destinos,
-  onElegirDestino,
-  observaciones,
-  pendiente,
-  comprado,
-  faltan,
-  onAbrir,
-  acciones,
-  className
-}) {
-  const est = estadoNecesidad(estado);
-  const titulo2 = /* @__PURE__ */ jsxs41(Fragment3, { children: [
-    /* @__PURE__ */ jsx53("span", { className: "block truncate font-semibold", children: producto || "Sin producto" }),
-    variante ? /* @__PURE__ */ jsx53("span", { className: "block truncate text-xs text-mute", children: variante }) : null
-  ] });
-  return /* @__PURE__ */ jsxs41("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
-    /* @__PURE__ */ jsxs41("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsx53("div", { className: "min-w-0", children: onAbrir ? /* @__PURE__ */ jsx53("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2 }),
-      /* @__PURE__ */ jsx53(ChipPrioridad, { prioridad, className: "shrink-0" })
-    ] }),
-    /* @__PURE__ */ jsxs41("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
-      /* @__PURE__ */ jsx53(Badge, { color: colorDeTono(est.tono), children: est.etiqueta }),
-      origen ? /* @__PURE__ */ jsx53(ChipOrigen, { origen }) : null,
-      centro ? /* @__PURE__ */ jsxs41("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx53(Icon, { name: "building", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx53("span", { className: "truncate", children: centro })
-      ] }) : null,
-      fechaPrometida ? /* @__PURE__ */ jsxs41("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx53(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx53(Vencimiento, { fecha: fechaPrometida, diasAviso })
-      ] }) : null,
-      vinculo?.etiqueta ? vinculo.onClick ? /* @__PURE__ */ jsxs41("button", { type: "button", onClick: vinculo.onClick, className: "inline-flex min-w-0 items-center gap-1 transition hover:text-fore", children: [
-        /* @__PURE__ */ jsx53(Icon, { name: "receipt", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx53("span", { className: "truncate", children: vinculo.etiqueta })
-      ] }) : /* @__PURE__ */ jsxs41("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx53(Icon, { name: "receipt", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx53("span", { className: "truncate", children: vinculo.etiqueta })
-      ] }) : null
-    ] }),
-    /* @__PURE__ */ jsx53(ContadoresCompra, { className: "mt-2", pendiente, comprado, faltan }),
-    Array.isArray(destinos) && destinos.length > 0 ? /* @__PURE__ */ jsx53("div", { className: "mt-1.5", children: /* @__PURE__ */ jsx53(ResumenDestinos, { destinos, onElegir: onElegirDestino }) }) : null,
-    observaciones ? /* @__PURE__ */ jsx53("p", { className: "mt-1.5 text-xs text-mute", children: observaciones }) : null,
-    acciones ? /* @__PURE__ */ jsx53("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
-  ] });
-}
-
-// src/components/TarjetaCompra.jsx
-import { Fragment as Fragment4, jsx as jsx54, jsxs as jsxs42 } from "react/jsx-runtime";
-function TarjetaCompra({
-  codigo,
-  proveedor,
-  referencia,
-  moneda = "PYG",
-  simbolo,
-  costo,
-  estado,
-  unidades,
-  conImei,
-  origen,
-  destino,
-  notas,
-  onAbrir,
-  acciones,
-  className
-}) {
-  const est = estadoCompra(estado);
-  const titulo2 = /* @__PURE__ */ jsxs42(Fragment4, { children: [
-    /* @__PURE__ */ jsx54("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
-    /* @__PURE__ */ jsx54("span", { className: "block truncate font-semibold", children: proveedor || "Sin proveedor" })
-  ] });
-  return /* @__PURE__ */ jsxs42("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
-    /* @__PURE__ */ jsxs42("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs42("div", { className: "min-w-0", children: [
-        onAbrir ? /* @__PURE__ */ jsx54("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
-        referencia ? /* @__PURE__ */ jsxs42("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [
-          "Ref. ",
-          referencia
-        ] }) : null
-      ] }),
-      /* @__PURE__ */ jsx54(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
-    ] }),
-    /* @__PURE__ */ jsxs42("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
-      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx54(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null,
-      costo !== null && costo !== void 0 && costo !== "" ? /* @__PURE__ */ jsxs42("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx54(Icon, { name: "money", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx54(Money, { value: costo, currency: moneda, simbolo })
-      ] }) : null,
-      origen ? /* @__PURE__ */ jsxs42("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx54(Icon, { name: "building", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx54("span", { className: "truncate", children: origen })
-      ] }) : null,
-      destino ? /* @__PURE__ */ jsxs42("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx54(Icon, { name: "arrowRight", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx54("span", { className: "truncate", children: destino })
-      ] }) : null
-    ] }),
-    notas ? /* @__PURE__ */ jsx54("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
-    acciones ? /* @__PURE__ */ jsx54("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
-  ] });
-}
-
-// src/components/TarjetaLote.jsx
-import { Fragment as Fragment5, jsx as jsx55, jsxs as jsxs43 } from "react/jsx-runtime";
-function TarjetaLote({
-  codigo,
-  estado,
-  origen,
-  destino,
-  metodo,
-  empresa,
-  guia,
-  responsable,
-  eta,
-  unidades,
-  conImei,
-  notas,
-  onAbrir,
-  acciones,
-  className
-}) {
-  const est = estadoEnvio(estado);
-  const ruta = [origen, destino].filter(Boolean).join(" \u2192 ");
-  const titulo2 = /* @__PURE__ */ jsxs43(Fragment5, { children: [
-    /* @__PURE__ */ jsx55("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
-    /* @__PURE__ */ jsx55("span", { className: "block truncate font-semibold", children: ruta || "Sin origen ni destino" })
-  ] });
-  return /* @__PURE__ */ jsxs43("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
-    /* @__PURE__ */ jsxs43("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs43("div", { className: "min-w-0", children: [
-        onAbrir ? /* @__PURE__ */ jsx55("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
-        empresa || guia ? /* @__PURE__ */ jsx55("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [empresa, guia ? `Gu\xEDa ${guia}` : null].filter(Boolean).join(" \xB7 ") }) : null
-      ] }),
-      /* @__PURE__ */ jsx55(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
-    ] }),
-    /* @__PURE__ */ jsxs43("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
-      metodo ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx55(Icon, { name: iconoMetodoEnvio(metodo), className: "h-3.5 w-3.5 shrink-0" }),
-        etiquetaMetodoEnvio(metodo)
-      ] }) : null,
-      responsable ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx55(Icon, { name: "user", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx55("span", { className: "truncate", children: responsable })
-      ] }) : null,
-      eta ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx55(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx55(Vencimiento, { fecha: eta })
-      ] }) : null,
-      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx55(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null
-    ] }),
-    notas ? /* @__PURE__ */ jsx55("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
-    acciones ? /* @__PURE__ */ jsx55("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
-  ] });
-}
-
-// src/components/TarjetaRecepcion.jsx
-import { Fragment as Fragment6, jsx as jsx56, jsxs as jsxs44 } from "react/jsx-runtime";
-function TarjetaRecepcion({
-  codigo,
-  estado,
-  origen,
-  destino,
-  metodo,
-  eta,
-  unidades,
-  conImei,
-  deposito,
-  depositoSugerido,
-  llegada,
-  notas,
-  onAbrir,
-  acciones,
-  className
-}) {
-  const est = estadoEnvio(estado);
-  const ruta = [origen, destino].filter(Boolean).join(" \u2192 ");
-  const depositoTexto = deposito ?? depositoSugerido;
-  const titulo2 = /* @__PURE__ */ jsxs44(Fragment6, { children: [
-    /* @__PURE__ */ jsx56("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
-    /* @__PURE__ */ jsx56("span", { className: "block truncate font-semibold", children: ruta || "Sin origen ni destino" })
-  ] });
-  return /* @__PURE__ */ jsxs44("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
-    /* @__PURE__ */ jsxs44("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs44("div", { className: "min-w-0", children: [
-        onAbrir ? /* @__PURE__ */ jsx56("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
-        llegada ? /* @__PURE__ */ jsxs44("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [
-          "Lleg\xF3 ",
-          llegada
-        ] }) : null
-      ] }),
-      /* @__PURE__ */ jsx56(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
-    ] }),
-    /* @__PURE__ */ jsxs44("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
-      metodo ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx56(Icon, { name: iconoMetodoEnvio(metodo), className: "h-3.5 w-3.5 shrink-0" }),
-        etiquetaMetodoEnvio(metodo)
-      ] }) : null,
-      eta ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx56(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx56(Vencimiento, { fecha: eta })
-      ] }) : null,
-      depositoTexto ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx56(Icon, { name: "box", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx56("span", { className: "truncate", children: depositoTexto })
-      ] }) : null,
-      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx56(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null
-    ] }),
-    notas ? /* @__PURE__ */ jsx56("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
-    acciones ? /* @__PURE__ */ jsx56("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
-  ] });
-}
-
-// src/components/CodigoQr.jsx
-import { useEffect as useEffect7, useState as useState16 } from "react";
-
-// src/utils/qr.js
-var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
-async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES.nivel, margen = QR_OPCIONES.margen } = {}) {
-  const texto = String(valor ?? "").trim();
-  if (!texto) return "";
-  try {
-    const { default: QRCode } = await import("qrcode");
-    return await QRCode.toDataURL(texto, { errorCorrectionLevel: nivel, margin: margen, width: ancho });
-  } catch {
-    return "";
-  }
-}
-
-// src/components/CodigoQr.jsx
-import { jsx as jsx57 } from "react/jsx-runtime";
-function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
-  const [imagen, setImagen] = useState16("");
-  useEffect7(() => {
-    let activo = true;
-    qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
-      if (activo) setImagen(data);
-    });
-    return () => {
-      activo = false;
-    };
-  }, [valor, ancho, nivel, margen]);
-  if (!imagen) return null;
-  return /* @__PURE__ */ jsx57("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
-}
-
-// src/components/EtiquetaLote.jsx
-import { jsx as jsx58, jsxs as jsxs45 } from "react/jsx-runtime";
-function EtiquetaLote({
-  codigo,
-  numero,
-  total,
-  producto,
-  variante,
-  serial,
-  pendienteImei = false,
-  pedido,
-  destino,
-  qr,
-  qrValor,
-  nota,
-  className
-}) {
-  return /* @__PURE__ */ jsxs45("div", { className: cn("w-full max-w-[320px] rounded-xl border-2 border-[#10161a] bg-white p-3 text-[#10161a]", className), children: [
-    /* @__PURE__ */ jsxs45("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsx58("b", { className: "font-mono text-sm", children: codigo || "ENV-\u2026" }),
-      qr ? /* @__PURE__ */ jsx58("img", { src: qr, alt: "QR del lote", className: "h-16 w-16" }) : null,
-      !qr && qrValor ? /* @__PURE__ */ jsx58(CodigoQr, { valor: qrValor, ancho: 96, alt: "QR del lote", className: "h-16 w-16 rounded-md bg-white p-0" }) : null
-    ] }),
-    total ? /* @__PURE__ */ jsxs45("p", { className: "mt-1 text-center text-xs font-bold uppercase tracking-wider", children: [
-      "Producto ",
-      numero,
-      " de ",
-      total
-    ] }) : null,
-    /* @__PURE__ */ jsx58("p", { className: "mt-1 text-center text-base font-bold leading-tight", children: producto || "Producto" }),
-    variante ? /* @__PURE__ */ jsx58("p", { className: "text-center text-[11px]", children: variante }) : null,
-    /* @__PURE__ */ jsx58("p", { className: "mt-1 text-center font-mono text-sm", children: serial || (pendienteImei ? "IMEI pendiente" : "\u2014") }),
-    pedido || destino ? /* @__PURE__ */ jsxs45("div", { className: "mt-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide", children: [
-      /* @__PURE__ */ jsx58("span", { className: "min-w-0 truncate", children: pedido || "" }),
-      /* @__PURE__ */ jsx58("span", { className: "min-w-0 truncate text-right", children: destino || "" })
-    ] }) : null,
-    nota ? /* @__PURE__ */ jsx58("p", { className: "mt-1 text-[10px]", children: nota }) : null
-  ] });
-}
-
-// src/utils/revision.js
-var ESTADOS_REVISION = {
-  ok: { etiqueta: "OK", etiquetaPlural: "OK", tono: "ok" },
-  // Resultado del contrato de recepción (F5): `RECIBIDO` entra como estado ok.
-  recibido: { etiqueta: "Recibido", etiquetaPlural: "Recibidos", tono: "ok" },
-  pendiente: { etiqueta: "Pendiente", etiquetaPlural: "Pendientes", tono: "mute" },
-  faltante: { etiqueta: "Falta", etiquetaPlural: "Faltan", tono: "bad" },
-  sobrante: { etiqueta: "Sobra", etiquetaPlural: "Sobran", tono: "warn" },
-  danado: { etiqueta: "Da\xF1ada", etiquetaPlural: "Da\xF1adas", tono: "bad" },
-  incorrecto: { etiqueta: "Incorrecta", etiquetaPlural: "Incorrectas", tono: "warn" },
-  sinImei: { etiqueta: "Sin IMEI", etiquetaPlural: "Sin IMEI", tono: "mute" },
-  sinDocumentacion: { etiqueta: "Sin documentaci\xF3n", etiquetaPlural: "Sin documentaci\xF3n", tono: "warn" }
-};
-var INCIDENCIAS = ["faltante", "sobrante", "danado", "incorrecto", "sinImei", "sinDocumentacion"];
-var normalizar = (valor) => String(valor ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
-var POR_CLAVE = new Map(Object.keys(ESTADOS_REVISION).map((clave) => [normalizar(clave), clave]));
-var claveRevision = (estado) => POR_CLAVE.get(normalizar(estado)) || String(estado ?? "");
-var esIncidencia = (estado) => INCIDENCIAS.includes(claveRevision(estado));
-var etiquetaRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]?.etiqueta || String(estado || "");
-var etiquetaPluralRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]?.etiquetaPlural || String(estado || "");
-var tonoRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]?.tono || "mute";
-
-// src/components/ResumenIncidencias.jsx
-import { jsx as jsx59, jsxs as jsxs46 } from "react/jsx-runtime";
-var CLASES2 = {
-  bad: "border-bad/30 bg-bad/10 text-bad",
-  warn: "border-warn/30 bg-warn/10 text-warn",
-  mute: "border-ink-500 bg-ink-700 text-mute",
-  ok: "border-ok/30 bg-ok/10 text-ok"
-};
-function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencias", className }) {
-  const lista = (Array.isArray(incidencias) ? incidencias : []).map((incidencia) => ({ ...incidencia, cantidad: Math.trunc(Number(incidencia?.cantidad) || 0) })).filter((incidencia) => incidencia.cantidad > 0);
-  if (!lista.length) {
-    return /* @__PURE__ */ jsx59("span", { className: cn("inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES2.ok, className), children: sinIncidencias });
-  }
-  return /* @__PURE__ */ jsx59("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), role: "list", "aria-label": "Incidencias de la recepci\xF3n", children: lista.map((incidencia, indice) => {
-    const tono = incidencia.tono || tonoRevision(incidencia.tipo);
-    return /* @__PURE__ */ jsxs46(
-      "span",
-      {
-        role: "listitem",
-        title: incidencia.detalle || void 0,
-        className: cn("inline-flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES2[tono] || CLASES2.mute),
-        children: [
-          incidencia.etiqueta || etiquetaPluralRevision(incidencia.tipo),
-          /* @__PURE__ */ jsx59("span", { className: "tabular-nums", children: incidencia.cantidad })
-        ]
-      },
-      `${incidencia.tipo}-${indice}`
-    );
-  }) });
-}
-
-// src/components/ResumenRecepcion.jsx
-import { jsx as jsx60, jsxs as jsxs47 } from "react/jsx-runtime";
-var ORDEN = ["recibido", "faltante", "sobrante", "danado", "incorrecto"];
-var CHIP2 = {
-  ok: "border-ok/30 bg-ok/10 text-ok",
-  warn: "border-warn/30 bg-warn/10 text-warn",
-  bad: "border-bad/30 bg-bad/10 text-bad",
-  mute: "border-ink-500 bg-ink-700 text-mute"
-};
-function ResumenRecepcion({ resumen, items, className }) {
-  const conteos = resumen && typeof resumen === "object" && !Array.isArray(resumen) ? Object.fromEntries(Object.entries(resumen).map(([clave, valor]) => [claveRevision(clave), Number(valor) || 0])) : Array.isArray(items) ? items.reduce((acumulado, item) => {
-    const clave = claveRevision(item?.resultado);
-    if (clave) acumulado[clave] = (acumulado[clave] || 0) + 1;
-    return acumulado;
-  }, {}) : {};
-  const filas = ORDEN.filter((clave) => (conteos[clave] || 0) > 0);
-  if (!filas.length) return null;
-  return /* @__PURE__ */ jsx60("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), "aria-label": "Resumen de la recepci\xF3n", children: filas.map((clave) => /* @__PURE__ */ jsxs47("span", { className: cn("inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-semibold", CHIP2[tonoRevision(clave)] || CHIP2.mute), children: [
-    /* @__PURE__ */ jsx60("b", { className: "tabular-nums", children: conteos[clave] }),
-    etiquetaPluralRevision(clave).toLowerCase()
-  ] }, clave)) });
-}
-
-// src/components/FilaRevision.jsx
-import { jsx as jsx61, jsxs as jsxs48 } from "react/jsx-runtime";
-var TONOS2 = {
-  ok: "border-ok/30 bg-ok/5",
-  warn: "border-warn/25 bg-warn/5",
-  bad: "border-bad/25 bg-bad/5",
-  mute: "border-ink-600"
-};
-var CHIP3 = {
-  ok: "border-ok/30 bg-ok/10 text-ok",
-  warn: "border-warn/30 bg-warn/10 text-warn",
-  bad: "border-bad/30 bg-bad/10 text-bad",
-  mute: "border-ink-500 bg-ink-700 text-mute"
-};
-function FilaRevision({ etiqueta, serial, estado = "ok", detalle, acciones, compact = false, className }) {
-  const tono = tonoRevision(estado);
-  return /* @__PURE__ */ jsxs48("div", { className: cn("flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-3", compact ? "py-1.5" : "py-2.5", TONOS2[tono] || TONOS2.mute, className), children: [
-    /* @__PURE__ */ jsxs48("span", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx61("span", { className: "block truncate text-sm font-semibold", children: etiqueta }),
-      /* @__PURE__ */ jsxs48("span", { className: "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-mute", children: [
-        serial ? /* @__PURE__ */ jsx61(SerialTexto, { serial, className: "text-[11px]" }) : /* @__PURE__ */ jsx61("span", { children: "IMEI pendiente" }),
-        detalle ? /* @__PURE__ */ jsx61("span", { className: CELDA_DATO, title: String(detalle), children: detalle }) : null
-      ] })
-    ] }),
-    /* @__PURE__ */ jsx61("span", { className: cn("shrink-0 rounded-lg border px-2 py-0.5 text-xs font-semibold", CHIP3[tono] || CHIP3.mute), "data-estado": estado, children: etiquetaRevision(estado) }),
-    acciones ? /* @__PURE__ */ jsx61("span", { className: "flex shrink-0 flex-wrap items-center gap-2", children: acciones }) : null
-  ] });
-}
-
-// src/components/SelectorIncidencia.jsx
-import { jsx as jsx62 } from "react/jsx-runtime";
-var CHIP4 = {
-  ok: "border-ok/40 bg-ok/10 text-ok",
-  warn: "border-warn/40 bg-warn/10 text-warn",
-  bad: "border-bad/40 bg-bad/10 text-bad",
-  mute: "border-ink-500 bg-ink-700 text-mute"
-};
-var CHIP_APAGADO = "border-ink-500 text-mute hover:border-fono hover:text-fore";
-function SelectorIncidencia({ valor, onChange, tipos = INCIDENCIAS, permitirQuitar = true, disabled = false, ariaLabel = "Incidencia de la unidad", className }) {
-  return /* @__PURE__ */ jsx62("span", { role: "group", "aria-label": ariaLabel, className: cn("flex flex-wrap items-center gap-1.5", className), children: tipos.map((tipo) => {
-    const activo = valor === tipo;
-    const tono = tonoRevision(tipo);
-    return /* @__PURE__ */ jsx62(
-      "button",
-      {
-        type: "button",
-        disabled,
-        "aria-pressed": activo,
-        title: activo && permitirQuitar ? "Quitar la incidencia" : etiquetaRevision(tipo),
-        onClick: () => onChange?.(activo && permitirQuitar ? null : tipo),
-        className: cn(
-          "rounded-lg border px-2 py-0.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50",
-          activo ? CHIP4[tono] || CHIP4.mute : CHIP_APAGADO
-        ),
-        children: ESTADOS_REVISION[tipo]?.etiqueta || tipo
-      },
-      tipo
-    );
-  }) });
-}
-
-// src/components/DestinoRecepcion.jsx
-import { useId as useId7, useState as useState17 } from "react";
-import { jsx as jsx63, jsxs as jsxs49 } from "react/jsx-runtime";
-function DestinoRecepcion({
-  destino,
-  depositos = [],
-  pendientes = 0,
-  recibiendo = false,
-  onRecibir,
-  etiqueta = "Recibir en",
-  textoRecibir = "Recibir todo",
-  className
-}) {
-  const [elegido, setElegido] = useState17(destino?.id ?? depositos[0]?.id ?? "");
-  const id = useId7();
-  const actual = depositos.find((deposito) => deposito.id === elegido) || destino || null;
-  const alternativas = depositos.filter((deposito) => deposito.id !== actual?.id);
-  return /* @__PURE__ */ jsxs49("section", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3", className), "aria-label": "Cierre de la recepci\xF3n", children: [
-    /* @__PURE__ */ jsxs49("div", { className: "flex flex-wrap items-end gap-3", children: [
-      /* @__PURE__ */ jsxs49("label", { htmlFor: id, className: "min-w-0 flex-1 space-y-1 text-xs text-mute", children: [
-        /* @__PURE__ */ jsx63("span", { className: "block font-semibold", children: etiqueta }),
-        alternativas.length > 0 ? /* @__PURE__ */ jsxs49(Select, { id, value: elegido, onChange: (event) => setElegido(event.target.value), className: "w-full", children: [
-          actual ? /* @__PURE__ */ jsx63("option", { value: actual.id, children: actual.nombre }) : null,
-          alternativas.map((deposito) => /* @__PURE__ */ jsx63("option", { value: deposito.id, children: deposito.nombre }, deposito.id))
-        ] }) : /* @__PURE__ */ jsxs49("span", { className: "flex h-9 items-center gap-2 rounded-lg border border-ink-600 px-3 text-sm font-semibold text-fore", children: [
-          /* @__PURE__ */ jsx63(Icon, { name: "box", className: "h-4 w-4 text-mute" }),
-          actual?.nombre || "Sin dep\xF3sito"
-        ] })
-      ] }),
-      /* @__PURE__ */ jsx63(Button, { type: "button", disabled: recibiendo || !actual?.id || !onRecibir, onClick: () => onRecibir?.(actual.id), children: recibiendo ? "Recibiendo\u2026" : textoRecibir })
-    ] }),
-    Number(pendientes) > 0 && /* @__PURE__ */ jsxs49("p", { className: "mt-2 flex items-center gap-1.5 text-xs text-warn", children: [
-      /* @__PURE__ */ jsx63(Icon, { name: "alert", className: "h-3.5 w-3.5 shrink-0", "aria-hidden": "true" }),
-      Number(pendientes),
-      " unidad(es) sin IMEI: se reciben igual y el IMEI se completa despu\xE9s."
-    ] })
+    hay ? /* @__PURE__ */ jsx33(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx33(Badge, { color: "slate", children: "Sin dato" })
   ] });
 }
 
 // src/components/GradoBadge.jsx
-import { jsx as jsx64, jsxs as jsxs50 } from "react/jsx-runtime";
+import { jsx as jsx34, jsxs as jsxs28 } from "react/jsx-runtime";
 function GradoBadge({ grado, conDescripcion = false, className }) {
   const config = gradoCondicion(grado);
-  if (!config) return /* @__PURE__ */ jsx64(Badge, { className, children: grado || "Sin grado" });
-  return /* @__PURE__ */ jsxs50("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsx64(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
-    conDescripcion && /* @__PURE__ */ jsx64("span", { className: "text-xs text-mute", children: config.descripcion })
+  if (!config) return /* @__PURE__ */ jsx34(Badge, { className, children: grado || "Sin grado" });
+  return /* @__PURE__ */ jsxs28("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsx34(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
+    conDescripcion && /* @__PURE__ */ jsx34("span", { className: "text-xs text-mute", children: config.descripcion })
   ] });
 }
 
+// src/utils/categorias.js
+var CATEGORIAS_PRODUCTO = [
+  { clave: "iphone", etiqueta: "iPhone", icono: "mobile", alias: ["iphone", "mobile", "celular", "telefono", "smartphone"] },
+  { clave: "macbook", etiqueta: "MacBook", icono: "laptop", alias: ["macbook", "mac", "laptop", "notebook", "computadora"] },
+  { clave: "ipad", etiqueta: "iPad", icono: "tablet", alias: ["ipad", "tablet", "tableta"] },
+  { clave: "watch", etiqueta: "Watch", icono: "watch", alias: ["watch", "reloj", "apple watch"] },
+  { clave: "airpods", etiqueta: "AirPods", icono: "buds", alias: ["airpods", "auriculares", "audifonos", "buds", "earbuds"] },
+  { clave: "accesorios", etiqueta: "Accesorios", icono: "cable", alias: ["accesorios", "cable", "cables", "cargador", "cargadores", "funda", "fundas", "vidrio", "lamina", "templado", "adaptador"] },
+  { clave: "servicio", etiqueta: "Servicio", icono: "wrench", alias: ["servicio", "servicios", "reparacion"] },
+  { clave: "otro", etiqueta: "Otro", icono: "box", alias: [] }
+];
+var ICONO_CATEGORIA = Object.fromEntries(CATEGORIAS_PRODUCTO.map(({ clave, icono }) => [clave, icono]));
+var PALABRAS_ACCESORIO = ["funda", "cable", "cargador", "vidrio", "lamina", "templado", "adaptador", "protector", "soporte"];
+var sinAcentos = (texto) => String(texto ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
+function normalizarCategoria(texto) {
+  const limpio = sinAcentos(texto);
+  const buscar = (clave) => CATEGORIAS_PRODUCTO.find((categoria) => categoria.clave === clave);
+  if (!limpio) return buscar("otro");
+  if (PALABRAS_ACCESORIO.some((palabra) => limpio.includes(palabra))) return buscar("accesorios");
+  const exacta = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.includes(limpio));
+  if (exacta) return exacta;
+  const contiene = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.some((alias) => alias.length > 3 && limpio.includes(alias)));
+  return contiene || buscar("otro");
+}
+var categoriaDe = (texto) => normalizarCategoria(texto).clave;
+var iconoDeCategoria = (texto) => normalizarCategoria(texto).icono;
+var etiquetaDeCategoria = (texto) => normalizarCategoria(texto).etiqueta;
+
+// src/components/IconoCategoria.jsx
+import { jsx as jsx35 } from "react/jsx-runtime";
+var GLIFOS_CATEGORIA = {
+  // Celular: marco redondeado con parlante y botón.
+  mobile: "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM10 5h4M11 18.5h2",
+  // Laptop: pantalla arriba, base ancha.
+  laptop: "M5 5h14v10H5zM2.5 19h19M9 15l-.5 4M15 15l.5 4",
+  // Tablet: marco redondeado más ancho que el celular.
+  tablet: "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM11 18.5h2",
+  // Reloj: caja central con correas.
+  watch: "M9 2h6l.8 4H8.2L9 2ZM8.2 18h7.6l-.8 4H9l-.8-4ZM6 8h12v8H6zM12 10.5v3l2 1",
+  // Auriculares: dos buds con su tallo.
+  buds: "M7 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM7 16.5V21M17 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM17 16.5V21",
+  // Cable: curva con conectores en los extremos.
+  cable: "M4 3v5a4 4 0 0 0 4 4h4a4 4 0 0 1 4 4v5M2 3h4M18 21h4"
+};
+function IconoCategoria({ categoria, icono, className, ...props }) {
+  const glifo = icono || iconoDeCategoria(categoria);
+  const clases = cn("shrink-0", className || "h-5 w-5");
+  if (!GLIFOS_CATEGORIA[glifo]) return /* @__PURE__ */ jsx35(Icon, { name: glifo, className: clases, ...props });
+  return /* @__PURE__ */ jsx35(
+    "svg",
+    {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "1.7",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": "true",
+      className: clases,
+      ...props,
+      children: /* @__PURE__ */ jsx35("path", { d: GLIFOS_CATEGORIA[glifo] })
+    }
+  );
+}
+
 // src/components/TileEquipo.jsx
-import { Fragment as Fragment7, jsx as jsx65, jsxs as jsxs51 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx36, jsxs as jsxs29 } from "react/jsx-runtime";
 function TileEquipo({
   modelo,
   imei,
@@ -4958,170 +3019,99 @@ function TileEquipo({
   className
 }) {
   const raiz = cn("w-full space-y-2.5 rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left", onOpen && "transition hover:border-fono active:scale-[.995]", className);
-  const contenido = /* @__PURE__ */ jsxs51(Fragment7, { children: [
-    /* @__PURE__ */ jsxs51("div", { className: "flex items-start gap-3", children: [
-      foto ? /* @__PURE__ */ jsx65("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx65("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx65(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
-      /* @__PURE__ */ jsxs51("div", { className: "min-w-0 flex-1", children: [
-        /* @__PURE__ */ jsx65("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
-        imei && /* @__PURE__ */ jsx65("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
-        detalle && /* @__PURE__ */ jsx65("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
+  const contenido = /* @__PURE__ */ jsxs29(Fragment3, { children: [
+    /* @__PURE__ */ jsxs29("div", { className: "flex items-start gap-3", children: [
+      foto ? /* @__PURE__ */ jsx36("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx36("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx36(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
+      /* @__PURE__ */ jsxs29("div", { className: "min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsx36("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
+        imei && /* @__PURE__ */ jsx36("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
+        detalle && /* @__PURE__ */ jsx36("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
       ] }),
-      estado && /* @__PURE__ */ jsx65(ChipEstado, { estado })
+      estado && /* @__PURE__ */ jsx36(ChipEstado, { estado })
     ] }),
-    /* @__PURE__ */ jsxs51("div", { className: "flex flex-wrap items-center gap-2", children: [
-      grado && /* @__PURE__ */ jsx65(GradoBadge, { grado }),
-      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx65(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
-      locks?.length ? /* @__PURE__ */ jsx65(ChipsLocks, { locks }) : null
+    /* @__PURE__ */ jsxs29("div", { className: "flex flex-wrap items-center gap-2", children: [
+      grado && /* @__PURE__ */ jsx36(GradoBadge, { grado }),
+      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx36(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
+      locks?.length ? /* @__PURE__ */ jsx36(ChipsLocks, { locks }) : null
     ] }),
-    acciones && /* @__PURE__ */ jsx65("div", { className: "flex flex-wrap gap-2", children: acciones })
+    acciones && /* @__PURE__ */ jsx36("div", { className: "flex flex-wrap gap-2", children: acciones })
   ] });
   if (onOpen) {
-    return /* @__PURE__ */ jsx65("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
+    return /* @__PURE__ */ jsx36("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
   }
-  return /* @__PURE__ */ jsx65("article", { className: raiz, children: contenido });
-}
-
-// src/components/PasosEquipo.jsx
-import { jsx as jsx66, jsxs as jsxs52 } from "react/jsx-runtime";
-function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
-  if (!pasos.length) return null;
-  const etiquetaDe = (paso) => typeof paso === "string" ? paso : paso.etiqueta ?? paso.label ?? "";
-  const claveDe = (paso, indice) => typeof paso === "string" ? indice : paso.id ?? indice;
-  const indiceActual = (() => {
-    const i = pasos.findIndex((paso, indice) => claveDe(paso, indice) === actual);
-    if (i >= 0) return i;
-    const numero = Number(actual);
-    return Number.isInteger(numero) ? Math.min(Math.max(0, numero), pasos.length - 1) : 0;
-  })();
-  const texto = etiqueta || etiquetaDe(pasos[indiceActual]) || String(actual);
-  return /* @__PURE__ */ jsxs52(
-    "span",
-    {
-      className: cn("flex items-center gap-1", className),
-      "data-testid": testId,
-      "data-paso": indiceActual + 1,
-      "aria-label": `Paso ${indiceActual + 1} de ${pasos.length}: ${texto}`,
-      children: [
-        pasos.map((paso, orden) => /* @__PURE__ */ jsx66(
-          "span",
-          {
-            "aria-hidden": "true",
-            className: cn(
-              "h-1.5 rounded-full transition-all",
-              orden < indiceActual ? "w-3 bg-fono/60" : orden === indiceActual ? "w-5 bg-fono" : "w-1.5 bg-ink-600"
-            )
-          },
-          claveDe(paso, orden)
-        )),
-        /* @__PURE__ */ jsx66("span", { className: "text-[10px] font-semibold text-mute", children: texto })
-      ]
-    }
-  );
-}
-
-// src/components/ColumnaLote.jsx
-import { jsx as jsx67, jsxs as jsxs53 } from "react/jsx-runtime";
-function ColumnaLote({ etiqueta, tono = "slate", contador, acciones, children, vacio = "Sin equipos", testId, className }) {
-  const lista = Array.isArray(children) ? children.filter(Boolean) : children;
-  const vacia = !lista || Array.isArray(lista) && lista.length === 0;
-  return /* @__PURE__ */ jsxs53("section", { "data-testid": testId, className: cn("rounded-2xl border border-ink-600 bg-ink-800/40 p-3", className), children: [
-    /* @__PURE__ */ jsxs53("header", { className: "flex items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs53("span", { className: "flex min-w-0 items-center gap-2", children: [
-        /* @__PURE__ */ jsx67(Badge, { color: tono, children: etiqueta }),
-        contador !== void 0 && contador !== null && /* @__PURE__ */ jsx67("span", { className: "text-xs tabular-nums text-mute", children: contador })
-      ] }),
-      acciones ? /* @__PURE__ */ jsx67("span", { className: "flex flex-wrap items-center gap-2", children: acciones }) : null
-    ] }),
-    /* @__PURE__ */ jsx67("div", { className: "mt-3 space-y-2", children: vacia ? /* @__PURE__ */ jsx67(EmptyState, { compact: true, title: vacio }) : lista })
-  ] });
-}
-
-// src/components/TileRol.jsx
-import { Fragment as Fragment8, jsx as jsx68, jsxs as jsxs54 } from "react/jsx-runtime";
-function TileRol({ titulo: titulo2, descripcion, cantidad, total, dominios = [], onAbrir, className }) {
-  const contenido = /* @__PURE__ */ jsxs54(Fragment8, { children: [
-    /* @__PURE__ */ jsxs54("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs54("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx68("b", { className: "block truncate text-sm", children: titulo2 }),
-        descripcion ? /* @__PURE__ */ jsx68("p", { className: "mt-0.5 text-[11px] leading-4 text-mute", children: descripcion }) : null
-      ] }),
-      Number.isFinite(Number(total)) && Number(total) > 0 ? /* @__PURE__ */ jsxs54("span", { className: "v2-numero shrink-0 text-2xl font-bold tabular-nums", children: [
-        Number(cantidad) || 0,
-        /* @__PURE__ */ jsxs54("span", { className: "text-sm font-semibold text-mute", children: [
-          "/",
-          Number(total)
-        ] })
-      ] }) : null
-    ] }),
-    dominios.length > 0 && /* @__PURE__ */ jsx68("div", { className: "mt-2 flex flex-wrap gap-1", children: dominios.map((dominio, indice) => /* @__PURE__ */ jsx68(Badge, { color: dominio.activo ? "green" : "slate", children: dominio.etiqueta }, dominio.id ?? `${dominio.etiqueta}-${indice}`)) })
-  ] });
-  const clases = "block w-full rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left";
-  if (!onAbrir) return /* @__PURE__ */ jsx68("div", { className: cn(clases, className), children: contenido });
-  return /* @__PURE__ */ jsx68("button", { type: "button", onClick: onAbrir, className: cn(clases, "transition hover:border-fono/60", className), children: contenido });
+  return /* @__PURE__ */ jsx36("article", { className: raiz, children: contenido });
 }
 
 // src/components/Stepper.jsx
-import { jsx as jsx69, jsxs as jsxs55 } from "react/jsx-runtime";
-function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", ariaLabel = "Flujo", className }) {
+import { jsx as jsx37, jsxs as jsxs30 } from "react/jsx-runtime";
+function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
   if (!pasos.length) return null;
-  const etiquetaDe = (paso) => typeof paso === "string" ? paso : paso.etiqueta ?? paso.label ?? "";
-  const claveDe = (paso, indice) => typeof paso === "string" ? indice : paso.id ?? indice;
-  const esHecho = (paso, indice) => hechos.includes(claveDe(paso, indice)) || typeof actual === "number" && indice < actual;
-  const esActual = (paso, indice) => typeof paso === "string" || paso.id === void 0 ? indice === actual : paso.id === actual;
-  if (variante === "tarjetas") {
-    return /* @__PURE__ */ jsx69("ol", { className: cn("grid grid-cols-2 gap-2 sm:grid-flow-col sm:auto-cols-fr", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
-      const hecho = esHecho(paso, indice);
-      const activo = !hecho && esActual(paso, indice);
-      return /* @__PURE__ */ jsxs55("li", { className: cn("flex items-center gap-2.5 rounded-xl border p-2.5", activo ? "border-info/40 bg-info/5" : "border-ink-600"), children: [
-        /* @__PURE__ */ jsx69(
-          "span",
-          {
-            className: cn(
-              "grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold",
-              activo ? "oc-paso-activo bg-info/15 text-info" : hecho ? "bg-ok/15 text-ok" : "bg-ink-700 text-mute"
-            ),
-            "aria-hidden": "true",
-            children: hecho ? /* @__PURE__ */ jsx69(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
-          }
-        ),
-        /* @__PURE__ */ jsxs55("span", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsx69("span", { className: "block truncate text-xs font-semibold", children: etiquetaDe(paso) }),
-          typeof paso === "object" && paso.detalle ? /* @__PURE__ */ jsx69("span", { className: cn("block truncate text-[11px]", activo ? "text-info" : "text-mute"), children: paso.detalle }) : null
-        ] })
-      ] }, claveDe(paso, indice));
-    }) });
-  }
-  return /* @__PURE__ */ jsx69("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
+  const esHecho = (paso, indice) => hechos.includes(paso.id ?? indice) || typeof actual === "number" && indice < actual;
+  const esActual = (paso, indice) => paso.id !== void 0 ? paso.id === actual : indice === actual;
+  return /* @__PURE__ */ jsx37("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), children: pasos.map((paso, indice) => {
     const hecho = esHecho(paso, indice);
     const enCurso = esActual(paso, indice);
-    return /* @__PURE__ */ jsxs55("li", { className: "flex items-center gap-2", children: [
-      /* @__PURE__ */ jsx69(
+    return /* @__PURE__ */ jsxs30("li", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsx37(
         "span",
         {
           className: cn(
             "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[11px] font-bold",
             hecho && "border-pass/40 bg-pass/15 text-pass",
-            !hecho && enCurso && "oc-paso-activo border-fono bg-fono/10 text-fono-light",
+            !hecho && enCurso && "border-fono bg-fono/10 text-fono-light",
             !hecho && !enCurso && "border-ink-600 bg-ink-800 text-mute"
           ),
           "aria-hidden": "true",
-          children: hecho ? /* @__PURE__ */ jsx69(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+          children: hecho ? /* @__PURE__ */ jsx37(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
         }
       ),
-      /* @__PURE__ */ jsxs55("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
-        etiquetaDe(paso),
-        typeof paso === "object" && paso.detalle && /* @__PURE__ */ jsxs55("span", { className: "ml-1 font-normal text-mute", children: [
+      /* @__PURE__ */ jsxs30("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
+        paso.etiqueta,
+        paso.detalle && /* @__PURE__ */ jsxs30("span", { className: "ml-1 font-normal text-mute", children: [
           "\xB7 ",
           paso.detalle
         ] })
       ] }),
-      indice < pasos.length - 1 && /* @__PURE__ */ jsx69("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
-    ] }, claveDe(paso, indice));
+      indice < pasos.length - 1 && /* @__PURE__ */ jsx37("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
+    ] }, paso.id ?? indice);
   }) });
 }
 
+// src/components/CodigoQr.jsx
+import { useEffect as useEffect5, useState as useState11 } from "react";
+
+// src/utils/qr.js
+import QRCode from "qrcode";
+var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
+async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES.nivel, margen = QR_OPCIONES.margen } = {}) {
+  const texto = String(valor ?? "").trim();
+  if (!texto) return "";
+  try {
+    return await QRCode.toDataURL(texto, { errorCorrectionLevel: nivel, margin: margen, width: ancho });
+  } catch {
+    return "";
+  }
+}
+
+// src/components/CodigoQr.jsx
+import { jsx as jsx38 } from "react/jsx-runtime";
+function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
+  const [imagen, setImagen] = useState11("");
+  useEffect5(() => {
+    let activo = true;
+    qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
+      if (activo) setImagen(data);
+    });
+    return () => {
+      activo = false;
+    };
+  }, [valor, ancho, nivel, margen]);
+  if (!imagen) return null;
+  return /* @__PURE__ */ jsx38("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
+}
+
 // src/components/FichaCertificado.jsx
-import { jsx as jsx70, jsxs as jsxs56 } from "react/jsx-runtime";
+import { jsx as jsx39, jsxs as jsxs31 } from "react/jsx-runtime";
 function FichaCertificado({
   empresa,
   modelo,
@@ -5132,2652 +3122,54 @@ function FichaCertificado({
   locks = [],
   aprobados,
   total,
-  puntaje,
-  condicion,
-  repuestosNoOem,
-  repuestosNoOemNota,
   verificadoPor,
   verificadoAt,
   enlace,
   etiquetaQr = "Escane\xE1 para ver el informe completo",
-  estado = "pass",
   acciones,
   className
 }) {
   const hayChecklist = Number(total) > 0;
   const completo = hayChecklist && Number(aprobados) === Number(total);
-  return /* @__PURE__ */ jsxs56("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
-    /* @__PURE__ */ jsxs56("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
-      /* @__PURE__ */ jsxs56("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx70("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
-        /* @__PURE__ */ jsx70("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
+  return /* @__PURE__ */ jsxs31("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
+    /* @__PURE__ */ jsxs31("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
+      /* @__PURE__ */ jsxs31("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsx39("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
+        /* @__PURE__ */ jsx39("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
       ] }),
-      /* @__PURE__ */ jsx70(ChipEstado, { estado })
+      /* @__PURE__ */ jsx39(ChipEstado, { estado: "pass" })
     ] }),
-    /* @__PURE__ */ jsxs56("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
-      /* @__PURE__ */ jsxs56("div", { className: "min-w-0 space-y-3", children: [
-        /* @__PURE__ */ jsxs56("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
-          /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
-          /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx70(GradoBadge, { grado }) : "Sin grado asignado" }),
-          /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx70(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
-          /* @__PURE__ */ jsx70(
+    /* @__PURE__ */ jsxs31("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
+      /* @__PURE__ */ jsxs31("div", { className: "min-w-0 space-y-3", children: [
+        /* @__PURE__ */ jsxs31("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
+          /* @__PURE__ */ jsx39(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
+          /* @__PURE__ */ jsx39(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx39(GradoBadge, { grado }) : "Sin grado asignado" }),
+          /* @__PURE__ */ jsx39(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx39(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
+          /* @__PURE__ */ jsx39(
             FilaDato,
             {
               etiqueta: "Checklist",
-              valor: hayChecklist ? /* @__PURE__ */ jsxs56("span", { className: completo ? "text-pass" : "text-mute", children: [
+              valor: hayChecklist ? /* @__PURE__ */ jsxs31("span", { className: completo ? "text-pass" : "text-mute", children: [
                 aprobados,
                 " de ",
                 total,
                 " pass"
               ] }) : "Sin verificaci\xF3n f\xEDsica"
             }
-          ),
-          puntaje !== null && puntaje !== void 0 && puntaje !== "" && /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "Puntaje", valor: /* @__PURE__ */ jsx70("span", { className: "tabular-nums", children: Number.isFinite(Number(puntaje)) ? `${Number(puntaje)}%` : puntaje }) }),
-          condicion ? /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "Condici\xF3n", valor: condicion }) : null
+          )
         ] }),
-        locks.length ? /* @__PURE__ */ jsx70(ChipsLocks, { locks, conEstado: true }) : null,
-        repuestosNoOem ? /* @__PURE__ */ jsxs56("div", { className: "rounded-xl border border-warn/25 bg-warn/5 p-3 text-sm", children: [
-          /* @__PURE__ */ jsx70("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: "Repuestos no OEM" }),
-          /* @__PURE__ */ jsx70("p", { className: "mt-0.5 break-words", children: repuestosNoOem }),
-          repuestosNoOemNota ? /* @__PURE__ */ jsx70("p", { className: "mt-0.5 text-xs text-mute", children: repuestosNoOemNota }) : null
-        ] }) : null,
-        /* @__PURE__ */ jsxs56("p", { className: "text-xs text-mute", children: [
+        locks.length ? /* @__PURE__ */ jsx39(ChipsLocks, { locks, conEstado: true }) : null,
+        /* @__PURE__ */ jsxs31("p", { className: "text-xs text-mute", children: [
           verificadoPor ? `Verificado por ${verificadoPor}` : "Verificaci\xF3n pendiente",
           verificadoAt ? ` \xB7 ${verificadoAt}` : ""
         ] })
       ] }),
-      enlace ? /* @__PURE__ */ jsxs56("div", { className: "flex flex-col items-center gap-2", children: [
-        /* @__PURE__ */ jsx70(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
-        /* @__PURE__ */ jsx70("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
+      enlace ? /* @__PURE__ */ jsxs31("div", { className: "flex flex-col items-center gap-2", children: [
+        /* @__PURE__ */ jsx39(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
+        /* @__PURE__ */ jsx39("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
       ] }) : null
     ] }),
-    acciones ? /* @__PURE__ */ jsx70("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
-  ] });
-}
-
-// src/components/VistaPreviaPapel.jsx
-import { jsx as jsx71 } from "react/jsx-runtime";
-var ANCHOS_PAPEL = {
-  "thermal-80": "max-w-[302px]",
-  "thermal-58": "max-w-[219px]",
-  "thermal-55": "max-w-[208px]",
-  thermal: "max-w-[219px]",
-  a4: "max-w-[794px]"
-};
-function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 = "Vista previa del documento", alto = "h-[60vh]", className, ...props }) {
-  const ancho = ANCHOS_PAPEL[formato];
-  return /* @__PURE__ */ jsx71(
-    "iframe",
-    {
-      title: titulo2,
-      srcDoc: contenido,
-      className: cn("w-full rounded-xl border border-ink-600 bg-white", alto, ancho ? `mx-auto ${ancho}` : "", className),
-      ...props
-    }
-  );
-}
-
-// src/components/Calendario.jsx
-import { useMemo as useMemo6, useState as useState18 } from "react";
-
-// src/utils/calendario.js
-var ES_PY2 = "es-PY";
-var UTC = "UTC";
-var CLAVE = /^\d{4}-\d{2}-\d{2}$/;
-var FORMATO_SEMANA = new Intl.DateTimeFormat(ES_PY2, { timeZone: UTC, weekday: "short" });
-var FORMATO_MES = new Intl.DateTimeFormat(ES_PY2, { timeZone: UTC, month: "long", year: "numeric" });
-var FORMATO_DIA = new Intl.DateTimeFormat(ES_PY2, { timeZone: UTC, weekday: "long", day: "numeric", month: "long" });
-var FORMATO_DIA_NUMERO = new Intl.DateTimeFormat(ES_PY2, { timeZone: UTC, day: "2-digit" });
-var FORMATO_MES_CORTO = new Intl.DateTimeFormat(ES_PY2, { timeZone: UTC, month: "short" });
-var capitalizar = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
-function esClaveDia(valor) {
-  if (typeof valor !== "string" || !CLAVE.test(valor)) return false;
-  const [anio, mes, dia] = valor.split("-").map(Number);
-  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
-  return fecha.getUTCFullYear() === anio && fecha.getUTCMonth() === mes - 1 && fecha.getUTCDate() === dia;
-}
-function claveDia(valor) {
-  if (typeof valor === "string" && esClaveDia(valor)) return valor;
-  const fecha = valor instanceof Date ? valor : valor ? new Date(valor) : null;
-  if (!fecha || Number.isNaN(fecha.getTime())) return "";
-  return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`;
-}
-function fechaDeClave(clave) {
-  if (!esClaveDia(clave)) return null;
-  const [anio, mes, dia] = clave.split("-").map(Number);
-  return new Date(Date.UTC(anio, mes - 1, dia));
-}
-function hoyClave(hoy = /* @__PURE__ */ new Date()) {
-  return claveDia(hoy);
-}
-function sumarDias(clave, dias) {
-  const fecha = fechaDeClave(clave);
-  if (!fecha) return "";
-  return claveUTC(fechaConDias(fecha, Number(dias) || 0));
-}
-function sumarMeses(clave, meses) {
-  const fecha = fechaDeClave(clave);
-  if (!fecha) return "";
-  const anio = fecha.getUTCFullYear();
-  const mes = fecha.getUTCMonth() + (Number(meses) || 0);
-  const ultimo = new Date(Date.UTC(anio, mes + 1, 0)).getUTCDate();
-  return claveUTC(new Date(Date.UTC(anio, mes, Math.min(fecha.getUTCDate(), ultimo))));
-}
-function indiceSemana(clave) {
-  const fecha = fechaDeClave(clave);
-  return fecha ? (fecha.getUTCDay() + 6) % 7 : 0;
-}
-function rangoSemana(clave) {
-  const inicio = sumarDias(clave, -indiceSemana(clave));
-  const dias = Array.from({ length: 7 }, (_, indice) => sumarDias(inicio, indice));
-  return { desde: dias[0], hasta: dias[6], dias };
-}
-function rangoMes(clave) {
-  const fecha = fechaDeClave(clave);
-  if (!fecha) return { desde: "", hasta: "", dias: [] };
-  const anio = fecha.getUTCFullYear();
-  const mes = fecha.getUTCMonth();
-  const primero = new Date(Date.UTC(anio, mes, 1));
-  const ultimo = new Date(Date.UTC(anio, mes + 1, 0));
-  const inicio = fechaConDias(primero, -indiceSemana(claveUTC(primero)));
-  const fin = fechaConDias(ultimo, 6 - indiceSemana(claveUTC(ultimo)));
-  const dias = [];
-  for (let cursor = inicio.getTime(); cursor <= fin.getTime(); cursor += 864e5) {
-    dias.push(claveUTC(new Date(cursor)));
-  }
-  return { desde: dias[0], hasta: dias[dias.length - 1], dias };
-}
-function mismoMes(clave, referencia) {
-  return Boolean(clave) && Boolean(referencia) && clave.slice(0, 7) === referencia.slice(0, 7);
-}
-function etiquetaMes(clave) {
-  const fecha = fechaDeClave(clave);
-  return fecha ? capitalizar(FORMATO_MES.format(fecha)) : "\u2014";
-}
-function etiquetaDia(clave) {
-  const fecha = fechaDeClave(clave);
-  return fecha ? capitalizar(FORMATO_DIA.format(fecha)) : "\u2014";
-}
-function etiquetaDiaCorta(clave) {
-  const fecha = fechaDeClave(clave);
-  return fecha ? `${FORMATO_DIA_NUMERO.format(fecha)} ${FORMATO_MES_CORTO.format(fecha).replace(/\.$/, "")}` : "\u2014";
-}
-var DIAS_SEMANA = Array.from(
-  { length: 7 },
-  (_, indice) => capitalizar(FORMATO_SEMANA.format(new Date(Date.UTC(2024, 0, 1 + indice))).replace(/\.$/, ""))
-);
-function agruparPorDia(items = [], claveDe = (item) => item?.fecha) {
-  const mapa = /* @__PURE__ */ new Map();
-  for (const item of items) {
-    const clave = claveDia(claveDe(item));
-    if (!clave) continue;
-    const lista = mapa.get(clave);
-    if (lista) lista.push(item);
-    else mapa.set(clave, [item]);
-  }
-  return mapa;
-}
-function fechaConDias(fecha, dias) {
-  return new Date(Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate() + dias));
-}
-function claveUTC(fecha) {
-  return `${fecha.getUTCFullYear()}-${String(fecha.getUTCMonth() + 1).padStart(2, "0")}-${String(fecha.getUTCDate()).padStart(2, "0")}`;
-}
-
-// src/components/Calendario.jsx
-import { Fragment as Fragment9, jsx as jsx72, jsxs as jsxs57 } from "react/jsx-runtime";
-var TONO_ITEM = { info: TONOS.chip.info, ok: TONOS.chip.ok, warn: TONOS.chip.warn, bad: TONOS.chip.bad };
-function ItemCalendario({ item, contexto, onElegir }) {
-  const tono = TONO_ITEM[item.tono] || TONOS.chip.mute;
-  const titulo2 = [item.hora, item.titulo].filter(Boolean).join(" \xB7 ");
-  const clases = cn(
-    "flex w-full items-center gap-1.5 rounded-md border text-left transition hover:brightness-110",
-    contexto.vista === "lista" ? "px-2.5 py-1.5 text-xs" : "px-1.5 py-0.5 text-[11px]",
-    tono
-  );
-  const contenido = /* @__PURE__ */ jsxs57(Fragment9, { children: [
-    item.hora && /* @__PURE__ */ jsx72("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
-    /* @__PURE__ */ jsxs57("span", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx72("span", { className: "block truncate font-medium", children: item.titulo }),
-      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx72("span", { className: "block truncate opacity-80", children: item.detalle })
-    ] })
-  ] });
-  const etiqueta = [titulo2, item.detalle].filter(Boolean).join(" \u2014 ");
-  return item.href ? /* @__PURE__ */ jsx72("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx72("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
-}
-function ListaDias({ dias, porDia, hoy, onElegir, renderItem, soloConItems }) {
-  const visibles = soloConItems ? dias.filter((dia) => (porDia.get(dia)?.length ?? 0) > 0 || dia === hoy) : dias;
-  if (!visibles.length) return /* @__PURE__ */ jsx72(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
-  return /* @__PURE__ */ jsx72("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
-    const delDia = porDia.get(dia) || [];
-    return /* @__PURE__ */ jsxs57("section", { className: "py-2", children: [
-      /* @__PURE__ */ jsxs57("header", { className: "flex items-center justify-between gap-2 px-1", children: [
-        /* @__PURE__ */ jsx72("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
-        dia === hoy && /* @__PURE__ */ jsx72("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
-      ] }),
-      /* @__PURE__ */ jsx72("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx72("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx72("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx72(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
-      ) })
-    ] }, dia);
-  }) });
-}
-function Calendario({
-  items = [],
-  vistas = ["mes"],
-  vista,
-  vistaPorDefecto = "mes",
-  onCambiarVista,
-  ancla,
-  anclaPorDefecto,
-  onCambiarPeriodo,
-  diaSeleccionado,
-  onSeleccionarDia,
-  onElegirItem,
-  renderItem,
-  maxPorDia = 2,
-  cargando = false,
-  mostrarDetalle = true,
-  soloConItemsEnLista = true,
-  hoy,
-  ariaLabel = "Calendario",
-  className
-}) {
-  const claveHoy = useMemo6(() => hoyClave(hoy), [hoy]);
-  const [vistaInterna, setVistaInterna] = useState18(vistaPorDefecto);
-  const [anclaInterna, setAnclaInterna] = useState18(() => anclaPorDefecto || ancla || claveHoy);
-  const [seleccionInterna, setSeleccionInterna] = useState18(null);
-  const vistaActual = vistas.includes(vista) ? vista : vistas.includes(vistaInterna) ? vistaInterna : vistas[0] || "mes";
-  const anclaActual = String(ancla || anclaInterna || claveHoy).slice(0, 10);
-  const seleccion = diaSeleccionado !== void 0 ? diaSeleccionado : seleccionInterna;
-  const rango = useMemo6(
-    () => vistaActual === "semana" ? rangoSemana(anclaActual) : rangoMes(anclaActual),
-    [vistaActual, anclaActual]
-  );
-  const porDia = useMemo6(() => agruparPorDia(items), [items]);
-  const totalEnRango = useMemo6(
-    () => rango.dias.reduce((suma, dia) => suma + (porDia.get(dia)?.length ?? 0), 0),
-    [rango, porDia]
-  );
-  const delSeleccionado = seleccion ? porDia.get(seleccion) || [] : [];
-  const periodo = vistaActual === "semana" ? `${etiquetaDiaCorta(rango.desde)} \u2013 ${etiquetaDiaCorta(rango.hasta)}` : etiquetaMes(anclaActual);
-  function cambiarVista(siguiente) {
-    if (vista === void 0) setVistaInterna(siguiente);
-    onCambiarVista?.(siguiente);
-    cambiarSeleccion(null);
-  }
-  function mover(delta) {
-    const siguiente = vistaActual === "semana" ? sumarDias(anclaActual, delta * 7) : sumarMeses(anclaActual, delta);
-    if (ancla === void 0) setAnclaInterna(siguiente);
-    onCambiarPeriodo?.(siguiente, vistaActual === "semana" ? rangoSemana(siguiente) : rangoMes(siguiente));
-    cambiarSeleccion(null);
-  }
-  function irHoy() {
-    if (ancla === void 0) setAnclaInterna(claveHoy);
-    onCambiarPeriodo?.(claveHoy, vistaActual === "semana" ? rangoSemana(claveHoy) : rangoMes(claveHoy));
-    cambiarSeleccion(claveHoy);
-  }
-  function cambiarSeleccion(dia) {
-    if (diaSeleccionado === void 0) setSeleccionInterna(dia);
-    onSeleccionarDia?.(dia);
-  }
-  return /* @__PURE__ */ jsxs57("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
-    /* @__PURE__ */ jsxs57("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs57("div", { className: "flex items-center gap-1.5", children: [
-        /* @__PURE__ */ jsx72(
-          "button",
-          {
-            type: "button",
-            onClick: () => mover(-1),
-            "aria-label": vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
-            title: vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
-            className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx72(Icon, { name: "back", className: "h-4 w-4" })
-          }
-        ),
-        /* @__PURE__ */ jsx72(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
-        /* @__PURE__ */ jsx72(
-          "button",
-          {
-            type: "button",
-            onClick: () => mover(1),
-            "aria-label": vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
-            title: vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
-            className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx72(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsx72("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
-      vistas.length > 1 && /* @__PURE__ */ jsx72(
-        SegmentedField,
-        {
-          value: vistaActual,
-          onChange: cambiarVista,
-          ariaLabel: "Vista del calendario",
-          options: [
-            ["mes", "Mes", "calendar"],
-            ["semana", "Semana", "list"]
-          ]
-        }
-      )
-    ] }),
-    cargando ? /* @__PURE__ */ jsx72("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx72(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs57(Fragment9, { children: [
-      /* @__PURE__ */ jsxs57("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
-        /* @__PURE__ */ jsx72("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx72("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
-        /* @__PURE__ */ jsx72("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
-          const delDia = porDia.get(dia) || [];
-          const ocultos = delDia.length - maxPorDia;
-          const esHoy = dia === claveHoy;
-          const esSeleccionado = dia === seleccion;
-          return /* @__PURE__ */ jsxs57(
-            "div",
-            {
-              "data-fuera": mismoMes(dia, anclaActual) ? void 0 : "true",
-              "data-hoy": esHoy ? "true" : void 0,
-              "data-seleccionado": esSeleccionado ? "true" : void 0,
-              className: cn(
-                "flex min-h-[6.5rem] flex-col gap-1 border-b border-r border-ink-600/60 p-1 last:border-r-0",
-                !mismoMes(dia, anclaActual) && "bg-ink-800/40",
-                esSeleccionado && "bg-fono/5"
-              ),
-              children: [
-                /* @__PURE__ */ jsxs57(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => cambiarSeleccion(esSeleccionado ? null : dia),
-                    "aria-label": `Ver el detalle de ${etiquetaDia(dia)}`,
-                    "aria-pressed": esSeleccionado,
-                    title: etiquetaDia(dia),
-                    className: cn(
-                      "flex items-center justify-between rounded-md px-1 py-0.5 text-xs transition",
-                      esHoy ? "bg-fono/15 font-bold text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore"
-                    ),
-                    children: [
-                      /* @__PURE__ */ jsx72("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
-                      delDia.length > 0 && /* @__PURE__ */ jsx72("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsx72("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
-                  (item, indice) => renderItem ? /* @__PURE__ */ jsx72("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx72(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
-                ) }),
-                ocultos > 0 && /* @__PURE__ */ jsxs57(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => cambiarSeleccion(dia),
-                    title: `Ver ${delDia.length} movimientos`,
-                    className: "rounded-md px-1 text-left text-[10px] font-semibold text-fono-light transition hover:bg-fono/10",
-                    children: [
-                      "+",
-                      ocultos,
-                      " m\xE1s"
-                    ]
-                  }
-                )
-              ]
-            },
-            dia
-          );
-        }) })
-      ] }),
-      /* @__PURE__ */ jsx72("div", { className: "md:hidden", children: /* @__PURE__ */ jsx72(
-        ListaDias,
-        {
-          dias: rango.dias,
-          porDia,
-          hoy: claveHoy,
-          onElegir: onElegirItem,
-          renderItem,
-          soloConItems: soloConItemsEnLista
-        }
-      ) })
-    ] }),
-    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx72(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
-    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs57("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
-      /* @__PURE__ */ jsxs57("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-        /* @__PURE__ */ jsx72("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
-        /* @__PURE__ */ jsxs57("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxs57("span", { className: "text-xs tabular-nums text-mute", children: [
-            delSeleccionado.length,
-            " ",
-            delSeleccionado.length === 1 ? "movimiento" : "movimientos"
-          ] }),
-          /* @__PURE__ */ jsx72(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
-        ] })
-      ] }),
-      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx72(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx72("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx72("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx72(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
-      ) })
-    ] })
-  ] });
-}
-
-// src/components/RangoFecha.jsx
-import { useId as useId8, useRef as useRef8, useState as useState19 } from "react";
-
-// src/utils/rangoFecha.js
-var PERIODOS_FECHA = ["hoy", "esta-semana", "este-mes", "mes-pasado", "ultimos-30", "personalizado"];
-var ETIQUETA_PERIODO = {
-  hoy: "Hoy",
-  "esta-semana": "Esta semana",
-  "este-mes": "Este mes",
-  "mes-pasado": "Mes pasado",
-  "ultimos-30": "\xDAltimos 30 d\xEDas",
-  personalizado: "Personalizado"
-};
-function esAtajo(periodo) {
-  return PERIODOS_FECHA.includes(periodo) && periodo !== "personalizado";
-}
-function rangoDePeriodo(periodo, { hoy } = {}) {
-  const clave = hoyClave(hoy);
-  if (!clave) return null;
-  switch (periodo) {
-    case "hoy":
-      return { desde: clave, hasta: clave };
-    case "esta-semana": {
-      const semana = rangoSemana(clave);
-      return { desde: semana.desde, hasta: semana.hasta };
-    }
-    case "este-mes":
-      return { desde: `${clave.slice(0, 7)}-01`, hasta: clave };
-    case "mes-pasado": {
-      const primeroDeEste = `${clave.slice(0, 7)}-01`;
-      const ultimoDelAnterior = sumarDias(primeroDeEste, -1);
-      return { desde: `${ultimoDelAnterior.slice(0, 7)}-01`, hasta: ultimoDelAnterior };
-    }
-    case "ultimos-30":
-      return { desde: sumarDias(clave, -29), hasta: clave };
-    default:
-      return null;
-  }
-}
-function periodoDeRango(desde, hasta, { hoy } = {}) {
-  if (!desde || !hasta) return "personalizado";
-  for (const periodo of PERIODOS_FECHA) {
-    const rango = esAtajo(periodo) ? rangoDePeriodo(periodo, { hoy }) : null;
-    if (rango && rango.desde === desde && rango.hasta === hasta) return periodo;
-  }
-  return "personalizado";
-}
-function rangoInvertido(desde, hasta) {
-  return Boolean(desde) && Boolean(hasta) && desde > hasta;
-}
-
-// src/components/RangoFecha.jsx
-import { jsx as jsx73, jsxs as jsxs58 } from "react/jsx-runtime";
-function RangoFecha({
-  desde,
-  hasta,
-  onCambio,
-  desdePorDefecto,
-  hastaPorDefecto,
-  periodoPorDefecto = "este-mes",
-  atajos = PERIODOS_FECHA,
-  hoy,
-  ariaLabel = "Filtro por rango de fechas",
-  mostrarCampos = true,
-  className
-}) {
-  const controlado = desde !== void 0 || hasta !== void 0;
-  const [interno, setInterno] = useState19(() => {
-    if (desdePorDefecto !== void 0 || hastaPorDefecto !== void 0) {
-      return { desde: desdePorDefecto || "", hasta: hastaPorDefecto || "" };
-    }
-    return rangoDePeriodo(periodoPorDefecto, { hoy }) || { desde: "", hasta: "" };
-  });
-  const idDesde = useId8();
-  const idHasta = useId8();
-  const refDesde = useRef8(null);
-  const actual = controlado ? { desde: desde ?? "", hasta: hasta ?? "" } : interno;
-  const activo = periodoDeRango(actual.desde, actual.hasta, { hoy });
-  const invertido = rangoInvertido(actual.desde, actual.hasta);
-  function aplicar(siguienteDesde, siguienteHasta) {
-    const par = { desde: siguienteDesde ?? "", hasta: siguienteHasta ?? "" };
-    if (!controlado) setInterno(par);
-    onCambio?.(par.desde, par.hasta);
-  }
-  return /* @__PURE__ */ jsxs58("div", { className: cn("space-y-2", className), children: [
-    /* @__PURE__ */ jsx73("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
-      const esActivo = activo === periodo;
-      return /* @__PURE__ */ jsx73(
-        "button",
-        {
-          type: "button",
-          "aria-pressed": esActivo,
-          onClick: () => {
-            const rango = rangoDePeriodo(periodo, { hoy });
-            if (rango) aplicar(rango.desde, rango.hasta);
-            else refDesde.current?.focus();
-          },
-          className: cn(
-            "rounded-lg border px-2.5 py-1.5 text-xs font-medium transition",
-            esActivo ? "border-fono/30 bg-fono/15 text-fono-light" : "border-ink-600 text-mute hover:border-fono/40 hover:text-fore"
-          ),
-          children: ETIQUETA_PERIODO[periodo] || periodo
-        },
-        periodo
-      );
-    }) }),
-    mostrarCampos && /* @__PURE__ */ jsxs58("div", { className: "flex flex-wrap items-end gap-2", children: [
-      /* @__PURE__ */ jsxs58("div", { children: [
-        /* @__PURE__ */ jsx73(Label, { htmlFor: idDesde, children: "Desde" }),
-        /* @__PURE__ */ jsx73(
-          Input,
-          {
-            id: idDesde,
-            ref: refDesde,
-            type: "date",
-            value: actual.desde,
-            max: actual.hasta || void 0,
-            onChange: (event) => aplicar(event.target.value, actual.hasta),
-            className: "w-40 max-w-full tabular-nums"
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsxs58("div", { children: [
-        /* @__PURE__ */ jsx73(Label, { htmlFor: idHasta, children: "Hasta" }),
-        /* @__PURE__ */ jsx73(
-          Input,
-          {
-            id: idHasta,
-            type: "date",
-            value: actual.hasta,
-            min: actual.desde || void 0,
-            onChange: (event) => aplicar(actual.desde, event.target.value),
-            className: "w-40 max-w-full tabular-nums"
-          }
-        )
-      ] })
-    ] }),
-    invertido && /* @__PURE__ */ jsx73(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
-  ] });
-}
-
-// src/components/PaletaComandos.jsx
-import { useEffect as useEffect8, useId as useId9, useMemo as useMemo7, useRef as useRef9, useState as useState20 } from "react";
-import { Fragment as Fragment10, jsx as jsx74, jsxs as jsxs59 } from "react/jsx-runtime";
-var CAPITALIZAR = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
-function agruparResultados(resultados = [], { etiquetasTipo = {}, iconosTipo = {} } = {}) {
-  const grupos = [];
-  const porTipo = /* @__PURE__ */ new Map();
-  for (const resultado of resultados) {
-    const tipo = resultado?.tipo || "otros";
-    let grupo = porTipo.get(tipo);
-    if (!grupo) {
-      grupo = {
-        tipo,
-        etiqueta: etiquetasTipo[tipo] || CAPITALIZAR(tipo),
-        icono: iconosTipo[tipo] || "search",
-        items: []
-      };
-      porTipo.set(tipo, grupo);
-      grupos.push(grupo);
-    }
-    grupo.items.push(resultado);
-  }
-  return grupos;
-}
-function estadoPaleta({ listo = false, cargando = false, error = "", total = 0 } = {}) {
-  if (!listo) return "seguir";
-  if (error) return "error";
-  if (total > 0) return "listo";
-  if (cargando) return "cargando";
-  return "vacio";
-}
-function PaletaComandos({
-  abierta,
-  onAbrir,
-  onCerrar,
-  buscar,
-  onElegir,
-  etiquetasTipo,
-  iconosTipo,
-  titulo: titulo2 = "Buscar",
-  placeholder = "Buscar\u2026",
-  ariaLabel,
-  atajo = "k",
-  atajoTexto = "\u2318K",
-  conAtajo = true,
-  minimo = 2,
-  espera = 220,
-  mensajeError = "No pudimos buscar. Reintent\xE1.",
-  textoSeguir,
-  textoSinResultados = "Sin resultados",
-  descripcionVacio,
-  boton = false,
-  textoBoton = "Buscar",
-  mostrarAtajoEnBoton = true,
-  className
-}) {
-  const [interna, setInterna] = useState20(false);
-  const [consulta, setConsulta] = useState20("");
-  const [resultados, setResultados] = useState20(null);
-  const [cargando, setCargando] = useState20(false);
-  const [error, setError] = useState20("");
-  const [activo, setActivo] = useState20(0);
-  const [intento, setIntento] = useState20(0);
-  const raiz = useRef9(null);
-  const entrada = useRef9(null);
-  const buscarRef = useRef9(buscar);
-  buscarRef.current = buscar;
-  const onAbrirRef = useRef9(onAbrir);
-  onAbrirRef.current = onAbrir;
-  const idLista = useId9();
-  const controlada = abierta !== void 0;
-  const visible = controlada ? Boolean(abierta) : interna;
-  function abrir() {
-    if (!controlada) setInterna(true);
-    onAbrir?.();
-  }
-  function cerrar() {
-    if (!controlada) setInterna(false);
-    onCerrar?.();
-  }
-  useEffect8(() => {
-    if (!conAtajo) return void 0;
-    const onKeyDown2 = (event) => {
-      if (event.defaultPrevented || event.altKey || event.shiftKey) return;
-      if (!(event.metaKey || event.ctrlKey)) return;
-      if (String(event.key).toLowerCase() !== String(atajo).toLowerCase()) return;
-      event.preventDefault();
-      if (!controlada) setInterna(true);
-      onAbrirRef.current?.();
-    };
-    document.addEventListener("keydown", onKeyDown2);
-    return () => document.removeEventListener("keydown", onKeyDown2);
-  }, [conAtajo, atajo, controlada]);
-  useEffect8(() => {
-    if (!visible) return void 0;
-    setConsulta("");
-    setResultados(null);
-    setError("");
-    setCargando(false);
-    setActivo(0);
-    setIntento(0);
-    const frame = requestAnimationFrame(() => entrada.current?.focus());
-    return () => cancelAnimationFrame(frame);
-  }, [visible]);
-  useEffect8(() => {
-    if (!visible) return void 0;
-    const termino2 = consulta.trim();
-    if (termino2.length < minimo) {
-      setResultados(null);
-      setCargando(false);
-      setError("");
-      return void 0;
-    }
-    let vigente = true;
-    setCargando(true);
-    setError("");
-    const timer = setTimeout(async () => {
-      try {
-        const siguiente = await buscarRef.current?.(termino2);
-        if (!vigente) return;
-        setResultados(Array.isArray(siguiente) ? siguiente : []);
-        setCargando(false);
-      } catch {
-        if (!vigente) return;
-        setError(mensajeError);
-        setCargando(false);
-      }
-    }, Math.max(0, Number(espera) || 0));
-    return () => {
-      vigente = false;
-      clearTimeout(timer);
-    };
-  }, [visible, consulta, intento, minimo, espera, mensajeError]);
-  const termino = consulta.trim();
-  const listo = termino.length >= minimo;
-  const grupos = useMemo7(
-    () => agruparResultados(resultados || [], { etiquetasTipo, iconosTipo }),
-    [resultados, etiquetasTipo, iconosTipo]
-  );
-  const planos = useMemo7(() => grupos.flatMap((grupo) => grupo.items), [grupos]);
-  const estado = estadoPaleta({ listo, cargando, error, total: planos.length });
-  const indice = useMemo7(() => new Map(planos.map((item, posicion) => [item, posicion])), [planos]);
-  useEffect8(() => {
-    setActivo(0);
-  }, [resultados]);
-  useEffect8(() => {
-    if (!visible) return;
-    raiz.current?.querySelector(`[data-paleta-index="${activo}"]`)?.scrollIntoView?.({ block: "nearest" });
-  }, [activo, visible, planos.length]);
-  function mover(delta) {
-    if (!planos.length) return;
-    setActivo((actual) => {
-      const siguiente = actual + delta;
-      if (siguiente < 0) return planos.length - 1;
-      if (siguiente >= planos.length) return 0;
-      return siguiente;
-    });
-  }
-  function elegir(resultado) {
-    if (!resultado) return;
-    cerrar();
-    onElegir?.(resultado);
-  }
-  function onKeyDown(event) {
-    if (event.key === "Escape") {
-      event.stopPropagation();
-      cerrar();
-      return;
-    }
-    if (event.key === "ArrowDown") {
-      event.preventDefault();
-      mover(1);
-    } else if (event.key === "ArrowUp") {
-      event.preventDefault();
-      mover(-1);
-    } else if (event.key === "Enter") {
-      const elegido = planos[activo];
-      if (elegido) {
-        event.preventDefault();
-        elegir(elegido);
-      }
-    }
-  }
-  const textoContinuar = textoSeguir || `Segu\xED escribiendo: buscamos desde ${minimo} caracteres.`;
-  const idOpcion = (posicion) => `${idLista}-opcion-${posicion}`;
-  return /* @__PURE__ */ jsxs59(Fragment10, { children: [
-    boton && /* @__PURE__ */ jsxs59(
-      "button",
-      {
-        type: "button",
-        onClick: abrir,
-        "aria-label": `${titulo2} \xB7 ${atajoTexto}`,
-        "aria-haspopup": "dialog",
-        title: `${titulo2} \xB7 ${atajoTexto}`,
-        className: "inline-flex h-9 items-center gap-2 rounded-lg border border-ink-500 px-3 text-sm text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-        children: [
-          /* @__PURE__ */ jsx74(Icon, { name: "search", className: "h-4 w-4" }),
-          /* @__PURE__ */ jsx74("span", { className: "hidden sm:inline", children: textoBoton }),
-          mostrarAtajoEnBoton && /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
-        ]
-      }
-    ),
-    visible && /* @__PURE__ */ jsx74(
-      "div",
-      {
-        className: "fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-3 sm:p-6",
-        onMouseDown: (event) => event.target === event.currentTarget && cerrar(),
-        onKeyDown,
-        children: /* @__PURE__ */ jsxs59(
-          "div",
-          {
-            ref: raiz,
-            role: "dialog",
-            "aria-modal": "true",
-            "aria-label": titulo2,
-            className: cn("mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink shadow-float", className),
-            children: [
-              /* @__PURE__ */ jsx74("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx74(
-                SearchField_default,
-                {
-                  ref: entrada,
-                  value: consulta,
-                  onChange: (event) => setConsulta(event.target.value),
-                  placeholder,
-                  ariaLabel: ariaLabel || placeholder,
-                  "aria-controls": idLista,
-                  "aria-expanded": estado === "listo",
-                  "aria-activedescendant": estado === "listo" ? idOpcion(activo) : void 0,
-                  role: "combobox",
-                  "aria-autocomplete": "list",
-                  autoComplete: "off"
-                }
-              ) }),
-              /* @__PURE__ */ jsxs59("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
-                estado === "seguir" && /* @__PURE__ */ jsx74("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
-                estado === "error" && /* @__PURE__ */ jsxs59("div", { className: "space-y-2 p-2", children: [
-                  /* @__PURE__ */ jsx74(Aviso, { tono: "error", compact: true, children: error }),
-                  /* @__PURE__ */ jsx74(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
-                ] }),
-                estado === "cargando" && /* @__PURE__ */ jsxs59("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
-                  /* @__PURE__ */ jsx74(Skeleton, { className: "h-4 w-1/3" }),
-                  /* @__PURE__ */ jsx74(Skeleton, { className: "h-9 w-full" }),
-                  /* @__PURE__ */ jsx74(Skeleton, { className: "h-9 w-full" })
-                ] }),
-                estado === "vacio" && /* @__PURE__ */ jsx74(
-                  EmptyState,
-                  {
-                    compact: true,
-                    icon: "search",
-                    title: textoSinResultados,
-                    description: descripcionVacio || `No encontramos nada para \xAB${termino}\xBB. Prob\xE1 con otro nombre o n\xFAmero.`
-                  }
-                ),
-                estado === "listo" && /* @__PURE__ */ jsx74("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs59("section", { role: "group", "aria-label": grupo.etiqueta, children: [
-                  /* @__PURE__ */ jsx74("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
-                  grupo.items.map((item) => {
-                    const posicion = indice.get(item) ?? 0;
-                    const esActivo = posicion === activo;
-                    return /* @__PURE__ */ jsxs59(
-                      "button",
-                      {
-                        id: idOpcion(posicion),
-                        type: "button",
-                        role: "option",
-                        "aria-selected": esActivo,
-                        "data-paleta-index": posicion,
-                        "data-activo": esActivo ? "true" : void 0,
-                        onMouseEnter: () => setActivo(posicion),
-                        onClick: () => elegir(item),
-                        className: cn(
-                          "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition",
-                          esActivo ? "bg-fono/10 text-fore" : "text-mute hover:bg-ink-700/60 hover:text-fore"
-                        ),
-                        children: [
-                          /* @__PURE__ */ jsx74(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
-                          /* @__PURE__ */ jsxs59("span", { className: "min-w-0 flex-1", children: [
-                            /* @__PURE__ */ jsx74("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
-                            item.detalle && /* @__PURE__ */ jsx74("span", { className: "block truncate text-xs text-mute", children: item.detalle })
-                          ] }),
-                          /* @__PURE__ */ jsx74(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
-                        ]
-                      },
-                      item.id ?? `${grupo.tipo}-${posicion}`
-                    );
-                  })
-                ] }, grupo.tipo)) })
-              ] }),
-              /* @__PURE__ */ jsxs59("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
-                /* @__PURE__ */ jsxs59("span", { children: [
-                  /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
-                  " ",
-                  /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
-                  " moverse"
-                ] }),
-                /* @__PURE__ */ jsxs59("span", { children: [
-                  /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
-                  " abrir"
-                ] }),
-                /* @__PURE__ */ jsxs59("span", { children: [
-                  /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
-                  " cerrar"
-                ] })
-              ] })
-            ]
-          }
-        )
-      }
-    )
-  ] });
-}
-
-// src/components/AyudaModulo.jsx
-import { useState as useState21 } from "react";
-import { jsx as jsx75, jsxs as jsxs60 } from "react/jsx-runtime";
-function AyudaModulo({
-  titulo: titulo2,
-  resumen,
-  puntos = [],
-  enlaces = [],
-  etiquetaBoton = "\xBFQu\xE9 es esto?",
-  tituloDialogo,
-  abierta,
-  onAbrir,
-  onCerrar,
-  className
-}) {
-  const [interna, setInterna] = useState21(false);
-  if (!titulo2 && !resumen) return null;
-  const controlada = abierta !== void 0;
-  const visible = controlada ? Boolean(abierta) : interna;
-  const abrir = () => {
-    if (!controlada) setInterna(true);
-    onAbrir?.();
-  };
-  const cerrar = () => {
-    if (!controlada) setInterna(false);
-    onCerrar?.();
-  };
-  const encabezado = tituloDialogo || `${etiquetaBoton} \xB7 ${titulo2 || "Ayuda"}`;
-  return /* @__PURE__ */ jsxs60("div", { className: cn("inline-flex", className), children: [
-    /* @__PURE__ */ jsx75(
-      "button",
-      {
-        type: "button",
-        onClick: abrir,
-        "aria-label": encabezado,
-        "aria-haspopup": "dialog",
-        title: encabezado,
-        className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-sm font-bold text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-        children: /* @__PURE__ */ jsx75("span", { "aria-hidden": "true", children: "?" })
-      }
-    ),
-    /* @__PURE__ */ jsx75(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs60("div", { className: "space-y-4", children: [
-      resumen && /* @__PURE__ */ jsx75("p", { className: "text-sm leading-6 text-mute", children: resumen }),
-      puntos.length > 0 && /* @__PURE__ */ jsx75("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs60("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
-        /* @__PURE__ */ jsx75(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
-        /* @__PURE__ */ jsx75("span", { className: "min-w-0", children: punto })
-      ] }, punto)) }),
-      enlaces.length > 0 && /* @__PURE__ */ jsx75("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs60(
-        "a",
-        {
-          href: enlace.href,
-          onClick: (event) => {
-            enlace.onClick?.(event);
-            cerrar();
-          },
-          className: "flex items-center justify-between gap-2 rounded-lg border border-ink-600 px-3 py-2 text-sm font-medium text-fore transition hover:border-fono hover:bg-fono/10",
-          children: [
-            /* @__PURE__ */ jsx75("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
-            /* @__PURE__ */ jsx75(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
-          ]
-        },
-        enlace.href || enlace.etiqueta
-      )) }),
-      /* @__PURE__ */ jsx75("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx75(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
-    ] }) })
-  ] });
-}
-
-// src/components/BarraInferior.jsx
-import { Fragment as Fragment11, jsx as jsx76, jsxs as jsxs61 } from "react/jsx-runtime";
-var ESPACIO_BARRA_INFERIOR = "pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0";
-function BarraInferior({
-  items = [],
-  activo,
-  onSelect,
-  onMas,
-  masEtiqueta = "M\xE1s",
-  masIcono = "menu",
-  menuAbierto = false,
-  menuId,
-  maxItems = 4,
-  ariaLabel = "Navegaci\xF3n inferior",
-  className
-}) {
-  const visibles = items.slice(0, maxItems);
-  if (!visibles.length && !onMas) return null;
-  const claseItem = (esActivo) => cn(
-    "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition",
-    esActivo ? "text-fono-light" : "text-mute hover:text-fore"
-  );
-  return /* @__PURE__ */ jsxs61(
-    "nav",
-    {
-      "aria-label": ariaLabel,
-      className: cn(
-        "fixed inset-x-0 bottom-0 z-40 flex border-t border-ink-600 bg-ink-900/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden",
-        className
-      ),
-      children: [
-        visibles.map((item) => {
-          const esActivo = item.id === activo;
-          const contenido = /* @__PURE__ */ jsxs61(Fragment11, { children: [
-            /* @__PURE__ */ jsxs61("span", { className: "relative", children: [
-              item.icono && /* @__PURE__ */ jsx76(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
-              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx76("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
-            ] }),
-            /* @__PURE__ */ jsx76("span", { className: "max-w-full truncate", children: item.etiqueta })
-          ] });
-          const titulo2 = item.title || item.etiqueta;
-          const clase = cn(claseItem(esActivo), "h-14");
-          return item.href ? /* @__PURE__ */ jsx76(
-            "a",
-            {
-              href: item.href,
-              onClick: item.onClick,
-              "aria-current": esActivo ? "page" : void 0,
-              "aria-label": item.ariaLabel || item.etiqueta,
-              title: titulo2,
-              className: clase,
-              children: contenido
-            },
-            item.id ?? item.href
-          ) : /* @__PURE__ */ jsx76(
-            "button",
-            {
-              type: "button",
-              onClick: () => {
-                onSelect?.(item.id);
-                item.onClick?.();
-              },
-              "aria-current": esActivo ? "page" : void 0,
-              "aria-label": item.ariaLabel || item.etiqueta,
-              title: titulo2,
-              className: clase,
-              children: contenido
-            },
-            item.id ?? item.etiqueta
-          );
-        }),
-        onMas && /* @__PURE__ */ jsxs61(
-          "button",
-          {
-            type: "button",
-            onClick: onMas,
-            "aria-label": masEtiqueta,
-            "aria-controls": menuId,
-            "aria-expanded": menuAbierto,
-            title: masEtiqueta,
-            className: cn(claseItem(menuAbierto), "h-14"),
-            children: [
-              /* @__PURE__ */ jsx76(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
-              /* @__PURE__ */ jsx76("span", { className: "max-w-full truncate", children: masEtiqueta })
-            ]
-          }
-        )
-      ]
-    }
-  );
-}
-
-// src/components/Avatar.jsx
-import { useEffect as useEffect9, useState as useState22 } from "react";
-
-// src/utils/avatar.js
-var COLORES_AVATAR = {
-  fono: "bg-fono/15 text-fono-light",
-  ok: "bg-ok/15 text-ok",
-  info: "bg-info/15 text-info",
-  warn: "bg-warn/15 text-warn",
-  bad: "bg-bad/15 text-bad",
-  pass: "bg-pass/15 text-pass",
-  reserved: "bg-reserved/15 text-reserved",
-  mute: "bg-ink-600 text-mute"
-};
-var CLAVES_COLOR = Object.keys(COLORES_AVATAR);
-var TIPO_SOCIETARIO = /^(sa|srl|saci|sae|sas|ltda|eas|cia|s|a)$/i;
-var primeraLetra = (palabra) => [...String(palabra || "")][0] ?? "";
-function inicialesDeNombre(nombre) {
-  const palabras = String(nombre ?? "").replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
-  if (!palabras.length) return "\u2014";
-  const significativas = palabras.filter((palabra) => !TIPO_SOCIETARIO.test(palabra));
-  if (!significativas.length) return (primeraLetra(palabras[0]) + primeraLetra(palabras[1])).toUpperCase();
-  if (significativas.length > 1) {
-    return (primeraLetra(significativas[0]) + primeraLetra(significativas[significativas.length - 1])).toUpperCase();
-  }
-  const societario = palabras.find((palabra) => TIPO_SOCIETARIO.test(palabra));
-  return (primeraLetra(significativas[0]) + (societario ? primeraLetra(societario) : "")).toUpperCase();
-}
-function claveColorDeNombre(nombre) {
-  const texto = String(nombre ?? "").trim().toLowerCase();
-  let hash = 0;
-  for (let indice = 0; indice < texto.length; indice += 1) {
-    hash = (hash * 31 + texto.charCodeAt(indice)) % 1e5;
-  }
-  return CLAVES_COLOR[hash % CLAVES_COLOR.length];
-}
-function colorDeNombre(nombre) {
-  return COLORES_AVATAR[claveColorDeNombre(nombre)] || COLORES_AVATAR.mute;
-}
-
-// src/components/Avatar.jsx
-import { jsx as jsx77 } from "react/jsx-runtime";
-var TAMANOS_AVATAR = {
-  xs: "h-5 w-5 text-[9px]",
-  sm: "h-7 w-7 text-[10px]",
-  md: "h-9 w-9 text-xs",
-  lg: "h-14 w-14 text-lg",
-  xl: "h-20 w-20 text-2xl"
-};
-function Avatar({
-  nombre,
-  src,
-  tamano = "md",
-  forma,
-  empresa = false,
-  title,
-  ariaLabel,
-  decorativo = false,
-  onError,
-  className
-}) {
-  const [fallo, setFallo] = useState22(false);
-  useEffect9(() => {
-    setFallo(false);
-  }, [src]);
-  const cuadro = empresa ? "cuadrado" : forma || "redondo";
-  const redondo = cuadro !== "cuadrado";
-  const etiqueta = ariaLabel || title || String(nombre ?? "").trim() || "Identidad";
-  const conImagen = Boolean(src) && !fallo;
-  return /* @__PURE__ */ jsx77(
-    "span",
-    {
-      role: decorativo ? void 0 : "img",
-      "aria-label": decorativo ? void 0 : etiqueta,
-      "aria-hidden": decorativo || void 0,
-      title,
-      className: cn(
-        "inline-flex shrink-0 items-center justify-center overflow-hidden font-bold uppercase",
-        redondo ? "rounded-full" : "rounded-lg",
-        !conImagen && colorDeNombre(nombre),
-        TAMANOS_AVATAR[tamano] || TAMANOS_AVATAR.md,
-        className
-      ),
-      children: conImagen ? /* @__PURE__ */ jsx77(
-        "img",
-        {
-          src,
-          alt: "",
-          decoding: "async",
-          referrerPolicy: "no-referrer",
-          onError: (event) => {
-            setFallo(true);
-            onError?.(event);
-          },
-          className: cn("h-full w-full", redondo ? "object-cover" : "object-contain")
-        }
-      ) : /* @__PURE__ */ jsx77("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
-    }
-  );
-}
-
-// src/components/PersonaChip.jsx
-import { useEffect as useEffect10, useState as useState23 } from "react";
-
-// src/utils/identidad.js
-var primerTexto = (...valores) => {
-  for (const valor of valores) {
-    if (typeof valor === "string" && valor.trim()) return valor.trim();
-  }
-  return "";
-};
-function identidadDeUsuario(fuente = {}) {
-  const objeto = fuente && typeof fuente === "object" ? fuente : {};
-  const nombre = primerTexto(objeto.nombre, objeto.name, objeto.displayName, objeto.fullName) || primerTexto(objeto.email) || "Sistema";
-  return {
-    nombre,
-    primerNombre: primerNombre(nombre) || "Sistema",
-    // Foto local (subida): la app la resuelve por id y la pasa acá.
-    fotoLocal: primerTexto(objeto.foto, objeto.avatarUrl, objeto.photoURL, objeto.fotoUrl),
-    // Foto de la identidad (Google).
-    picture: primerTexto(objeto.picture),
-    hasAvatar: objeto.hasAvatar ?? objeto.tieneFoto ?? void 0,
-    scope: primerTexto(objeto.scope)
-  };
-}
-var ESTADOS_PRESENCIA = {
-  "en-linea": { etiqueta: "En l\xEDnea", punto: "bg-ok" },
-  ausente: { etiqueta: "Ausente", punto: "bg-warn" },
-  ocupado: { etiqueta: "Ocupado", punto: "bg-bad" },
-  offline: { etiqueta: "Sin conexi\xF3n", punto: "bg-mute" }
-};
-function resumenPresencia(personas = []) {
-  const lista = Array.isArray(personas) ? personas : [];
-  if (!lista.length) return "";
-  if (lista.length === 1) {
-    const { primerNombre: nombre } = identidadDeUsuario(lista[0]);
-    return `${nombre} en l\xEDnea`;
-  }
-  return `${lista.length} en l\xEDnea`;
-}
-
-// src/components/PersonaChip.jsx
-import { jsx as jsx78, jsxs as jsxs62 } from "react/jsx-runtime";
-function PersonaChip({
-  user,
-  foto,
-  picture,
-  size = "md",
-  nombre = true,
-  nombreCorto = false,
-  estado,
-  title,
-  className,
-  textoClassName,
-  avatarClassName,
-  children
-}) {
-  const fuente = typeof user === "string" ? { name: user } : user || {};
-  const identidad = identidadDeUsuario(fuente);
-  const visible = nombreCorto ? identidad.primerNombre : identidad.nombre;
-  const presencia = ESTADOS_PRESENCIA[estado] || null;
-  const local = foto ?? (identidad.hasAvatar === false ? "" : identidad.fotoLocal);
-  const google = picture ?? identidad.picture;
-  const [localRota, setLocalRota] = useState23(false);
-  useEffect10(() => {
-    setLocalRota(false);
-  }, [local]);
-  const src = !localRota && local ? local : google;
-  const etiqueta = title || [identidad.nombre, presencia?.etiqueta, identidad.scope].filter(Boolean).join(" \xB7 ");
-  return /* @__PURE__ */ jsxs62("span", { "data-testid": "persona-chip", className: cn("inline-flex min-w-0 items-center gap-2", className), title: etiqueta, children: [
-    /* @__PURE__ */ jsxs62("span", { className: "relative inline-flex shrink-0", children: [
-      /* @__PURE__ */ jsx78(
-        Avatar,
-        {
-          nombre: identidad.nombre,
-          src,
-          tamano: size,
-          onError: () => setLocalRota(true),
-          className: avatarClassName,
-          decorativo: !nombre && !children,
-          title: etiqueta
-        }
-      ),
-      presencia ? /* @__PURE__ */ jsx78("i", { "aria-hidden": true, className: cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-1 ring-paper", presencia.punto) }) : null
-    ] }),
-    nombre ? /* @__PURE__ */ jsx78("span", { className: cn("min-w-0", CELDA_IDENTIDAD_GRANDE, textoClassName), children: visible }) : null,
-    children ? /* @__PURE__ */ jsx78("span", { className: CELDA_DATO, children }) : null
-  ] });
-}
-
-// src/components/PilaPersonas.jsx
-import { Fragment as Fragment12, jsx as jsx79, jsxs as jsxs63 } from "react/jsx-runtime";
-function PilaPersonas({
-  personas = [],
-  max = 4,
-  size = "md",
-  onMas,
-  resumen = true,
-  ariaLabel = "Personas en l\xEDnea",
-  title,
-  className
-}) {
-  const lista = Array.isArray(personas) ? personas : [];
-  if (!lista.length) return null;
-  const visibles = lista.slice(0, Math.max(0, max));
-  const restantes = lista.length - visibles.length;
-  const texto = title || resumenPresencia(lista);
-  const contenido = /* @__PURE__ */ jsxs63(Fragment12, { children: [
-    /* @__PURE__ */ jsxs63("span", { className: "flex -space-x-2", children: [
-      visibles.map((persona, indice) => {
-        const fuente = typeof persona === "string" ? { name: persona } : persona || {};
-        const identidad = identidadDeUsuario(fuente);
-        return /* @__PURE__ */ jsx79(
-          PersonaChip,
-          {
-            user: fuente,
-            foto: fuente.foto,
-            picture: fuente.picture,
-            size,
-            nombre: false,
-            estado: fuente.estado ?? (fuente.active ? "en-linea" : void 0),
-            title: `${identidad.nombre}${identidad.scope ? ` \xB7 ${identidad.scope}` : ""}`,
-            avatarClassName: "border-paper"
-          },
-          fuente.id ?? `${identidad.nombre}-${indice}`
-        );
-      }),
-      restantes > 0 && /* @__PURE__ */ jsxs63(
-        "span",
-        {
-          className: cn(
-            "grid place-items-center rounded-full border border-paper bg-ink-700 font-bold text-mute",
-            size === "sm" ? "h-6 w-6 text-[10px]" : size === "lg" ? "h-14 w-14 text-sm" : size === "xs" ? "h-5 w-5 text-[9px]" : size === "xl" ? "h-20 w-20 text-lg" : "h-9 w-9 text-xs"
-          ),
-          "aria-hidden": onMas ? void 0 : "true",
-          children: [
-            "+",
-            restantes
-          ]
-        }
-      )
-    ] }),
-    resumen && texto ? /* @__PURE__ */ jsx79("span", { className: "whitespace-nowrap text-xs font-semibold text-mute", children: texto }) : null
-  ] });
-  const clases = "flex items-center gap-2 rounded-full border border-fore/10 bg-ink-700/60 px-2.5 py-1";
-  return onMas ? /* @__PURE__ */ jsx79("button", { type: "button", onClick: onMas, className: cn(clases, className), "aria-label": texto || ariaLabel, title: texto, children: contenido }) : /* @__PURE__ */ jsx79("div", { role: "group", "aria-label": texto || ariaLabel, title: texto, className: cn(clases, className), children: contenido });
-}
-
-// src/components/ImporteDelta.jsx
-import { jsx as jsx80 } from "react/jsx-runtime";
-function tonoDelta(valor, { invertir = false } = {}) {
-  const numero = Number(valor);
-  if (!Number.isFinite(numero) || numero === 0) return "mute";
-  const positivo = numero > 0;
-  const bueno = invertir ? !positivo : positivo;
-  return bueno ? "ok" : "bad";
-}
-var TONO_TEXTO = { ok: "text-ok", bad: "text-bad", mute: "text-mute" };
-function ImporteDelta({
-  valor,
-  moneda = "PYG",
-  formato = "moneda",
-  invertir = false,
-  vacio = "\u2014",
-  simbolo,
-  className
-}) {
-  const numero = Number(valor);
-  const ausente = valor === null || valor === void 0 || valor === "" || !Number.isFinite(numero);
-  if (ausente) return /* @__PURE__ */ jsx80("span", { className: cn("tabular-nums text-mute", className), children: vacio });
-  const texto = formato === "porcentaje" ? `${signoDe(numero) ? `${signoDe(numero)} ` : ""}${formatPercent(Math.abs(numero))} %` : montoConSigno(numero, moneda, vacio, { simbolo });
-  return /* @__PURE__ */ jsx80(
-    "span",
-    {
-      className: cn(
-        "inline-flex items-center justify-end whitespace-nowrap font-semibold tabular-nums",
-        TONO_TEXTO[tonoDelta(numero, { invertir })],
-        className
-      ),
-      children: texto
-    }
-  );
-}
-
-// src/components/IndicadorConexion.jsx
-import { jsx as jsx81, jsxs as jsxs64 } from "react/jsx-runtime";
-function IndicadorConexion({
-  enLinea = true,
-  pendientes = 0,
-  sincronizando = false,
-  onSincronizar,
-  variante = "chip",
-  mensaje,
-  etiquetaEnLinea = "En l\xEDnea",
-  etiquetaSinConexion = "Sin conexi\xF3n",
-  etiquetaSincronizando = "Sincronizando\u2026",
-  className
-}) {
-  const cuenta = Number.isFinite(Number(pendientes)) && Number(pendientes) > 0 ? Math.trunc(Number(pendientes)) : 0;
-  const texto = sincronizando ? etiquetaSincronizando : enLinea ? etiquetaEnLinea : etiquetaSinConexion;
-  const detalle = cuenta > 0 ? `${formatoNumero(cuenta)} ${cuenta === 1 ? "pendiente" : "pendientes"} de subir` : "";
-  const titulo2 = [texto, detalle].filter(Boolean).join(" \xB7 ");
-  const boton = onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs64(
-    "button",
-    {
-      type: "button",
-      onClick: onSincronizar,
-      disabled: sincronizando,
-      "aria-label": sincronizando ? etiquetaSincronizando : `Sincronizar ${formatoNumero(cuenta)} pendientes`,
-      title: sincronizando ? etiquetaSincronizando : "Sincronizar ahora",
-      className: cn(
-        "inline-flex h-6 items-center gap-1 rounded-md border px-1.5 font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
-        variante === "banner" ? "border-current/40 hover:bg-fore/10" : "border-ink-500 text-mute hover:border-fono hover:text-fore"
-      ),
-      children: [
-        /* @__PURE__ */ jsx81(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
-        "Sincronizar"
-      ]
-    }
-  );
-  if (variante === "banner") {
-    return /* @__PURE__ */ jsxs64(
-      "div",
-      {
-        role: "status",
-        "aria-live": "polite",
-        title: titulo2,
-        className: cn(
-          "flex flex-wrap items-center justify-center gap-2 px-4 py-2 text-center text-sm font-medium",
-          enLinea ? "bg-ink-800 text-mute" : "bg-bad text-white dark:text-onbrand",
-          className
-        ),
-        children: [
-          /* @__PURE__ */ jsx81(Icon, { name: enLinea ? "refresh" : "alert", className: "h-4 w-4 shrink-0", "aria-hidden": "true" }),
-          /* @__PURE__ */ jsxs64("span", { children: [
-            mensaje || texto,
-            !mensaje && detalle ? ` \xB7 ${detalle}` : ""
-          ] }),
-          !enLinea && !mensaje && /* @__PURE__ */ jsx81("span", { className: "hidden sm:inline", children: "Se sincroniza al reconectar." }),
-          boton
-        ]
-      }
-    );
-  }
-  return /* @__PURE__ */ jsxs64(
-    "div",
-    {
-      role: "status",
-      "aria-live": "polite",
-      title: titulo2,
-      className: cn(
-        "inline-flex min-w-0 items-center gap-2 rounded-lg border border-ink-600 bg-ink-800 px-2.5 py-1.5 text-xs",
-        enLinea ? "text-mute" : "text-warn",
-        className
-      ),
-      children: [
-        /* @__PURE__ */ jsx81(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
-        /* @__PURE__ */ jsxs64("span", { className: "min-w-0 truncate font-medium", children: [
-          texto,
-          detalle && /* @__PURE__ */ jsxs64("span", { className: "text-mute", children: [
-            " \xB7 ",
-            detalle
-          ] })
-        ] }),
-        boton
-      ]
-    }
-  );
-}
-
-// src/components/CampanaAvisos.jsx
-import { useEffect as useEffect11, useRef as useRef10, useState as useState24 } from "react";
-import { Fragment as Fragment13, jsx as jsx82, jsxs as jsxs65 } from "react/jsx-runtime";
-function contarSinLeer(avisos = []) {
-  const conEstado = avisos.filter((aviso) => aviso && typeof aviso.leido === "boolean");
-  if (conEstado.length) return conEstado.filter((aviso) => !aviso.leido).length;
-  return avisos.length;
-}
-function textoContador(total) {
-  const cuenta = Number(total) || 0;
-  return cuenta > 99 ? "99+" : String(cuenta);
-}
-function CampanaAvisos({
-  avisos = [],
-  onAbrir,
-  onElegir,
-  titulo: titulo2 = "Avisos",
-  ariaLabel = "Avisos",
-  anclaje = "right",
-  vacioTitulo = "Sin avisos",
-  vacioDetalle = "No hay novedades para mostrar.",
-  pie,
-  className
-}) {
-  const [abierto, setAbierto] = useState24(false);
-  const raiz = useRef10(null);
-  const sinLeer = contarSinLeer(avisos);
-  useEffect11(() => {
-    if (!abierto) return void 0;
-    const cerrarFuera = (event) => {
-      if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
-      setAbierto(false);
-    };
-    const cerrarEsc = (event) => {
-      if (event.key === "Escape") setAbierto(false);
-    };
-    document.addEventListener("mousedown", cerrarFuera);
-    document.addEventListener("keydown", cerrarEsc);
-    return () => {
-      document.removeEventListener("mousedown", cerrarFuera);
-      document.removeEventListener("keydown", cerrarEsc);
-    };
-  }, [abierto]);
-  function alternar() {
-    setAbierto((actual) => {
-      if (!actual) onAbrir?.();
-      return !actual;
-    });
-  }
-  return /* @__PURE__ */ jsxs65("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsxs65(
-      "button",
-      {
-        type: "button",
-        onClick: alternar,
-        "aria-label": ariaLabel,
-        "aria-haspopup": "menu",
-        "aria-expanded": abierto,
-        title: sinLeer > 0 ? `${ariaLabel} \xB7 ${sinLeer} sin leer` : ariaLabel,
-        className: "relative grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-        children: [
-          /* @__PURE__ */ jsx82(Icon, { name: "bell", className: "h-4 w-4" }),
-          sinLeer > 0 && /* @__PURE__ */ jsx82("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
-        ]
-      }
-    ),
-    abierto && /* @__PURE__ */ jsxs65(
-      "div",
-      {
-        role: "menu",
-        "aria-label": titulo2,
-        className: cn(
-          "absolute z-30 mt-1 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-ink-500 bg-ink shadow-float",
-          anclaje === "left" ? "left-0" : "right-0"
-        ),
-        children: [
-          /* @__PURE__ */ jsxs65("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx82("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
-            sinLeer > 0 && /* @__PURE__ */ jsxs65("span", { className: "text-xs tabular-nums text-mute", children: [
-              textoContador(sinLeer),
-              " sin leer"
-            ] })
-          ] }),
-          /* @__PURE__ */ jsx82("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx82(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
-            const tono = TONOS.punto[aviso.tono] || TONOS.punto.mute;
-            const contenido = /* @__PURE__ */ jsxs65(Fragment13, { children: [
-              /* @__PURE__ */ jsx82("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx82(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
-              /* @__PURE__ */ jsxs65("span", { className: "min-w-0 flex-1", children: [
-                /* @__PURE__ */ jsx82("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
-                aviso.detalle && /* @__PURE__ */ jsx82("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
-                aviso.fecha && /* @__PURE__ */ jsx82("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
-              ] })
-            ] });
-            const clases = "flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-ink-700/60";
-            return aviso.href ? /* @__PURE__ */ jsx82(
-              "a",
-              {
-                role: "menuitem",
-                href: aviso.href,
-                className: clases,
-                onClick: () => {
-                  setAbierto(false);
-                  onElegir?.(aviso);
-                  aviso.onClick?.();
-                },
-                children: contenido
-              },
-              aviso.id ?? aviso.titulo
-            ) : /* @__PURE__ */ jsx82(
-              "button",
-              {
-                type: "button",
-                role: "menuitem",
-                className: clases,
-                onClick: () => {
-                  setAbierto(false);
-                  onElegir?.(aviso);
-                  aviso.onClick?.();
-                },
-                children: contenido
-              },
-              aviso.id ?? aviso.titulo
-            );
-          }) }),
-          pie && /* @__PURE__ */ jsx82("div", { className: "border-t border-ink-600 p-2", children: pie })
-        ]
-      }
-    )
-  ] });
-}
-
-// src/components/GraficoBarras.jsx
-import { jsx as jsx83, jsxs as jsxs66 } from "react/jsx-runtime";
-var COLORES = {
-  fono: "bg-fono",
-  ok: "bg-ok",
-  bad: "bg-bad",
-  warn: "bg-warn",
-  info: "bg-info",
-  pass: "bg-pass",
-  accion: "bg-accion",
-  mute: "bg-mute"
-};
-function maximoDeBarras(datos = [], max) {
-  const pedido = Number(max);
-  if (Number.isFinite(pedido) && pedido > 0) return pedido;
-  return datos.reduce((tope, dato) => Math.max(tope, Number(dato?.valor) || 0), 0) || 1;
-}
-function porcentajeBarra(valor, max) {
-  const numero = Number(valor);
-  const tope = Number(max) > 0 ? Number(max) : 1;
-  if (!Number.isFinite(numero) || numero <= 0) return 0;
-  return Math.min(100, numero / tope * 100);
-}
-function GraficoBarras({
-  datos = [],
-  max,
-  orientacion = "vertical",
-  altura = 160,
-  tono = "fono",
-  formatoValor,
-  etiqueta = "Gr\xE1fico de barras",
-  mostrarValores = true,
-  className
-}) {
-  const formatear = formatoValor || ((valor) => formatoNumero(valor));
-  if (!datos.length) return /* @__PURE__ */ jsx83(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
-  const tope = maximoDeBarras(datos, max);
-  const colorDe = (dato) => COLORES[dato.tono] || COLORES[tono] || COLORES.fono;
-  const listaAccesible = /* @__PURE__ */ jsx83("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx83("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
-  if (orientacion === "horizontal") {
-    return /* @__PURE__ */ jsxs66("div", { className: cn("space-y-1.5", className), children: [
-      datos.map((dato, indice) => /* @__PURE__ */ jsxs66("div", { className: "flex items-center gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx83("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
-        /* @__PURE__ */ jsx83(
-          "span",
-          {
-            className: "h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-fore/10",
-            role: "img",
-            "aria-label": `${dato.etiqueta}: ${formatear(dato.valor)}`,
-            title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-            children: /* @__PURE__ */ jsx83("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
-          }
-        ),
-        mostrarValores && /* @__PURE__ */ jsx83("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
-      ] }, dato.id ?? indice)),
-      listaAccesible
-    ] });
-  }
-  return /* @__PURE__ */ jsxs66("div", { className: cn("space-y-1", className), children: [
-    /* @__PURE__ */ jsx83("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx83("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx83(
-      "span",
-      {
-        className: cn("absolute inset-x-0 bottom-0 rounded-t-md transition-[height] duration-500", colorDe(dato)),
-        style: { height: `${porcentajeBarra(dato.valor, tope)}%` },
-        title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-        children: mostrarValores && /* @__PURE__ */ jsx83("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
-      }
-    ) }, dato.id ?? indice)) }),
-    /* @__PURE__ */ jsx83("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx83("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
-    listaAccesible
-  ] });
-}
-
-// src/components/TableroKanban.jsx
-import { useCallback as useCallback3, useEffect as useEffect12, useMemo as useMemo8, useRef as useRef11, useState as useState25 } from "react";
-import { jsx as jsx84, jsxs as jsxs67 } from "react/jsx-runtime";
-var SIN_MOVIMIENTOS = /* @__PURE__ */ new Set();
-function columnasDelTablero(columnas = [], tarjetas = []) {
-  const declaradas = [...columnas || []];
-  const valores = new Set(declaradas.map((columna) => columna.valor));
-  const extras = [...new Set((tarjetas || []).map((tarjeta) => tarjeta.estado).filter((estado) => estado !== null && estado !== void 0 && estado !== "" && !valores.has(estado)))].sort();
-  return [...declaradas, ...extras.map((valor) => ({ valor, titulo: valor, tono: "mute" }))];
-}
-function agruparTarjetas(columnas = [], tarjetas = []) {
-  const grupos = {};
-  for (const columna of columnas) grupos[columna.valor] = [];
-  for (const tarjeta of tarjetas || []) {
-    if (grupos[tarjeta.estado]) grupos[tarjeta.estado].push(tarjeta);
-  }
-  return grupos;
-}
-function destinosDeTarjeta(tarjeta, columnas = []) {
-  const permitidos = tarjeta?.destinos ?? columnas.map((columna) => columna.valor);
-  return (permitidos || []).filter((valor, indice) => valor !== tarjeta?.estado && permitidos.indexOf(valor) === indice);
-}
-function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
-  const [overrides, setOverrides] = useState25({});
-  const [moviendo, setMoviendo] = useState25(SIN_MOVIMIENTOS);
-  const tarjetasRef = useRef11(tarjetas);
-  const overridesRef = useRef11(overrides);
-  const enVueloRef = useRef11(/* @__PURE__ */ new Set());
-  useEffect12(() => {
-    tarjetasRef.current = tarjetas;
-  }, [tarjetas]);
-  useEffect12(() => {
-    overridesRef.current = overrides;
-  }, [overrides]);
-  useEffect12(() => {
-    setOverrides((actual) => {
-      const entradas = Object.entries(actual);
-      if (entradas.length === 0) return actual;
-      const siguiente = {};
-      for (const [id, estado] of entradas) {
-        const tarjeta = (tarjetas || []).find((candidata) => candidata.id === id);
-        if (tarjeta && tarjeta.estado !== estado) siguiente[id] = estado;
-      }
-      return Object.keys(siguiente).length === entradas.length ? actual : siguiente;
-    });
-  }, [tarjetas]);
-  const efectivas = useMemo8(
-    () => (tarjetas || []).map((tarjeta) => {
-      const optimista = overrides[tarjeta.id];
-      return optimista && optimista !== tarjeta.estado ? { ...tarjeta, estado: optimista } : tarjeta;
-    }),
-    [tarjetas, overrides]
-  );
-  const revertir = useCallback3(
-    (id, mensaje) => {
-      setOverrides((actual) => {
-        if (!(id in actual)) return actual;
-        const siguiente = { ...actual };
-        delete siguiente[id];
-        return siguiente;
-      });
-      if (mensaje) onError?.(mensaje);
-    },
-    [onError]
-  );
-  const moverA = useCallback3(
-    (id, estadoDestino) => {
-      if (!onMover || !id || !estadoDestino) return;
-      const tarjeta = tarjetasRef.current.find((candidata) => candidata.id === id);
-      const vigente = overridesRef.current[id] ?? tarjeta?.estado;
-      if (!tarjeta || vigente === estadoDestino || enVueloRef.current.has(id)) return;
-      const liberar = () => {
-        enVueloRef.current.delete(id);
-        setMoviendo((actual) => {
-          if (!actual.has(id)) return actual;
-          const siguiente = new Set(actual);
-          siguiente.delete(id);
-          return siguiente;
-        });
-      };
-      const terminar = (resultado) => {
-        if (resultado && resultado.ok === false) revertir(id, resultado.error || "No se pudo mover la tarjeta.");
-      };
-      enVueloRef.current.add(id);
-      setOverrides((actual) => ({ ...actual, [id]: estadoDestino }));
-      setMoviendo((actual) => new Set(actual).add(id));
-      try {
-        const resultado = onMover(id, estadoDestino);
-        if (resultado && typeof resultado.then === "function") {
-          resultado.then(terminar).catch(() => revertir(id, "No se pudo mover la tarjeta.")).finally(liberar);
-        } else {
-          terminar(resultado);
-          liberar();
-        }
-      } catch {
-        revertir(id, "No se pudo mover la tarjeta.");
-        liberar();
-      }
-    },
-    [onMover, revertir]
-  );
-  return { tarjetas: efectivas, moverA, moviendo };
-}
-function TableroKanban({
-  /** Nombre del tablero para lectores de pantalla («Presupuestos», «Trabajos»). */
-  etiqueta = "Tablero",
-  /** Columnas del pipeline: `[{ valor, titulo, tono? }]`. */
-  columnas = [],
-  /**
-   * Tarjetas: `[{ id, estado, titulo, subtitulo?, chips?, monto?, montoNota?,
-   * fecha?, detalle?, acciones?, destinos? }]`.
-   */
-  tarjetas = [],
-  /** Rol con permiso de escritura: sin él no hay arrastre ni «Mover a…». */
-  puedeMover = false,
-  etiquetaMover = "Mover a\u2026",
-  textoVacio = "Sin tarjetas",
-  /** `(id, estadoDestino) => void | { ok: true } | { ok: false, error } | Promise<…>`. */
-  onMover,
-  /** Aviso del revert (por ejemplo, el toast de la pantalla). */
-  onError,
-  className
-}) {
-  const { tarjetas: efectivas, moverA, moviendo } = useTableroOptimista({ tarjetas, onMover, onError });
-  const [arrastrandoId, setArrastrandoId] = useState25("");
-  const [sobreColumna, setSobreColumna] = useState25("");
-  const columnasReales = useMemo8(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
-  const grupos = useMemo8(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
-  const arrastrando = arrastrandoId ? efectivas.find((tarjeta) => tarjeta.id === arrastrandoId) ?? null : null;
-  const acepta = (tarjeta, valor) => Boolean(onMover && puedeMover && tarjeta && !moviendo.has(tarjeta.id) && destinosDeTarjeta(tarjeta, columnasReales).includes(valor));
-  function terminarArrastre() {
-    setArrastrandoId("");
-    setSobreColumna("");
-  }
-  const tituloDe = (valor) => columnasReales.find((columna) => columna.valor === valor)?.titulo ?? valor;
-  return /* @__PURE__ */ jsx84("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
-    const deLaColumna = grupos[columna.valor] ?? [];
-    const sobre = sobreColumna === columna.valor && acepta(arrastrando, columna.valor);
-    return /* @__PURE__ */ jsxs67(
-      "section",
-      {
-        "aria-label": `${columna.titulo}: ${deLaColumna.length}`,
-        className: cn(
-          "flex w-[17.5rem] shrink-0 snap-start flex-col rounded-2xl border border-ink-600 bg-ink-900/60 transition",
-          sobre && "border-fono/60 ring-2 ring-fono/30"
-        ),
-        onDragOver: (event) => {
-          if (!acepta(arrastrando, columna.valor)) return;
-          event.preventDefault();
-          event.dataTransfer.dropEffect = "move";
-          setSobreColumna(columna.valor);
-        },
-        onDragLeave: () => setSobreColumna((actual) => actual === columna.valor ? "" : actual),
-        onDrop: (event) => {
-          if (!acepta(arrastrando, columna.valor)) return;
-          event.preventDefault();
-          const id = event.dataTransfer.getData("text/plain") || arrastrandoId;
-          terminarArrastre();
-          if (id) moverA(id, columna.valor);
-        },
-        children: [
-          /* @__PURE__ */ jsxs67("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx84("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
-            /* @__PURE__ */ jsx84("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
-            /* @__PURE__ */ jsx84("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
-          ] }),
-          /* @__PURE__ */ jsxs67("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
-            deLaColumna.map((tarjeta) => {
-              const destinos = destinosDeTarjeta(tarjeta, columnasReales);
-              const movible = Boolean(onMover && puedeMover && destinos.length > 0 && !moviendo.has(tarjeta.id));
-              const tieneMonto = tarjeta.monto !== null && tarjeta.monto !== void 0;
-              return /* @__PURE__ */ jsxs67(
-                "article",
-                {
-                  className: cn(
-                    "rounded-xl border border-ink-600 bg-ink p-2.5 transition",
-                    arrastrandoId === tarjeta.id && "opacity-60",
-                    moviendo.has(tarjeta.id) && "opacity-70"
-                  ),
-                  "aria-busy": moviendo.has(tarjeta.id) || void 0,
-                  draggable: movible,
-                  onDragStart: (event) => {
-                    if (!movible) {
-                      event.preventDefault();
-                      return;
-                    }
-                    event.dataTransfer.effectAllowed = "move";
-                    event.dataTransfer.setData("text/plain", tarjeta.id);
-                    setArrastrandoId(tarjeta.id);
-                  },
-                  onDragEnd: terminarArrastre,
-                  children: [
-                    /* @__PURE__ */ jsxs67("div", { className: "flex items-start justify-between gap-2", children: [
-                      /* @__PURE__ */ jsx84("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
-                      tarjeta.acciones && /* @__PURE__ */ jsx84("span", { className: "shrink-0", children: tarjeta.acciones })
-                    ] }),
-                    tarjeta.subtitulo && /* @__PURE__ */ jsx84("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
-                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx84("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs67(
-                      "span",
-                      {
-                        title: chip.titulo ?? chip.etiqueta,
-                        className: cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(chip.tono)),
-                        children: [
-                          chip.icono && /* @__PURE__ */ jsx84(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
-                          chip.etiqueta
-                        ]
-                      },
-                      chip.etiqueta ?? indice
-                    )) }),
-                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs67("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
-                      tieneMonto && /* @__PURE__ */ jsxs67("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
-                        /* @__PURE__ */ jsx84(Money, { value: tarjeta.monto }),
-                        tarjeta.montoNota && /* @__PURE__ */ jsx84("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
-                      ] }),
-                      tarjeta.fecha && /* @__PURE__ */ jsx84("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
-                    ] }),
-                    tarjeta.detalle && /* @__PURE__ */ jsx84("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
-                    movible && /* @__PURE__ */ jsxs67("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
-                      /* @__PURE__ */ jsx84("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
-                      /* @__PURE__ */ jsxs67(
-                        "select",
-                        {
-                          id: `mover-${tarjeta.id}`,
-                          value: "",
-                          onChange: (event) => {
-                            if (event.target.value) moverA(tarjeta.id, event.target.value);
-                          },
-                          title: etiquetaMover,
-                          className: cn(
-                            "h-8 w-full cursor-pointer rounded-lg border border-ink-500 bg-ink-800 px-2 text-xs text-fore",
-                            "outline-none transition focus:border-fono focus:ring-1 focus:ring-fono/40 [&>option]:bg-ink-800 [&>option]:text-fore"
-                          ),
-                          children: [
-                            /* @__PURE__ */ jsx84("option", { value: "", children: etiquetaMover }),
-                            destinos.map((valor) => /* @__PURE__ */ jsx84("option", { value: valor, children: tituloDe(valor) }, valor))
-                          ]
-                        }
-                      )
-                    ] })
-                  ]
-                },
-                tarjeta.id
-              );
-            }),
-            deLaColumna.length === 0 && /* @__PURE__ */ jsx84("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
-          ] })
-        ]
-      },
-      columna.valor
-    );
-  }) });
-}
-
-// src/components/Cronologia.jsx
-import { jsx as jsx85, jsxs as jsxs68 } from "react/jsx-runtime";
-var ICONOS_HITO = {
-  creado: "plus",
-  actualizado: "edit",
-  estado: "refresh",
-  enviado: "send",
-  visto: "eye",
-  solicitud: "edit",
-  revision: "alert",
-  resuelto: "check",
-  aprobado: "check",
-  rechazado: "close",
-  pago: "money",
-  cobro: "money",
-  comprobante: "upload",
-  tesoreria: "wallet",
-  inventario: "box",
-  retiro: "truck",
-  devolucion: "download",
-  tarea: "list",
-  tarea_cumplida: "check",
-  evento: "calendar",
-  cancelado: "close",
-  nota: "info",
-  gracias: "sparkles"
-};
-var TONOS_HITO = {
-  creado: "mute",
-  actualizado: "mute",
-  estado: "info",
-  enviado: "info",
-  visto: "info",
-  solicitud: "warn",
-  revision: "warn",
-  resuelto: "ok",
-  aprobado: "ok",
-  rechazado: "bad",
-  pago: "ok",
-  cobro: "info",
-  comprobante: "info",
-  tesoreria: "info",
-  inventario: "info",
-  retiro: "info",
-  devolucion: "ok",
-  tarea: "mute",
-  tarea_cumplida: "ok",
-  evento: "info",
-  cancelado: "bad",
-  nota: "mute",
-  gracias: "ok"
-};
-var ETIQUETAS_HITO = {
-  creado: "Creado",
-  actualizado: "Actualizado",
-  estado: "Cambio de estado",
-  enviado: "Enviado",
-  visto: "Visto",
-  solicitud: "Solicitud",
-  revision: "Revisi\xF3n",
-  resuelto: "Resuelto",
-  aprobado: "Aprobado",
-  rechazado: "Rechazado",
-  pago: "Pago",
-  cobro: "Cobro",
-  comprobante: "Comprobante",
-  tesoreria: "Tesorer\xEDa",
-  inventario: "Inventario",
-  retiro: "Retiro",
-  devolucion: "Devoluci\xF3n",
-  tarea: "Tarea",
-  tarea_cumplida: "Tarea cumplida",
-  evento: "Evento",
-  cancelado: "Cancelado",
-  nota: "Nota",
-  gracias: "Agradecimiento"
-};
-function fechaDelHito(valor) {
-  return valor ? fechaHora(valor) : "";
-}
-function etiquetaDeHito(tipo, etiquetas = ETIQUETAS_HITO) {
-  const clave = String(tipo ?? "").trim();
-  if (!clave) return "";
-  return etiquetas[clave] || clave.replace(/_/g, " ");
-}
-function agruparHitos(hitos = []) {
-  const grupos = [];
-  for (const hito of hitos || []) {
-    const valido = fechaValida(hito?.fecha);
-    const clave = valido ? fechaDia(valido) : "sin-fecha";
-    let grupo = grupos[grupos.length - 1];
-    if (!grupo || grupo.clave !== clave) {
-      grupo = { clave, etiqueta: fechaDia(hito?.fecha, "Sin fecha"), hitos: [] };
-      grupos.push(grupo);
-    }
-    grupo.hitos.push(hito);
-  }
-  return grupos;
-}
-function FilaHito({ hito, iconos, tonos, etiquetas, mostrarTipo }) {
-  const tipo = String(hito.tipo ?? "").trim();
-  const tono = hito.tono || tonos[tipo] || "mute";
-  const icono = hito.icono || iconos[tipo] || "info";
-  const etiqueta = mostrarTipo ? etiquetaDeHito(tipo, etiquetas) : "";
-  return /* @__PURE__ */ jsxs68("li", { className: "flex gap-3", children: [
-    /* @__PURE__ */ jsx85("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx85(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs68("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
-      /* @__PURE__ */ jsxs68("p", { className: "text-sm font-semibold text-fore", children: [
-        /* @__PURE__ */ jsx85("span", { className: "break-words", children: hito.titulo }),
-        hito.actor && /* @__PURE__ */ jsxs68("span", { className: "font-normal text-mute", children: [
-          " \xB7 ",
-          hito.actor
-        ] })
-      ] }),
-      hito.detalle && /* @__PURE__ */ jsx85("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
-      /* @__PURE__ */ jsx85("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
-    ] })
-  ] });
-}
-function Cronologia({
-  /** Hitos: `[{ id, fecha, tipo, titulo, detalle?, actor?, tono?, icono? }]`. */
-  hitos = [],
-  /** Mapa `tipo → ícono` que pisa los defectos (`ICONOS_HITO`). */
-  iconos = ICONOS_HITO,
-  /** Mapa `tipo → tono` que pisa los defectos (`TONOS_HITO`). */
-  tonos = TONOS_HITO,
-  /** Mapa `tipo → etiqueta` que pisa los defectos (`ETIQUETAS_HITO`). */
-  etiquetas = ETIQUETAS_HITO,
-  /** Agrupa los hitos por día con el encabezado de fecha. */
-  agrupar = false,
-  /** Muestra la etiqueta del tipo al pie de cada hito. */
-  mostrarTipo = false,
-  /** Nombre de la lista para lectores de pantalla. */
-  etiqueta = "Cronolog\xEDa",
-  vacioTitulo = "Todav\xEDa no hay hitos",
-  vacioDetalle,
-  className
-}) {
-  if (!hitos?.length) {
-    return /* @__PURE__ */ jsx85(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
-  }
-  const fila = (hito) => /* @__PURE__ */ jsx85(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
-  return /* @__PURE__ */ jsx85("div", { className, children: agrupar ? /* @__PURE__ */ jsx85("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs68("section", { children: [
-    /* @__PURE__ */ jsx85("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
-    /* @__PURE__ */ jsx85("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
-  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx85("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
-}
-
-// src/components/PlanPagos.jsx
-import { jsx as jsx86, jsxs as jsxs69 } from "react/jsx-runtime";
-var ESTADOS_CUOTA = {
-  pendiente: { chip: "pendiente", etiqueta: "Pendiente", icono: "clock" },
-  revision: { chip: "revision", etiqueta: "En revisi\xF3n", icono: "refresh" },
-  pagada: { chip: "pass", etiqueta: "Pagada", icono: "check" },
-  cancelada: { chip: "pendiente", etiqueta: "Cancelada", icono: "close", tono: "mute" }
-};
-function ChipCuota({ estado, estados }) {
-  const config = estados[estado];
-  if (!config) return null;
-  return /* @__PURE__ */ jsx86(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
-}
-function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, simbolo, estados, destacada, conEstado }) {
-  return /* @__PURE__ */ jsxs69("tr", { className: "border-t border-ink-700", children: [
-    /* @__PURE__ */ jsxs69("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
-      /* @__PURE__ */ jsx86("span", { className: "font-semibold", children: etiqueta }),
-      destacada && /* @__PURE__ */ jsx86("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
-      nota && /* @__PURE__ */ jsx86("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
-    ] }),
-    /* @__PURE__ */ jsx86("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx86(Money, { value: monto, currency: moneda, simbolo }) }),
-    /* @__PURE__ */ jsx86("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
-    conEstado && /* @__PURE__ */ jsx86("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx86(ChipCuota, { estado, estados }) : null })
-  ] });
-}
-function PlanPagos({
-  /** Monto del anticipo (0 o `null` = no hay anticipo separado). */
-  anticipo = 0,
-  anticipoEtiqueta = "Anticipo",
-  anticipoVence,
-  /** Cuotas: `[{ id?, etiqueta, monto, vence?, estado?, nota? }]`. */
-  cuotas = [],
-  /**
-   * Lo que corresponde transferir ahora: `{ id?, etiqueta, monto }`. Con `id`
-   * se marca además la cuota correspondiente en la tabla.
-   */
-  aTransferir = null,
-  /** Total del plan; `null` no dibuja el pie. */
-  total = null,
-  totalEtiqueta = "Total",
-  /** Saldo del plan sin cuota agendada (0 = el plan cubre todo). */
-  saldoSinCuota = 0,
-  saldoEtiqueta = "Saldo sin cuota agendada",
-  /** Condiciones de pago escritas por el equipo. */
-  condiciones = null,
-  /** Moneda de los montos (`PYG` entero o `USD` con decimales). */
-  moneda = "PYG",
-  /** Símbolo del guaraní para el panel de la app (p. ej. `'Gs.'` o `'₲'`). */
-  simbolo,
-  /** Mapa `estado → chip`; pisa `ESTADOS_CUOTA`. */
-  estados = ESTADOS_CUOTA,
-  /** Texto del vacío: no hay anticipo ni cuotas. */
-  vacio = "El presupuesto se paga en un solo pago.",
-  className
-}) {
-  const montoAnticipo = Number(anticipo) || 0;
-  const hayAnticipo = montoAnticipo > 0;
-  const conEstado = (cuotas || []).some((cuota) => Boolean(cuota.estado));
-  const vacioPlan = !hayAnticipo && !(cuotas || []).length;
-  if (vacioPlan && total === null && !condiciones && !aTransferir) {
-    return /* @__PURE__ */ jsx86(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
-  }
-  return /* @__PURE__ */ jsxs69("div", { className: cn("space-y-2.5", className), children: [
-    aTransferir && /* @__PURE__ */ jsxs69("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
-      /* @__PURE__ */ jsx86("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
-      /* @__PURE__ */ jsx86("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx86(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
-    ] }),
-    vacioPlan ? /* @__PURE__ */ jsx86("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs69("table", { className: "w-full", children: [
-      /* @__PURE__ */ jsx86("caption", { className: "sr-only", children: "Plan de pagos" }),
-      /* @__PURE__ */ jsx86("thead", { children: /* @__PURE__ */ jsxs69("tr", { children: [
-        /* @__PURE__ */ jsx86("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
-        /* @__PURE__ */ jsx86("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
-        /* @__PURE__ */ jsx86("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
-        conEstado && /* @__PURE__ */ jsx86("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
-      ] }) }),
-      /* @__PURE__ */ jsxs69("tbody", { children: [
-        hayAnticipo && /* @__PURE__ */ jsx86(
-          FilaPlan,
-          {
-            etiqueta: anticipoEtiqueta,
-            monto: montoAnticipo,
-            vence: anticipoVence,
-            moneda,
-            simbolo,
-            estados,
-            conEstado: false,
-            destacada: aTransferir?.id === "anticipo"
-          }
-        ),
-        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx86(
-          FilaPlan,
-          {
-            etiqueta: cuota.etiqueta,
-            monto: cuota.monto,
-            vence: cuota.vence,
-            estado: cuota.estado,
-            nota: cuota.nota,
-            moneda,
-            simbolo,
-            estados,
-            conEstado,
-            destacada: Boolean(aTransferir?.id && aTransferir.id === cuota.id)
-          },
-          cuota.id ?? `${cuota.etiqueta}-${indice}`
-        ))
-      ] }),
-      total !== null && /* @__PURE__ */ jsx86("tfoot", { children: /* @__PURE__ */ jsxs69("tr", { className: "border-t border-ink-500", children: [
-        /* @__PURE__ */ jsx86("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
-        /* @__PURE__ */ jsx86("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx86(Money, { value: total, currency: moneda, simbolo }) })
-      ] }) })
-    ] }),
-    vacioPlan && total !== null && /* @__PURE__ */ jsxs69("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
-      /* @__PURE__ */ jsx86("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
-      /* @__PURE__ */ jsx86("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx86(Money, { value: total, currency: moneda, simbolo }) })
-    ] }),
-    saldoSinCuota > 0 && /* @__PURE__ */ jsxs69("p", { className: "text-xs text-mute", children: [
-      saldoEtiqueta,
-      ":",
-      " ",
-      /* @__PURE__ */ jsx86("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx86(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
-    ] }),
-    condiciones && /* @__PURE__ */ jsx86(Nota, { tono: "info", compact: true, children: condiciones })
-  ] });
-}
-
-// src/components/DocumentoImpresion.jsx
-import { Fragment as Fragment14, jsx as jsx87, jsxs as jsxs70 } from "react/jsx-runtime";
-var CANTIDAD_FORMATTER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 3 });
-function cantidadTexto(cantidad) {
-  if (cantidad === null || cantidad === void 0 || cantidad === "") return "";
-  return typeof cantidad === "number" ? CANTIDAD_FORMATTER.format(cantidad) : cantidad;
-}
-function Dato({ etiqueta, valor, className }) {
-  if (!valor) return null;
-  return /* @__PURE__ */ jsxs70("p", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsx87("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
-    /* @__PURE__ */ jsx87("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
-  ] });
-}
-function Identidad({ titulo: titulo2, datos, logo, monograma }) {
-  if (!datos) return null;
-  return /* @__PURE__ */ jsxs70("section", { className: "oc-print-bloque", children: [
-    /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
-    /* @__PURE__ */ jsxs70("div", { className: "flex items-start gap-3", children: [
-      (logo || monograma) && /* @__PURE__ */ jsx87("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx87("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx87("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
-      /* @__PURE__ */ jsxs70("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx87(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
-        /* @__PURE__ */ jsx87(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
-        /* @__PURE__ */ jsx87(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
-        /* @__PURE__ */ jsx87(Dato, { etiqueta: "Correo", valor: datos.correo }),
-        /* @__PURE__ */ jsx87(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
-      ] })
-    ] })
-  ] });
-}
-function FilaLiquidacion({ etiqueta, valor, moneda, simbolo, nota, fuerte = false }) {
-  const numero = Number(valor);
-  const negativo = Number.isFinite(numero) && numero < 0;
-  return /* @__PURE__ */ jsxs70("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
-    /* @__PURE__ */ jsxs70("span", { className: "min-w-0", children: [
-      etiqueta,
-      nota && /* @__PURE__ */ jsxs70("small", { className: "oc-print-suave", children: [
-        " ",
-        nota
-      ] })
-    ] }),
-    /* @__PURE__ */ jsxs70("span", { className: "oc-print-num shrink-0 font-semibold", children: [
-      negativo && "\u2212 ",
-      /* @__PURE__ */ jsx87(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
-    ] })
-  ] });
-}
-function DocumentoImpresion({
-  /** Título del documento («Presupuesto», «Factura», «Orden de trabajo»). */
-  titulo: titulo2 = "Documento",
-  /** Número o referencia visible junto al título. */
-  numero = null,
-  etiquetaNumero = "N.\xBA",
-  /**
-   * Datos del emisor: `{ nombre, documento?, etiquetaDocumento?, direccion?,
-   * telefono?, correo?, logo? }`. El logo es una URL servida por la app.
-   */
-  emisor = null,
-  /** Datos del receptor, con la misma forma que el emisor. */
-  receptor = null,
-  /** Meta del documento: `[{ etiqueta, valor }]` (fechas, validez, depósito…). */
-  meta = [],
-  /** Estado visible del documento («Aprobado», «Anulado»…). */
-  estado = null,
-  estadoTono = "mute",
-  /** Detalle: `[{ cantidad, concepto, unitario, subtotal, nota? }]`. */
-  detalle = [],
-  /**
-   * Liquidación: `{ subtotal, descuento?, descuentoEtiqueta?, iva?, otros?,
-   * total }`. `iva` = `[{ tasa, base?, monto }]` y `otros` =
-   * `[{ etiqueta, monto }]` (flete, ajustes).
-   */
-  liquidacion = null,
-  /** Notas del pie del documento (texto o nodo). */
-  notas = null,
-  notasEtiqueta = "Notas",
-  /** Pie de la hoja (texto o nodo). */
-  pie = null,
-  /** Callback del botón «Imprimir»; sin él no se dibuja el botón. */
-  onImprimir,
-  etiquetaImprimir = "Imprimir",
-  /** Moneda de los montos (`PYG` entero o `USD` con decimales). */
-  moneda = "PYG",
-  /** Símbolo del guaraní para el panel de la app (p. ej. `Gs.`). */
-  simbolo,
-  etiquetaDetalle = "Detalle",
-  etiquetaEmisor = "Emisor",
-  etiquetaReceptor = "Receptor",
-  etiquetaLiquidacion = "Liquidaci\xF3n",
-  etiquetaMeta = "Documento",
-  vacioDetalle = "Sin \xEDtems cargados",
-  className
-}) {
-  const monograma = String(emisor?.nombre ?? "").trim().slice(0, 2).toUpperCase() || "\xB7\xB7";
-  const tieneLiquidacion = Boolean(liquidacion && (liquidacion.subtotal !== void 0 || liquidacion.total !== void 0));
-  return /* @__PURE__ */ jsxs70("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
-    onImprimir && /* @__PURE__ */ jsx87("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs70(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
-      /* @__PURE__ */ jsx87(Icon, { name: "printer", className: "h-4 w-4" }),
-      etiquetaImprimir
-    ] }) }),
-    /* @__PURE__ */ jsxs70("article", { className: "oc-print-hoja", children: [
-      /* @__PURE__ */ jsxs70("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
-        /* @__PURE__ */ jsxs70("div", { className: "flex min-w-0 items-center gap-2.5", children: [
-          emisor?.logo ? /* @__PURE__ */ jsx87("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx87("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
-          /* @__PURE__ */ jsxs70("span", { className: "grid min-w-0 gap-0.5", children: [
-            /* @__PURE__ */ jsx87("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
-            emisor?.direccion && /* @__PURE__ */ jsx87("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxs70("div", { className: "text-right", children: [
-          /* @__PURE__ */ jsx87("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
-          numero && /* @__PURE__ */ jsxs70("p", { className: "text-[12px] font-bold", children: [
-            etiquetaNumero,
-            " ",
-            numero
-          ] }),
-          estado && /* @__PURE__ */ jsx87("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
-        ] })
-      ] }),
-      (emisor || receptor) && /* @__PURE__ */ jsxs70("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx87(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
-        /* @__PURE__ */ jsx87(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
-      ] }),
-      meta?.length > 0 && /* @__PURE__ */ jsxs70("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
-        /* @__PURE__ */ jsx87("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx87(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
-      ] }),
-      /* @__PURE__ */ jsxs70("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
-        detalle?.length > 0 ? /* @__PURE__ */ jsxs70("table", { className: "oc-print-tabla", children: [
-          /* @__PURE__ */ jsx87("thead", { children: /* @__PURE__ */ jsxs70("tr", { children: [
-            /* @__PURE__ */ jsx87("th", { scope: "col", children: "Cantidad" }),
-            /* @__PURE__ */ jsx87("th", { scope: "col", children: "Concepto" }),
-            /* @__PURE__ */ jsx87("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
-            /* @__PURE__ */ jsx87("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
-          ] }) }),
-          /* @__PURE__ */ jsx87("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs70("tr", { children: [
-            /* @__PURE__ */ jsx87("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
-            /* @__PURE__ */ jsxs70("td", { children: [
-              item.concepto,
-              item.nota && /* @__PURE__ */ jsx87("small", { className: "block oc-print-suave", children: item.nota })
-            ] }),
-            /* @__PURE__ */ jsx87("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx87(Money, { value: item.unitario, currency: moneda, simbolo }) }),
-            /* @__PURE__ */ jsx87("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx87(Money, { value: item.subtotal, currency: moneda, simbolo }) })
-          ] }, item.id ?? indice)) })
-        ] }) : /* @__PURE__ */ jsx87("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
-      ] }),
-      tieneLiquidacion && /* @__PURE__ */ jsxs70("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
-        /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
-        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx87(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
-        liquidacion.descuento ? /* @__PURE__ */ jsx87(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
-        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx87(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
-        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx87(
-          FilaLiquidacion,
-          {
-            etiqueta: `IVA ${iva.tasa}%`,
-            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs70(Fragment14, { children: [
-              "sobre ",
-              /* @__PURE__ */ jsx87(Money, { value: iva.base, currency: moneda, simbolo })
-            ] }) : null,
-            valor: iva.monto,
-            moneda,
-            simbolo
-          },
-          `${iva.tasa}-${indice}`
-        )),
-        liquidacion.total !== void 0 && /* @__PURE__ */ jsx87(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
-      ] }),
-      notas && /* @__PURE__ */ jsxs70("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
-        /* @__PURE__ */ jsx87("div", { className: "oc-print-nota", children: notas })
-      ] }),
-      pie && /* @__PURE__ */ jsx87("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
-    ] })
-  ] });
-}
-
-// src/components/SubidaImagen.jsx
-import { useId as useId10, useRef as useRef12, useState as useState26 } from "react";
-import { jsx as jsx88, jsxs as jsxs71 } from "react/jsx-runtime";
-var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
-var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
-var TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024;
-var TAMANO_OBJETIVO_IMAGEN = 1024 * 1024;
-var ETIQUETA_TIPO = { "image/jpeg": "JPG", "image/png": "PNG", "image/webp": "WebP" };
-function asciiEn(bytes, offset, length) {
-  return String.fromCharCode(...bytes.slice(offset, offset + length));
-}
-function mimeDeImagen(bytes) {
-  if (!bytes || bytes.length < 4) return null;
-  const empiezaCon = (...firma) => firma.every((byte, indice) => bytes[indice] === byte);
-  if (empiezaCon(255, 216, 255)) return "image/jpeg";
-  if (empiezaCon(137, 80, 78, 71, 13, 10, 26, 10)) return "image/png";
-  if (bytes.length >= 12 && asciiEn(bytes, 0, 4) === "RIFF" && asciiEn(bytes, 8, 4) === "WEBP") return "image/webp";
-  return null;
-}
-function pesoLegible(bytes) {
-  if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
-  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-}
-function validarImagen(archivo, { tipos = MIMES_IMAGEN, tamanoMaximo = TAMANO_MAXIMO_IMAGEN } = {}) {
-  if (!archivo) return { ok: false, error: "No se eligi\xF3 ning\xFAn archivo." };
-  if (!archivo.size) return { ok: false, error: "El archivo est\xE1 vac\xEDo; prob\xE1 de nuevo." };
-  if (archivo.size > tamanoMaximo) {
-    return { ok: false, error: `El archivo supera los ${pesoLegible(tamanoMaximo)}; prob\xE1 con una imagen m\xE1s chica.` };
-  }
-  const mime = String(archivo.type ?? "").toLowerCase();
-  if (mime && !tipos.includes(mime)) {
-    return { ok: false, error: `Solo se aceptan im\xE1genes ${tipos.map((tipo) => ETIQUETA_TIPO[tipo] || tipo).join(", ")}.` };
-  }
-  return { ok: true };
-}
-async function cargarFuente(archivo) {
-  if (typeof createImageBitmap === "function") {
-    try {
-      const bitmap = await createImageBitmap(archivo, { imageOrientation: "from-image" });
-      return { imagen: bitmap, ancho: bitmap.width, alto: bitmap.height, liberar: () => bitmap.close() };
-    } catch {
-    }
-  }
-  const url = URL.createObjectURL(archivo);
-  try {
-    const imagen = await new Promise((resolve, reject) => {
-      const elemento = new Image();
-      elemento.onload = () => resolve(elemento);
-      elemento.onerror = () => reject(new Error("No pudimos leer la imagen."));
-      elemento.src = url;
-    });
-    return { imagen, ancho: imagen.naturalWidth, alto: imagen.naturalHeight, liberar: () => URL.revokeObjectURL(url) };
-  } catch {
-    URL.revokeObjectURL(url);
-    return null;
-  }
-}
-function blobABase64(blob) {
-  return new Promise((resolve) => {
-    const lector = new FileReader();
-    lector.onload = () => {
-      const resultado = typeof lector.result === "string" ? lector.result : "";
-      const coma = resultado.indexOf(",");
-      resolve(coma >= 0 ? resultado.slice(coma + 1) : null);
-    };
-    lector.onerror = () => resolve(null);
-    lector.readAsDataURL(blob);
-  });
-}
-function canvasABlob(canvas, calidad) {
-  return new Promise((resolve) => canvas.toBlob(resolve, "image/webp", calidad));
-}
-var CALIDADES = [0.86, 0.7, 0.55];
-async function prepararImagen(archivo, { cuadrado = false, ladoMaximo = 1024, objetivo = TAMANO_OBJETIVO_IMAGEN } = {}) {
-  const rapida = validarImagen(archivo);
-  if (!rapida.ok) return rapida;
-  if (typeof document === "undefined") return { ok: false, error: "La imagen se prepara en el navegador." };
-  const cabecera = new Uint8Array(await archivo.slice(0, 16).arrayBuffer());
-  const tipo = mimeDeImagen(cabecera);
-  if (!tipo) return { ok: false, error: "El archivo no es un JPG, PNG o WebP real: revis\xE1 que no est\xE9 renombrado." };
-  const fuente = await cargarFuente(archivo);
-  if (!fuente || fuente.ancho < 1 || fuente.alto < 1) {
-    fuente?.liberar();
-    return { ok: false, error: "No pudimos leer la imagen; prob\xE1 con otro archivo." };
-  }
-  try {
-    const escala = Math.min(1, ladoMaximo / Math.max(fuente.ancho, fuente.alto));
-    const lado = cuadrado ? Math.min(fuente.ancho, fuente.alto) : 0;
-    const ancho = cuadrado ? Math.max(1, Math.round(lado * escala)) : Math.max(1, Math.round(fuente.ancho * escala));
-    const alto = cuadrado ? ancho : Math.max(1, Math.round(fuente.alto * escala));
-    const canvas = document.createElement("canvas");
-    canvas.width = ancho;
-    canvas.height = alto;
-    const contexto = canvas.getContext("2d");
-    if (!contexto) return { ok: false, error: "No pudimos procesar la imagen en este navegador." };
-    if (cuadrado) {
-      const origen = Math.min(fuente.ancho, fuente.alto);
-      contexto.drawImage(fuente.imagen, (fuente.ancho - origen) / 2, (fuente.alto - origen) / 2, origen, origen, 0, 0, ancho, alto);
-    } else {
-      contexto.drawImage(fuente.imagen, 0, 0, ancho, alto);
-    }
-    let blob = null;
-    for (const calidad of CALIDADES) {
-      blob = await canvasABlob(canvas, calidad);
-      if (blob && blob.size > 0 && blob.size <= objetivo) break;
-    }
-    if (!blob || blob.size === 0) return { ok: false, error: "No pudimos comprimir la imagen; prob\xE1 con otra." };
-    if (blob.size > objetivo) return { ok: false, error: `La imagen sigue superando ${pesoLegible(objetivo)} despu\xE9s de comprimirla; prob\xE1 con una m\xE1s chica.` };
-    const base64 = await blobABase64(blob);
-    if (!base64) return { ok: false, error: "No pudimos leer la imagen; prob\xE1 de nuevo." };
-    return {
-      ok: true,
-      imagen: {
-        base64,
-        tipo: "image/webp",
-        ancho,
-        alto,
-        tamano: blob.size,
-        dataUrl: `data:image/webp;base64,${base64}`
-      }
-    };
-  } finally {
-    fuente.liberar();
-  }
-}
-function SubidaImagen({
-  /** Etiqueta del campo. */
-  etiqueta,
-  /** Aclaración debajo del campo (nunca junto al error). */
-  descripcion,
-  /** Vista previa de una imagen ya guardada (data URL servida por la app). */
-  valor = null,
-  /** Error externo (del API); se muestra con `role="alert"`. */
-  error = null,
-  /** Tipos aceptados; por defecto JPG, PNG y WebP. */
-  tipos = MIMES_IMAGEN,
-  /** Tamaño máximo del archivo elegido, en bytes. */
-  tamanoMaximo = TAMANO_MAXIMO_IMAGEN,
-  /** Comprime en el navegador antes de avisar (canvas, sin librerías). */
-  comprimir = true,
-  /** Recorta cuadrado desde el centro (avatar) o conserva la relación (logo). */
-  cuadrado = false,
-  /** Lado máximo de la imagen final, en px. */
-  ladoMaximo = 1024,
-  /** Tamaño objetivo de la imagen comprimida, en bytes. */
-  tamanoObjetivo = TAMANO_OBJETIVO_IMAGEN,
-  /** Recibe `{ archivo, dataUrl, tipo, ancho, alto, tamano, base64?, preparada }`. */
-  onImagen,
-  /** Quita la imagen (limpia la vista previa y avisa al consumidor). */
-  onLimpiar,
-  limpiarEtiqueta = "Quitar imagen",
-  subirEtiqueta = "Subir imagen",
-  cambiarEtiqueta = "Cambiar imagen",
-  disabled = false,
-  /** Ocupado externo (por ejemplo, mientras el API guarda). */
-  ocupado = false,
-  className
-}) {
-  const inputRef = useRef12(null);
-  const campoId = useId10();
-  const errorId = `${campoId}-error`;
-  const ayudaId = `${campoId}-ayuda`;
-  const [preparando, setPreparando] = useState26(false);
-  const [errorLocal, setErrorLocal] = useState26("");
-  const [vistaLocal, setVistaLocal] = useState26(null);
-  const [arrastrando, setArrastrando] = useState26(false);
-  const mensaje = error || errorLocal;
-  const trabajando = Boolean(ocupado) || preparando;
-  const vista = vistaLocal ?? valor;
-  const acepta = tipos.map((tipo) => EXTENSION_IMAGEN[tipo] ? `.${EXTENSION_IMAGEN[tipo]}` : tipo).join(",");
-  async function elegir(archivo) {
-    if (!archivo || trabajando || disabled) return;
-    setErrorLocal("");
-    const rapida = validarImagen(archivo, { tipos, tamanoMaximo });
-    if (!rapida.ok) {
-      setErrorLocal(rapida.error);
-      return;
-    }
-    if (!comprimir) {
-      onImagen?.({ archivo, tipo: archivo.type, tamano: archivo.size, preparada: false });
-      return;
-    }
-    setPreparando(true);
-    const resultado = await prepararImagen(archivo, { cuadrado, ladoMaximo, objetivo: tamanoObjetivo });
-    setPreparando(false);
-    if (!resultado.ok) {
-      setErrorLocal(resultado.error);
-      return;
-    }
-    setVistaLocal(resultado.imagen.dataUrl);
-    onImagen?.({ archivo, ...resultado.imagen, preparada: true });
-  }
-  function limpiar() {
-    setVistaLocal(null);
-    setErrorLocal("");
-    if (inputRef.current) inputRef.current.value = "";
-    onLimpiar?.();
-  }
-  return /* @__PURE__ */ jsxs71("div", { className: cn("min-w-0", className), children: [
-    etiqueta && /* @__PURE__ */ jsx88("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
-    /* @__PURE__ */ jsxs71(
-      "div",
-      {
-        className: cn(
-          "flex flex-wrap items-center gap-3 rounded-2xl border-2 border-dashed p-3 transition",
-          arrastrando ? "border-fono/70 bg-fono/5" : "border-ink-500",
-          (disabled || trabajando) && "opacity-70"
-        ),
-        onDragOver: (event) => {
-          if (disabled || trabajando) return;
-          event.preventDefault();
-          event.dataTransfer.dropEffect = "copy";
-          setArrastrando(true);
-        },
-        onDragLeave: () => setArrastrando(false),
-        onDrop: (event) => {
-          if (disabled || trabajando) return;
-          event.preventDefault();
-          setArrastrando(false);
-          void elegir(event.dataTransfer.files?.[0] ?? null);
-        },
-        children: [
-          vista ? /* @__PURE__ */ jsx88("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx88("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx88("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx88(Icon, { name: "image", className: "h-6 w-6" }) }),
-          /* @__PURE__ */ jsxs71("div", { className: "min-w-0 flex-1", children: [
-            /* @__PURE__ */ jsx88("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
-            /* @__PURE__ */ jsxs71("p", { className: "mt-0.5 text-[11px] text-mute", children: [
-              tipos.map((tipo) => ETIQUETA_TIPO[tipo] || tipo).join(" \xB7 "),
-              " \xB7 hasta ",
-              pesoLegible(tamanoMaximo)
-            ] }),
-            /* @__PURE__ */ jsxs71("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
-              /* @__PURE__ */ jsxs71(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
-                /* @__PURE__ */ jsx88(Icon, { name: "upload", className: "h-4 w-4" }),
-                trabajando ? "Procesando\u2026" : vista ? cambiarEtiqueta : subirEtiqueta
-              ] }),
-              (vista || vistaLocal) && /* @__PURE__ */ jsx88(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
-            ] })
-          ] }),
-          /* @__PURE__ */ jsx88(
-            "input",
-            {
-              ref: inputRef,
-              className: "sr-only",
-              type: "file",
-              accept: acepta,
-              "aria-label": etiqueta || subirEtiqueta,
-              disabled: disabled || trabajando,
-              onChange: (event) => {
-                void elegir(event.target.files?.[0] ?? null);
-                event.target.value = "";
-              }
-            }
-          )
-        ]
-      }
-    ),
-    mensaje ? /* @__PURE__ */ jsx88("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx88("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
-  ] });
-}
-
-// src/components/ProgresoChecklist.jsx
-import { jsx as jsx89, jsxs as jsxs72 } from "react/jsx-runtime";
-function progresoChecklist({
-  hechas = 0,
-  total = 0,
-  vencidas = 0,
-  riesgo = false,
-  sustantivo = "tareas",
-  textoVacio = "Sin datos"
-} = {}) {
-  const totalNum = Math.max(0, Math.floor(Number(total) || 0));
-  const hechasNum = Math.min(totalNum, Math.max(0, Math.floor(Number(hechas) || 0)));
-  const vencidasNum = Math.min(totalNum - hechasNum, Math.max(0, Math.floor(Number(vencidas) || 0)));
-  const pendientes = totalNum - hechasNum;
-  const completo = totalNum > 0 && hechasNum === totalNum;
-  const enRiesgo = Boolean(riesgo) && totalNum > 0 && hechasNum === 0;
-  const tono = enRiesgo ? "bad" : vencidasNum > 0 ? "warn" : completo ? "ok" : "fono";
-  const porcentaje = totalNum > 0 ? Math.round(hechasNum / totalNum * 100) : 0;
-  const etiqueta = totalNum > 0 ? `${hechasNum} de ${totalNum} ${sustantivo}` : textoVacio;
-  const partes = totalNum > 0 ? [`${hechasNum} de ${totalNum} ${sustantivo} cumplidas`] : [textoVacio];
-  if (pendientes > 0) partes.push(`${pendientes} pendiente${pendientes === 1 ? "" : "s"}`);
-  if (vencidasNum > 0) partes.push(`${vencidasNum} vencida${vencidasNum === 1 ? "" : "s"}`);
-  if (enRiesgo) partes.push("sin avance: riesgo");
-  return {
-    hechas: hechasNum,
-    total: totalNum,
-    pendientes,
-    vencidas: vencidasNum,
-    riesgo: enRiesgo,
-    completo,
-    tono: tonoCanonico(tono),
-    porcentaje,
-    etiqueta,
-    detalle: partes.join(" \xB7 ")
-  };
-}
-function ProgresoChecklist({
-  hechas = 0,
-  total = 0,
-  /** Pendientes ya vencidas (la pantalla las cuenta con su calendario real). */
-  vencidas = 0,
-  /** Checklist de un trabajo próximo sin ningún avance. */
-  riesgo = false,
-  /** Sustantivo del conteo («tareas», «ítems», «pass»). */
-  sustantivo = "tareas",
-  /** Muestra el porcentaje a la derecha del conteo. */
-  porcentaje = true,
-  /** Muestra el detalle de pendientes/vencidas debajo de la barra. */
-  mostrarDetalle = true,
-  /** Altura de la barra (`sm`, `md`, `lg`). */
-  alto = "md",
-  textoVacio = "Sin datos",
-  className
-}) {
-  const avance = progresoChecklist({ hechas, total, vencidas, riesgo, sustantivo, textoVacio });
-  const tonoTexto = avance.tono === "ok" ? "text-ok" : avance.tono === "bad" ? "text-bad" : avance.tono === "warn" ? "text-warn" : "text-fore";
-  const hayDetalle = avance.vencidas > 0 || avance.riesgo;
-  return /* @__PURE__ */ jsxs72("div", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsxs72("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx89("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
-      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs72("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
-        avance.porcentaje,
-        "%"
-      ] })
-    ] }),
-    avance.total > 0 && /* @__PURE__ */ jsx89(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
-    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs72("p", { className: "mt-1 text-[11px] text-mute", children: [
-      avance.riesgo && /* @__PURE__ */ jsx89("span", { className: "text-bad", children: "Sin avance" }),
-      avance.riesgo && avance.vencidas > 0 && " \xB7 ",
-      avance.vencidas > 0 && /* @__PURE__ */ jsxs72("span", { className: "text-warn", children: [
-        avance.vencidas,
-        " vencida",
-        avance.vencidas === 1 ? "" : "s"
-      ] })
-    ] })
+    acciones ? /* @__PURE__ */ jsx39("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
   ] });
 }
 
@@ -7790,9 +3182,9 @@ var titulo = (palabra) => {
   return limpia.charAt(0).toUpperCase() + limpia.slice(1);
 };
 var estaEnMayusculas = (texto) => texto === texto.toUpperCase() && /[A-ZÁÉÍÓÚÑ]/.test(texto);
-var TIPO_SOCIETARIO2 = /\b(S\.?A\.?|S\.?R\.?L\.?|S\.?A\.?C\.?I\.?|S\.?A\.?E\.?|S\.?A\.?S\.?|LTDA\.?|E\.?A\.?S\.?|C[IÍ]A\.?|SOCIEDAD|EMPRESA|COMPA[ÑN][IÍ]A|COOPERATIVA|FUNDACI[OÓ]N|ASOCIACI[OÓ]N|MUNICIPALIDAD|GOBERNACI[OÓ]N|MINISTERIO|UNIVERSIDAD|COLEGIO|CONSORCIO)\b/i;
+var TIPO_SOCIETARIO = /\b(S\.?A\.?|S\.?R\.?L\.?|S\.?A\.?C\.?I\.?|S\.?A\.?E\.?|S\.?A\.?S\.?|LTDA\.?|E\.?A\.?S\.?|C[IÍ]A\.?|SOCIEDAD|EMPRESA|COMPA[ÑN][IÍ]A|COOPERATIVA|FUNDACI[OÓ]N|ASOCIACI[OÓ]N|MUNICIPALIDAD|GOBERNACI[OÓ]N|MINISTERIO|UNIVERSIDAD|COLEGIO|CONSORCIO)\b/i;
 function esRazonSocial(texto) {
-  return TIPO_SOCIETARIO2.test(String(texto || ""));
+  return TIPO_SOCIETARIO.test(String(texto || ""));
 }
 function nombrePartes(texto) {
   const limpio = String(texto ?? "").replace(/\s+/g, " ").trim();
@@ -8103,7 +3495,7 @@ var azar = (max) => Math.floor(Math.random() * max);
 var validacionDe = () => String(azar(1e4)).padStart(4, "0");
 var sufijoDe = () => String(azar(10));
 var refDePrueba = () => `TEST-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`;
-var fechaCorta2 = (iso) => new Date(iso).toLocaleString("es-PY", { dateStyle: "short", timeStyle: "short" });
+var fechaCorta = (iso) => new Date(iso).toLocaleString("es-PY", { dateStyle: "short", timeStyle: "short" });
 function paginaDePrueba({
   tipo = "caracteres",
   ancho = 80,
@@ -8142,7 +3534,7 @@ function paginaDePrueba({
     t.par("Ancho", `${ancho} mm`);
     t.par("Copias", String(copias));
     t.par("Usuario", usuario || "\u2014");
-    t.par("Fecha", fechaCorta2(ahora));
+    t.par("Fecha", fechaCorta(ahora));
     t.par("Equipo", equipo || "\u2014");
     t.par("Trabajo", ref);
   };
@@ -8194,7 +3586,7 @@ function paginaDePrueba({
   if (tipo === "venta") {
     t.centrado(`${nombreApp} \xB7 SUCURSAL CENTRAL`).centrado("Comprobante de venta");
     t.linea();
-    t.par("Fecha", fechaCorta2(ahora));
+    t.par("Fecha", fechaCorta(ahora));
     t.par("Vendedor", "Vendedor de prueba");
     t.par("Cliente", "Cliente de prueba");
     t.linea();
@@ -8251,26 +3643,157 @@ var GRILLA_DOS_COLUMNAS = "grid gap-3 sm:grid-cols-2";
 var GRILLA_DOS_COLUMNAS_COMPACTA = "grid gap-2 sm:grid-cols-2";
 var PIE_ACCIONES = "flex flex-wrap justify-end gap-2";
 var PIE_ACCIONES_REVERSO = "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end";
+
+// src/catalog/productos.js
+var MODELOS_IPHONE = [
+  // Generación actual y anteriores (del más nuevo al más viejo)
+  "iPhone 17 Pro Max",
+  "iPhone 17 Pro",
+  "iPhone 17 Plus",
+  "iPhone 17",
+  "iPhone 16 Pro Max",
+  "iPhone 16 Pro",
+  "iPhone 16 Plus",
+  "iPhone 16",
+  "iPhone 15 Pro Max",
+  "iPhone 15 Pro",
+  "iPhone 15 Plus",
+  "iPhone 15",
+  "iPhone 14 Pro Max",
+  "iPhone 14 Pro",
+  "iPhone 14 Plus",
+  "iPhone 14",
+  "iPhone 13 Pro Max",
+  "iPhone 13 Pro",
+  "iPhone 13 mini",
+  "iPhone 13",
+  "iPhone 12 Pro Max",
+  "iPhone 12 Pro",
+  "iPhone 12 mini",
+  "iPhone 12",
+  "iPhone 11 Pro Max",
+  "iPhone 11 Pro",
+  "iPhone 11",
+  "iPhone XS Max",
+  "iPhone XS",
+  "iPhone XR",
+  "iPhone X",
+  "iPhone 8 Plus",
+  "iPhone 8",
+  "iPhone 7 Plus",
+  "iPhone 7",
+  "iPhone SE (3.\xAA generaci\xF3n)",
+  "iPhone SE (2.\xAA generaci\xF3n)"
+];
+var CAPACIDADES_IPHONE = ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"];
+var COLORES_IPHONE = [
+  "Negro",
+  "Blanco",
+  "Plata",
+  "Gris espacial",
+  "Dorado",
+  "Azul",
+  "Verde",
+  "Rojo",
+  "Rosa",
+  "Morado",
+  "Amarillo",
+  "Titanio natural",
+  "Titanio azul",
+  "Titanio blanco",
+  "Titanio negro",
+  "Titanio desierto"
+];
+var CATEGORIAS_ACCESORIOS = [
+  "Fundas",
+  "Vidrios templados",
+  "Cargadores",
+  "Cables",
+  "Auriculares",
+  "Bater\xEDas",
+  "Parlantes",
+  "Relojes y correas",
+  "Soportes",
+  "Power banks",
+  "Adaptadores",
+  "L\xE1pices y stylus",
+  "Memorias y almacenamiento",
+  "C\xE1maras y accesorios",
+  "Repuestos",
+  "Otros accesorios"
+];
+var MARCAS_ACCESORIOS = [
+  "Apple",
+  "Samsung",
+  "Xiaomi",
+  "JBL",
+  "Baseus",
+  "Anker",
+  "Hoco",
+  "Generic",
+  "Otro"
+];
+function buscarEnCatalogo(catalogo = [], texto = "") {
+  const norm2 = (valor) => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const q = norm2(texto);
+  if (!q) return catalogo;
+  return catalogo.filter((item) => norm2(item).includes(q));
+}
+
+// src/utils/fecha.js
+var ES_PY = "es-PY";
+var OPCIONES_HORA = { hour12: false };
+function fechaValida(value) {
+  if (!value) return null;
+  const fecha = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(fecha.getTime()) ? null : fecha;
+}
+function fechaHora(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleString(ES_PY, { dateStyle: "short", timeStyle: "short", ...OPCIONES_HORA }) : vacio;
+}
+function fechaDia(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleDateString(ES_PY) : vacio;
+}
+function fechaHoraCorta(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleString(ES_PY, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }) : vacio;
+}
+function fechaCorta2(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  if (!fecha) return vacio;
+  const dia = fecha.toLocaleDateString(ES_PY, { day: "2-digit", month: "short" });
+  const hora = fecha.toLocaleTimeString(ES_PY, { hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA });
+  return `${dia} \xB7 ${hora}`;
+}
+
+// src/utils/serial.js
+function ultimos4(serial) {
+  return String(serial ?? "").slice(-4);
+}
+function partirSerial(serial) {
+  const texto = String(serial ?? "");
+  if (!texto) return { cabeza: "", cola: "" };
+  return { cabeza: texto.slice(0, -4), cola: texto.slice(-4) };
+}
+function serialEnmascarado(serial) {
+  const cola = ultimos4(serial);
+  return cola ? `\u2022\u2022\u2022\u2022${cola}` : "";
+}
 export {
-  ANCHOS_PAPEL,
   AVANCES_FIRMA,
   AjustesImpresion,
   AuthLayout,
-  Avatar,
   Aviso,
-  AyudaModulo,
   BANCOS_PARAGUAY,
   Badge,
   BancoCombobox,
   BancoLogo,
-  BarraInferior,
-  BarraLote,
   BarraProgreso,
   BotonDentroCampo,
   BotonImprimir,
-  BuscadorDispositivo,
   Button,
-  CAMPOS_DISPOSITIVO,
   CAPACIDADES_IPHONE,
   CATEGORIAS_ACCESORIOS,
   CATEGORIAS_PRODUCTO,
@@ -8281,69 +3804,36 @@ export {
   CELDA_NUMERO,
   CIUDADES_PARAGUAY,
   CODIGOS_PAIS,
-  COLORES_AVATAR,
   COLORES_BANCO_RESPALDO,
   COLORES_IPHONE,
   COLOR_BADGE,
-  COLOR_DE_TONO,
-  CONDICION_UNIDAD,
-  CONECTIVIDADES_MOVIL,
-  Calendario,
-  CampanaAvisos,
-  CampoSeriales,
   Card,
   CeldaMoneda,
-  Checkbox,
   ChipEstado,
-  ChipOrigen,
-  ChipPrioridad,
   ChipsLocks,
   CityAutocomplete,
   CodigoQr,
-  ColumnaLote,
   ConfirmDialog,
-  ContadorLote,
-  ContadoresCompra,
   ConteoChecklist,
-  Cronologia,
   CurrencySelect,
   DEPARTAMENTOS_PARAGUAY,
-  DIAS_SEMANA,
-  DISPOSITIVOS_MOBILE,
   DOMINIOS_EMAIL,
   DataTable,
-  DestinoRecepcion,
-  DocumentoImpresion,
   Dot,
   Drawer,
-  ESPACIO_BARRA_INFERIOR,
   ESTADOS_CHIP,
-  ESTADOS_COMPRA,
-  ESTADOS_CUOTA,
-  ESTADOS_ENVIO,
   ESTADOS_ITEM,
   ESTADOS_LOCK,
-  ESTADOS_NECESIDAD,
-  ESTADOS_PRESENCIA,
-  ESTADOS_RECEPCION,
-  ESTADOS_REVISION,
   ESTADO_IMPRESORA,
-  ETIQUETAS_HITO,
   ETIQUETA_ESTADO,
-  ETIQUETA_PERIODO,
   ETIQUETA_TRABAJO,
-  EXTENSION_IMAGEN,
   EmailField,
   EmptyState,
   ErrorState,
-  EstadoBadge,
-  EstadoGuardado,
-  EtiquetaLote,
   Eyebrow,
   FichaCertificado,
   FilaChecklist,
   FilaDato,
-  FilaRevision,
   FormField,
   GLIFOS_CATEGORIA,
   GRADOS_CONDICION,
@@ -8352,19 +3842,12 @@ export {
   GoogleButton,
   GoogleMark,
   GradoBadge,
-  GraficoBarras,
-  ICONOS,
-  ICONOS_HITO,
   ICONO_CATEGORIA,
-  INCIDENCIAS,
   Icon,
   IconAction,
   IconoCategoria,
-  ImporteDelta,
-  IndicadorConexion,
   Input,
   InstagramField,
-  LIMITE_MONTO_ALMACENABLE,
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
   LOCKS_DISPOSITIVO,
@@ -8373,175 +3856,89 @@ export {
   ListGridToggle,
   LoadingScreen,
   MARCAS_ACCESORIOS,
+  MENSAJE_RUC,
+  MENSAJE_RUC_CONSULTA,
+  MENSAJE_RUC_SIN_DATOS,
   MENSAJE_TELEFONO,
-  METODOS_ENVIO,
-  MIMES_IMAGEN,
   MODELOS_IPHONE,
   MedidorBateria,
-  MedidorStock,
   MenuDesplegable,
   Modal,
   Money,
   MoneyInput,
   NavLateral,
   Nota,
-  NumericKeypad,
   OAuthDivider,
-  ORIGENES_NECESIDAD,
-  PASOS_ENVIO,
-  PASOS_NECESIDAD,
-  PERFILES_DISPOSITIVO,
-  PERIODOS_FECHA,
+  PATRON_RUC,
+  PATRON_TAX_ID_GENERICO,
   PIE_ACCIONES,
   PIE_ACCIONES_REVERSO,
-  PRIORIDADES_COMPRA,
   PageHeader,
-  PaletaComandos,
   PanelDerecho,
-  PasosEquipo,
   PasswordInput,
   PegarEnlaceToken,
   PercentField,
-  PeriodoTabs,
-  PersonaChip,
   PhoneField,
-  PilaPersonas,
   PinInput,
-  PlanPagos,
-  ProductCombobox,
   ProductFooter,
-  ProgresoChecklist,
   QR_OPCIONES,
   ROTULO_DATO,
   ROTULO_SECCION,
-  RUC_RE,
-  RangoFecha,
-  ResumenDestinos,
-  ResumenIncidencias,
-  ResumenRecepcion,
-  RucField,
-  SIMBOLOS_MONEDA,
-  SIMBOLO_PYG,
   SearchField_default as SearchField,
-  SeccionColapsable,
   SegmentedField,
   Select,
-  SelectorIncidencia,
   SemaforoItem,
   SerialField,
-  SerialTexto,
   Skeleton,
   Stat,
   Stepper,
-  SubidaImagen,
   Subtabs,
   Switch,
-  TAMANOS_AVATAR,
   TAMANOS_CAMPO,
   TAMANOS_MODAL,
-  TAMANO_MAXIMO_IMAGEN,
   TAMANO_MODAL_PREDETERMINADO,
-  TAMANO_OBJETIVO_IMAGEN,
   TIPOS_PRUEBA,
   TIPOS_TICKET_PRUEBA,
   TONOS,
-  TONOS_ALIAS,
-  TONOS_HITO,
   TONO_ESTADO,
-  TableroKanban,
   TarjetaAjuste,
-  TarjetaCompra,
-  TarjetaLote,
-  TarjetaNecesidad,
-  TarjetaRecepcion,
+  TaxIdField,
   Textarea,
   TileEquipo,
-  TileRol,
   ToastProvider,
   UMBRAL_BATERIA_ATENCION,
   UMBRAL_BATERIA_OK,
   VARIANTES_CORTE,
-  Vencimiento,
-  VistaPreviaPapel,
   agregarEstado,
-  agruparHitos,
-  agruparPorDia,
-  agruparResultados,
-  agruparTarjetas,
   anchoParaLargo,
   bloqueFirma,
   buscarCiudad,
-  buscarDispositivo,
   buscarEnCatalogo,
   categoriaDe,
-  chipDeTono,
-  claveColorDeNombre,
-  claveDeEstado2 as claveDeEstado,
-  claveDeEstadoCompra,
-  claveDeEstadoEnvio,
-  claveDeEstadoRecepcion,
-  claveDeMetodoEnvio,
-  claveDePrioridad,
-  claveDia,
-  claveRevision,
   cn,
-  codigoDeDispositivo,
   codigoPais,
   colorBadge,
   colorDeBanco,
-  colorDeNombre,
-  colorDeTono,
   colorTrabajo,
   columnasDeAncho,
-  columnasDelTablero,
   componerTelefono,
   conexionDeDestino,
-  contarSinLeer,
   crearTicket,
   departamentoDe,
   destinoDeConexion,
-  destinosDeTarjeta,
   envolver,
-  errorMonto,
   esApellidosPrimero,
-  esAtajo,
-  esClaveDia,
-  esIncidencia,
   esRazonSocial,
-  esRuc,
   esToken,
   estadoChip,
-  estadoCompra,
   estadoDeDiagnostico,
-  estadoEnvio,
   estadoItem,
   estadoLock,
-  estadoNecesidad,
-  estadoPaleta,
-  estadoRecepcion,
-  estadoVencimiento,
-  etiquetaCompra,
-  etiquetaCondicion,
   etiquetaDeCategoria,
-  etiquetaDeHito,
-  etiquetaDia,
-  etiquetaDiaCorta,
-  etiquetaDispositivo,
-  etiquetaEnvio,
-  etiquetaMes,
-  etiquetaMetodoEnvio,
-  etiquetaNecesidad,
-  etiquetaOrigen,
-  etiquetaPluralRevision,
-  etiquetaPrioridad,
-  etiquetaRecepcion,
-  etiquetaRevision,
   etiquetaTrabajo,
   excedeMonto,
   extractTokenFromUrl,
-  extraerRuc,
-  fechaCorta,
-  fechaDeClave,
+  fechaCorta2 as fechaCorta,
   fechaDia,
   fechaHora,
   fechaHoraCorta,
@@ -8552,45 +3949,26 @@ export {
   formatPercent,
   formatUsd,
   formatUsdInput,
-  formatoNumero,
   gradoCondicion,
-  hoyClave,
   iconoDeCategoria,
-  iconoMetodoEnvio,
-  iconoOrigen,
-  identidadDeUsuario,
-  imeiValido,
-  indiceSemana,
   inicialesDeBanco,
-  inicialesDeNombre,
   internationalPhone,
   largoMaximoMonto,
-  limiteMonto,
-  limpiarDependientes,
   limpiarPercent,
+  limpiarTaxId,
   logoDeBanco,
-  maximoDeBarras,
-  metodoEnvio,
-  mimeDeImagen,
-  mismoMes,
-  montoConSigno,
   montoGs,
   montoTexto,
   montoUsd,
   motivoDeDiagnostico,
-  nombreDeDispositivo,
   nombrePartes,
   normalizarBanco,
   normalizarCategoria,
   normalizarInstagram,
   normalizarNombre,
   normalizarSerial,
-  normalizarSeriales,
   normalizarTelefono,
-  opcionesDependiente,
-  ordenDePrioridad,
-  ordenarPorPrioridad,
-  origenDe,
+  normalizeTaxId,
   paginaDePrueba,
   paginaDePruebaSimple,
   parseGsInput,
@@ -8598,47 +3976,22 @@ export {
   parseTelefono,
   parseUsdInput,
   partirSerial,
-  periodoDeRango,
-  porcentajeBarra,
-  prepararImagen,
   primerNombre,
-  prioridadDe,
-  progresoChecklist,
-  puntoDeTono,
   qrDataUrl,
-  rangoDePeriodo,
-  rangoInvertido,
-  rangoMes,
-  rangoSemana,
   repartirLinea,
-  resumenPresencia,
-  separarSeriales,
   serialEnmascarado,
-  signoDe,
   soloDigitos,
   sugerenciasDe,
   sugerenciasDeBanco,
-  sumarDias,
-  sumarMeses,
+  taxIdGenericoValid,
+  taxIdValid,
+  taxIdValidoParaPais,
   telefonoValido,
   telefonoVisible,
-  textoContador,
-  textoDeTono,
   textoVerificacion,
   tonoBateria,
-  tonoCanonico,
-  tonoCompra,
-  tonoDelta,
-  tonoEnvio,
-  tonoNecesidad,
-  tonoOrigen,
-  tonoPrioridad,
-  tonoRecepcion,
-  tonoRevision,
   ultimos4,
-  useTableroOptimista,
   useToast,
-  validarImagen,
   whatsappUrl
 };
 //# sourceMappingURL=index.js.map

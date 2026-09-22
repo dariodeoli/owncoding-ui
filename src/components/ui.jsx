@@ -659,12 +659,16 @@ export function DataTable({ columns, rows, emptyLabel = 'Sin datos para mostrar.
 }
 
 // ── FormField ───────────────────────────────────────────────────────
-export function FormField({ label, hint, error, children, htmlFor }) {
+// Envoltorio label + mensaje. El mensaje (error o hint) lleva `id` para que el
+// campo lo declare en `aria-describedby`: por defecto se deriva de `htmlFor` y
+// se puede pisar con `descripcionId` (campos con id generado por `useId`).
+export function FormField({ label, hint, error, children, htmlFor, descripcionId }) {
+  const mensajeId = descripcionId || (htmlFor ? `${htmlFor}-descripcion` : undefined)
   return (
     <div>
       {label && <Label htmlFor={htmlFor}>{label}</Label>}
       {children}
-      {error ? <p role="alert" className="mt-1.5 text-xs text-bad">{error}</p> : hint ? <p className="mt-1.5 text-xs text-mute">{hint}</p> : null}
+      {error ? <p id={mensajeId} role="alert" className="mt-1.5 text-xs text-bad">{error}</p> : hint ? <p id={mensajeId} className="mt-1.5 text-xs text-mute">{hint}</p> : null}
     </div>
   )
 }
