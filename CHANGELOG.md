@@ -4,6 +4,42 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Sin publicar — lote 2 (2026-09-22)
+
+- **Agenda:** `Calendario` — grilla mensual (semana opcional) con encabezado de
+  navegación, conteo por día, detalle del día elegido y lista por día en mobile
+  (sin scroll horizontal). Ítems `{ fecha, titulo, hora?, detalle?, tono?,
+  href? }` con `renderItem` a medida y rango visible por
+  `onCambiarPeriodo(ancla, rango)`; el consumidor decide qué datos pide. Los
+  días son claves puras `YYYY-MM-DD` (`utils/calendario.js`: `rangoMes`,
+  `rangoSemana`, `sumarDias`, `sumarMeses`, `etiquetaMes`/`etiquetaDia` es-PY).
+- **Filtro de fechas:** `RangoFecha` — atajos Hoy · Esta semana · Este mes · Mes
+  pasado · Últimos 30 días · Personalizado + campos desde/hasta, controlado o
+  suelto, con `onCambio(desde, hasta)` y aviso de rango invertido
+  (`utils/rangoFecha.js`: `rangoDePeriodo`, `periodoDeRango`).
+- **Búsqueda global:** `PaletaComandos` — ⌘/Ctrl+K (atajo configurable), foco
+  automático, resultados agrupados por tipo, ↑↓/Enter/Escape, debounce con
+  cancelación, «seguí escribiendo» con mínimo configurable, sin resultados y
+  error con reintento. La búsqueda la provee el consumidor (`buscar` async) y
+  el elegido se devuelve por `onElegir`; helpers `agruparResultados` y
+  `estadoPaleta`.
+- **Shell:** `AyudaModulo` («¿Qué es esto?»: resumen + 3–5 puntos + 2–3 enlaces
+  internos en el diálogo de la librería) y `BarraInferior` (hasta 4 ítems +
+  «Más»; activo con `aria-current`, `ESPACIO_BARRA_INFERIOR` para que no tape el
+  contenido).
+- **Identidad:** `Avatar` — iniciales con color estable derivado del nombre
+  (`inicialesDeNombre`, `colorDeNombre`), imagen opcional con caída a iniciales,
+  tamaños sm/md/lg, forma redonda o cuadrada (empresas) y `role="img"` con
+  `aria-label`. Queda pendiente la cadena de identidad de #211.
+- **Tablero:** `ImporteDelta` (monto con signo y color, tabular, `invertir`),
+  `IndicadorConexion` (en línea/sin conexión + pendientes de subir),
+  `CampanaAvisos` (contador de no leídos hasta 99+ y panel props-driven) y
+  `GraficoBarras` (barras CSS sin dependencias, vertical/horizontal, lista
+  accesible). `utils/moneda.js` suma `formatoNumero`, `signoDe` y
+  `montoConSigno`.
+- 45 tests nuevos (101 en total); props y reglas en `docs/REGLAS.md` §10. Sin
+  bump de versión: lo decide el dueño junto con el resto del lote.
+
 ## v0.12.0 — 2026-09-22
 
 - **Informe público (#240):** `FichaCertificado` — tarjeta del informe de

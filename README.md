@@ -198,6 +198,18 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   fechas (`fechaHora`, `fechaCorta`, …), teléfono/WhatsApp (`whatsappUrl`,
   `telefonoVisible`, …), seriales (`ultimos4`, `serialEnmascarado`) y tokens de
   acción (`extractTokenFromUrl`).
+- **Agenda, filtros y shell (lote 2, sin publicar):** `Calendario` (grilla
+  mensual + lista por día en mobile, detalle del día y `renderItem` a medida),
+  `RangoFecha` (atajos + campos desde/hasta), `PaletaComandos` (⌘/Ctrl+K con
+  `buscar` async y `onElegir`), `AyudaModulo` («¿Qué es esto?»),
+  `BarraInferior` (+ `ESPACIO_BARRA_INFERIOR`) y `Avatar` (iniciales con color
+  derivado del nombre, imagen con caída a iniciales).
+- **Tablero (lote 2, sin publicar):** `ImporteDelta` (monto con signo y color),
+  `IndicadorConexion` (en línea / pendientes de subir), `CampanaAvisos`
+  (contador + panel por props) y `GraficoBarras` (barras CSS sin dependencias).
+- **Días, rangos y cantidades:** `utils/calendario.js` (clave `YYYY-MM-DD`,
+  semana lunes-domingo y etiquetas es-PY), `utils/rangoFecha.js` (atajos y
+  rango) y `formatoNumero`/`signoDe`/`montoConSigno` en `utils/moneda.js`.
 
 ## Estructura
 
@@ -227,10 +239,12 @@ traerlo).
 ## Pendientes (fase 2)
 
 - **Identidad unificada (#211, DSN):** entra cuando esté cerrada en MobOS
-  (`PersonaChip`/`UsuarioIdentidad` + Avatar). Acá queda el TODO.
+  (`PersonaChip`/`UsuarioIdentidad`). El `Avatar` de iniciales/color e imagen
+  con caída ya vive acá; falta la cadena foto local → foto de identidad →
+  iniciales.
 - **Tipos:** el paquete se distribuye en JS/JSX; falta generar `.d.ts`.
 - **Adopción por app:** migrar MobOS (y luego ScaleOS, LedBox, PagaYa) a
   consumir el paquete sin romper nada. Ver `docs/MODOS-DE-TRABAJO.md`.
-- Objetos de MobOS que aún no se portaron: `Avatar`, `ComprobantePreview`,
+- Objetos de MobOS que aún no se portaron: `ComprobantePreview`,
   `SeccionColapsable`, combos con datos (`BancoCombobox`, `ProductCombobox`,
   `CityAutocomplete`) y el agente de impresión (no es UI).
