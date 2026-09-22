@@ -18,7 +18,9 @@ npm install github:dariodeoli/owncoding-ui
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
 dependencia git para eso). El bundle ya queda commiteado en `dist/` por si la
-instalación se hace con `--ignore-scripts`.
+instalación se hace con `--ignore-scripts`. Alternativa sin git: publicar el
+mismo paquete en GitHub Packages (`npm.pkg.github.com`) y consumirlo con
+`@dariodeoli/owncoding-ui`; el paquete es el mismo, cambia el registry.
 
 Requisitos: **React 18+** y **Tailwind CSS 3.4+**.
 
