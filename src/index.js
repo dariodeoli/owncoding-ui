@@ -57,15 +57,51 @@ export { default as AuthLayout } from './components/AuthLayout.jsx'
 export { default as ProductFooter } from './components/ProductFooter.jsx'
 export { default as LoadingScreen } from './components/LoadingScreen.jsx'
 export { default as PegarEnlaceToken } from './components/PegarEnlaceToken.jsx'
+export { default as NavLateral } from './components/NavLateral.jsx'
+export { default as MenuDesplegable } from './components/MenuDesplegable.jsx'
+
+// Ajustes (modelo de configuración) e impresión LAN/USB
+export { default as PanelDerecho } from './components/PanelDerecho.jsx'
+export { default as TarjetaAjuste } from './components/TarjetaAjuste.jsx'
+export { default as AjustesImpresion } from './components/AjustesImpresion.jsx'
+export { default as BotonImprimir } from './components/BotonImprimir.jsx'
+export { default as BancoCombobox } from './components/BancoCombobox.jsx'
+export { default as BancoLogo } from './components/BancoLogo.jsx'
 
 // Clases de tabla/listado
 export { ROTULO_DATO, CELDA_ENCABEZADO, ROTULO_SECCION, CELDA_DATO, CELDA_NUMERO } from './utils/tabla.js'
 
 // Lógica compartida
 export { cn, primerNombre } from './utils/cn.js'
+export { normalizarNombre, nombrePartes, esApellidosPrimero } from './utils/nombre.js'
+export {
+  BANCOS_PARAGUAY,
+  LOGOS_BANCOS,
+  COLORES_BANCO_RESPALDO,
+  normalizarBanco,
+  inicialesDeBanco,
+  colorDeBanco,
+  logoDeBanco,
+  sugerenciasDeBanco,
+} from './utils/bancos.js'
+export {
+  ESTADO_IMPRESORA,
+  ETIQUETA_ESTADO,
+  TONO_ESTADO,
+  ETIQUETA_TRABAJO,
+  etiquetaTrabajo,
+  colorTrabajo,
+  conexionDeDestino,
+  destinoDeConexion,
+  estadoDeDiagnostico,
+  motivoDeDiagnostico,
+  textoVerificacion,
+  agregarEstado,
+} from './printing/estadoImpresoras.js'
 export {
   formatGs,
   formatGsInput,
+  largoMaximoMonto,
   parseGsInput,
   formatUsd,
   formatUsdInput,

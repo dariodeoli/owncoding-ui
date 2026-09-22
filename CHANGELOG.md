@@ -4,6 +4,22 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.4.0 — 2026-09-22
+
+- **Impresión LAN/USB funcional:** `AjustesImpresion`, `BotonImprimir` y
+  `printing/estadoImpresoras.js` (destinos `lan:<ip>:<puerto>` y `cups:<cola>`,
+  estados honestos, agregado por empresa). Guía: `docs/IMPRESION.md`.
+- **Navegación y shell:** `NavLateral` (colapsable) y `MenuDesplegable`.
+- **Ajustes (modelo):** `PanelDerecho` y `TarjetaAjuste`.
+- **Bancos de Paraguay:** catálogo `BANCOS_PARAGUAY` + `BancoCombobox` +
+  `BancoLogo` (archivo/marca/monograma).
+- **Nombres:** `normalizarNombre` con orden SIFEN (A1 A2 N1 N2 → N1 N2 A1 A2),
+  `nombrePartes` y `esApellidosPrimero`.
+- **Moneda:** `largoMaximoMonto(max, { decimales })` y `MoneyInput` con
+  `maxLength` derivado del tope (general 14, ventas 14, decimales 17).
+- **Docs:** `docs/ALIMENTAR.md` (alimentar la biblioteca y cosechar de otras
+  apps). 12 tests nuevos (37 en total).
+
 ## v0.3.0 — 2026-09-22
 
 - **Familia de acceso (sin API):** `GoogleButton` (+`GoogleMark`,

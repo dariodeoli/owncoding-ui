@@ -76,8 +76,7 @@ export function formatMoney(value, currency = 'PYG') {
   return currency === 'USD' ? formatUsd(value) : formatGs(value)
 }
 
-// ── Montos de pantalla (el formato que ya usan ui/Money y las listas) ────────
-// "Gs 12.500" y "US$ 1,234.56": es la presentación dominante del repo (la de
+// ── Montos de pantalla (el formato que ya usan ui/Money y las listas) ────────// "Gs 12.500" y "US$ 1,234.56": es la presentación dominante del repo (la de
 // `Money`, `gs()` y `formatGs`). Los montos se escriben con estos helpers y no
 // con `toLocaleString` a mano; el vacío es explícito ('—' por defecto) para no
 // mostrar 0 cuando falta el dato. No convierten moneda.
@@ -100,4 +99,13 @@ function numeroDe(value) {
   if (value === null || value === undefined || value === '') return null
   const amount = Number(value)
   return Number.isFinite(amount) ? amount : null
+}
+
+// Largo máximo del texto de un monto: dígitos del tope + separadores de miles
+// (+ 3 si la moneda lleva decimales). El campo lo usa como `maxLength`, así el
+// monto más grande documentado entra completo y no se puede escribir de más.
+export function largoMaximoMonto(max = LIMITE_MONTO_GENERAL, { decimales = false } = {}) {
+  const digitos = String(Math.trunc(Math.abs(Number(max) || 0))).length
+  const separadores = Math.floor((digitos - 1) / 3)
+  return digitos + separadores + (decimales ? 3 : 0)
 }

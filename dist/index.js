@@ -82,6 +82,11 @@ function numeroDe(value) {
   const amount = Number(value);
   return Number.isFinite(amount) ? amount : null;
 }
+function largoMaximoMonto(max = LIMITE_MONTO_GENERAL, { decimales = false } = {}) {
+  const digitos = String(Math.trunc(Math.abs(Number(max) || 0))).length;
+  const separadores = Math.floor((digitos - 1) / 3);
+  return digitos + separadores + (decimales ? 3 : 0);
+}
 
 // src/components/Icon.jsx
 import { jsx } from "react/jsx-runtime";
@@ -260,11 +265,12 @@ function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, 
   ] });
 }
 var MONEY_SYMBOL = { PYG: "Gs.", USD: "US$", BRL: "R$", EUR: "\u20AC", USDT: "USDT" };
-function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, ...props }) {
+function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
   const isPyg = currency === "PYG";
   const prefix = symbol || MONEY_SYMBOL[currency] || currency;
   const display = isPyg ? formatGsInput(value) : formatUsdInput(value);
   const excede = excedeMonto(value, max);
+  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !isPyg });
   return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
     /* @__PURE__ */ jsx2("span", { className: "pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-semibold text-mute", children: prefix }),
     /* @__PURE__ */ jsx2(
@@ -274,6 +280,7 @@ function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className,
         "aria-invalid": excede || void 0,
         title: excede ? `El monto supera el m\xE1ximo permitido (${max.toLocaleString("es-PY")})` : props.title,
         inputMode: isPyg ? "numeric" : "decimal",
+        maxLength: topeLargo,
         value: display,
         onChange: (event) => {
           const next = event.target.value.replace(/[^\d.,]/g, "");
@@ -1414,12 +1421,750 @@ function PegarEnlaceToken({
   ] });
 }
 
+// src/components/NavLateral.jsx
+import { jsx as jsx18, jsxs as jsxs13 } from "react/jsx-runtime";
+function NavLateral({
+  items = [],
+  activeId,
+  onSelect,
+  colapsado = false,
+  onToggle,
+  cabecera,
+  pie,
+  ancho = "w-64",
+  ariaLabel = "Navegaci\xF3n principal",
+  className
+}) {
+  return /* @__PURE__ */ jsxs13(
+    "nav",
+    {
+      "aria-label": ariaLabel,
+      className: cn("flex h-dvh flex-col border-r border-ink-600 bg-ink-900 transition-[width] duration-200", colapsado ? "w-[4.5rem]" : ancho, className),
+      children: [
+        /* @__PURE__ */ jsxs13("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
+          cabecera && /* @__PURE__ */ jsx18("div", { className: "min-w-0 flex-1", children: cabecera }),
+          onToggle && /* @__PURE__ */ jsx18(
+            "button",
+            {
+              type: "button",
+              onClick: onToggle,
+              "aria-label": colapsado ? "Expandir men\xFA" : "Contraer men\xFA",
+              "aria-expanded": !colapsado,
+              className: cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg text-mute transition hover:bg-ink-700 hover:text-fore", colapsado && "w-full"),
+              children: /* @__PURE__ */ jsx18(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsx18("ul", { className: "min-h-0 flex-1 space-y-1 overflow-y-auto px-2 py-2", children: items.map((item) => {
+          const activo = item.id === activeId;
+          return /* @__PURE__ */ jsx18("li", { children: /* @__PURE__ */ jsxs13(
+            "button",
+            {
+              type: "button",
+              onClick: () => onSelect?.(item.id),
+              "aria-current": activo ? "page" : void 0,
+              title: colapsado ? item.label : void 0,
+              className: cn(
+                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
+                activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore",
+                colapsado && "justify-center px-2"
+              ),
+              children: [
+                item.icono && /* @__PURE__ */ jsx18(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+                !colapsado && /* @__PURE__ */ jsx18("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
+                !colapsado && item.contador != null && /* @__PURE__ */ jsx18("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
+                colapsado && item.contador != null && /* @__PURE__ */ jsx18("span", { className: "sr-only", children: item.contador })
+              ]
+            }
+          ) }, item.id);
+        }) }),
+        pie && /* @__PURE__ */ jsx18("div", { className: "border-t border-ink-600 p-2", children: pie })
+      ]
+    }
+  );
+}
+
+// src/components/MenuDesplegable.jsx
+import { useEffect as useEffect2, useRef as useRef3, useState as useState5 } from "react";
+import { jsx as jsx19, jsxs as jsxs14 } from "react/jsx-runtime";
+function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel = "Men\xFA", className }) {
+  const [abierto, setAbierto] = useState5(false);
+  const raiz = useRef3(null);
+  useEffect2(() => {
+    if (!abierto) return void 0;
+    const cerrarFuera = (event) => {
+      if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
+      setAbierto(false);
+    };
+    const cerrarEsc = (event) => {
+      if (event.key === "Escape") setAbierto(false);
+    };
+    document.addEventListener("click", cerrarFuera);
+    document.addEventListener("keydown", cerrarEsc);
+    return () => {
+      document.removeEventListener("click", cerrarFuera);
+      document.removeEventListener("keydown", cerrarEsc);
+    };
+  }, [abierto]);
+  return /* @__PURE__ */ jsxs14("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx19(
+      "button",
+      {
+        type: "button",
+        "aria-haspopup": "menu",
+        "aria-expanded": abierto,
+        onClick: () => setAbierto((actual) => !actual),
+        className: "inline-flex items-center gap-2 rounded-lg transition",
+        children: trigger
+      }
+    ),
+    abierto && /* @__PURE__ */ jsx19(
+      "div",
+      {
+        role: "menu",
+        "aria-label": ariaLabel,
+        className: cn("absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-paper p-1 shadow-xl", alineacion === "right" ? "right-0" : "left-0"),
+        children: items.map((item, indice) => {
+          if (item.separador) return /* @__PURE__ */ jsx19("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
+          return /* @__PURE__ */ jsxs14(
+            "button",
+            {
+              type: "button",
+              role: "menuitem",
+              disabled: item.disabled,
+              onClick: () => {
+                setAbierto(false);
+                item.onClick?.();
+              },
+              className: cn(
+                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
+                item.peligro ? "text-bad hover:bg-bad/10" : "text-fore hover:bg-ink-700",
+                item.disabled && "cursor-not-allowed opacity-40"
+              ),
+              children: [
+                item.icono && /* @__PURE__ */ jsx19(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+                /* @__PURE__ */ jsx19("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
+                item.extra
+              ]
+            },
+            item.id ?? item.label ?? indice
+          );
+        })
+      }
+    )
+  ] });
+}
+
+// src/components/PanelDerecho.jsx
+import { jsx as jsx20, jsxs as jsxs15 } from "react/jsx-runtime";
+function PanelDerecho({ children, panel, id, className, classNamePanel }) {
+  return /* @__PURE__ */ jsxs15("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
+    /* @__PURE__ */ jsx20("div", { className: "min-w-0 space-y-4", children }),
+    /* @__PURE__ */ jsx20("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
+  ] });
+}
+
+// src/components/TarjetaAjuste.jsx
+import { jsx as jsx21, jsxs as jsxs16 } from "react/jsx-runtime";
+function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, children, className, id }) {
+  return /* @__PURE__ */ jsxs16(Card, { id, className: cn("space-y-3", className), children: [
+    /* @__PURE__ */ jsxs16("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs16("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs16("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          icono && /* @__PURE__ */ jsx21(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
+          titulo2
+        ] }),
+        descripcion && /* @__PURE__ */ jsx21("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+      ] }),
+      accion && /* @__PURE__ */ jsx21("div", { className: "shrink-0", children: accion })
+    ] }),
+    children
+  ] });
+}
+
+// src/components/AjustesImpresion.jsx
+import { useState as useState6 } from "react";
+
+// src/printing/estadoImpresoras.js
+var ESTADO_IMPRESORA = Object.freeze({
+  SIN_VERIFICAR: "sin-verificar",
+  VERIFICANDO: "verificando",
+  OK: "ok",
+  ERROR: "error"
+});
+var ETIQUETA_ESTADO = Object.freeze({
+  "sin-verificar": "Sin verificar",
+  "verificando": "Verificando\u2026",
+  "ok": "Lista para imprimir",
+  "error": "Sin respuesta"
+});
+var TONO_ESTADO = Object.freeze({
+  "sin-verificar": "slate",
+  "verificando": "slate",
+  "ok": "ok",
+  "error": "bad"
+});
+var MOTIVO_TEXTO = Object.freeze({
+  red_cambiada: "La impresora no est\xE1 en esta red",
+  permisos_red_local: "El sistema bloque\xF3 la salida a la red local",
+  permiso_o_red: "Puede faltar el permiso de Red Local",
+  impresora_apagada: "La impresora rechaz\xF3 la conexi\xF3n"
+});
+var ETIQUETA_TRABAJO = Object.freeze({
+  pendiente: "Pendiente",
+  reclamado: "En el puente",
+  aceptado: "Aceptado (falta confirmar)",
+  incierto: "Incierto",
+  fallido: "Fallido",
+  confirmado: "Confirmado en papel",
+  cancelado: "Cancelado",
+  impreso: "Impreso"
+});
+var TONO_TRABAJO = Object.freeze({
+  pendiente: "orange",
+  reclamado: "blue",
+  aceptado: "blue",
+  incierto: "orange",
+  fallido: "red",
+  confirmado: "green",
+  cancelado: "slate",
+  impreso: "green"
+});
+var etiquetaTrabajo = (estado) => ETIQUETA_TRABAJO[String(estado || "").toLowerCase()] || String(estado || "\u2014");
+var colorTrabajo = (estado) => TONO_TRABAJO[String(estado || "").toLowerCase()] || "slate";
+function conexionDeDestino(destino) {
+  return /^(usb|cups):/.test(String(destino || "")) ? "cups" : "lan";
+}
+function destinoDeConexion({ conexion = "lan", ip = "", puerto = "", cola = "" } = {}) {
+  if (conexion === "cups" || conexion === "usb") {
+    const nombre = String(cola || "").trim();
+    return nombre ? `cups:${nombre}` : "";
+  }
+  const host = String(ip || "").trim();
+  if (!host) return "";
+  return `lan:${host}:${String(puerto || "").trim() || "9100"}`;
+}
+function estadoDeDiagnostico(resultado) {
+  if (!resultado || typeof resultado !== "object" || resultado.ok === false) return ESTADO_IMPRESORA.ERROR;
+  if (resultado.alcance === true) return ESTADO_IMPRESORA.OK;
+  if (resultado.metodo === "CUPS") return resultado.cupsUri ? ESTADO_IMPRESORA.OK : ESTADO_IMPRESORA.ERROR;
+  return ESTADO_IMPRESORA.ERROR;
+}
+function motivoDeDiagnostico(resultado) {
+  if (!resultado || typeof resultado !== "object") return "El agente no respondi\xF3";
+  if (resultado.metodo === "CUPS" && !resultado.cupsUri) return "La cola local no existe en esta computadora";
+  return MOTIVO_TEXTO[resultado.motivo] || String(resultado.error || "Sin respuesta de la impresora");
+}
+function textoVerificacion(registro, ahora = Date.now()) {
+  if (!registro || registro.estado === ESTADO_IMPRESORA.SIN_VERIFICAR) return "Sin verificar";
+  if (registro.estado === ESTADO_IMPRESORA.VERIFICANDO) return "Verificando\u2026";
+  const segundos = Number.isFinite(registro.fecha) ? Math.max(0, Math.round((ahora - registro.fecha) / 1e3)) : 0;
+  if (registro.estado === ESTADO_IMPRESORA.OK) return `Verificada hace ${segundos} s`;
+  return registro.motivo ? `Sin respuesta: ${registro.motivo}` : "Sin respuesta";
+}
+function agregarEstado(impresoras = [], estados = {}) {
+  const activas = (impresoras || []).filter((impresora) => impresora?.activa !== false);
+  const total = activas.length;
+  let ok = 0;
+  let error = 0;
+  for (const impresora of activas) {
+    const estado = estados?.[impresora?.id]?.estado;
+    if (estado === ESTADO_IMPRESORA.OK) ok += 1;
+    else if (estado === ESTADO_IMPRESORA.ERROR) error += 1;
+  }
+  const sinVerificar = total - ok - error;
+  if (!total) return { estado: "sin-verificar", label: "Sin verificar", tono: "slate", total, ok, error, sinVerificar, detalle: "Sin impresoras activas" };
+  if (error > 0) return { estado: "con-problemas", label: "Con problemas", tono: "bad", total, ok, error, sinVerificar, detalle: `${error} de ${total} sin respuesta` };
+  if (ok === total) return { estado: "listo", label: "Listo para imprimir", tono: "ok", total, ok, error, sinVerificar, detalle: `${total} de ${total} listas` };
+  return { estado: "sin-verificar", label: "Sin verificar", tono: "slate", total, ok, error, sinVerificar, detalle: `${sinVerificar} de ${total} sin verificar` };
+}
+
+// src/components/AjustesImpresion.jsx
+import { jsx as jsx22, jsxs as jsxs17 } from "react/jsx-runtime";
+var VACIO = () => ({
+  id: null,
+  nombre: "",
+  ubicacion: "",
+  conexion: "lan",
+  ip: "",
+  puerto: "9100",
+  cola: "",
+  ancho: "80",
+  copias: "1",
+  predeterminada: false,
+  activa: true
+});
+var ANCHOS = [
+  { id: "80", label: "80 mm (t\xE9rmica)" },
+  { id: "58", label: "58 mm (t\xE9rmica chica)" },
+  { id: "a4", label: "A4 (l\xE1ser/inyecci\xF3n)" }
+];
+function aFormulario(impresora) {
+  if (!impresora) return VACIO();
+  const conexion = impresora.conexion === "cups" || conexionDeDestino(impresora.destino) === "cups" ? "cups" : "lan";
+  const destino = String(impresora.destino || "");
+  const [, ip = "", puerto = "9100"] = destino.match(/^lan:([^:]+):?(\d+)?/) || [];
+  return {
+    ...VACIO(),
+    ...impresora,
+    conexion,
+    ip: impresora.ip || ip,
+    puerto: impresora.puerto || puerto || "9100",
+    cola: impresora.cola || (destino.startsWith("cups:") ? destino.slice(5) : ""),
+    copias: String(impresora.copias ?? "1")
+  };
+}
+function AjustesImpresion({
+  impresoras = [],
+  estado = {},
+  guardando = false,
+  probando = null,
+  onGuardar,
+  onEliminar,
+  onProbar,
+  onVerificar,
+  anchoOpciones = ANCHOS,
+  titulo: titulo2 = "Impresoras",
+  descripcion = "Eleg\xED c\xF3mo sale el papel: por red (LAN) o por una cola local (USB). La app verifica cada impresora antes de usarla.",
+  className
+}) {
+  const [form, setForm] = useState6(null);
+  const resumen = agregarEstado(impresoras, estado);
+  function cambiar(campo, valor) {
+    setForm((actual) => ({ ...actual, [campo]: valor }));
+  }
+  function enviar(event) {
+    event.preventDefault();
+    if (!form) return;
+    const destino = destinoDeConexion(form);
+    if (!destino) return;
+    onGuardar?.({ ...form, destino, copias: Number(form.copias) || 1 });
+    setForm(null);
+  }
+  return /* @__PURE__ */ jsxs17(Card, { className: cn("space-y-4", className), children: [
+    /* @__PURE__ */ jsxs17("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs17("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs17("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          /* @__PURE__ */ jsx22(Icon, { name: "printer", className: "h-4 w-4" }),
+          titulo2
+        ] }),
+        /* @__PURE__ */ jsx22("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+      ] }),
+      /* @__PURE__ */ jsxs17("div", { className: "flex flex-wrap items-center gap-2", children: [
+        /* @__PURE__ */ jsx22(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
+        onVerificar && /* @__PURE__ */ jsxs17(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
+          /* @__PURE__ */ jsx22(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
+          "Verificar"
+        ] }),
+        /* @__PURE__ */ jsxs17(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
+          /* @__PURE__ */ jsx22(Icon, { name: "plus", className: "h-4 w-4" }),
+          "Agregar impresora"
+        ] })
+      ] })
+    ] }),
+    impresoras.length === 0 && /* @__PURE__ */ jsx22("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
+    /* @__PURE__ */ jsx22("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
+      const registro = estado?.[impresora.id];
+      const tono = TONO_ESTADO[registro?.estado] || "slate";
+      return /* @__PURE__ */ jsxs17("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
+        /* @__PURE__ */ jsxs17("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsxs17("p", { className: "flex items-center gap-2 font-medium", children: [
+            /* @__PURE__ */ jsx22(Dot, { color: tono }),
+            impresora.nombre || "Impresora",
+            impresora.predeterminada && /* @__PURE__ */ jsx22(Badge, { color: "fono", children: "Predeterminada" }),
+            impresora.activa === false && /* @__PURE__ */ jsx22(Badge, { color: "slate", children: "Inactiva" })
+          ] }),
+          /* @__PURE__ */ jsxs17("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
+            conexionDeDestino(impresora.destino) === "cups" ? "USB / cola local" : "LAN",
+            " \xB7 ",
+            impresora.destino || "sin destino",
+            " \xB7 ",
+            impresora.ancho || "80",
+            " mm",
+            registro ? ` \xB7 ${textoVerificacion(registro)}` : ""
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs17("div", { className: "flex flex-wrap items-center gap-1", children: [
+          onProbar && /* @__PURE__ */ jsx22(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
+          /* @__PURE__ */ jsx22(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
+          onEliminar && /* @__PURE__ */ jsx22(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
+        ] })
+      ] }, impresora.id);
+    }) }),
+    form && /* @__PURE__ */ jsxs17("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
+      /* @__PURE__ */ jsxs17("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs17("div", { children: [
+          /* @__PURE__ */ jsx22(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
+          /* @__PURE__ */ jsx22(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
+        ] }),
+        /* @__PURE__ */ jsxs17("div", { children: [
+          /* @__PURE__ */ jsx22(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
+          /* @__PURE__ */ jsx22(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs17("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs17("div", { children: [
+          /* @__PURE__ */ jsx22(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
+          /* @__PURE__ */ jsxs17(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
+            /* @__PURE__ */ jsx22("option", { value: "lan", children: "LAN (impresora de red)" }),
+            /* @__PURE__ */ jsx22("option", { value: "cups", children: "USB / cola local (CUPS)" })
+          ] })
+        ] }),
+        form.conexion === "lan" ? /* @__PURE__ */ jsxs17("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
+          /* @__PURE__ */ jsxs17("div", { children: [
+            /* @__PURE__ */ jsx22(Label, { htmlFor: "imp-ip", children: "IP" }),
+            /* @__PURE__ */ jsx22(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
+          ] }),
+          /* @__PURE__ */ jsxs17("div", { children: [
+            /* @__PURE__ */ jsx22(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
+            /* @__PURE__ */ jsx22(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
+          ] })
+        ] }) : /* @__PURE__ */ jsxs17("div", { children: [
+          /* @__PURE__ */ jsx22(Label, { htmlFor: "imp-cola", children: "Cola local" }),
+          /* @__PURE__ */ jsx22(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
+          /* @__PURE__ */ jsx22("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxs17("div", { className: "grid gap-3 sm:grid-cols-3", children: [
+        /* @__PURE__ */ jsxs17("div", { children: [
+          /* @__PURE__ */ jsx22(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
+          /* @__PURE__ */ jsx22(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx22("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
+        ] }),
+        /* @__PURE__ */ jsxs17("div", { children: [
+          /* @__PURE__ */ jsx22(Label, { htmlFor: "imp-copias", children: "Copias" }),
+          /* @__PURE__ */ jsx22(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
+        ] }),
+        /* @__PURE__ */ jsxs17("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
+          /* @__PURE__ */ jsx22("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
+          "Predeterminada"
+        ] })
+      ] }),
+      /* @__PURE__ */ jsx22("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
+      /* @__PURE__ */ jsxs17("div", { className: "flex flex-wrap justify-end gap-2", children: [
+        /* @__PURE__ */ jsx22(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
+        /* @__PURE__ */ jsx22(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs17("p", { className: "text-xs text-mute", children: [
+      "La impresi\xF3n sale por el ",
+      /* @__PURE__ */ jsx22("b", { className: "text-fore", children: "agente local" }),
+      ": instalalo en la computadora que tiene la impresora (LAN o USB conectada) y vinculala con el c\xF3digo. Con el agente ca\xEDdo, los trabajos quedan en cola; nunca se pierden. Ver ",
+      /* @__PURE__ */ jsx22("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
+      "."
+    ] })
+  ] });
+}
+
+// src/components/BotonImprimir.jsx
+import { jsx as jsx23, jsxs as jsxs18 } from "react/jsx-runtime";
+function BotonImprimir({
+  onImprimir,
+  estado = null,
+  etiqueta = "Imprimir",
+  icono = "printer",
+  variant = "outline",
+  disabled = false,
+  className
+}) {
+  const enCurso = estado === "pendiente" || estado === "reclamado";
+  const texto = enCurso ? etiquetaTrabajo(estado) : etiqueta;
+  return /* @__PURE__ */ jsxs18("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsxs18(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
+      /* @__PURE__ */ jsx23(Icon, { name: icono, className: "h-4 w-4" }),
+      texto
+    ] }),
+    estado && !enCurso && /* @__PURE__ */ jsx23(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
+  ] });
+}
+
+// src/components/BancoCombobox.jsx
+import { useEffect as useEffect3, useId as useId2, useMemo as useMemo2, useRef as useRef4, useState as useState8 } from "react";
+
+// src/utils/bancos.js
+var BANCOS_PARAGUAY = [
+  "Banco Atlas",
+  "Banco Basa",
+  "Banco Continental",
+  "Banco de la Naci\xF3n Argentina",
+  "Banco do Brasil",
+  "Banco Familiar",
+  "Banco GNB Paraguay",
+  "Banco Interfisa",
+  "Banco Ita\xFA Paraguay",
+  "Banco Nacional de Fomento",
+  "Banco Sudameris",
+  "Bancop",
+  "Citibank Paraguay",
+  "Coomecipar",
+  "Cooperativa Medalla Milagrosa",
+  "Cooperativa San Crist\xF3bal",
+  "Cooperativa Universitaria",
+  "Financiera El Comercio",
+  "Financiera Finexpar",
+  "Financiera Paraguayo Japonesa",
+  "Solar Banco",
+  "ueno bank"
+];
+var LOGOS_BANCOS = {
+  "Banco Atlas": { archivo: "banco-atlas.png" },
+  "Banco Basa": { archivo: "banco-basa.svg" },
+  "Banco Continental": { marca: "continental" },
+  "Banco de la Naci\xF3n Argentina": { archivo: "banco-nacion-argentina.png", chip: true, alias: ["banco nacion", "bna"] },
+  "Banco do Brasil": { archivo: "banco-do-brasil.svg", alias: ["bb", "brasil"] },
+  "Banco Familiar": { marca: "familiar" },
+  "Banco GNB Paraguay": { archivo: "banco-gnb.svg" },
+  "Banco Interfisa": { archivo: "interfisa.png" },
+  "Banco Ita\xFA Paraguay": { archivo: "itau.png", alias: ["itau", "banco itau", "itau paraguay"] },
+  "Banco Nacional de Fomento": { archivo: "bnf.png" },
+  "Banco Sudameris": { archivo: "sudameris.png" },
+  "Bancop": { archivo: "bancop.png" },
+  "Citibank Paraguay": { archivo: "citibank.svg", alias: ["citibank", "citi"] },
+  "Coomecipar": { monograma: "CO", color: "#0B6E4F" },
+  "Cooperativa Medalla Milagrosa": { monograma: "MMM", color: "#6C3FA0" },
+  "Cooperativa San Crist\xF3bal": { monograma: "CSC", color: "#167A54" },
+  "Cooperativa Universitaria": { monograma: "CU", color: "#1D4E9E" },
+  "Financiera El Comercio": { monograma: "FEC", color: "#0E7C7B" },
+  "Financiera Finexpar": { monograma: "FX", color: "#C24E1B" },
+  "Financiera Paraguayo Japonesa": { archivo: "paraguayo-japonesa.png" },
+  "Solar Banco": { archivo: "solar.svg", alias: ["solar", "solar ahorro y finanzas"] },
+  "ueno bank": { marca: "ueno", alias: ["ueno"] }
+};
+var COLORES_BANCO_RESPALDO = ["#33414F", "#1D4E9E", "#0B6E4F", "#8A3A1B", "#6C3FA0", "#12659E"];
+function normalizarBanco(texto) {
+  return String(texto || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+var INDICE = new Map(
+  Object.entries(LOGOS_BANCOS).flatMap(
+    ([nombre, entrada]) => [nombre, ...entrada.alias || []].map((clave) => [normalizarBanco(clave), { nombre, ...entrada }])
+  )
+);
+var VACIAS = /* @__PURE__ */ new Set(["banco", "financiera", "cooperativa", "banca", "de", "del", "la", "el", "y"]);
+function inicialesDeBanco(nombre) {
+  const palabras = String(nombre || "").split(/[\s/]+/).filter(Boolean);
+  const utiles = palabras.filter((palabra) => !VACIAS.has(normalizarBanco(palabra)));
+  const base = (utiles.length ? utiles : palabras).slice(0, 3);
+  const iniciales = base.map((palabra) => palabra[0].toUpperCase()).join("");
+  return iniciales || "?";
+}
+function colorDeBanco(nombre) {
+  const texto = normalizarBanco(nombre);
+  let hash = 0;
+  for (const letra of texto) hash = (hash * 31 + letra.charCodeAt(0)) % 9973;
+  return COLORES_BANCO_RESPALDO[hash % COLORES_BANCO_RESPALDO.length];
+}
+function logoDeBanco(nombre) {
+  const texto = String(nombre || "").trim();
+  if (!texto) return null;
+  const entrada = INDICE.get(normalizarBanco(texto));
+  if (entrada?.archivo) return { banco: entrada.nombre, tipo: "archivo", archivo: entrada.archivo, chip: Boolean(entrada.chip) };
+  if (entrada?.marca) return { banco: entrada.nombre, tipo: "marca", marca: entrada.marca };
+  if (entrada) return { banco: entrada.nombre, tipo: "monograma", iniciales: entrada.monograma, color: entrada.color };
+  return { banco: texto, tipo: "monograma", iniciales: inicialesDeBanco(texto), color: colorDeBanco(texto), generico: true };
+}
+function sugerenciasDeBanco(texto, catalogo = BANCOS_PARAGUAY) {
+  const termino = normalizarBanco(texto);
+  if (!termino) return catalogo;
+  return catalogo.filter((banco) => normalizarBanco(banco).includes(termino));
+}
+
+// src/components/BancoLogo.jsx
+import { useState as useState7 } from "react";
+import { jsx as jsx24 } from "react/jsx-runtime";
+function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseAssets = "/bancos", marcas = {} }) {
+  const [fallo, setFallo] = useState7(false);
+  const texto = String(banco || "").trim();
+  const registro = logoDeBanco(texto);
+  if (!registro) return null;
+  const marca = registro.tipo === "marca" ? registro.marca : null;
+  if (marca && marcas[marca]) {
+    const Logo = marcas[marca];
+    return /* @__PURE__ */ jsx24("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx24(Logo, {}) });
+  }
+  if (soloCatalogo && registro.generico) return null;
+  if (registro.tipo === "archivo" && !fallo) {
+    return /* @__PURE__ */ jsx24("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx24(
+      "img",
+      {
+        src: baseAssets ? `${baseAssets.replace(/\/$/, "")}/${registro.archivo}` : registro.archivo,
+        alt: "",
+        loading: "lazy",
+        onError: () => setFallo(true),
+        className: cn("h-full w-auto max-w-[6rem] object-contain", registro.chip && "rounded-[4px] bg-white px-1 py-[1px]")
+      }
+    ) });
+  }
+  const iniciales = registro.iniciales || inicialesDeBanco(texto);
+  const color = registro.color || colorDeBanco(texto);
+  return /* @__PURE__ */ jsx24("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx24(
+    "span",
+    {
+      "aria-hidden": "true",
+      className: "grid h-full min-w-[1.15rem] place-items-center rounded-[5px] px-1 text-[9px] font-bold leading-none tracking-tight text-white",
+      style: { backgroundColor: color },
+      children: iniciales
+    }
+  ) });
+}
+
+// src/components/BancoCombobox.jsx
+import { jsx as jsx25, jsxs as jsxs19 } from "react/jsx-runtime";
+function BancoCombobox({
+  id,
+  value = "",
+  onChange,
+  required = false,
+  disabled = false,
+  placeholder,
+  className,
+  catalogo = BANCOS_PARAGUAY,
+  logoProps
+}) {
+  const [abierto, setAbierto] = useState8(false);
+  const [resaltado, setResaltado] = useState8(0);
+  const listaId = useId2();
+  const raiz = useRef4(null);
+  const lista = useRef4(null);
+  useEffect3(() => {
+    const cerrarFuera = (event) => {
+      if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
+      setAbierto(false);
+    };
+    document.addEventListener("click", cerrarFuera);
+    return () => document.removeEventListener("click", cerrarFuera);
+  }, []);
+  const sugerencias = useMemo2(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
+  useEffect3(() => {
+    if (!abierto) return;
+    lista.current?.querySelector(`#${CSS.escape(`${listaId}-${resaltado}`)}`)?.scrollIntoView({ block: "nearest" });
+  }, [abierto, resaltado, listaId]);
+  function elegir(banco) {
+    onChange?.(banco);
+    setAbierto(false);
+    setResaltado(0);
+  }
+  function alTeclear(event) {
+    if (event.key === "Escape") {
+      setAbierto(false);
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!abierto) {
+        setAbierto(true);
+        return;
+      }
+      if (!sugerencias.length) return;
+      const paso = event.key === "ArrowDown" ? 1 : -1;
+      setResaltado((actual) => (actual + paso + sugerencias.length) % sugerencias.length);
+      return;
+    }
+    if (event.key === "Enter" && abierto && sugerencias[resaltado]) {
+      event.preventDefault();
+      elegir(sugerencias[resaltado]);
+    }
+  }
+  const listaVisible = abierto && sugerencias.length > 0;
+  return /* @__PURE__ */ jsxs19("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx25(
+      Input,
+      {
+        id,
+        role: "combobox",
+        "aria-expanded": listaVisible,
+        "aria-controls": listaId,
+        "aria-autocomplete": "list",
+        "aria-activedescendant": listaVisible ? `${listaId}-${resaltado}` : void 0,
+        autoComplete: "off",
+        required,
+        disabled,
+        value,
+        placeholder,
+        onChange: (event) => {
+          onChange?.(event.target.value);
+          setAbierto(true);
+          setResaltado(0);
+        },
+        onFocus: () => setAbierto(true),
+        onKeyDown: alTeclear
+      }
+    ),
+    listaVisible && /* @__PURE__ */ jsx25(
+      "ul",
+      {
+        id: listaId,
+        ref: lista,
+        role: "listbox",
+        "aria-label": "Bancos",
+        className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-paper p-1 shadow-xl",
+        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx25("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs19(
+          "button",
+          {
+            type: "button",
+            className: cn("flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-sm transition", indice === resaltado ? "bg-ink-700 text-fore" : "text-mute hover:bg-ink-700 hover:text-fore"),
+            onMouseEnter: () => setResaltado(indice),
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: () => elegir(banco),
+            children: [
+              /* @__PURE__ */ jsx25(BancoLogo, { banco, alto: "h-4", ...logoProps }),
+              /* @__PURE__ */ jsx25("span", { className: "min-w-0 flex-1 truncate", children: banco })
+            ]
+          }
+        ) }, banco))
+      }
+    )
+  ] });
+}
+
 // src/utils/tabla.js
 var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
 var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
 var ROTULO_SECCION = "text-xs font-bold uppercase tracking-wider text-mute";
 var CELDA_DATO = "truncate text-xs text-mute";
 var CELDA_NUMERO = "text-right tabular-nums";
+
+// src/utils/nombre.js
+var PARTICULAS = /* @__PURE__ */ new Set(["de", "del", "la", "las", "los", "y", "e", "da", "das", "do", "dos", "van", "von", "san", "santa"]);
+var titulo = (palabra) => {
+  const limpia = String(palabra || "").toLowerCase();
+  if (!limpia) return "";
+  if (PARTICULAS.has(limpia)) return limpia;
+  return limpia.charAt(0).toUpperCase() + limpia.slice(1);
+};
+var estaEnMayusculas = (texto) => texto === texto.toUpperCase() && /[A-ZÁÉÍÓÚÑ]/.test(texto);
+function nombrePartes(texto) {
+  const limpio = String(texto ?? "").replace(/\s+/g, " ").trim();
+  if (!limpio) return { nombres: [], apellidos: [], conComa: false };
+  if (limpio.includes(",")) {
+    const [apellidos, nombres] = limpio.split(",", 2).map((parte) => parte.trim());
+    return {
+      nombres: String(nombres || "").split(" ").filter(Boolean),
+      apellidos: String(apellidos || "").split(" ").filter(Boolean),
+      conComa: true
+    };
+  }
+  return { nombres: limpio.split(" ").filter(Boolean), apellidos: [], conComa: false };
+}
+function normalizarNombre(texto, { apellidosPrimero = "auto" } = {}) {
+  const original = String(texto ?? "").replace(/\s+/g, " ").trim();
+  if (!original) return "";
+  const partes = nombrePartes(original);
+  const mayusculas = estaEnMayusculas(original);
+  const reordenar = !partes.conComa && (apellidosPrimero === true || apellidosPrimero === "sifen" && mayusculas && partes.nombres.length >= 3);
+  if (!partes.conComa && !reordenar && !mayusculas) return original;
+  let ordenadas;
+  if (partes.conComa) {
+    ordenadas = [...partes.nombres, ...partes.apellidos];
+  } else if (reordenar) {
+    const corte = partes.nombres.length >= 4 ? 2 : partes.nombres.length - 1;
+    ordenadas = [...partes.nombres.slice(corte), ...partes.nombres.slice(0, corte)];
+  } else {
+    ordenadas = partes.nombres;
+  }
+  return ordenadas.map(titulo).filter(Boolean).join(" ");
+}
+function esApellidosPrimero(texto) {
+  return String(texto ?? "").includes(",");
+}
 
 // src/utils/fecha.js
 var ES_PY = "es-PY";
@@ -1463,15 +2208,21 @@ function serialEnmascarado(serial) {
   return cola ? `\u2022\u2022\u2022\u2022${cola}` : "";
 }
 export {
+  AjustesImpresion,
   AuthLayout,
   Aviso,
+  BANCOS_PARAGUAY,
   Badge,
+  BancoCombobox,
+  BancoLogo,
   BarraProgreso,
+  BotonImprimir,
   Button,
   CELDA_DATO,
   CELDA_ENCABEZADO,
   CELDA_NUMERO,
   CODIGOS_PAIS,
+  COLORES_BANCO_RESPALDO,
   Card,
   CeldaMoneda,
   ConfirmDialog,
@@ -1480,6 +2231,9 @@ export {
   DataTable,
   Dot,
   Drawer,
+  ESTADO_IMPRESORA,
+  ETIQUETA_ESTADO,
+  ETIQUETA_TRABAJO,
   EmailField,
   EmptyState,
   ErrorState,
@@ -1494,15 +2248,19 @@ export {
   InstagramField,
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
+  LOGOS_BANCOS,
   Label,
   ListGridToggle,
   LoadingScreen,
   MENSAJE_TELEFONO,
+  MenuDesplegable,
   Modal,
   Money,
   MoneyInput,
+  NavLateral,
   OAuthDivider,
   PageHeader,
+  PanelDerecho,
   PasswordInput,
   PegarEnlaceToken,
   PercentField,
@@ -1519,12 +2277,22 @@ export {
   Stat,
   Subtabs,
   Switch,
+  TONO_ESTADO,
+  TarjetaAjuste,
   Textarea,
   ToastProvider,
+  agregarEstado,
   cn,
   codigoPais,
+  colorDeBanco,
+  colorTrabajo,
   componerTelefono,
+  conexionDeDestino,
+  destinoDeConexion,
+  esApellidosPrimero,
   esToken,
+  estadoDeDiagnostico,
+  etiquetaTrabajo,
   excedeMonto,
   extractTokenFromUrl,
   fechaCorta,
@@ -1538,12 +2306,19 @@ export {
   formatPercent,
   formatUsd,
   formatUsdInput,
+  inicialesDeBanco,
   internationalPhone,
+  largoMaximoMonto,
   limpiarPercent,
+  logoDeBanco,
   montoGs,
   montoTexto,
   montoUsd,
+  motivoDeDiagnostico,
+  nombrePartes,
+  normalizarBanco,
   normalizarInstagram,
+  normalizarNombre,
   normalizarSerial,
   normalizarTelefono,
   parseGsInput,
@@ -1555,8 +2330,10 @@ export {
   serialEnmascarado,
   soloDigitos,
   sugerenciasDe,
+  sugerenciasDeBanco,
   telefonoValido,
   telefonoVisible,
+  textoVerificacion,
   ultimos4,
   useToast,
   whatsappUrl

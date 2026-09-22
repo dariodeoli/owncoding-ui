@@ -95,6 +95,16 @@ la de MobOS.
   `Modal`, `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`.
   El interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   `Toggle`).
+- **Navegación y shell:** `NavLateral` (colapsable, modelo `[{id,label,icono,contador}]`),
+  `MenuDesplegable` (usuario, acciones de fila), `AuthLayout`, `ProductFooter`,
+  `LoadingScreen`.
+- **Ajustes (modelo):** `PanelDerecho` (contenido + formulario fijo a la
+  derecha) y `TarjetaAjuste` (título/descripción/acción + cuerpo).
+- **Impresión LAN/USB (funcional):** `AjustesImpresion`, `BotonImprimir` y
+  `printing/estadoImpresoras.js` (estados honestos, destinos `lan:<ip>:<puerto>`
+  y `cups:<cola>`). Guía completa: `docs/IMPRESION.md`.
+- **Bancos de Paraguay:** catálogo `BANCOS_PARAGUAY` como predeterminado,
+  `BancoCombobox` y `BancoLogo` (archivo/marca/monograma, sin cuadros rotos).
 - **Estados y avisos:** `Aviso` (error/ok/warn, con contenedor), `EmptyState`,
   `ErrorState`, `Skeleton`, `Badge`, `Dot`.
 - **Datos:** `Money`, `FilaDato`, `CeldaMoneda`, `BarraProgreso`,
@@ -109,12 +119,19 @@ la de MobOS.
 
 ```
 src/components/   objetos portables (ui.jsx = primitivas y objetos)
-src/utils/        lógica compartida pura (moneda, fechas, teléfono, tabla, cn)
+src/utils/        lógica compartida pura (moneda, fechas, teléfono, nombre, bancos, tabla, cn)
+src/printing/     estado de impresoras y trabajos (puro)
 src/styles/       tokens.css
-docs/             REGLAS.md · MODOS-DE-TRABAJO.md · PLANTILLA-AGENTS.md
+docs/             REGLAS.md · MODOS-DE-TRABAJO.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
 scripts/build.mjs build (esbuild → dist/index.js + dist/styles.css)
 test/             smoke de render (vitest + renderToStaticMarkup) y lógica
 ```
+
+## Alimentar la biblioteca
+
+La biblioteca crece con lo que ya funciona en las apps y también cosecha de
+otras apps del grupo: ver `docs/ALIMENTAR.md` (criterio, pasos y cuándo no
+traerlo).
 
 ## Versionado
 
