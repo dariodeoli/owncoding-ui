@@ -7,10 +7,19 @@
   "private": true,
   "main": "./dist/index.js",
   "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
     "./styles.css": "./dist/styles.css",
-    "./tailwind-preset": "./tailwind-preset.js",
+    "./tokens.css": "./dist/tokens.css",
+    "./base.css": "./dist/base.css",
+    "./tailwind-preset": {
+      "types": "./types/tailwind-preset.d.ts",
+      "default": "./tailwind-preset.js"
+    },
     "./package.json": "./package.json"
   },
   "engines": {
@@ -19,6 +28,7 @@
   "files": [
     "dist",
     "src",
+    "types",
     "docs",
     "CHANGELOG.md",
     "tailwind-preset.js",

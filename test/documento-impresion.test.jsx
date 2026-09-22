@@ -6,7 +6,9 @@ import { readFileSync } from 'node:fs'
 
 import { DocumentoImpresion } from '../src/index.js'
 
-const styles = readFileSync(new URL('../src/styles/tokens.css', import.meta.url), 'utf8')
+// Las reglas `@media print` viajan con la base opt-in (`base.css`); `styles.css`
+// las incluye al concatenar tokens + base.
+const styles = readFileSync(new URL('../src/styles/base.css', import.meta.url), 'utf8')
 
 const DOC = {
   titulo: 'Presupuesto',

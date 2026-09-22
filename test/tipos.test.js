@@ -1,0 +1,56 @@
+// Tipos publicados: el paquete declara `types` (y la condición del `exports`)
+// apuntando a `dist/index.d.ts`, el build copia el archivo declarado a mano y
+// los nombres clave de la API existen en las declaraciones. No es un test de
+// TypeScript (no hay TS en el paquete): verifica el contrato publicado.
+import { describe, expect, test } from 'vitest'
+import { existsSync, readFileSync } from 'node:fs'
+
+const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+const dts = readFileSync(new URL('../types/index.d.ts', import.meta.url), 'utf8')
+const dist = new URL('../dist/index.d.ts', import.meta.url)
+const presetDts = readFileSync(new URL('../types/tailwind-preset.d.ts', import.meta.url), 'utf8')
+
+const exporta = (nombre) => new RegExp(`export (function|const|type|interface|class) ${nombre}\\b`).test(dts)
+
+describe('tipos publicados (.d.ts)', () => {
+  test('package.json los expone por `types` y por la condición del exports', () => {
+    expect(pkg.types).toBe('./dist/index.d.ts')
+    expect(pkg.exports['.'].types).toBe('./dist/index.d.ts')
+    expect(pkg.exports['.'].default).toBe('./dist/index.js')
+    expect(pkg.exports['./tailwind-preset'].types).toBe('./types/tailwind-preset.d.ts')
+    expect(pkg.files).toContain('types')
+  })
+
+  test('el build copia las declaraciones al paquete (dist/index.d.ts)', () => {
+    expect(existsSync(dist)).toBe(true)
+    expect(readFileSync(dist, 'utf8')).toBe(dts)
+  })
+
+  test('los objetos principales y sus props están declarados', () => {
+    for (const nombre of [
+      // Primitivas y campos
+      'Button', 'Input', 'MoneyInput', 'Money', 'Select', 'Textarea', 'Label', 'Card',
+      'Modal', 'ConfirmDialog', 'Drawer', 'ToastProvider', 'useToast', 'EmptyState',
+      'ErrorState', 'Aviso', 'Nota', 'DataTable', 'FormField', 'Stat', 'Subtabs',
+      'FilaDato', 'CeldaMoneda', 'BarraProgreso', 'Icon',
+      // Estados, tablas y dinero
+      'ChipEstado', 'ESTADOS_CHIP', 'estadoChip', 'TONOS', 'tonoCanonico',
+      'CELDA_DATO', 'CELDA_NUMERO', 'ROTULO_DATO', 'formatGs', 'montoTexto',
+      'montoConSigno', 'SIMBOLOS_MONEDA', 'fechaHora', 'fechaDia', 'fechaCorta',
+      'fechaHoraCorta', 'TAMANOS_CAMPO', 'TAMANOS_MODAL',
+      // Lote 2
+      'Calendario', 'RangoFecha', 'PaletaComandos', 'AyudaModulo', 'BarraInferior',
+      'Avatar', 'ImporteDelta', 'IndicadorConexion', 'CampanaAvisos', 'GraficoBarras',
+      // Lote LedBox
+      'TableroKanban', 'useTableroOptimista', 'Cronologia', 'PlanPagos',
+      'DocumentoImpresion', 'SubidaImagen', 'ProgresoChecklist', 'progresoChecklist',
+    ]) {
+      expect(exporta(nombre), `falta el tipo de ${nombre}`).toBe(true)
+    }
+  })
+
+  test('los tipos del preset cubren `owncodingContent`', () => {
+    expect(presetDts).toContain('owncodingContent')
+    expect(presetDts).toContain('export default')
+  })
+})

@@ -3,19 +3,33 @@
  *
  * Uso en la app:
  *   // tailwind.config.js
- *   import preset from 'owncoding-ui/tailwind-preset'
- *   export default { presets: [preset], content: [...] }
+ *   import preset, { owncodingContent } from 'owncoding-ui/tailwind-preset'
+ *   export default { presets: [preset], content: [...owncodingContent, './src'] }
+ *
+ * ⚠️ Tailwind 3.4 **ignora** el `content` que declara un preset
+ * (`normalizeConfig` arma la lista solo con el config del proyecto): si la app
+ * no suma `owncodingContent`, Tailwind purga las clases de los objetos
+ * compartidos y los íconos salen gigantes sin ningún error. Por eso la ruta
+ * tiene que vivir en el `content` de la app. `owncodingContent` trae el bundle
+ * (`dist`) y las fuentes (`src`), así funciona también con `--ignore-scripts`
+ * o si se copia el paquete sin build.
  *
  * La paleta sale de CSS vars (`--c-*`), así cada app cambia su acento sin
  * tocar la librería: definí los valores en `:root` y `.dark`. Ver
- * `owncoding-ui/styles.css` para los valores de referencia.
+ * `owncoding-ui/styles.css` (o `tokens.css`) para los valores de referencia.
  */
+
+/** Rutas que la app suma a su `content`; se resuelven desde su raíz. */
+export const owncodingContent = [
+  './node_modules/owncoding-ui/dist/**/*.js',
+  './node_modules/owncoding-ui/src/**/*.jsx',
+]
+
 export default {
   darkMode: 'class',
-  // La app debe escanear también el bundle de la librería: si no, Tailwind
-  // purga las clases de los componentes compartidos. Un preset puede declarar
-  // `content` y Tailwind lo combina con el de la app.
-  content: ['./node_modules/owncoding-ui/dist/**/*.js'],
+  // Se declara por si otra herramienta respeta el `content` del preset; en
+  // Tailwind 3.4 la app **tiene** que sumar `owncodingContent` a su lista.
+  content: owncodingContent,
   theme: {
     extend: {
       colors: {

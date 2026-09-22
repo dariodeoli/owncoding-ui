@@ -1,0 +1,12 @@
+/* ============================================================================
+   OwnCoding UI — hoja completa (tokens + base)
+   Punto de entrada compatible: es exactamente lo que había en v0.13.1.
+   Importar después de las directivas de Tailwind:
+     @tailwind base; @tailwind components; @tailwind utilities;
+     @import 'owncoding-ui/styles.css';
+   Si la app solo quiere las variables (diseño propio), importa
+   `owncoding-ui/tokens.css`; para sumar la base global sola,
+   `owncoding-ui/base.css`.
+   ============================================================================ */
+@import './tokens.css';
+@import './base.css';
