@@ -5,7 +5,13 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 documenta acá y en el README).
 
 ## Sin publicar — lote 2 (2026-09-22)
-
+- **Preview del papel (preview v2, #241):** `VistaPreviaPapel` + `ANCHOS_PAPEL`
+  — el documento impreso con el **ancho real del papel** (mm a 96 dpi:
+  `thermal-80` 302 px, `thermal-58` 219 px, `thermal-55` 208 px y `a4` 794 px),
+  centro automático y alto configurable; el selector de formato va con
+  `SegmentedField`. En MobOS reemplaza los mapas `ANCHO_VISTA` duplicados en el
+  preview de comprobantes y el de reportes, y cierra el combo del informe
+  (`FichaCertificado` + `CodigoQr` + `qrDataUrl` + `VistaPreviaPapel`).
 - **Agenda:** `Calendario` — grilla mensual (semana opcional) con encabezado de
   navegación, conteo por día, detalle del día elegido y lista por día en mobile
   (sin scroll horizontal). Ítems `{ fecha, titulo, hora?, detalle?, tono?,

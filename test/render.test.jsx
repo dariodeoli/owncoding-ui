@@ -32,6 +32,7 @@ import {
   Switch,
   Textarea,
   TileEquipo,
+  VistaPreviaPapel,
 } from '../src/index.js'
 import { BotonDentroCampo } from '../src/index.js'
 import { CELDA_DATO, CELDA_ENCABEZADO, CELDA_NUMERO, ROTULO_DATO, ROTULO_SECCION } from '../src/index.js'
@@ -213,5 +214,16 @@ describe('render de los objetos base', () => {
     // El QR se genera en el cliente (useEffect): en SSR no aparece la imagen.
     expect(ficha).not.toContain('<img')
     expect(renderToStaticMarkup(<FichaCertificado modelo="iPad" total={0} />)).toContain('Sin verificación física')
+  })
+
+  test('la vista previa del papel usa el ancho real del formato (#241)', () => {
+    const previa = renderToStaticMarkup(<VistaPreviaPapel formato="thermal-80" contenido="<p>Hola</p>" titulo="Vista previa del comprobante" />)
+    expect(previa).toContain('max-w-[302px]')
+    expect(previa).toContain('mx-auto')
+    expect(previa).toContain('title="Vista previa del comprobante"')
+    expect(previa).toContain('srcDoc="&lt;p&gt;Hola&lt;/p&gt;"')
+    expect(renderToStaticMarkup(<VistaPreviaPapel formato="a4" contenido="<p>A4</p>" />)).toContain('max-w-[794px]')
+    expect(renderToStaticMarkup(<VistaPreviaPapel formato="thermal-58" contenido="x" />)).toContain('max-w-[219px]')
+    expect(renderToStaticMarkup(<VistaPreviaPapel formato="desconocido" contenido="x" />)).not.toContain('mx-auto')
   })
 })

@@ -62,6 +62,10 @@ la de MobOS.
 
 ### Notas de release
 
+- **Sin publicar** — `VistaPreviaPapel` + `ANCHOS_PAPEL` (preview v2, #241): la
+  vista previa del documento impreso con el ancho real del papel (80/58/55 mm y
+  A4); cierra el combo del informe junto a `FichaCertificado`, `CodigoQr` y
+  `qrDataUrl`.
 - **v0.12.0** — informe público: `FichaCertificado` (tarjeta del informe de
   dispositivo) y `CodigoQr` + `qrDataUrl` (QR unificado, peer opcional
   `qrcode`).

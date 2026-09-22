@@ -186,6 +186,7 @@ así el resto de la app no cambia.
 | `CodigoQr` | `valor`, `ancho` (220), `nivel` (`M`), `margen` (1), `alt`, `className` | QR del informe/enlace; sin valor no renderiza nada. Requiere `qrcode` (peer opcional) |
 | `qrDataUrl` | `valor`, `{ ancho, nivel, margen }` | Data URL del QR para HTML impreso o previews; vacío → `''`, nunca lanza |
 | `FichaCertificado` | `empresa`, `modelo`, `imei`, `grado`, `bateria`, `ciclos`, `locks`, `aprobados`, `total`, `verificadoPor`, `verificadoAt`, `enlace`, `etiquetaQr`, `acciones`, `className` | Tarjeta del informe público: compone chip, grado, batería, conteo del checklist, locks y QR |
+| `VistaPreviaPapel` (`ANCHOS_PAPEL`) | `formato` (`thermal-80`/`thermal-58`/`thermal-55`/`a4`), `contenido` (HTML), `titulo`, `alto`, `className` | Vista previa del documento impreso con el ancho real del papel (mm a 96 dpi: 302/219/208 y 794 px); el selector de formato va con `SegmentedField` |
 | `CATEGORIAS_PRODUCTO` | — | iPhone/MacBook/iPad/Watch/AirPods/Accesorios/Servicio/Otro con `etiqueta`, `icono` y `alias` |
 | `ICONO_CATEGORIA` | — | Mapa `categoría → glifo` para filtros y chips |
 | `normalizarCategoria` / `categoriaDe` / `iconoDeCategoria` / `etiquetaDeCategoria` | `texto` | "Funda iPhone" → accesorios; "CELULAR" → iPhone; desconocido → Otro |
