@@ -12,8 +12,14 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 ## Cómo lo consume una app
 
 ```bash
+# Versión fija (recomendado: se adopta una versión y se sube a propósito)
+npm install github:dariodeoli/owncoding-ui#v0.2.2
+
+# Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
-# repo privado con SSH:  npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git
+
+# Repo privado por SSH
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.2.2
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -49,6 +55,30 @@ import { Button, Aviso, EmptyState, montoTexto, CELDA_DATO } from 'owncoding-ui'
 Cada app pisa sus colores en `:root` (y `.dark`) sin tocar la librería; el
 acento es el token `fono` (borde `--c-fono`, etc.). La paleta de referencia es
 la de MobOS.
+
+### Notas de release v0.2.x
+
+- **v0.2.2** — documentación de consumo (versión fija por tag) y CHANGELOG en el
+  paquete. Sin cambios de API.
+- **v0.2.1** — `exports` expone `./package.json`; `engines.node >= 18`; CI de
+  build/tests. Sin cambios de API.
+- **v0.2.0 (cambio incompatible)** — se retiró el alias `Toggle` (#186).
+  **Actualizar:** reemplazar `Toggle` por `Switch`; el callback ahora recibe el
+  evento (`onChange={(event) => setValor(event.target.checked)}`) en vez del
+  booleano. Los alias de compatibilidad no viven en esta librería.
+- Para subir de versión en una app: cambiar el tag de la dependencia, buscar
+  usos del objeto cambiado, correr los checks de la app (lint, tests, build,
+  smoke) y commitear en la rama del slot.
+
+### Adopción en una app (checklist)
+
+1. Instalar la versión fija por tag y configurar el preset en Tailwind.
+2. Importar `owncoding-ui/styles.css` después de las directivas de Tailwind.
+3. Definir la paleta de la app en `:root`/`.dark` (si no usa la de referencia).
+4. Reemplazar los objetos locales por los de la librería, de a un objeto por
+   commit (sin mezclar con cambios de negocio).
+5. Correr lint + tests + build + e2e smoke de la app.
+6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
 ## Qué incluye (v0.1.0)
 

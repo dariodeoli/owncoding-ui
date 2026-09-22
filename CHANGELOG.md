@@ -4,6 +4,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.2.2 — 2026-09-21
+
+- README: consumo real (versión fija por tag) y notas de release v0.2.x con la
+  guía de actualización del cambio de `Toggle` a `Switch`; checklist de adopción.
+- CHANGELOG incluido en el paquete. Sin cambios de API.
+
 ## v0.2.1 — 2026-09-21
 
 - `exports` expone `./package.json`; `engines.node >= 18` (robustez de consumo).
