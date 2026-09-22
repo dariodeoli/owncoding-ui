@@ -4,6 +4,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.13.1 — 2026-09-22
+
+- **Release completa:** suma al lote LedBox ya etiquetado el **lote 2** (agenda,
+  filtros, shell y tablero: `Calendario`, `RangoFecha`, `PaletaComandos`,
+  `AyudaModulo`, `BarraInferior`, `Avatar`, `ImporteDelta`, `IndicadorConexion`,
+  `CampanaAvisos`, `GraficoBarras`) y el resto de los helpers.
+- **Formato de guaraníes sin punto:** `Money` y `CeldaMoneda` muestran
+  `Gs 1.234.567` (el símbolo de `PYG` pierde el punto) para coincidir con el
+  formato que usan las apps en pantalla y en los imprimibles. Los
+  formateadores puros (`formatGs`, `montoTexto`, `formatMoney`, `montoGs`) ya lo
+  hacían.
+- Nota: `v0.13.0` quedó como pre-release parcial (sin el lote 2 ni el formato);
+  las apps deben fijar **v0.13.1**.
+
 ## v0.13.0 — 2026-09-22
 
 - **Agenda:** `Calendario` — grilla mensual (semana opcional) con encabezado de
