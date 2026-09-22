@@ -58,6 +58,16 @@ integrador decide el número final).
   construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
   `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
 
+## v0.14.1 — 2026-09-22
+
+- **Documentación (sin cambios de código):** `docs/COMANDOS.md` con los
+  comandos del orquestador (`pp` pendientes, `pd` pendiente de deploy con la
+  tabla commit → qué cambia y su tipo, `al` agentes libres, `ht` ciclo
+  completo y `hd` alias) y las reglas: nada se mergea/pushea/despliega sin `ht`
+  o ronda ordenada, los conflictos se resuelven en el worktree del slot que
+  rebasea, y el orquestador no toca código. Referenciado desde
+  `docs/MODOS-DE-TRABAJO.md`.
+
 ## v0.14.0 — 2026-09-22
 
 - **Adopción sin fricción (pedido del piloto de LedBox):** `owncodingContent`

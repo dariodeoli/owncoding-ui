@@ -29,6 +29,10 @@ Dueño ──▶ ORQUESTADOR ──▶ SLOTS (worktrees, ramas persistentes)
 
 ## Ciclo de un pedido
 
+> Los comandos abreviados del dueño (`pp`, `pd`, `al`, `ht`, `hd`) están en
+> **`docs/COMANDOS.md`**: `ht` es el ciclo completo (merge → suite → push →
+> `NOVEDADES.md` → release + smoke).
+
 1. El dueño le cuenta el problema al orquestador, en lenguaje de producto.
 2. El orquestador abre un issue (plantilla) y elige el slot por dominio.
 3. Brief al slot: issue, alcance, criterio, rama, checks, handover.

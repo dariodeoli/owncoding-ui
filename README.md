@@ -584,7 +584,7 @@ src/utils/        lógica compartida pura (moneda, fechas, teléfono, nombre, ba
 src/printing/     estado de impresoras y trabajos (puro)
 src/styles/       tokens.css (solo variables) · base.css (base opt-in) · styles.css (las dos)
 types/            declaraciones .d.ts escritas a mano (el build las copia a dist/)
-docs/             REGLAS.md · V2.md · MODOS-DE-TRABAJO.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
+docs/             REGLAS.md · V2.md · MODOS-DE-TRABAJO.md · COMANDOS.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
 scripts/build.mjs build (esbuild → dist/index.js + dist/index.d.ts + dist/styles.css + tokens.css/base.css)
 test/             smoke de render (vitest + renderToStaticMarkup), lógica y contrato del paquete
 ```
