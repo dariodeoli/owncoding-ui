@@ -210,7 +210,7 @@ así el resto de la app no cambia.
 | `SemaforoItem` | `estado` (`ok`/`aviso`/`falla`/`sinVerificar`), `etiqueta`, `detalle`, `como` (`li`/`div`) | Punto con ícono + texto accesible (`Etiqueta: Estado`) |
 | `FilaChecklist` | `etiqueta`, `estado`, `nota`, `accion`, `className` | Fila del checklist con el semáforo y la nota de la inspección |
 | `ConteoChecklist` | `pasan`, `total`, `fallas`, `sustantivo` (default `pass`), `className` | "12 de 12 pass" en verde `pass`; las fallas aparte en rojo |
-| `MedidorBateria` | `porcentaje`, `ciclos`, `etiqueta`, `variante` (`barra`/`chip`), `compact`, `className` | Umbrales 90/80; sin dato → `—` y "Sin dato" (nunca 0) |
+| `MedidorBateria` | `porcentaje`, `ciclos`, `etiqueta`, `variante` (`barra`/`chip`), `compact`, `mostrarEtiqueta` (chip «87% batería»), `className` | Umbrales 90/80; sin dato → `—` y "Sin dato" (nunca 0) |
 | `GradoBadge` | `grado` (`A`/`B`/`C`), `conDescripcion`, `className` | A verde, B naranja, C rojo; un grado inválido se muestra crudo |
 | `TileEquipo` | `modelo`, `imei`, `detalle`, `foto`, `estado`, `grado`, `bateria`, `ciclos`, `locks`, `acciones`, `onOpen` | Compone chip, grado, batería, locks e icono de categoría; `onOpen` lo vuelve botón |
 | `Stepper` | `pasos` = `[{ id, etiqueta, detalle? }]`, `actual`, `hechos`, `className` | Hecho verde `pass`, actual con anillo, pendiente gris |

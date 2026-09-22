@@ -58,6 +58,14 @@ integrador decide el número final).
   construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
   `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
 
+## v0.14.4 — 2026-09-22
+
+- **`MedidorBateria` con `mostrarEtiqueta`:** el chip puede mostrar la palabra
+  además del porcentaje («87% batería»), para las tiles del modo taller/rack
+  donde el `%` solo quedaría ambiguo. Portado del lote 15 de MobOS, que adopta
+  `GradoBadge` y `MedidorBateria` en el rack.
+- Props en `docs/REGLAS.md` §8 bis.
+
 ## v0.14.3 — 2026-09-22
 
 - **`tools/auto-ht.sh` (script genérico):** implementa la política automática

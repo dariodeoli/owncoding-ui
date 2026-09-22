@@ -6,7 +6,7 @@ import { cn } from '../utils/cn.js'
 // umbral (≥90 bien, 80–89 atención, <80 cambio) y el mismo formato. Variante
 // `barra` para la ficha/rack (etiqueta + % + barra) y `chip` para listas y
 // tablas (solo el %). Sin dato → `—`, nunca un cero inventado.
-export default function MedidorBateria({ porcentaje, ciclos, etiqueta = 'Batería', variante = 'barra', compact = false, className }) {
+export default function MedidorBateria({ porcentaje, ciclos, etiqueta = 'Batería', variante = 'barra', compact = false, mostrarEtiqueta = false, className }) {
   const hay = porcentaje !== null && porcentaje !== undefined && porcentaje !== '' && Number.isFinite(Number(porcentaje))
   const valor = hay ? Number(porcentaje) : null
   const tono = tonoBateria(hay ? valor : null)
@@ -16,7 +16,7 @@ export default function MedidorBateria({ porcentaje, ciclos, etiqueta = 'Baterí
   if (variante === 'chip') {
     return (
       <span className={cn('inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums', TONOS.texto[tono], className)} title={title}>
-        {texto}
+        {texto}{mostrarEtiqueta ? ` ${etiqueta.toLowerCase()}` : ''}
       </span>
     )
   }

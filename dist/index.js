@@ -2924,14 +2924,17 @@ function ChipsLocks({ locks = [], conEstado = false, className }) {
 
 // src/components/MedidorBateria.jsx
 import { jsx as jsx32, jsxs as jsxs26 } from "react/jsx-runtime";
-function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, className }) {
+function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, mostrarEtiqueta = false, className }) {
   const hay = porcentaje !== null && porcentaje !== void 0 && porcentaje !== "" && Number.isFinite(Number(porcentaje));
   const valor = hay ? Number(porcentaje) : null;
   const tono = tonoBateria(hay ? valor : null);
   const texto = hay ? `${valor}%` : "\u2014";
   const title = hay ? `${etiqueta}: ${valor}%${ciclos ? ` \xB7 ${ciclos} ciclos` : ""}` : `${etiqueta}: sin dato`;
   if (variante === "chip") {
-    return /* @__PURE__ */ jsx32("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: texto });
+    return /* @__PURE__ */ jsxs26("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: [
+      texto,
+      mostrarEtiqueta ? ` ${etiqueta.toLowerCase()}` : ""
+    ] });
   }
   return /* @__PURE__ */ jsxs26("div", { className: cn("space-y-1", className), title, children: [
     /* @__PURE__ */ jsxs26("div", { className: "flex items-baseline justify-between gap-2", children: [
