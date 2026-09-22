@@ -27,7 +27,9 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 
 Transversales: error **o** hint (nunca ambos), `aria-invalid` +
 `aria-describedby`, error con `role="alert"`, teclado móvil correcto y nada de
-máscaras que rompan pegado/autofill. El servidor revalida siempre.
+máscaras que rompan pegado/autofill. El servidor revalida siempre. El
+interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
+`Toggle` y la librería no expone alias de compatibilidad).
 
 ## 2. Botones y acciones
 

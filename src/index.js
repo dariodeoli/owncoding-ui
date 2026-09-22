@@ -32,7 +32,6 @@ export {
   DataTable,
   FormField,
   Stat,
-  Toggle,
   Subtabs,
   FilaDato,
   CeldaMoneda,

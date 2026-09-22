@@ -168,51 +168,8 @@ function Icon({ name, className, ...props }) {
   );
 }
 
-// src/components/Switch.jsx
-import { jsx as jsx2, jsxs } from "react/jsx-runtime";
-function Switch({ checked, onChange, disabled = false, id, ariaLabel, className, ...props }) {
-  return /* @__PURE__ */ jsxs("span", { className: cn("relative inline-flex h-5 w-9 shrink-0 items-center", className), children: [
-    /* @__PURE__ */ jsx2(
-      "input",
-      {
-        id,
-        type: "checkbox",
-        role: "switch",
-        "aria-checked": Boolean(checked),
-        "aria-label": ariaLabel,
-        checked: Boolean(checked),
-        disabled,
-        onChange,
-        className: "peer absolute inset-0 z-10 h-full w-full cursor-pointer appearance-none rounded-full opacity-0 disabled:cursor-not-allowed",
-        ...props
-      }
-    ),
-    /* @__PURE__ */ jsx2(
-      "span",
-      {
-        "aria-hidden": "true",
-        className: cn(
-          "pointer-events-none absolute inset-0 rounded-full border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-fono/50 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-paper",
-          checked ? "border-fono bg-fono" : "border-ink-500 bg-ink-600",
-          disabled && "opacity-50"
-        )
-      }
-    ),
-    /* @__PURE__ */ jsx2(
-      "span",
-      {
-        "aria-hidden": "true",
-        className: cn(
-          "pointer-events-none absolute left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
-          checked && "translate-x-4"
-        )
-      }
-    )
-  ] });
-}
-
 // src/components/ui.jsx
-import { jsx as jsx3, jsxs as jsxs2 } from "react/jsx-runtime";
+import { jsx as jsx2, jsxs } from "react/jsx-runtime";
 var VARIANTS = {
   primary: "bg-fono text-onbrand hover:bg-fono-light",
   success: "bg-ok text-black hover:brightness-110",
@@ -221,7 +178,7 @@ var VARIANTS = {
   ghost: "bg-transparent text-mute hover:bg-ink-700 hover:text-fore"
 };
 function Button({ className, variant = "primary", ...props }) {
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "button",
     {
       className: cn(
@@ -235,7 +192,7 @@ function Button({ className, variant = "primary", ...props }) {
   );
 }
 var Input = forwardRef(function Input2({ className, ...props }, ref) {
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "input",
     {
       ref,
@@ -251,9 +208,9 @@ var Input = forwardRef(function Input2({ className, ...props }, ref) {
 });
 function PasswordInput({ className, ...props }) {
   const [visible, setVisible] = useState(false);
-  return /* @__PURE__ */ jsxs2("div", { className: "relative", children: [
-    /* @__PURE__ */ jsx3(Input, { ...props, type: visible ? "text" : "password", className: cn("pr-11", className) }),
-    /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
+    /* @__PURE__ */ jsx2(Input, { ...props, type: visible ? "text" : "password", className: cn("pr-11", className) }),
+    /* @__PURE__ */ jsx2(
       "button",
       {
         type: "button",
@@ -262,7 +219,7 @@ function PasswordInput({ className, ...props }) {
         "aria-label": visible ? "Ocultar contrase\xF1a" : "Mostrar contrase\xF1a",
         "aria-pressed": visible,
         title: visible ? "Ocultar contrase\xF1a" : "Mostrar contrase\xF1a",
-        children: /* @__PURE__ */ jsx3(Icon, { name: visible ? "eyeOff" : "eye", className: "h-4 w-4" })
+        children: /* @__PURE__ */ jsx2(Icon, { name: visible ? "eyeOff" : "eye", className: "h-4 w-4" })
       }
     )
   ] });
@@ -270,8 +227,8 @@ function PasswordInput({ className, ...props }) {
 function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, disabled = false, inputRef, ariaLabel, className, id }) {
   const largoMax = Math.min(6, Math.max(4, Number(length) || 4));
   const largo = String(value || "").length;
-  return /* @__PURE__ */ jsxs2("span", { className: cn("relative mx-auto block h-16 w-44 transition-transform duration-150 focus-within:scale-[1.03]", disabled && "opacity-50", className), children: [
-    /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsxs("span", { className: cn("relative mx-auto block h-16 w-44 transition-transform duration-150 focus-within:scale-[1.03]", disabled && "opacity-50", className), children: [
+    /* @__PURE__ */ jsx2(
       "input",
       {
         ref: inputRef,
@@ -293,7 +250,7 @@ function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, 
         className: "pin-oculto h-full w-full rounded-2xl border border-ink-500 bg-paper text-center text-3xl font-bold tracking-[.45em] shadow-card transition-all duration-150 focus:border-fono focus:ring-2 focus:ring-fono/30 focus:outline-none"
       }
     ),
-    /* @__PURE__ */ jsx3("span", { "aria-hidden": "true", className: "pointer-events-none absolute inset-0 flex items-center justify-center gap-[.5em]", children: Array.from({ length: largoMax }, (_, indice) => /* @__PURE__ */ jsx3(
+    /* @__PURE__ */ jsx2("span", { "aria-hidden": "true", className: "pointer-events-none absolute inset-0 flex items-center justify-center gap-[.5em]", children: Array.from({ length: largoMax }, (_, indice) => /* @__PURE__ */ jsx2(
       "span",
       {
         className: cn("h-2.5 w-2.5 rounded-full transition-colors", indice < largo ? "bg-fore" : "bg-mute/25")
@@ -308,9 +265,9 @@ function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className,
   const prefix = symbol || MONEY_SYMBOL[currency] || currency;
   const display = isPyg ? formatGsInput(value) : formatUsdInput(value);
   const excede = excedeMonto(value, max);
-  return /* @__PURE__ */ jsxs2("div", { className: "relative", children: [
-    /* @__PURE__ */ jsx3("span", { className: "pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-semibold text-mute", children: prefix }),
-    /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
+    /* @__PURE__ */ jsx2("span", { className: "pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-semibold text-mute", children: prefix }),
+    /* @__PURE__ */ jsx2(
       Input,
       {
         ...props,
@@ -329,11 +286,11 @@ function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className,
 }
 function Money({ value, currency = "PYG", className }) {
   const amount = Number(value);
-  if (!Number.isFinite(amount)) return /* @__PURE__ */ jsx3("span", { className, children: "\u2014" });
-  return /* @__PURE__ */ jsx3("span", { className, children: currency === "USD" ? `US$ ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : formatGs(amount) });
+  if (!Number.isFinite(amount)) return /* @__PURE__ */ jsx2("span", { className, children: "\u2014" });
+  return /* @__PURE__ */ jsx2("span", { className, children: currency === "USD" ? `US$ ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : formatGs(amount) });
 }
 function Select({ className, children, ...props }) {
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "select",
     {
       className: cn(
@@ -349,7 +306,7 @@ function Select({ className, children, ...props }) {
   );
 }
 function Textarea({ className, ...props }) {
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "textarea",
     {
       className: cn(
@@ -363,7 +320,7 @@ function Textarea({ className, ...props }) {
   );
 }
 function Label({ className, ...props }) {
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "label",
     {
       className: cn(
@@ -375,7 +332,7 @@ function Label({ className, ...props }) {
   );
 }
 function Eyebrow({ className, ...props }) {
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "div",
     {
       className: cn("text-xs font-bold uppercase tracking-[.18em] text-fono-light", className),
@@ -384,7 +341,7 @@ function Eyebrow({ className, ...props }) {
   );
 }
 function Card({ className, ...props }) {
-  return /* @__PURE__ */ jsx3("div", { className: cn("rounded-xl border border-fono/30 bg-ink-800 p-5", className), ...props });
+  return /* @__PURE__ */ jsx2("div", { className: cn("rounded-xl border border-fono/30 bg-ink-800 p-5", className), ...props });
 }
 function Modal({ open, onClose, title, children, className }) {
   const dialog = useRef(null);
@@ -422,10 +379,10 @@ function Modal({ open, onClose, title, children, className }) {
     };
   }, [open]);
   if (!open) return null;
-  return /* @__PURE__ */ jsx3("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs2("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full max-w-lg overflow-y-auto rounded-2xl border border-ink-600 bg-ink-800 p-4 shadow-2xl sm:p-6", className), children: [
-    /* @__PURE__ */ jsxs2("div", { className: "mb-4 flex items-center justify-between gap-3", children: [
-      /* @__PURE__ */ jsx3("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-      /* @__PURE__ */ jsx3("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
+  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full max-w-lg overflow-y-auto rounded-2xl border border-ink-600 bg-ink-800 p-4 shadow-2xl sm:p-6", className), children: [
+    /* @__PURE__ */ jsxs("div", { className: "mb-4 flex items-center justify-between gap-3", children: [
+      /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
+      /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
     ] }),
     children
   ] }) });
@@ -440,12 +397,12 @@ function ConfirmDialog({
   variant = "primary",
   busy = false
 }) {
-  return /* @__PURE__ */ jsx3(Modal, { open, onClose: busy ? void 0 : onCancel, title, className: "max-w-md", children: /* @__PURE__ */ jsxs2("div", { className: "space-y-5", children: [
-    /* @__PURE__ */ jsx3("div", { className: cn("flex h-11 w-11 items-center justify-center rounded-2xl", variant === "danger" ? "bg-bad/10 text-bad" : "bg-fono/10 text-fono-light"), children: /* @__PURE__ */ jsx3(Icon, { name: variant === "danger" ? "alert" : "check", className: "h-5 w-5" }) }),
-    /* @__PURE__ */ jsx3("p", { className: "text-sm leading-6 text-mute", children: description }),
-    /* @__PURE__ */ jsxs2("div", { className: "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", children: [
-      /* @__PURE__ */ jsx3(Button, { type: "button", variant: "ghost", onClick: onCancel, disabled: busy, children: "Cancelar" }),
-      /* @__PURE__ */ jsx3(Button, { type: "button", variant, onClick: onConfirm, disabled: busy, children: busy ? "Procesando\u2026" : confirmLabel })
+  return /* @__PURE__ */ jsx2(Modal, { open, onClose: busy ? void 0 : onCancel, title, className: "max-w-md", children: /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
+    /* @__PURE__ */ jsx2("div", { className: cn("flex h-11 w-11 items-center justify-center rounded-2xl", variant === "danger" ? "bg-bad/10 text-bad" : "bg-fono/10 text-fono-light"), children: /* @__PURE__ */ jsx2(Icon, { name: variant === "danger" ? "alert" : "check", className: "h-5 w-5" }) }),
+    /* @__PURE__ */ jsx2("p", { className: "text-sm leading-6 text-mute", children: description }),
+    /* @__PURE__ */ jsxs("div", { className: "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", children: [
+      /* @__PURE__ */ jsx2(Button, { type: "button", variant: "ghost", onClick: onCancel, disabled: busy, children: "Cancelar" }),
+      /* @__PURE__ */ jsx2(Button, { type: "button", variant, onClick: onConfirm, disabled: busy, children: busy ? "Procesando\u2026" : confirmLabel })
     ] })
   ] }) });
 }
@@ -458,7 +415,7 @@ var BADGE = {
   slate: "bg-ink-600 text-mute border-ink-500"
 };
 function Badge({ className, color = "slate", ...props }) {
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "span",
     {
       className: cn(
@@ -472,8 +429,8 @@ function Badge({ className, color = "slate", ...props }) {
 }
 var DOT = { green: "bg-ok", red: "bg-bad", blue: "bg-fono", slate: "bg-mute", orange: "bg-warn" };
 function Dot({ color = "slate", pulse = false, className }) {
-  return /* @__PURE__ */ jsxs2("span", { className: cn("relative inline-flex h-2 w-2 shrink-0", className), children: [
-    pulse && /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsxs("span", { className: cn("relative inline-flex h-2 w-2 shrink-0", className), children: [
+    pulse && /* @__PURE__ */ jsx2(
       "span",
       {
         className: cn(
@@ -482,7 +439,7 @@ function Dot({ color = "slate", pulse = false, className }) {
         )
       }
     ),
-    /* @__PURE__ */ jsx3("span", { className: cn("relative inline-flex h-2 w-2 rounded-full", DOT[color]) })
+    /* @__PURE__ */ jsx2("span", { className: cn("relative inline-flex h-2 w-2 rounded-full", DOT[color]) })
   ] });
 }
 var ICON_ACTION_TONE = {
@@ -493,7 +450,7 @@ var ICON_ACTION_TONE = {
   mute: "border-transparent text-mute hover:bg-ink-700 hover:text-fore"
 };
 function IconAction({ icon, label, tone = "mute", onClick, disabled = false }) {
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "button",
     {
       type: "button",
@@ -505,7 +462,7 @@ function IconAction({ icon, label, tone = "mute", onClick, disabled = false }) {
         "inline-flex h-7 w-7 items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40",
         ICON_ACTION_TONE[tone]
       ),
-      children: /* @__PURE__ */ jsx3(Icon, { name: icon, className: "h-4 w-4" })
+      children: /* @__PURE__ */ jsx2(Icon, { name: icon, className: "h-4 w-4" })
     }
   );
 }
@@ -545,7 +502,7 @@ function Drawer({ open, onClose, title, children, side = "right", className }) {
     };
   }, [open]);
   if (!open) return null;
-  return /* @__PURE__ */ jsx3("div", { className: "fixed inset-0 z-50 bg-black/60", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs2(
+  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 bg-black/60", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs(
     "div",
     {
       ref: panel,
@@ -559,11 +516,11 @@ function Drawer({ open, onClose, title, children, side = "right", className }) {
         className
       ),
       children: [
-        /* @__PURE__ */ jsxs2("div", { className: "flex items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
-          /* @__PURE__ */ jsx3("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-          /* @__PURE__ */ jsx3("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
+        /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
+          /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
+          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
         ] }),
-        /* @__PURE__ */ jsx3("div", { className: "flex-1 overflow-y-auto p-4 sm:p-5", children })
+        /* @__PURE__ */ jsx2("div", { className: "flex-1 overflow-y-auto p-4 sm:p-5", children })
       ]
     }
   ) });
@@ -600,16 +557,16 @@ function ToastProvider({ children, demo = false }) {
     info: (title, description) => toast("info", title, description)
   }), [toast]);
   if (!mounted) return children;
-  return /* @__PURE__ */ jsxs2(ToastContext.Provider, { value, children: [
+  return /* @__PURE__ */ jsxs(ToastContext.Provider, { value, children: [
     children,
-    /* @__PURE__ */ jsx3("div", { className: "pointer-events-none fixed bottom-4 left-4 right-4 z-[60] flex max-w-sm flex-col gap-2 sm:left-auto sm:w-full", "aria-live": "polite", role: "status", children: toasts.map((toast2) => /* @__PURE__ */ jsxs2("div", { className: cn("pointer-events-auto flex items-start gap-3 rounded-xl border bg-ink-700 p-3.5 shadow-card", toast2.variant === "error" ? "border-bad/40" : toast2.variant === "success" ? "border-ok/40" : "border-ink-500"), children: [
-      /* @__PURE__ */ jsx3(Icon, { name: TOAST_ICON[toast2.variant], className: cn("mt-0.5 h-4 w-4", TOAST_TONE[toast2.variant]) }),
-      /* @__PURE__ */ jsxs2("div", { className: "min-w-0 flex-1", children: [
-        /* @__PURE__ */ jsx3("p", { className: "text-sm font-semibold text-fore", children: toast2.title }),
-        toast2.description && /* @__PURE__ */ jsx3("p", { className: "mt-0.5 text-xs text-mute", children: toast2.description }),
-        demo && /* @__PURE__ */ jsx3("p", { className: "mt-1 inline-flex rounded border border-fono/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Demo \xB7 no se guard\xF3 en la tienda" })
+    /* @__PURE__ */ jsx2("div", { className: "pointer-events-none fixed bottom-4 left-4 right-4 z-[60] flex max-w-sm flex-col gap-2 sm:left-auto sm:w-full", "aria-live": "polite", role: "status", children: toasts.map((toast2) => /* @__PURE__ */ jsxs("div", { className: cn("pointer-events-auto flex items-start gap-3 rounded-xl border bg-ink-700 p-3.5 shadow-card", toast2.variant === "error" ? "border-bad/40" : toast2.variant === "success" ? "border-ok/40" : "border-ink-500"), children: [
+      /* @__PURE__ */ jsx2(Icon, { name: TOAST_ICON[toast2.variant], className: cn("mt-0.5 h-4 w-4", TOAST_TONE[toast2.variant]) }),
+      /* @__PURE__ */ jsxs("div", { className: "min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsx2("p", { className: "text-sm font-semibold text-fore", children: toast2.title }),
+        toast2.description && /* @__PURE__ */ jsx2("p", { className: "mt-0.5 text-xs text-mute", children: toast2.description }),
+        demo && /* @__PURE__ */ jsx2("p", { className: "mt-1 inline-flex rounded border border-fono/40 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Demo \xB7 no se guard\xF3 en la tienda" })
       ] }),
-      /* @__PURE__ */ jsx3("button", { type: "button", onClick: () => dismiss(toast2.id), className: "rounded-md p-1 text-mute transition hover:bg-ink-600 hover:text-fore", "aria-label": "Cerrar aviso", children: "\xD7" })
+      /* @__PURE__ */ jsx2("button", { type: "button", onClick: () => dismiss(toast2.id), className: "rounded-md p-1 text-mute transition hover:bg-ink-600 hover:text-fore", "aria-label": "Cerrar aviso", children: "\xD7" })
     ] }, toast2.id)) })
   ] });
 }
@@ -622,22 +579,22 @@ function useToast() {
   return context;
 }
 function Skeleton({ className }) {
-  return /* @__PURE__ */ jsx3("div", { className: cn("animate-pulse rounded-lg bg-fore/5", className), "aria-hidden": "true" });
+  return /* @__PURE__ */ jsx2("div", { className: cn("animate-pulse rounded-lg bg-fore/5", className), "aria-hidden": "true" });
 }
 function EmptyState({ icon = "box", title, description, action, compact = false, className }) {
-  return /* @__PURE__ */ jsxs2("div", { className: cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className), children: [
-    /* @__PURE__ */ jsx3("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-ink-500 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx3(Icon, { name: icon, className: "h-5 w-5" }) }),
-    title && /* @__PURE__ */ jsx3("p", { className: "mt-3 text-sm font-semibold text-fore", children: title }),
-    description && /* @__PURE__ */ jsx3("p", { className: "mt-1 max-w-xs text-xs leading-5 text-mute", children: description }),
-    action && /* @__PURE__ */ jsx3("div", { className: "mt-4", children: action })
+  return /* @__PURE__ */ jsxs("div", { className: cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className), children: [
+    /* @__PURE__ */ jsx2("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-ink-500 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx2(Icon, { name: icon, className: "h-5 w-5" }) }),
+    title && /* @__PURE__ */ jsx2("p", { className: "mt-3 text-sm font-semibold text-fore", children: title }),
+    description && /* @__PURE__ */ jsx2("p", { className: "mt-1 max-w-xs text-xs leading-5 text-mute", children: description }),
+    action && /* @__PURE__ */ jsx2("div", { className: "mt-4", children: action })
   ] });
 }
 function ErrorState({ title = "Algo sali\xF3 mal", description, onRetry }) {
-  return /* @__PURE__ */ jsxs2("div", { className: "flex flex-col items-center justify-center px-6 py-12 text-center", children: [
-    /* @__PURE__ */ jsx3("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad", children: /* @__PURE__ */ jsx3(Icon, { name: "alert", className: "h-5 w-5" }) }),
-    /* @__PURE__ */ jsx3("p", { className: "mt-3 text-sm font-semibold text-fore", children: title }),
-    description && /* @__PURE__ */ jsx3("p", { className: "mt-1 max-w-xs text-xs leading-5 text-mute", children: description }),
-    onRetry && /* @__PURE__ */ jsx3(Button, { type: "button", variant: "outline", onClick: onRetry, className: "mt-4", children: "Reintentar" })
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center justify-center px-6 py-12 text-center", children: [
+    /* @__PURE__ */ jsx2("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad", children: /* @__PURE__ */ jsx2(Icon, { name: "alert", className: "h-5 w-5" }) }),
+    /* @__PURE__ */ jsx2("p", { className: "mt-3 text-sm font-semibold text-fore", children: title }),
+    description && /* @__PURE__ */ jsx2("p", { className: "mt-1 max-w-xs text-xs leading-5 text-mute", children: description }),
+    onRetry && /* @__PURE__ */ jsx2(Button, { type: "button", variant: "outline", onClick: onRetry, className: "mt-4", children: "Reintentar" })
   ] });
 }
 var AVISOS = {
@@ -647,7 +604,7 @@ var AVISOS = {
 };
 function Aviso({ tono = "error", como = "p", compact = false, className, children, ...props }) {
   const Etiqueta = como === "div" ? "div" : "p";
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     Etiqueta,
     {
       role: tono === "error" ? "alert" : "status",
@@ -658,55 +615,55 @@ function Aviso({ tono = "error", como = "p", compact = false, className, childre
   );
 }
 function PageHeader({ title, subtitle, actions, backTo, eyebrow }) {
-  return /* @__PURE__ */ jsxs2("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", children: [
-    /* @__PURE__ */ jsxs2("div", { className: "flex min-w-0 items-center gap-3", children: [
-      backTo && /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", children: [
+    /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-center gap-3", children: [
+      backTo && /* @__PURE__ */ jsx2(
         "button",
         {
           type: "button",
           onClick: backTo,
           className: "grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
           "aria-label": "Volver",
-          children: /* @__PURE__ */ jsx3(Icon, { name: "back", className: "h-4 w-4" })
+          children: /* @__PURE__ */ jsx2(Icon, { name: "back", className: "h-4 w-4" })
         }
       ),
-      /* @__PURE__ */ jsxs2("div", { className: "min-w-0", children: [
-        eyebrow && /* @__PURE__ */ jsx3(Eyebrow, { children: eyebrow }),
-        /* @__PURE__ */ jsx3("h1", { className: "truncate text-2xl font-bold", children: title }),
-        subtitle && /* @__PURE__ */ jsx3("p", { className: "mt-1 truncate text-sm text-mute", children: subtitle })
+      /* @__PURE__ */ jsxs("div", { className: "min-w-0", children: [
+        eyebrow && /* @__PURE__ */ jsx2(Eyebrow, { children: eyebrow }),
+        /* @__PURE__ */ jsx2("h1", { className: "truncate text-2xl font-bold", children: title }),
+        subtitle && /* @__PURE__ */ jsx2("p", { className: "mt-1 truncate text-sm text-mute", children: subtitle })
       ] })
     ] }),
-    actions && /* @__PURE__ */ jsx3("div", { className: "flex shrink-0 flex-wrap items-center gap-2", children: actions })
+    actions && /* @__PURE__ */ jsx2("div", { className: "flex shrink-0 flex-wrap items-center gap-2", children: actions })
   ] });
 }
 function DataTable({ columns, rows, emptyLabel = "Sin datos para mostrar.", loading = false, mobileCard, className }) {
   if (loading) {
-    return /* @__PURE__ */ jsxs2("div", { className: cn("space-y-2 p-4", className), "aria-busy": "true", children: [
-      /* @__PURE__ */ jsx3(Skeleton, { className: "h-4 w-1/3" }),
-      /* @__PURE__ */ jsx3(Skeleton, { className: "h-10 w-full" }),
-      /* @__PURE__ */ jsx3(Skeleton, { className: "h-10 w-full" }),
-      /* @__PURE__ */ jsx3(Skeleton, { className: "h-10 w-full" })
+    return /* @__PURE__ */ jsxs("div", { className: cn("space-y-2 p-4", className), "aria-busy": "true", children: [
+      /* @__PURE__ */ jsx2(Skeleton, { className: "h-4 w-1/3" }),
+      /* @__PURE__ */ jsx2(Skeleton, { className: "h-10 w-full" }),
+      /* @__PURE__ */ jsx2(Skeleton, { className: "h-10 w-full" }),
+      /* @__PURE__ */ jsx2(Skeleton, { className: "h-10 w-full" })
     ] });
   }
-  if (!rows?.length) return /* @__PURE__ */ jsx3(EmptyState, { title: emptyLabel, description: "", className });
-  return /* @__PURE__ */ jsxs2("div", { className, children: [
-    /* @__PURE__ */ jsx3("div", { className: "hidden max-h-[70vh] overflow-auto md:block", children: /* @__PURE__ */ jsxs2("table", { className: "w-full text-sm", children: [
-      /* @__PURE__ */ jsx3("thead", { className: "sticky top-0 z-10 bg-ink-800", children: /* @__PURE__ */ jsx3("tr", { className: "border-b border-ink-600 text-left text-xs uppercase tracking-wider text-mute", children: columns.map((column) => /* @__PURE__ */ jsx3("th", { className: cn("px-2.5 py-1.5 font-medium", column.align === "right" && "text-right", column.align === "center" && "text-center"), children: column.label }, column.key)) }) }),
-      /* @__PURE__ */ jsx3("tbody", { children: rows.map((row) => /* @__PURE__ */ jsx3("tr", { className: "border-b border-ink-600/60 last:border-0", children: columns.map((column) => /* @__PURE__ */ jsx3("td", { className: cn("px-2.5 py-1.5 text-fore", column.align === "right" && "text-right", column.align === "center" && "text-center"), children: column.render ? column.render(row) : row[column.key] }, column.key)) }, row.id ?? row.key ?? JSON.stringify(row))) })
+  if (!rows?.length) return /* @__PURE__ */ jsx2(EmptyState, { title: emptyLabel, description: "", className });
+  return /* @__PURE__ */ jsxs("div", { className, children: [
+    /* @__PURE__ */ jsx2("div", { className: "hidden max-h-[70vh] overflow-auto md:block", children: /* @__PURE__ */ jsxs("table", { className: "w-full text-sm", children: [
+      /* @__PURE__ */ jsx2("thead", { className: "sticky top-0 z-10 bg-ink-800", children: /* @__PURE__ */ jsx2("tr", { className: "border-b border-ink-600 text-left text-xs uppercase tracking-wider text-mute", children: columns.map((column) => /* @__PURE__ */ jsx2("th", { className: cn("px-2.5 py-1.5 font-medium", column.align === "right" && "text-right", column.align === "center" && "text-center"), children: column.label }, column.key)) }) }),
+      /* @__PURE__ */ jsx2("tbody", { children: rows.map((row) => /* @__PURE__ */ jsx2("tr", { className: "border-b border-ink-600/60 last:border-0", children: columns.map((column) => /* @__PURE__ */ jsx2("td", { className: cn("px-2.5 py-1.5 text-fore", column.align === "right" && "text-right", column.align === "center" && "text-center"), children: column.render ? column.render(row) : row[column.key] }, column.key)) }, row.id ?? row.key ?? JSON.stringify(row))) })
     ] }) }),
-    /* @__PURE__ */ jsx3("div", { className: "grid grid-cols-1 gap-2 p-2.5 md:hidden", children: mobileCard ? rows.map((row) => /* @__PURE__ */ jsx3("div", { children: mobileCard(row) }, row.id ?? row.key ?? JSON.stringify(row))) : /* @__PURE__ */ jsx3(EmptyState, { icon: "filter", title: emptyLabel }) })
+    /* @__PURE__ */ jsx2("div", { className: "grid grid-cols-1 gap-2 p-2.5 md:hidden", children: mobileCard ? rows.map((row) => /* @__PURE__ */ jsx2("div", { children: mobileCard(row) }, row.id ?? row.key ?? JSON.stringify(row))) : /* @__PURE__ */ jsx2(EmptyState, { icon: "filter", title: emptyLabel }) })
   ] });
 }
 function FormField({ label, hint, error, children, htmlFor }) {
-  return /* @__PURE__ */ jsxs2("div", { children: [
-    label && /* @__PURE__ */ jsx3(Label, { htmlFor, children: label }),
+  return /* @__PURE__ */ jsxs("div", { children: [
+    label && /* @__PURE__ */ jsx2(Label, { htmlFor, children: label }),
     children,
-    error ? /* @__PURE__ */ jsx3("p", { role: "alert", className: "mt-1.5 text-xs text-bad", children: error }) : hint ? /* @__PURE__ */ jsx3("p", { className: "mt-1.5 text-xs text-mute", children: hint }) : null
+    error ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "mt-1.5 text-xs text-bad", children: error }) : hint ? /* @__PURE__ */ jsx2("p", { className: "mt-1.5 text-xs text-mute", children: hint }) : null
   ] });
 }
 function Stat({ label, valor, delta, sub, destacado = false, className }) {
   const sube = typeof delta === "number" && delta >= 0;
-  return /* @__PURE__ */ jsxs2(
+  return /* @__PURE__ */ jsxs(
     "div",
     {
       className: cn(
@@ -715,27 +672,24 @@ function Stat({ label, valor, delta, sub, destacado = false, className }) {
         className
       ),
       children: [
-        /* @__PURE__ */ jsx3("div", { className: cn("text-[11px] font-medium uppercase tracking-wider", destacado ? "text-onbrand/75" : "text-mute"), children: label }),
-        /* @__PURE__ */ jsx3("div", { className: cn("mt-1.5 text-2xl font-semibold tracking-tight md:text-3xl", destacado ? "text-onbrand" : "text-fore"), children: valor }),
-        /* @__PURE__ */ jsxs2("div", { className: "mt-1.5 flex items-center gap-2 text-xs", children: [
-          typeof delta === "number" && /* @__PURE__ */ jsxs2("span", { className: cn("font-medium", sube ? "text-ok" : "text-bad"), children: [
+        /* @__PURE__ */ jsx2("div", { className: cn("text-[11px] font-medium uppercase tracking-wider", destacado ? "text-onbrand/75" : "text-mute"), children: label }),
+        /* @__PURE__ */ jsx2("div", { className: cn("mt-1.5 text-2xl font-semibold tracking-tight md:text-3xl", destacado ? "text-onbrand" : "text-fore"), children: valor }),
+        /* @__PURE__ */ jsxs("div", { className: "mt-1.5 flex items-center gap-2 text-xs", children: [
+          typeof delta === "number" && /* @__PURE__ */ jsxs("span", { className: cn("font-medium", sube ? "text-ok" : "text-bad"), children: [
             sube ? "" : "",
             " ",
             Math.abs(delta).toFixed(1),
             "%"
           ] }),
-          sub && /* @__PURE__ */ jsx3("span", { className: destacado ? "text-onbrand/75" : "text-mute", children: sub })
+          sub && /* @__PURE__ */ jsx2("span", { className: destacado ? "text-onbrand/75" : "text-mute", children: sub })
         ] })
       ]
     }
   );
 }
-function Toggle({ checked = false, onChange, ...props }) {
-  return /* @__PURE__ */ jsx3(Switch, { checked, onChange: (event) => onChange?.(event.target.checked), ...props });
-}
 function Subtabs({ value, onChange, items = [], className }) {
   if (!items.length) return null;
-  return /* @__PURE__ */ jsx3("div", { className: cn("mb-5 flex flex-wrap gap-2 rounded-2xl border border-fore/10 bg-ink p-2", className), role: "tablist", children: items.map(([id, label]) => /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2("div", { className: cn("mb-5 flex flex-wrap gap-2 rounded-2xl border border-fore/10 bg-ink p-2", className), role: "tablist", children: items.map(([id, label]) => /* @__PURE__ */ jsx2(
     "button",
     {
       type: "button",
@@ -753,14 +707,14 @@ function Subtabs({ value, onChange, items = [], className }) {
 }
 var TONOS_VALOR = { ok: "text-ok", warn: "text-warn", bad: "text-bad", mute: "text-mute" };
 function FilaDato({ etiqueta, valor, tono = "", etiquetaComo: Etiqueta = "span", valorComo: Valor = "span", className, valorClassName, children }) {
-  return /* @__PURE__ */ jsxs2("div", { className: cn("flex items-center justify-between gap-3", className), children: [
-    /* @__PURE__ */ jsx3(Etiqueta, { className: "min-w-0 text-mute", children: etiqueta ?? children }),
-    /* @__PURE__ */ jsx3(Valor, { className: cn("shrink-0 font-semibold tabular-nums", TONOS_VALOR[tono], valorClassName), children: valor })
+  return /* @__PURE__ */ jsxs("div", { className: cn("flex items-center justify-between gap-3", className), children: [
+    /* @__PURE__ */ jsx2(Etiqueta, { className: "min-w-0 text-mute", children: etiqueta ?? children }),
+    /* @__PURE__ */ jsx2(Valor, { className: cn("shrink-0 font-semibold tabular-nums", TONOS_VALOR[tono], valorClassName), children: valor })
   ] });
 }
 function CeldaMoneda({ valor, tono = "", currency = "PYG", className, children }) {
-  return /* @__PURE__ */ jsxs2("span", { className: cn("inline-flex shrink-0 items-center justify-end gap-1 font-semibold tabular-nums", TONOS_VALOR[tono], className), children: [
-    /* @__PURE__ */ jsx3(Money, { value: Number(valor || 0), currency }),
+  return /* @__PURE__ */ jsxs("span", { className: cn("inline-flex shrink-0 items-center justify-end gap-1 font-semibold tabular-nums", TONOS_VALOR[tono], className), children: [
+    /* @__PURE__ */ jsx2(Money, { value: Number(valor || 0), currency }),
     children
   ] });
 }
@@ -769,7 +723,7 @@ var ALTURAS_BARRA = { sm: "h-1", md: "h-1.5", lg: "h-2.5" };
 function BarraProgreso({ valor = 0, max = 100, tono = "fono", alto = "md", etiqueta, className }) {
   const total = Number(max) > 0 ? Number(max) : 100;
   const porcentaje = Math.min(100, Math.max(0, (Number(valor) || 0) / total * 100));
-  return /* @__PURE__ */ jsx3(
+  return /* @__PURE__ */ jsx2(
     "div",
     {
       role: "progressbar",
@@ -778,9 +732,52 @@ function BarraProgreso({ valor = 0, max = 100, tono = "fono", alto = "md", etiqu
       "aria-valuenow": Math.round(porcentaje),
       "aria-label": etiqueta,
       className: cn("overflow-hidden rounded-full bg-fore/10", ALTURAS_BARRA[alto] || ALTURAS_BARRA.md, className),
-      children: /* @__PURE__ */ jsx3("span", { className: cn("block h-full rounded-full transition-[width] duration-500 ease-out", TONOS_BARRA[tono] || TONOS_BARRA.fono), style: { width: `${porcentaje}%` } })
+      children: /* @__PURE__ */ jsx2("span", { className: cn("block h-full rounded-full transition-[width] duration-500 ease-out", TONOS_BARRA[tono] || TONOS_BARRA.fono), style: { width: `${porcentaje}%` } })
     }
   );
+}
+
+// src/components/Switch.jsx
+import { jsx as jsx3, jsxs as jsxs2 } from "react/jsx-runtime";
+function Switch({ checked, onChange, disabled = false, id, ariaLabel, className, ...props }) {
+  return /* @__PURE__ */ jsxs2("span", { className: cn("relative inline-flex h-5 w-9 shrink-0 items-center", className), children: [
+    /* @__PURE__ */ jsx3(
+      "input",
+      {
+        id,
+        type: "checkbox",
+        role: "switch",
+        "aria-checked": Boolean(checked),
+        "aria-label": ariaLabel,
+        checked: Boolean(checked),
+        disabled,
+        onChange,
+        className: "peer absolute inset-0 z-10 h-full w-full cursor-pointer appearance-none rounded-full opacity-0 disabled:cursor-not-allowed",
+        ...props
+      }
+    ),
+    /* @__PURE__ */ jsx3(
+      "span",
+      {
+        "aria-hidden": "true",
+        className: cn(
+          "pointer-events-none absolute inset-0 rounded-full border transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-fono/50 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-paper",
+          checked ? "border-fono bg-fono" : "border-ink-500 bg-ink-600",
+          disabled && "opacity-50"
+        )
+      }
+    ),
+    /* @__PURE__ */ jsx3(
+      "span",
+      {
+        "aria-hidden": "true",
+        className: cn(
+          "pointer-events-none absolute left-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform",
+          checked && "translate-x-4"
+        )
+      }
+    )
+  ] });
 }
 
 // src/components/SearchField.jsx
@@ -1060,7 +1057,6 @@ export {
   Switch,
   Textarea,
   ToastProvider,
-  Toggle,
   cn,
   codigoPais,
   excedeMonto,

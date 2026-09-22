@@ -67,6 +67,12 @@ describe('render de los objetos base', () => {
     expect(html).toContain('checked')
   })
 
+  test('no se exporta un alias Toggle: el interruptor es uno solo (#186)', async () => {
+    const modulo = await import('../src/index.js')
+    expect(modulo.Toggle).toBeUndefined()
+    expect(typeof modulo.Switch).toBe('function')
+  })
+
   test('las clases de tabla son únicas y estables', () => {
     expect(ROTULO_DATO).toBe('text-[10px] font-bold uppercase tracking-wider text-mute')
     expect(CELDA_ENCABEZADO).toBe(`truncate ${ROTULO_DATO}`)

@@ -55,8 +55,9 @@ la de MobOS.
   `SearchField`, `PercentField` (+`parsePercent`/`formatPercent`),
   `CurrencySelect`.
 - **Acciones y contenedores:** `Button`, `IconAction`, `Card`, `Stat`,
-  `Modal`, `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`,
-  `Toggle`.
+  `Modal`, `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`.
+  El interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
+  `Toggle`).
 - **Estados y avisos:** `Aviso` (error/ok/warn, con contenedor), `EmptyState`,
   `ErrorState`, `Skeleton`, `Badge`, `Dot`.
 - **Datos:** `Money`, `FilaDato`, `CeldaMoneda`, `BarraProgreso`,
