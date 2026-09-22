@@ -112,7 +112,7 @@ var TAMANOS_CAMPO = Object.freeze({
   // RUC/CI
   ciudad: "w-56"
 });
-function anchoParaLargo(largoMin = 0, largoMax = 0) {
+function anchoParaLargo(largoMax = 0) {
   if (largoMax <= 12) return "w-28";
   if (largoMax <= 24) return "w-40";
   if (largoMax <= 40) return "w-56";

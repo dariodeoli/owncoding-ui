@@ -23,7 +23,7 @@ export const TAMANOS_CAMPO = Object.freeze({
 
 // Ancho sugerido para el texto que se va a escribir (mínimo y máximo en
 // caracteres) y la clase correspondiente: útil para campos libres.
-export function anchoParaLargo(largoMin = 0, largoMax = 0) {
+export function anchoParaLargo(largoMax = 0) {
   if (largoMax <= 12) return 'w-28'
   if (largoMax <= 24) return 'w-40'
   if (largoMax <= 40) return 'w-56'

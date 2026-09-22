@@ -57,9 +57,9 @@ describe('catálogos de productos y tamaños', () => {
   test('los tamaños recomendados existen y son clases de ancho', () => {
     expect(TAMANOS_CAMPO.moneda).toBe('w-36')
     expect(TAMANOS_CAMPO.porcentaje).toBe('w-24')
-    expect(anchoParaLargo(0, 6)).toBe('w-28')
-    expect(anchoParaLargo(0, 30)).toBe('w-56')
-    expect(anchoParaLargo(0, 90)).toBe('w-full')
+    expect(anchoParaLargo(6)).toBe('w-28')
+    expect(anchoParaLargo(30)).toBe('w-56')
+    expect(anchoParaLargo(90)).toBe('w-full')
   })
 })
 
