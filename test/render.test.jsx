@@ -15,6 +15,7 @@ import {
   Label,
   Money,
   Modal,
+  Nota,
   Select,
   Skeleton,
   Stat,
@@ -96,5 +97,21 @@ describe('render de los objetos base', () => {
     const ocupado = renderToStaticMarkup(<BotonDentroCampo etiqueta="Extraer" ocupado />)
     expect(ocupado).toContain('Consultando…')
     expect(ocupado).toContain('animate-spin')
+  })
+
+  test('la nota y la barra de gráfico salen de los objetos', () => {
+    const nota = renderToStaticMarkup(<Nota>Sin seguimiento asignado</Nota>)
+    expect(nota).toContain('border-warn/30 bg-warn/10')
+    expect(nota).toContain('text-mute')
+    expect(nota).not.toContain('role="status"')
+    expect(renderToStaticMarkup(<Nota tono="info" compact>Dato de referencia</Nota>)).toContain('border-info/25 bg-info/10')
+    expect(renderToStaticMarkup(<Nota tono="neutro">Neutra</Nota>)).toContain('border-ink-600 bg-ink-800/40')
+
+    const barra = renderToStaticMarkup(<BarraProgreso valor={30} max={60} pista="bg-ink-600" relleno="bg-blue-line" etiqueta="Ventas del mes" />)
+    expect(barra).toContain('role="progressbar"')
+    expect(barra).toContain('bg-ink-600')
+    expect(barra).toContain('bg-blue-line')
+    expect(barra).toContain('aria-valuenow="50"')
+    expect(renderToStaticMarkup(<BarraProgreso valor={10} tono="onbrand" />)).toContain('bg-onbrand')
   })
 })

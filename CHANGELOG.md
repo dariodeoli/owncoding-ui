@@ -4,6 +4,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.9.0 — 2026-09-22
+
+- **`Nota`:** superficie informativa para aclaraciones que no son resultado (no
+  anuncia con `role`), con `tono` warn/info/neutro, `compact` y `como`. Portada
+  del lote 10 de MobOS, donde reemplaza 8 notas copiadas en 4 pantallas.
+- **`BarraProgreso` con `pista`/`relleno` y tono `onbrand`:** las barras de
+  gráfico (ranking, series, fondo sobre color de marca) también pasan por el
+  objeto (rol, aria y transición) sin copiar el markup. En MobOS se migraron 5
+  barras a mano.
+- El README de consumo fija la versión publicada (`#v0.9.0`).
+
 ## v0.8.0 — 2026-09-22
 
 - **Ancho de modales por tipo (#237, portado de MobOS):** `Modal` expone

@@ -76,6 +76,10 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   `alert`), `tono="ok"`/`tono="warn"` (role `status`), `compact` para el tamaño
   chico, `como="div"` cuando el contenido es estructurado (ícono o botón de
   reintentar). No se copia el `<p>` con borde y fondo de color.
+- `Nota` es la aclaración que **no** es resultado (no anuncia con `role`):
+  `tono="warn"` (predeterminado, borde ámbar), `tono="info"` o `tono="neutro"`,
+  `compact` para el tamaño chico y `como="div"` si lleva estructura. Tampoco se
+  copia el `<p>` con `border-warn/30 bg-warn/10`.
 - Vacíos: `EmptyState` (`compact` dentro de tablas y paneles), con acción
   opcional.
 - Carga: `Skeleton` para placeholders; las pulsaciones decorativas (un ícono,

@@ -28,6 +28,7 @@ export {
   EmptyState,
   ErrorState,
   Aviso,
+  Nota,
   PageHeader,
   DataTable,
   FormField,

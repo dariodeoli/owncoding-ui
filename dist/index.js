@@ -665,6 +665,22 @@ function Aviso({ tono = "error", como = "p", compact = false, className, childre
     }
   );
 }
+var NOTAS = {
+  warn: "border-warn/30 bg-warn/10",
+  info: "border-info/25 bg-info/10",
+  neutro: "border-ink-600 bg-ink-800/40"
+};
+function Nota({ tono = "warn", como = "p", compact = false, className, children, ...props }) {
+  const Etiqueta = como === "div" ? "div" : "p";
+  return /* @__PURE__ */ jsx2(
+    Etiqueta,
+    {
+      className: cn("border text-mute", compact ? "rounded-lg p-2 text-xs" : "rounded-xl p-3 text-sm", NOTAS[tono] || NOTAS.warn, className),
+      ...props,
+      children
+    }
+  );
+}
 function PageHeader({ title, subtitle, actions, backTo, eyebrow }) {
   return /* @__PURE__ */ jsxs("div", { className: "flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between", children: [
     /* @__PURE__ */ jsxs("div", { className: "flex min-w-0 items-center gap-3", children: [
@@ -769,9 +785,9 @@ function CeldaMoneda({ valor, tono = "", currency = "PYG", className, children }
     children
   ] });
 }
-var TONOS_BARRA = { fono: "bg-fono", ok: "bg-ok", warn: "bg-warn", bad: "bg-bad", mute: "bg-mute" };
+var TONOS_BARRA = { fono: "bg-fono", ok: "bg-ok", warn: "bg-warn", bad: "bg-bad", mute: "bg-mute", onbrand: "bg-onbrand" };
 var ALTURAS_BARRA = { sm: "h-1", md: "h-1.5", lg: "h-2.5" };
-function BarraProgreso({ valor = 0, max = 100, tono = "fono", alto = "md", etiqueta, className }) {
+function BarraProgreso({ valor = 0, max = 100, tono = "fono", alto = "md", etiqueta, pista, relleno, className }) {
   const total = Number(max) > 0 ? Number(max) : 100;
   const porcentaje = Math.min(100, Math.max(0, (Number(valor) || 0) / total * 100));
   return /* @__PURE__ */ jsx2(
@@ -782,8 +798,8 @@ function BarraProgreso({ valor = 0, max = 100, tono = "fono", alto = "md", etiqu
       "aria-valuemax": 100,
       "aria-valuenow": Math.round(porcentaje),
       "aria-label": etiqueta,
-      className: cn("overflow-hidden rounded-full bg-fore/10", ALTURAS_BARRA[alto] || ALTURAS_BARRA.md, className),
-      children: /* @__PURE__ */ jsx2("span", { className: cn("block h-full rounded-full transition-[width] duration-500 ease-out", TONOS_BARRA[tono] || TONOS_BARRA.fono), style: { width: `${porcentaje}%` } })
+      className: cn("overflow-hidden rounded-full bg-fore/10", ALTURAS_BARRA[alto] || ALTURAS_BARRA.md, pista, className),
+      children: /* @__PURE__ */ jsx2("span", { className: cn("block h-full rounded-full transition-[width] duration-500 ease-out", TONOS_BARRA[tono] || TONOS_BARRA.fono, relleno), style: { width: `${porcentaje}%` } })
     }
   );
 }
@@ -3284,6 +3300,7 @@ export {
   Money,
   MoneyInput,
   NavLateral,
+  Nota,
   OAuthDivider,
   PIE_ACCIONES,
   PIE_ACCIONES_REVERSO,

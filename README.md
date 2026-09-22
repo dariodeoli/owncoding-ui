@@ -13,7 +13,7 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.2.2
+npm install github:dariodeoli/owncoding-ui#v0.9.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
@@ -58,6 +58,11 @@ la de MobOS.
 
 ### Notas de release
 
+- **v0.9.0** — `Nota` (superficie informativa warn/info/neutra, sin `role`),
+  `BarraProgreso` con `pista`/`relleno` y tono `onbrand` para las barras de
+  gráfico, `BotonDentroCampo`, `esRazonSocial` y el tamaño estándar de modal
+  (`Modal size` + `TAMANOS_MODAL`). El README de consumo queda en la versión
+  publicada.
 - **v0.8.0** — ancho de modales por tipo (`Modal size` + `TAMANOS_MODAL`:
   corto/formulario/amplio/completo, sin `max-w-*` suelto), `BotonDentroCampo`
   (acción trailing dentro del input, con tooltip y «Consultando…») y
@@ -118,7 +123,7 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 5. Correr lint + tests + build + e2e smoke de la app.
 6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
-## Qué incluye (v0.8.0)
+## Qué incluye (v0.9.0)
 
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
@@ -160,9 +165,11 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 - **Impresión — modelos:** `crearTicket` (ESC/POS 58/80 mm) y `paginaDePrueba`
   (verificador con validación de 4 dígitos y secciones por tipo). Ver
   `docs/IMPRESION.md`.
-- **Estados y avisos:** `Aviso` (error/ok/warn, con contenedor), `EmptyState`,
+- **Estados y avisos:** `Aviso` (error/ok/warn, con contenedor), `Nota`
+  (aclaración sin `role`: warn/info/neutra, `compact`), `EmptyState`,
   `ErrorState`, `Skeleton`, `Badge`, `Dot`.
-- **Datos:** `Money`, `FilaDato`, `CeldaMoneda`, `BarraProgreso`,
+- **Datos:** `Money`, `FilaDato`, `CeldaMoneda`, `BarraProgreso`
+  (`pista`/`relleno` para las barras de gráfico),
   `DataTable`, `PageHeader`, `Eyebrow`, clases de tabla `CELDA_DATO`,
   `CELDA_NUMERO`, `CELDA_ENCABEZADO`, `ROTULO_DATO`, `ROTULO_SECCION`.
 - **Lógica:** `cn`, `primerNombre`, moneda (`formatGs`, `montoTexto`, …),
