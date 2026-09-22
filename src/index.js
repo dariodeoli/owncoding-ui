@@ -27,6 +27,7 @@ export {
   Skeleton,
   EmptyState,
   ErrorState,
+  SectionState,
   Aviso,
   Nota,
   PageHeader,

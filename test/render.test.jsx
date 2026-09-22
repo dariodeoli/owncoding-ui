@@ -53,6 +53,7 @@ import {
   Select,
   SemaforoItem,
   Skeleton,
+  SectionState,
   Stat,
   Stepper,
   Switch,
@@ -114,6 +115,29 @@ describe('render de los objetos base', () => {
     expect(solapas).toContain('min-h-11')
     const lista = renderToStaticMarkup(<ListGridToggle value="list" onChange={() => {}} />)
     expect(lista).toContain('toque-44')
+  })
+
+  test('el estado de sección compone los objetos que ya existen (#1)', () => {
+    const vacio = renderToStaticMarkup(<SectionState title="Sin cobros" description="Todavía no hay movimientos" action={<button>Crear cobro</button>} />)
+    expect(vacio).toContain('Sin cobros')
+    expect(vacio).toContain('Todavía no hay movimientos')
+    expect(vacio).toContain('Crear cobro')
+    expect(vacio).not.toContain('role="alert"')
+
+    const cargando = renderToStaticMarkup(<SectionState estado="cargando" description="Cargando cobros" />)
+    expect(cargando).toContain('animate-pulse') // Skeleton, no un spinner nuevo
+    expect(cargando).toContain('role="status"')
+    expect(cargando).toContain('aria-busy="true"')
+
+    const error = renderToStaticMarkup(<SectionState estado="error" description="No pudimos cargar los cobros" onRetry={() => {}} />)
+    expect(error).toContain('Algo salió mal') // predeterminado de ErrorState
+    expect(error).toContain('role="alert"')
+    expect(error).toContain('Reintentar')
+    expect(error).toContain('py-12')
+
+    const compacto = renderToStaticMarkup(<SectionState estado="error" title="Falló" compact />)
+    expect(compacto).toContain('py-6')
+    expect(compacto).not.toContain('py-12')
   })
 
   test('dinero, fila de dato y barra de progreso', () => {

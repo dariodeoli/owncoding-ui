@@ -502,9 +502,11 @@ export function EmptyState({ icon = 'box', title, description, action, compact =
 }
 
 // ── ErrorState ──────────────────────────────────────────────────────
-export function ErrorState({ title = 'Algo salió mal', description, onRetry }) {
+// `compact` lo usa el estado de sección; `role` se pasa cuando el error vive
+// dentro de una sección (alert) o cuando la pantalla ya lo anuncia.
+export function ErrorState({ title = 'Algo salió mal', description, onRetry, compact = false, role, className }) {
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
+    <div role={role} className={cn('flex flex-col items-center justify-center px-6 text-center', compact ? 'py-6' : 'py-12', className)}>
       <div className="grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad">
         <Icon name="alert" className="h-5 w-5" />
       </div>
@@ -517,6 +519,32 @@ export function ErrorState({ title = 'Algo salió mal', description, onRetry }) 
       )}
     </div>
   )
+}
+
+// ── SectionState ────────────────────────────────────────────────────
+// Estado de sección en un solo objeto: vacío, cargando o error. Compone los
+// objetos que ya existen — EmptyState, Skeleton y ErrorState — en vez de
+// duplicar su markup: `cargando` dibuja placeholders con Skeleton, `error`
+// delega en ErrorState (con role de alerta) y el resto en EmptyState.
+export function SectionState({ estado = 'vacio', title, description, icon = 'box', action, compact = false, onRetry, className }) {
+  if (estado === 'cargando') {
+    return (
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label={title || 'Cargando…'}
+        className={cn('flex flex-col items-center justify-center px-6 text-center', compact ? 'py-6' : 'py-12', className)}
+      >
+        <Skeleton className="h-12 w-12 rounded-2xl" />
+        <Skeleton className="mt-3 h-4 w-36" />
+        {description ? <Skeleton className="mt-2 h-3 w-52" /> : null}
+      </div>
+    )
+  }
+  if (estado === 'error') {
+    return <ErrorState title={title} description={description} onRetry={onRetry} compact={compact} role="alert" className={className} />
+  }
+  return <EmptyState icon={icon} title={title} description={description} action={action} compact={compact} className={className} />
 }
 
 // ── Aviso (banner inline) ───────────────────────────────────────────

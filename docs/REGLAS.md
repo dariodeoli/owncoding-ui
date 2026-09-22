@@ -114,6 +114,10 @@ compatibilidad).
 - **Estados con badge:** `EstadoBadge` toma el mapa de cada dominio
   (`{ ESTADO: { label, color } }`) y dibuja el `Badge`; un valor fuera del mapa
   se muestra crudo y el vacío es explícito (`vacio`), nunca un badge en blanco.
+- Estados de sección: `SectionState`
+  (`estado="vacio" | "cargando" | "error"`), compacto y con `action`/`onRetry`.
+  **Compone** `EmptyState`, `Skeleton` y `ErrorState` en vez de duplicar su
+  markup: cada estado sigue teniendo su objeto cuando se usa suelto.
 
 ## 4. Datos y tablas
 

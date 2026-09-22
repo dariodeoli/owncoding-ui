@@ -793,13 +793,35 @@ function EmptyState({ icon = "box", title, description, action, compact = false,
     action && /* @__PURE__ */ jsx2("div", { className: "mt-4", children: action })
   ] });
 }
-function ErrorState({ title = "Algo sali\xF3 mal", description, onRetry }) {
-  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center justify-center px-6 py-12 text-center", children: [
+function ErrorState({ title = "Algo sali\xF3 mal", description, onRetry, compact = false, role, className }) {
+  return /* @__PURE__ */ jsxs("div", { role, className: cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className), children: [
     /* @__PURE__ */ jsx2("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad", children: /* @__PURE__ */ jsx2(Icon, { name: "alert", className: "h-5 w-5" }) }),
     /* @__PURE__ */ jsx2("p", { className: "mt-3 text-sm font-semibold text-fore", children: title }),
     description && /* @__PURE__ */ jsx2("p", { className: "mt-1 max-w-xs text-xs leading-5 text-mute", children: description }),
     onRetry && /* @__PURE__ */ jsx2(Button, { type: "button", variant: "outline", onClick: onRetry, className: "mt-4", children: "Reintentar" })
   ] });
+}
+function SectionState({ estado = "vacio", title, description, icon = "box", action, compact = false, onRetry, className }) {
+  if (estado === "cargando") {
+    return /* @__PURE__ */ jsxs(
+      "div",
+      {
+        role: "status",
+        "aria-busy": "true",
+        "aria-label": title || "Cargando\u2026",
+        className: cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className),
+        children: [
+          /* @__PURE__ */ jsx2(Skeleton, { className: "h-12 w-12 rounded-2xl" }),
+          /* @__PURE__ */ jsx2(Skeleton, { className: "mt-3 h-4 w-36" }),
+          description ? /* @__PURE__ */ jsx2(Skeleton, { className: "mt-2 h-3 w-52" }) : null
+        ]
+      }
+    );
+  }
+  if (estado === "error") {
+    return /* @__PURE__ */ jsx2(ErrorState, { title, description, onRetry, compact, role: "alert", className });
+  }
+  return /* @__PURE__ */ jsx2(EmptyState, { icon, title, description, action, compact, className });
 }
 var AVISOS = {
   error: "border-bad/30 bg-bad/10 text-bad",
@@ -8644,6 +8666,7 @@ export {
   SIMBOLO_PYG,
   SearchField_default as SearchField,
   SeccionColapsable,
+  SectionState,
   SegmentedField,
   Select,
   SelectorIncidencia,
