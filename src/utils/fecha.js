@@ -10,9 +10,27 @@ const ES_PY = 'es-PY'
 const OPCIONES_HORA = { hour12: false }
 
 // Fecha válida o null. Acepta Date o cualquier valor que `new Date` entienda.
+// Una clave `YYYY-MM-DD` (fecha pura, como los `dueAt` del API) se interpreta
+// como día local y no como medianoche UTC: si no, en Asunción se mostraba el
+// día anterior.
+const SOLO_DIA = /^(\d{4})-(\d{2})-(\d{2})$/
+
 export function fechaValida(value) {
   if (!value) return null
-  const fecha = value instanceof Date ? value : new Date(value)
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value
+  if (typeof value === 'string') {
+    const partes = SOLO_DIA.exec(value.trim())
+    if (partes) {
+      const anio = Number(partes[1])
+      const mes = Number(partes[2])
+      const dia = Number(partes[3])
+      const fecha = new Date(anio, mes - 1, dia)
+      // Rechaza días que ruedan (31/9 → 1/10): la fecha pura tiene que ser real.
+      const real = fecha.getFullYear() === anio && fecha.getMonth() === mes - 1 && fecha.getDate() === dia
+      return real ? fecha : null
+    }
+  }
+  const fecha = new Date(value)
   return Number.isNaN(fecha.getTime()) ? null : fecha
 }
 

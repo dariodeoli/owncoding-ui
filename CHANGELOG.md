@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Sin publicar — lote 2 (2026-09-22)
+## v0.13.0 — 2026-09-22
 
 - **Agenda:** `Calendario` — grilla mensual (semana opcional) con encabezado de
   navegación, conteo por día, detalle del día elegido y lista por día en mobile
@@ -39,6 +39,51 @@ documenta acá y en el README).
   `montoConSigno`.
 - 45 tests nuevos (101 en total); props y reglas en `docs/REGLAS.md` §10. Sin
   bump de versión: lo decide el dueño junto con el resto del lote.
+## Sin publicar — v0.13.0 propuesta (2026-09-22)
+
+Lote de objetos genéricos portado de LedBox (los seis que su panel resolvía a
+mano). Props y reglas en `docs/REGLAS.md` §8 ter; ejemplos de uso por objeto en
+el README. Sin cambios incompatibles.
+
+- **`TableroKanban` + `useTableroOptimista`:** pipeline por columnas de estado
+  con contador, tarjetas con chips/monto/fecha/detalle, arrastre HTML5 y
+  «Mover a…» accesible por teclado; movimiento optimista con revert si
+  `onMover` falla. Helpers puros `columnasDelTablero`, `agruparTarjetas` y
+  `destinosDeTarjeta`. Referencia: `AdminBoard` de LedBox.
+- **`Cronologia`:** lista de hitos con ícono/tono por tipo, título, detalle,
+  actor y fecha es-PY 24 h, agrupable por día; `ICONOS_HITO`, `TONOS_HITO`,
+  `ETIQUETAS_HITO` por defecto y pisables por props, con vacío. Referencia:
+  `AdminTimeline` + `lib/server/timeline.ts` de LedBox.
+- **`PlanPagos`:** anticipo + cuotas con etiqueta, monto (Int PYG), vencimiento
+  y estado (`ESTADOS_CUOTA` dibujados con `ChipEstado`), «a transferir ahora»
+  destacado, total y saldo sin cuota. Referencia: el plan del portal de LedBox
+  (`PortalBudgetView` + `paymentPlan`).
+- **`DocumentoImpresion`:** hoja A4 con emisor/receptor, meta (número, fechas,
+  estado), detalle, liquidación (subtotal, descuento, IVA por tasa, total),
+  notas, pie y botón de imprimir opcional; las reglas `@media print` viven en
+  `styles.css` (`.oc-print`, `oc-print-oculto`). Referencia: las hojas `lbprint`
+  de LedBox.
+- **`SubidaImagen`:** campo de imagen con arrastrar y soltar, vista previa,
+  validación por firma real (JPG/PNG/WebP) y tamaño, error, limpiar y
+  compresión opcional en canvas sin librerías (`mimeDeImagen`,
+  `validarImagen`, `prepararImagen`). Referencia: `AdminImageUpload` +
+  `lib/identity-image.ts` de LedBox.
+- **`ProgresoChecklist`:** barra accesible + «x de y» + porcentaje, con tonos
+  por umbral (completo `ok`, vencidas `warn`, riesgo `bad`) y la lógica pura
+  `progresoChecklist`. Referencia: `checklistProgress` de LedBox.
+- **Tonos unificados:** `utils/tonos.js` es el único mapa de clases por tono
+  (`ok`/`warn`/`bad`/`mute`/`info`/`pass`/`fono`), con alias de otras apps
+  (`neutral`, `accent`, `danger`…) y helpers `puntoDeTono`, `chipDeTono` y
+  `textoDeTono`. `TONOS` se sigue exportando igual. `ChipEstado` suma la prop
+  `tono` para los estados propios de cada módulo.
+- **Fix — `qrcode` ya no rompe el import:** la peer opcional pasa de import
+  estático a import dinámico dentro de `qrDataUrl`; importar el paquete sin
+  `qrcode` instalado funciona y el QR inexistente devuelve `''`. Test nuevo
+  con la peer mockeada como ausente.
+- **Fix — fechas puras (`YYYY-MM-DD`):** `fechaValida` las interpreta como día
+  local (como los `dueAt` del API) y no como medianoche UTC, que en Asunción
+  mostraba el día anterior; un día inexistente (31/9) sigue siendo inválido.
+- 30 tests nuevos (86 en total) y `dist/` regenerado.
 
 ## v0.12.0 — 2026-09-22
 

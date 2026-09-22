@@ -194,6 +194,40 @@ Reglas: la batería y el grado **nunca** se inventan (sin dato se dice sin
 dato); los chips de locks usan color + tooltip (el color solo no alcanza); los
 estados no se re-etiquetan por pantalla.
 
+## 8 ter. Pipeline, documentos y avance (lote LedBox)
+
+Objetos genéricos portados de LedBox (lote del 22-09-2026). Todos reciben props
+y avisan por callbacks: no hacen `fetch`, no leen stores ni conocen el router.
+Los montos son enteros (PYG) y el formato lo dibuja `Money`; las fechas van en
+es-PY 24 h con `utils/fecha.js`.
+
+| Objeto | Props | Notas |
+| --- | --- | --- |
+| `TableroKanban` | `etiqueta`, `columnas` = `[{ valor, titulo, tono? }]`, `tarjetas` = `[{ id, estado, titulo, subtitulo?, chips?, monto?, montoNota?, fecha?, detalle?, acciones?, destinos? }]`, `puedeMover`, `etiquetaMover`, `textoVacio`, `onMover(id, destino)`, `onError`, `className` | Tablero único por pipeline; arrastre HTML5 + «Mover a…» accesible por teclado; contador por columna y «vacío» por columna |
+| `useTableroOptimista` | `{ tarjetas, onMover, onError }` | Hook del movimiento optimista con revert (single-flight, idempotente) para quien necesite las filas efectivas fuera del tablero |
+| `Cronologia` | `hitos` = `[{ id, fecha, tipo, titulo, detalle?, actor?, tono?, icono? }]`, `iconos`/`tonos`/`etiquetas`, `agrupar`, `mostrarTipo`, `etiqueta`, `vacioTitulo`/`vacioDetalle` | Los mapas por tipo pisan los defaults (`ICONOS_HITO`, `TONOS_HITO`, `ETIQUETAS_HITO`); un tipo desconocido cae en `info`/`mute` y su etiqueta muestra el texto crudo |
+| `PlanPagos` | `anticipo`, `anticipoEtiqueta`, `anticipoVence`, `cuotas` = `[{ id?, etiqueta, monto, vence?, estado?, nota? }]`, `aTransferir` = `{ id?, etiqueta, monto }`, `total`, `totalEtiqueta`, `saldoSinCuota`, `condiciones`, `moneda`, `estados`, `vacio` | La cuota «a transferir ahora» se destaca y se marca en su fila; los estados de cuota (`pendiente`/`revision`/`pagada`/`cancelada`) salen de `ESTADOS_CUOTA` y se dibujan con `ChipEstado` |
+| `DocumentoImpresion` | `titulo`, `numero`, `emisor`, `receptor`, `meta` = `[{ etiqueta, valor }]`, `estado` + `estadoTono`, `detalle` = `[{ cantidad, concepto, unitario, subtotal, nota? }]`, `liquidacion` = `{ subtotal, descuento?, iva? = [{ tasa, base?, monto }], otros?, total }`, `notas`, `pie`, `onImprimir`, `moneda` | Hoja A4 con reglas en `styles.css` (`.oc-print`, `oc-print-oculto`); el botón de imprimir es opcional y el callback lo pone la pantalla (la librería no llama a `window.print()`) |
+| `SubidaImagen` | `etiqueta`, `descripcion`, `valor`, `error`, `tipos`, `tamanoMaximo`, `comprimir`, `cuadrado`, `ladoMaximo`, `tamanoObjetivo`, `onImagen`, `onLimpiar`, `disabled`, `ocupado` | Valida por firma real (JPG/PNG/WebP) y tamaño, con vista previa, arrastrar y soltar y limpiar; la compresión es canvas sin librerías y el objeto no sube nada |
+| `ProgresoChecklist` | `hechas`, `total`, `vencidas`, `riesgo`, `sustantivo`, `porcentaje`, `mostrarDetalle`, `alto`, `textoVacio` | Barra accesible + «x de y» + porcentaje; tonos `ok` (completo), `warn` (vencidas), `bad` (riesgo) y `fono` (en curso). Sin tareas no se inventa 0 %: dice «Sin datos» |
+| `ChipEstado` | `estado`, `etiqueta`, `icono`, **`tono`**, `className` | `tono` pisa el color del estado para los estados propios de cada módulo (p. ej. una cuota «Cancelada») sin copiar el chip |
+| `TONOS`, `tonoCanonico`, `puntoDeTono`, `chipDeTono`, `textoDeTono` | `valor` | Mapa único de tonos (`ok`/`warn`/`bad`/`mute`/`info`/`pass`/`fono`) con alias de otras apps (`neutral`, `accent`, `danger`…); todo objeto que muestra estados lee de acá |
+
+Reglas:
+
+- Un pipeline por estados usa `TableroKanban`: no se crean tableros paralelos ni
+  columnas con colapsos distintos; la vista lista/tablero es de la pantalla.
+- La cronología muestra los hitos ordenados tal como llegan: la librería no
+  ordena, no agrupa por estado ni esconde hitos. Si una audiencia no debe ver
+  algo, el consumidor filtra antes de pasarlo.
+- Los documentos A4 usan `DocumentoImpresion` con las reglas `@media print` de
+  `styles.css`; no se copian hojas `lbprint` ni bloques `@page` por pantalla.
+- La subida de imagen es una sola pieza (`SubidaImagen`): tipo real por magic
+  bytes, compresión en canvas y preview; no se repite el `<input type="file">`
+  con su validación por pantalla.
+- El avance de un checklist se muestra con `ProgresoChecklist` (y
+  `progresoChecklist` para la lógica pura); no se copia la barra con el conteo.
+
 ## 9. Cómo se fija una regla
 
 1. El objeto se crea en este paquete con props claras y sin acoplarse a una app.

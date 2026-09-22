@@ -4,16 +4,17 @@
 // helper que usan tanto las pantallas como los impresos (HTML autónomo).
 //
 // `qrcode` es una peer dependency opcional: la app que use estos objetos la
-// instala (`npm install qrcode`); el resto del paquete no la necesita.
-import QRCode from 'qrcode'
-
+// instala (`npm install qrcode`); el resto del paquete no la necesita. Por eso
+// el import es **dinámico y dentro de la función**: importar el paquete nunca
+// falla si `qrcode` no está, y el error se resuelve devolviendo `''`.
 export const QR_OPCIONES = { nivel: 'M', margen: 1, ancho: 220 }
 
-/** Data URL del QR, o `''` si no hay valor o el generador falla (nunca lanza). */
+/** Data URL del QR, o `''` si no hay valor, falta `qrcode` o el generador falla (nunca lanza). */
 export async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES.nivel, margen = QR_OPCIONES.margen } = {}) {
   const texto = String(valor ?? '').trim()
   if (!texto) return ''
   try {
+    const { default: QRCode } = await import('qrcode')
     return await QRCode.toDataURL(texto, { errorCorrectionLevel: nivel, margin: margen, width: ancho })
   } catch {
     return ''

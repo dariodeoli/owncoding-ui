@@ -94,7 +94,6 @@ export {
   LOCKS_DISPOSITIVO,
   GRADOS_CONDICION,
   COLOR_BADGE,
-  TONOS,
   UMBRAL_BATERIA_OK,
   UMBRAL_BATERIA_ATENCION,
   estadoItem,
@@ -155,6 +154,38 @@ export { default as ImporteDelta, tonoDelta } from './components/ImporteDelta.js
 export { default as IndicadorConexion } from './components/IndicadorConexion.jsx'
 export { default as CampanaAvisos, contarSinLeer, textoContador } from './components/CampanaAvisos.jsx'
 export { default as GraficoBarras, maximoDeBarras, porcentajeBarra } from './components/GraficoBarras.jsx'
+// Pipeline, documentos y avance (lote LedBox): tablero, cronología, plan de
+// pagos, impresión A4, subida de imagen y progreso de checklist. Todo portable:
+// props adentro, callbacks afuera, sin fetch ni router.
+export {
+  default as TableroKanban,
+  useTableroOptimista,
+  columnasDelTablero,
+  agruparTarjetas,
+  destinosDeTarjeta,
+} from './components/TableroKanban.jsx'
+export {
+  default as Cronologia,
+  ICONOS_HITO,
+  TONOS_HITO,
+  ETIQUETAS_HITO,
+  etiquetaDeHito,
+  agruparHitos,
+} from './components/Cronologia.jsx'
+export { default as PlanPagos, ESTADOS_CUOTA } from './components/PlanPagos.jsx'
+export { default as DocumentoImpresion } from './components/DocumentoImpresion.jsx'
+export {
+  default as SubidaImagen,
+  MIMES_IMAGEN,
+  EXTENSION_IMAGEN,
+  TAMANO_MAXIMO_IMAGEN,
+  TAMANO_OBJETIVO_IMAGEN,
+  mimeDeImagen,
+  validarImagen,
+  prepararImagen,
+} from './components/SubidaImagen.jsx'
+export { default as ProgresoChecklist, progresoChecklist } from './components/ProgresoChecklist.jsx'
+export { TONOS, TONOS_ALIAS, tonoCanonico, puntoDeTono, chipDeTono, textoDeTono } from './utils/tonos.js'
 
 // Lógica compartida
 export { cn, primerNombre } from './utils/cn.js'

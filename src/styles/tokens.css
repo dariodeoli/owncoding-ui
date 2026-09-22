@@ -204,3 +204,71 @@ input::placeholder, textarea::placeholder {
     animation: none;
   }
 }
+
+/* ── Documento imprimible A4 (`DocumentoImpresion`) ─────────────────────────
+   Hoja blanca autocontenida: no depende de los tokens del shell (el papel es
+   claro en cualquier tema), se previsualiza en pantalla y sale limpia en A4.
+   El consumidor marca con `oc-print-oculto` lo que no debe imprimirse (toolbar,
+   navegación). Los montos y cantidades usan `oc-print-num` (tabular, sin corte). */
+.oc-print {
+  background: #e9eef1;
+  color: #10161a;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.oc-print-hoja {
+  width: min(100%, 210mm);
+  margin: 0 auto;
+  padding: 14mm 12mm;
+  background: #fff;
+  color: #10161a;
+  border-radius: 3px;
+  box-shadow: 0 16px 44px rgba(9, 24, 31, .16);
+}
+.oc-print-suave { color: #5d6f78; }
+.oc-print-linea { border-color: #dbe3e7; }
+.oc-print-tabla { width: 100%; border-collapse: collapse; }
+.oc-print-tabla th {
+  padding: 4px 6px;
+  text-align: left;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #5d6f78;
+  border-bottom: 1px solid #10161a;
+}
+.oc-print-tabla td { padding: 5px 6px; font-size: 11.5px; vertical-align: top; border-bottom: 1px solid #e6ecef; }
+.oc-print-tabla tfoot td { border-bottom: none; border-top: 1px solid #10161a; font-weight: 700; }
+.oc-print-tabla tr { break-inside: avoid; }
+.oc-print-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.oc-print-fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 3px 6px;
+  font-size: 12px;
+  border-bottom: 1px solid #e6ecef;
+}
+.oc-print-fila--total { border: none; border-radius: 6px; background: #f2f7f9; padding: 6px; font-size: 14px; font-weight: 800; }
+.oc-print-nota { padding: 7px 10px; border-left: 3px solid #00b3c8; background: #f1f9fb; color: #35474f; font-size: 11px; }
+.oc-print-bloque { break-inside: avoid; }
+
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+  html, body { background: #fff !important; }
+  /* La app puede dejar su shell alrededor; con la hoja en pantalla se
+     neutraliza el fondo del documento y lo que el consumidor marcó. */
+  body:has(.oc-print) { background: #fff !important; }
+  .oc-print { min-height: 0 !important; padding: 0 !important; background: #fff !important; font-size: 11px; }
+  .oc-print-oculto { display: none !important; }
+  .oc-print-hoja { width: auto; margin: 0; padding: 0; border-radius: 0; box-shadow: none; }
+  .oc-print-tabla thead { display: table-header-group; }
+  .oc-print-tabla th { padding: 3px 5px; }
+  .oc-print-tabla td { padding: 3px 5px; font-size: 10.5px; }
+  .oc-print-fila { padding: 2px 5px; font-size: 11px; }
+  .oc-print-fila--total { font-size: 13px; padding: 5px; }
+  .oc-print-nota { padding: 5px 8px; font-size: 10px; }
+  .oc-print-totales, .oc-print-bloque { break-inside: avoid; }
+}

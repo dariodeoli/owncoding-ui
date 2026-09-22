@@ -2652,6 +2652,62 @@ var CELDA_NUMERO = "text-right tabular-nums";
 var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
 var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
 
+// src/utils/tonos.js
+var TONOS = {
+  punto: {
+    ok: "bg-ok/15 text-ok",
+    warn: "bg-warn/15 text-warn",
+    bad: "bg-bad/15 text-bad",
+    mute: "bg-ink-700 text-mute",
+    info: "bg-info/15 text-info",
+    pass: "bg-pass/15 text-pass",
+    fono: "bg-fono/15 text-fono-light"
+  },
+  chip: {
+    ok: "border-ok/30 bg-ok/10 text-ok",
+    warn: "border-warn/30 bg-warn/10 text-warn",
+    bad: "border-bad/30 bg-bad/10 text-bad",
+    mute: "border-ink-600 bg-ink-800/40 text-mute",
+    info: "border-info/30 bg-info/10 text-info",
+    pass: "border-pass/30 bg-pass/10 text-pass",
+    fono: "border-fono/30 bg-fono/10 text-fono-light"
+  },
+  texto: {
+    ok: "text-ok",
+    warn: "text-warn",
+    bad: "text-bad",
+    mute: "text-mute",
+    info: "text-info",
+    pass: "text-pass",
+    fono: "text-fono-light"
+  }
+};
+var TONOS_ALIAS = {
+  neutral: "mute",
+  neutro: "mute",
+  accent: "info",
+  acento: "info",
+  danger: "bad",
+  error: "bad",
+  success: "ok",
+  warning: "warn"
+};
+function tonoCanonico(valor) {
+  const clave = String(valor ?? "").trim().toLowerCase();
+  if (!clave) return "mute";
+  const canonico = TONOS_ALIAS[clave] || clave;
+  return TONOS.punto[canonico] ? canonico : "mute";
+}
+function puntoDeTono(valor) {
+  return TONOS.punto[tonoCanonico(valor)];
+}
+function chipDeTono(valor) {
+  return TONOS.chip[tonoCanonico(valor)];
+}
+function textoDeTono(valor) {
+  return TONOS.texto[tonoCanonico(valor)];
+}
+
 // src/utils/estadoEquipo.js
 var ESTADOS_ITEM = {
   ok: { etiqueta: "Bien", tono: "ok", icono: "check" },
@@ -2698,11 +2754,6 @@ var GRADOS_CONDICION = {
 var gradoCondicion = (clave) => GRADOS_CONDICION[String(clave || "").trim().toUpperCase()] || null;
 var COLOR_BADGE = { ok: "green", warn: "orange", bad: "red", mute: "slate", info: "blue", pass: "green" };
 var colorBadge = (tono) => COLOR_BADGE[tono] || "slate";
-var TONOS = {
-  punto: { ok: "bg-ok/15 text-ok", warn: "bg-warn/15 text-warn", bad: "bg-bad/15 text-bad", mute: "bg-ink-700 text-mute", info: "bg-info/15 text-info", pass: "bg-pass/15 text-pass" },
-  chip: { ok: "border-ok/30 bg-ok/10 text-ok", warn: "border-warn/30 bg-warn/10 text-warn", bad: "border-bad/30 bg-bad/10 text-bad", mute: "border-ink-600 bg-ink-800/40 text-mute", info: "border-info/30 bg-info/10 text-info", pass: "border-pass/30 bg-pass/10 text-pass" },
-  texto: { ok: "text-ok", warn: "text-warn", bad: "text-bad", mute: "text-mute", info: "text-info", pass: "text-pass" }
-};
 
 // src/components/SemaforoItem.jsx
 import { jsx as jsx28, jsxs as jsxs22 } from "react/jsx-runtime";
@@ -2760,9 +2811,9 @@ function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass"
 
 // src/components/ChipEstado.jsx
 import { jsx as jsx30, jsxs as jsxs24 } from "react/jsx-runtime";
-function ChipEstado({ estado = "pendiente", etiqueta, icono, className }) {
+function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, className }) {
   const config = estadoChip(estado);
-  return /* @__PURE__ */ jsxs24("span", { className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono], className), children: [
+  return /* @__PURE__ */ jsxs24("span", { className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[tonoCanonico(tono || config.tono)], className), children: [
     /* @__PURE__ */ jsx30(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
     etiqueta || config.etiqueta
   ] });
@@ -2966,12 +3017,12 @@ function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
 import { useEffect as useEffect5, useState as useState10 } from "react";
 
 // src/utils/qr.js
-import QRCode from "qrcode";
 var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
 async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES.nivel, margen = QR_OPCIONES.margen } = {}) {
   const texto = String(valor ?? "").trim();
   if (!texto) return "";
   try {
+    const { default: QRCode } = await import("qrcode");
     return await QRCode.toDataURL(texto, { errorCorrectionLevel: nivel, margin: margen, width: ancho });
   } catch {
     return "";
@@ -4393,6 +4444,1083 @@ function GraficoBarras({
   ] });
 }
 
+// src/components/TableroKanban.jsx
+import { useCallback as useCallback2, useEffect as useEffect9, useMemo as useMemo5, useRef as useRef9, useState as useState17 } from "react";
+
+// src/utils/fecha.js
+var ES_PY2 = "es-PY";
+var OPCIONES_HORA = { hour12: false };
+var SOLO_DIA = /^(\d{4})-(\d{2})-(\d{2})$/;
+function fechaValida(value) {
+  if (!value) return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value === "string") {
+    const partes = SOLO_DIA.exec(value.trim());
+    if (partes) {
+      const anio = Number(partes[1]);
+      const mes = Number(partes[2]);
+      const dia = Number(partes[3]);
+      const fecha2 = new Date(anio, mes - 1, dia);
+      const real = fecha2.getFullYear() === anio && fecha2.getMonth() === mes - 1 && fecha2.getDate() === dia;
+      return real ? fecha2 : null;
+    }
+  }
+  const fecha = new Date(value);
+  return Number.isNaN(fecha.getTime()) ? null : fecha;
+}
+function fechaHora(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleString(ES_PY2, { dateStyle: "short", timeStyle: "short", ...OPCIONES_HORA }) : vacio;
+}
+function fechaDia(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleDateString(ES_PY2) : vacio;
+}
+function fechaHoraCorta(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleString(ES_PY2, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }) : vacio;
+}
+function fechaCorta(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  if (!fecha) return vacio;
+  const dia = fecha.toLocaleDateString(ES_PY2, { day: "2-digit", month: "short" });
+  const hora = fecha.toLocaleTimeString(ES_PY2, { hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA });
+  return `${dia} \xB7 ${hora}`;
+}
+
+// src/components/TableroKanban.jsx
+import { jsx as jsx49, jsxs as jsxs39 } from "react/jsx-runtime";
+var SIN_MOVIMIENTOS = /* @__PURE__ */ new Set();
+function columnasDelTablero(columnas = [], tarjetas = []) {
+  const declaradas = [...columnas || []];
+  const valores = new Set(declaradas.map((columna) => columna.valor));
+  const extras = [...new Set((tarjetas || []).map((tarjeta) => tarjeta.estado).filter((estado) => estado !== null && estado !== void 0 && estado !== "" && !valores.has(estado)))].sort();
+  return [...declaradas, ...extras.map((valor) => ({ valor, titulo: valor, tono: "mute" }))];
+}
+function agruparTarjetas(columnas = [], tarjetas = []) {
+  const grupos = {};
+  for (const columna of columnas) grupos[columna.valor] = [];
+  for (const tarjeta of tarjetas || []) {
+    if (grupos[tarjeta.estado]) grupos[tarjeta.estado].push(tarjeta);
+  }
+  return grupos;
+}
+function destinosDeTarjeta(tarjeta, columnas = []) {
+  const permitidos = tarjeta?.destinos ?? columnas.map((columna) => columna.valor);
+  return (permitidos || []).filter((valor, indice) => valor !== tarjeta?.estado && permitidos.indexOf(valor) === indice);
+}
+function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
+  const [overrides, setOverrides] = useState17({});
+  const [moviendo, setMoviendo] = useState17(SIN_MOVIMIENTOS);
+  const tarjetasRef = useRef9(tarjetas);
+  const overridesRef = useRef9(overrides);
+  const enVueloRef = useRef9(/* @__PURE__ */ new Set());
+  useEffect9(() => {
+    tarjetasRef.current = tarjetas;
+  }, [tarjetas]);
+  useEffect9(() => {
+    overridesRef.current = overrides;
+  }, [overrides]);
+  useEffect9(() => {
+    setOverrides((actual) => {
+      const entradas = Object.entries(actual);
+      if (entradas.length === 0) return actual;
+      const siguiente = {};
+      for (const [id, estado] of entradas) {
+        const tarjeta = (tarjetas || []).find((candidata) => candidata.id === id);
+        if (tarjeta && tarjeta.estado !== estado) siguiente[id] = estado;
+      }
+      return Object.keys(siguiente).length === entradas.length ? actual : siguiente;
+    });
+  }, [tarjetas]);
+  const efectivas = useMemo5(
+    () => (tarjetas || []).map((tarjeta) => {
+      const optimista = overrides[tarjeta.id];
+      return optimista && optimista !== tarjeta.estado ? { ...tarjeta, estado: optimista } : tarjeta;
+    }),
+    [tarjetas, overrides]
+  );
+  const revertir = useCallback2(
+    (id, mensaje) => {
+      setOverrides((actual) => {
+        if (!(id in actual)) return actual;
+        const siguiente = { ...actual };
+        delete siguiente[id];
+        return siguiente;
+      });
+      if (mensaje) onError?.(mensaje);
+    },
+    [onError]
+  );
+  const moverA = useCallback2(
+    (id, estadoDestino) => {
+      if (!onMover || !id || !estadoDestino) return;
+      const tarjeta = tarjetasRef.current.find((candidata) => candidata.id === id);
+      const vigente = overridesRef.current[id] ?? tarjeta?.estado;
+      if (!tarjeta || vigente === estadoDestino || enVueloRef.current.has(id)) return;
+      const liberar = () => {
+        enVueloRef.current.delete(id);
+        setMoviendo((actual) => {
+          if (!actual.has(id)) return actual;
+          const siguiente = new Set(actual);
+          siguiente.delete(id);
+          return siguiente;
+        });
+      };
+      const terminar = (resultado) => {
+        if (resultado && resultado.ok === false) revertir(id, resultado.error || "No se pudo mover la tarjeta.");
+      };
+      enVueloRef.current.add(id);
+      setOverrides((actual) => ({ ...actual, [id]: estadoDestino }));
+      setMoviendo((actual) => new Set(actual).add(id));
+      try {
+        const resultado = onMover(id, estadoDestino);
+        if (resultado && typeof resultado.then === "function") {
+          resultado.then(terminar).catch(() => revertir(id, "No se pudo mover la tarjeta.")).finally(liberar);
+        } else {
+          terminar(resultado);
+          liberar();
+        }
+      } catch {
+        revertir(id, "No se pudo mover la tarjeta.");
+        liberar();
+      }
+    },
+    [onMover, revertir]
+  );
+  return { tarjetas: efectivas, moverA, moviendo };
+}
+function TableroKanban({
+  /** Nombre del tablero para lectores de pantalla («Presupuestos», «Trabajos»). */
+  etiqueta = "Tablero",
+  /** Columnas del pipeline: `[{ valor, titulo, tono? }]`. */
+  columnas = [],
+  /**
+   * Tarjetas: `[{ id, estado, titulo, subtitulo?, chips?, monto?, montoNota?,
+   * fecha?, detalle?, acciones?, destinos? }]`.
+   */
+  tarjetas = [],
+  /** Rol con permiso de escritura: sin él no hay arrastre ni «Mover a…». */
+  puedeMover = false,
+  etiquetaMover = "Mover a\u2026",
+  textoVacio = "Sin tarjetas",
+  /** `(id, estadoDestino) => void | { ok: true } | { ok: false, error } | Promise<…>`. */
+  onMover,
+  /** Aviso del revert (por ejemplo, el toast de la pantalla). */
+  onError,
+  className
+}) {
+  const { tarjetas: efectivas, moverA, moviendo } = useTableroOptimista({ tarjetas, onMover, onError });
+  const [arrastrandoId, setArrastrandoId] = useState17("");
+  const [sobreColumna, setSobreColumna] = useState17("");
+  const columnasReales = useMemo5(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
+  const grupos = useMemo5(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
+  const arrastrando = arrastrandoId ? efectivas.find((tarjeta) => tarjeta.id === arrastrandoId) ?? null : null;
+  const acepta = (tarjeta, valor) => Boolean(onMover && puedeMover && tarjeta && !moviendo.has(tarjeta.id) && destinosDeTarjeta(tarjeta, columnasReales).includes(valor));
+  function terminarArrastre() {
+    setArrastrandoId("");
+    setSobreColumna("");
+  }
+  const tituloDe = (valor) => columnasReales.find((columna) => columna.valor === valor)?.titulo ?? valor;
+  return /* @__PURE__ */ jsx49("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
+    const deLaColumna = grupos[columna.valor] ?? [];
+    const sobre = sobreColumna === columna.valor && acepta(arrastrando, columna.valor);
+    return /* @__PURE__ */ jsxs39(
+      "section",
+      {
+        "aria-label": `${columna.titulo}: ${deLaColumna.length}`,
+        className: cn(
+          "flex w-[17.5rem] shrink-0 snap-start flex-col rounded-2xl border border-ink-600 bg-ink-900/60 transition",
+          sobre && "border-fono/60 ring-2 ring-fono/30"
+        ),
+        onDragOver: (event) => {
+          if (!acepta(arrastrando, columna.valor)) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "move";
+          setSobreColumna(columna.valor);
+        },
+        onDragLeave: () => setSobreColumna((actual) => actual === columna.valor ? "" : actual),
+        onDrop: (event) => {
+          if (!acepta(arrastrando, columna.valor)) return;
+          event.preventDefault();
+          const id = event.dataTransfer.getData("text/plain") || arrastrandoId;
+          terminarArrastre();
+          if (id) moverA(id, columna.valor);
+        },
+        children: [
+          /* @__PURE__ */ jsxs39("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx49("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx49("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
+            /* @__PURE__ */ jsx49("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
+          ] }),
+          /* @__PURE__ */ jsxs39("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
+            deLaColumna.map((tarjeta) => {
+              const destinos = destinosDeTarjeta(tarjeta, columnasReales);
+              const movible = Boolean(onMover && puedeMover && destinos.length > 0 && !moviendo.has(tarjeta.id));
+              const tieneMonto = tarjeta.monto !== null && tarjeta.monto !== void 0;
+              return /* @__PURE__ */ jsxs39(
+                "article",
+                {
+                  className: cn(
+                    "rounded-xl border border-ink-600 bg-ink p-2.5 transition",
+                    arrastrandoId === tarjeta.id && "opacity-60",
+                    moviendo.has(tarjeta.id) && "opacity-70"
+                  ),
+                  "aria-busy": moviendo.has(tarjeta.id) || void 0,
+                  draggable: movible,
+                  onDragStart: (event) => {
+                    if (!movible) {
+                      event.preventDefault();
+                      return;
+                    }
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", tarjeta.id);
+                    setArrastrandoId(tarjeta.id);
+                  },
+                  onDragEnd: terminarArrastre,
+                  children: [
+                    /* @__PURE__ */ jsxs39("div", { className: "flex items-start justify-between gap-2", children: [
+                      /* @__PURE__ */ jsx49("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
+                      tarjeta.acciones && /* @__PURE__ */ jsx49("span", { className: "shrink-0", children: tarjeta.acciones })
+                    ] }),
+                    tarjeta.subtitulo && /* @__PURE__ */ jsx49("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
+                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx49("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs39(
+                      "span",
+                      {
+                        title: chip.titulo ?? chip.etiqueta,
+                        className: cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(chip.tono)),
+                        children: [
+                          chip.icono && /* @__PURE__ */ jsx49(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+                          chip.etiqueta
+                        ]
+                      },
+                      chip.etiqueta ?? indice
+                    )) }),
+                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs39("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
+                      tieneMonto && /* @__PURE__ */ jsxs39("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
+                        /* @__PURE__ */ jsx49(Money, { value: tarjeta.monto }),
+                        tarjeta.montoNota && /* @__PURE__ */ jsx49("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
+                      ] }),
+                      tarjeta.fecha && /* @__PURE__ */ jsx49("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
+                    ] }),
+                    tarjeta.detalle && /* @__PURE__ */ jsx49("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
+                    movible && /* @__PURE__ */ jsxs39("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
+                      /* @__PURE__ */ jsx49("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
+                      /* @__PURE__ */ jsxs39(
+                        "select",
+                        {
+                          id: `mover-${tarjeta.id}`,
+                          value: "",
+                          onChange: (event) => {
+                            if (event.target.value) moverA(tarjeta.id, event.target.value);
+                          },
+                          title: etiquetaMover,
+                          className: cn(
+                            "h-8 w-full cursor-pointer rounded-lg border border-ink-500 bg-ink-800 px-2 text-xs text-fore",
+                            "outline-none transition focus:border-fono focus:ring-1 focus:ring-fono/40 [&>option]:bg-ink-800 [&>option]:text-fore"
+                          ),
+                          children: [
+                            /* @__PURE__ */ jsx49("option", { value: "", children: etiquetaMover }),
+                            destinos.map((valor) => /* @__PURE__ */ jsx49("option", { value: valor, children: tituloDe(valor) }, valor))
+                          ]
+                        }
+                      )
+                    ] })
+                  ]
+                },
+                tarjeta.id
+              );
+            }),
+            deLaColumna.length === 0 && /* @__PURE__ */ jsx49("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
+          ] })
+        ]
+      },
+      columna.valor
+    );
+  }) });
+}
+
+// src/components/Cronologia.jsx
+import { jsx as jsx50, jsxs as jsxs40 } from "react/jsx-runtime";
+var ICONOS_HITO = {
+  creado: "plus",
+  actualizado: "edit",
+  estado: "refresh",
+  enviado: "send",
+  visto: "eye",
+  solicitud: "edit",
+  revision: "alert",
+  resuelto: "check",
+  aprobado: "check",
+  rechazado: "close",
+  pago: "money",
+  cobro: "money",
+  comprobante: "upload",
+  tesoreria: "wallet",
+  inventario: "box",
+  retiro: "truck",
+  devolucion: "download",
+  tarea: "list",
+  tarea_cumplida: "check",
+  evento: "calendar",
+  cancelado: "close",
+  nota: "info",
+  gracias: "sparkles"
+};
+var TONOS_HITO = {
+  creado: "mute",
+  actualizado: "mute",
+  estado: "info",
+  enviado: "info",
+  visto: "info",
+  solicitud: "warn",
+  revision: "warn",
+  resuelto: "ok",
+  aprobado: "ok",
+  rechazado: "bad",
+  pago: "ok",
+  cobro: "info",
+  comprobante: "info",
+  tesoreria: "info",
+  inventario: "info",
+  retiro: "info",
+  devolucion: "ok",
+  tarea: "mute",
+  tarea_cumplida: "ok",
+  evento: "info",
+  cancelado: "bad",
+  nota: "mute",
+  gracias: "ok"
+};
+var ETIQUETAS_HITO = {
+  creado: "Creado",
+  actualizado: "Actualizado",
+  estado: "Cambio de estado",
+  enviado: "Enviado",
+  visto: "Visto",
+  solicitud: "Solicitud",
+  revision: "Revisi\xF3n",
+  resuelto: "Resuelto",
+  aprobado: "Aprobado",
+  rechazado: "Rechazado",
+  pago: "Pago",
+  cobro: "Cobro",
+  comprobante: "Comprobante",
+  tesoreria: "Tesorer\xEDa",
+  inventario: "Inventario",
+  retiro: "Retiro",
+  devolucion: "Devoluci\xF3n",
+  tarea: "Tarea",
+  tarea_cumplida: "Tarea cumplida",
+  evento: "Evento",
+  cancelado: "Cancelado",
+  nota: "Nota",
+  gracias: "Agradecimiento"
+};
+function fechaDelHito(valor) {
+  return valor ? fechaHora(valor) : "";
+}
+function etiquetaDeHito(tipo, etiquetas = ETIQUETAS_HITO) {
+  const clave = String(tipo ?? "").trim();
+  if (!clave) return "";
+  return etiquetas[clave] || clave.replace(/_/g, " ");
+}
+function agruparHitos(hitos = []) {
+  const grupos = [];
+  for (const hito of hitos || []) {
+    const valido = fechaValida(hito?.fecha);
+    const clave = valido ? fechaDia(valido) : "sin-fecha";
+    let grupo = grupos[grupos.length - 1];
+    if (!grupo || grupo.clave !== clave) {
+      grupo = { clave, etiqueta: fechaDia(hito?.fecha, "Sin fecha"), hitos: [] };
+      grupos.push(grupo);
+    }
+    grupo.hitos.push(hito);
+  }
+  return grupos;
+}
+function FilaHito({ hito, iconos, tonos, etiquetas, mostrarTipo }) {
+  const tipo = String(hito.tipo ?? "").trim();
+  const tono = hito.tono || tonos[tipo] || "mute";
+  const icono = hito.icono || iconos[tipo] || "info";
+  const etiqueta = mostrarTipo ? etiquetaDeHito(tipo, etiquetas) : "";
+  return /* @__PURE__ */ jsxs40("li", { className: "flex gap-3", children: [
+    /* @__PURE__ */ jsx50("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx50(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs40("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
+      /* @__PURE__ */ jsxs40("p", { className: "text-sm font-semibold text-fore", children: [
+        /* @__PURE__ */ jsx50("span", { className: "break-words", children: hito.titulo }),
+        hito.actor && /* @__PURE__ */ jsxs40("span", { className: "font-normal text-mute", children: [
+          " \xB7 ",
+          hito.actor
+        ] })
+      ] }),
+      hito.detalle && /* @__PURE__ */ jsx50("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
+      /* @__PURE__ */ jsx50("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
+    ] })
+  ] });
+}
+function Cronologia({
+  /** Hitos: `[{ id, fecha, tipo, titulo, detalle?, actor?, tono?, icono? }]`. */
+  hitos = [],
+  /** Mapa `tipo → ícono` que pisa los defectos (`ICONOS_HITO`). */
+  iconos = ICONOS_HITO,
+  /** Mapa `tipo → tono` que pisa los defectos (`TONOS_HITO`). */
+  tonos = TONOS_HITO,
+  /** Mapa `tipo → etiqueta` que pisa los defectos (`ETIQUETAS_HITO`). */
+  etiquetas = ETIQUETAS_HITO,
+  /** Agrupa los hitos por día con el encabezado de fecha. */
+  agrupar = false,
+  /** Muestra la etiqueta del tipo al pie de cada hito. */
+  mostrarTipo = false,
+  /** Nombre de la lista para lectores de pantalla. */
+  etiqueta = "Cronolog\xEDa",
+  vacioTitulo = "Todav\xEDa no hay hitos",
+  vacioDetalle,
+  className
+}) {
+  if (!hitos?.length) {
+    return /* @__PURE__ */ jsx50(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
+  }
+  const fila = (hito) => /* @__PURE__ */ jsx50(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
+  return /* @__PURE__ */ jsx50("div", { className, children: agrupar ? /* @__PURE__ */ jsx50("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs40("section", { children: [
+    /* @__PURE__ */ jsx50("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+    /* @__PURE__ */ jsx50("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
+  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx50("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
+}
+
+// src/components/PlanPagos.jsx
+import { jsx as jsx51, jsxs as jsxs41 } from "react/jsx-runtime";
+var ESTADOS_CUOTA = {
+  pendiente: { chip: "pendiente", etiqueta: "Pendiente", icono: "clock" },
+  revision: { chip: "revision", etiqueta: "En revisi\xF3n", icono: "refresh" },
+  pagada: { chip: "pass", etiqueta: "Pagada", icono: "check" },
+  cancelada: { chip: "pendiente", etiqueta: "Cancelada", icono: "close", tono: "mute" }
+};
+function ChipCuota({ estado, estados }) {
+  const config = estados[estado];
+  if (!config) return null;
+  return /* @__PURE__ */ jsx51(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
+}
+function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, estados, destacada, conEstado }) {
+  return /* @__PURE__ */ jsxs41("tr", { className: "border-t border-ink-700", children: [
+    /* @__PURE__ */ jsxs41("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
+      /* @__PURE__ */ jsx51("span", { className: "font-semibold", children: etiqueta }),
+      destacada && /* @__PURE__ */ jsx51("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
+      nota && /* @__PURE__ */ jsx51("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
+    ] }),
+    /* @__PURE__ */ jsx51("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx51(Money, { value: monto, currency: moneda }) }),
+    /* @__PURE__ */ jsx51("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
+    conEstado && /* @__PURE__ */ jsx51("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx51(ChipCuota, { estado, estados }) : null })
+  ] });
+}
+function PlanPagos({
+  /** Monto del anticipo (0 o `null` = no hay anticipo separado). */
+  anticipo = 0,
+  anticipoEtiqueta = "Anticipo",
+  anticipoVence,
+  /** Cuotas: `[{ id?, etiqueta, monto, vence?, estado?, nota? }]`. */
+  cuotas = [],
+  /**
+   * Lo que corresponde transferir ahora: `{ id?, etiqueta, monto }`. Con `id`
+   * se marca además la cuota correspondiente en la tabla.
+   */
+  aTransferir = null,
+  /** Total del plan; `null` no dibuja el pie. */
+  total = null,
+  totalEtiqueta = "Total",
+  /** Saldo del plan sin cuota agendada (0 = el plan cubre todo). */
+  saldoSinCuota = 0,
+  saldoEtiqueta = "Saldo sin cuota agendada",
+  /** Condiciones de pago escritas por el equipo. */
+  condiciones = null,
+  /** Moneda de los montos (`PYG` entero o `USD` con decimales). */
+  moneda = "PYG",
+  /** Mapa `estado → chip`; pisa `ESTADOS_CUOTA`. */
+  estados = ESTADOS_CUOTA,
+  /** Texto del vacío: no hay anticipo ni cuotas. */
+  vacio = "El presupuesto se paga en un solo pago.",
+  className
+}) {
+  const montoAnticipo = Number(anticipo) || 0;
+  const hayAnticipo = montoAnticipo > 0;
+  const conEstado = (cuotas || []).some((cuota) => Boolean(cuota.estado));
+  const vacioPlan = !hayAnticipo && !(cuotas || []).length;
+  if (vacioPlan && total === null && !condiciones && !aTransferir) {
+    return /* @__PURE__ */ jsx51(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
+  }
+  return /* @__PURE__ */ jsxs41("div", { className: cn("space-y-2.5", className), children: [
+    aTransferir && /* @__PURE__ */ jsxs41("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
+      /* @__PURE__ */ jsx51("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
+      /* @__PURE__ */ jsx51("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: aTransferir.monto, currency: moneda }) })
+    ] }),
+    vacioPlan ? /* @__PURE__ */ jsx51("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs41("table", { className: "w-full", children: [
+      /* @__PURE__ */ jsx51("caption", { className: "sr-only", children: "Plan de pagos" }),
+      /* @__PURE__ */ jsx51("thead", { children: /* @__PURE__ */ jsxs41("tr", { children: [
+        /* @__PURE__ */ jsx51("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
+        /* @__PURE__ */ jsx51("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
+        /* @__PURE__ */ jsx51("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
+        conEstado && /* @__PURE__ */ jsx51("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
+      ] }) }),
+      /* @__PURE__ */ jsxs41("tbody", { children: [
+        hayAnticipo && /* @__PURE__ */ jsx51(
+          FilaPlan,
+          {
+            etiqueta: anticipoEtiqueta,
+            monto: montoAnticipo,
+            vence: anticipoVence,
+            moneda,
+            estados,
+            conEstado: false,
+            destacada: aTransferir?.id === "anticipo"
+          }
+        ),
+        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx51(
+          FilaPlan,
+          {
+            etiqueta: cuota.etiqueta,
+            monto: cuota.monto,
+            vence: cuota.vence,
+            estado: cuota.estado,
+            nota: cuota.nota,
+            moneda,
+            estados,
+            conEstado,
+            destacada: Boolean(aTransferir?.id && aTransferir.id === cuota.id)
+          },
+          cuota.id ?? `${cuota.etiqueta}-${indice}`
+        ))
+      ] }),
+      total !== null && /* @__PURE__ */ jsx51("tfoot", { children: /* @__PURE__ */ jsxs41("tr", { className: "border-t border-ink-500", children: [
+        /* @__PURE__ */ jsx51("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
+        /* @__PURE__ */ jsx51("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx51(Money, { value: total, currency: moneda }) })
+      ] }) })
+    ] }),
+    vacioPlan && total !== null && /* @__PURE__ */ jsxs41("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
+      /* @__PURE__ */ jsx51("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
+      /* @__PURE__ */ jsx51("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: total, currency: moneda }) })
+    ] }),
+    saldoSinCuota > 0 && /* @__PURE__ */ jsxs41("p", { className: "text-xs text-mute", children: [
+      saldoEtiqueta,
+      ":",
+      " ",
+      /* @__PURE__ */ jsx51("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: saldoSinCuota, currency: moneda }) })
+    ] }),
+    condiciones && /* @__PURE__ */ jsx51(Nota, { tono: "info", compact: true, children: condiciones })
+  ] });
+}
+
+// src/components/DocumentoImpresion.jsx
+import { Fragment as Fragment8, jsx as jsx52, jsxs as jsxs42 } from "react/jsx-runtime";
+var CANTIDAD_FORMATTER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 3 });
+function cantidadTexto(cantidad) {
+  if (cantidad === null || cantidad === void 0 || cantidad === "") return "";
+  return typeof cantidad === "number" ? CANTIDAD_FORMATTER.format(cantidad) : cantidad;
+}
+function Dato({ etiqueta, valor, className }) {
+  if (!valor) return null;
+  return /* @__PURE__ */ jsxs42("p", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsx52("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
+    /* @__PURE__ */ jsx52("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
+  ] });
+}
+function Identidad({ titulo: titulo2, datos, logo, monograma }) {
+  if (!datos) return null;
+  return /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque", children: [
+    /* @__PURE__ */ jsx52("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
+    /* @__PURE__ */ jsxs42("div", { className: "flex items-start gap-3", children: [
+      (logo || monograma) && /* @__PURE__ */ jsx52("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx52("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx52("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
+      /* @__PURE__ */ jsxs42("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx52(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
+        /* @__PURE__ */ jsx52(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
+        /* @__PURE__ */ jsx52(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
+        /* @__PURE__ */ jsx52(Dato, { etiqueta: "Correo", valor: datos.correo }),
+        /* @__PURE__ */ jsx52(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
+      ] })
+    ] })
+  ] });
+}
+function FilaLiquidacion({ etiqueta, valor, moneda, nota, fuerte = false }) {
+  const numero = Number(valor);
+  const negativo = Number.isFinite(numero) && numero < 0;
+  return /* @__PURE__ */ jsxs42("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
+    /* @__PURE__ */ jsxs42("span", { className: "min-w-0", children: [
+      etiqueta,
+      nota && /* @__PURE__ */ jsxs42("small", { className: "oc-print-suave", children: [
+        " ",
+        nota
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs42("span", { className: "oc-print-num shrink-0 font-semibold", children: [
+      negativo && "\u2212 ",
+      /* @__PURE__ */ jsx52(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda })
+    ] })
+  ] });
+}
+function DocumentoImpresion({
+  /** Título del documento («Presupuesto», «Factura», «Orden de trabajo»). */
+  titulo: titulo2 = "Documento",
+  /** Número o referencia visible junto al título. */
+  numero = null,
+  etiquetaNumero = "N.\xBA",
+  /**
+   * Datos del emisor: `{ nombre, documento?, etiquetaDocumento?, direccion?,
+   * telefono?, correo?, logo? }`. El logo es una URL servida por la app.
+   */
+  emisor = null,
+  /** Datos del receptor, con la misma forma que el emisor. */
+  receptor = null,
+  /** Meta del documento: `[{ etiqueta, valor }]` (fechas, validez, depósito…). */
+  meta = [],
+  /** Estado visible del documento («Aprobado», «Anulado»…). */
+  estado = null,
+  estadoTono = "mute",
+  /** Detalle: `[{ cantidad, concepto, unitario, subtotal, nota? }]`. */
+  detalle = [],
+  /**
+   * Liquidación: `{ subtotal, descuento?, descuentoEtiqueta?, iva?, otros?,
+   * total }`. `iva` = `[{ tasa, base?, monto }]` y `otros` =
+   * `[{ etiqueta, monto }]` (flete, ajustes).
+   */
+  liquidacion = null,
+  /** Notas del pie del documento (texto o nodo). */
+  notas = null,
+  notasEtiqueta = "Notas",
+  /** Pie de la hoja (texto o nodo). */
+  pie = null,
+  /** Callback del botón «Imprimir»; sin él no se dibuja el botón. */
+  onImprimir,
+  etiquetaImprimir = "Imprimir",
+  /** Moneda de los montos (`PYG` entero o `USD` con decimales). */
+  moneda = "PYG",
+  etiquetaDetalle = "Detalle",
+  etiquetaEmisor = "Emisor",
+  etiquetaReceptor = "Receptor",
+  etiquetaLiquidacion = "Liquidaci\xF3n",
+  etiquetaMeta = "Documento",
+  vacioDetalle = "Sin \xEDtems cargados",
+  className
+}) {
+  const monograma = String(emisor?.nombre ?? "").trim().slice(0, 2).toUpperCase() || "\xB7\xB7";
+  const tieneLiquidacion = Boolean(liquidacion && (liquidacion.subtotal !== void 0 || liquidacion.total !== void 0));
+  return /* @__PURE__ */ jsxs42("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
+    onImprimir && /* @__PURE__ */ jsx52("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs42(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
+      /* @__PURE__ */ jsx52(Icon, { name: "printer", className: "h-4 w-4" }),
+      etiquetaImprimir
+    ] }) }),
+    /* @__PURE__ */ jsxs42("article", { className: "oc-print-hoja", children: [
+      /* @__PURE__ */ jsxs42("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
+        /* @__PURE__ */ jsxs42("div", { className: "flex min-w-0 items-center gap-2.5", children: [
+          emisor?.logo ? /* @__PURE__ */ jsx52("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx52("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
+          /* @__PURE__ */ jsxs42("span", { className: "grid min-w-0 gap-0.5", children: [
+            /* @__PURE__ */ jsx52("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
+            emisor?.direccion && /* @__PURE__ */ jsx52("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
+          ] })
+        ] }),
+        /* @__PURE__ */ jsxs42("div", { className: "text-right", children: [
+          /* @__PURE__ */ jsx52("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
+          numero && /* @__PURE__ */ jsxs42("p", { className: "text-[12px] font-bold", children: [
+            etiquetaNumero,
+            " ",
+            numero
+          ] }),
+          estado && /* @__PURE__ */ jsx52("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
+        ] })
+      ] }),
+      (emisor || receptor) && /* @__PURE__ */ jsxs42("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx52(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
+        /* @__PURE__ */ jsx52(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
+      ] }),
+      meta?.length > 0 && /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx52("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
+        /* @__PURE__ */ jsx52("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx52(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
+      ] }),
+      /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx52("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
+        detalle?.length > 0 ? /* @__PURE__ */ jsxs42("table", { className: "oc-print-tabla", children: [
+          /* @__PURE__ */ jsx52("thead", { children: /* @__PURE__ */ jsxs42("tr", { children: [
+            /* @__PURE__ */ jsx52("th", { scope: "col", children: "Cantidad" }),
+            /* @__PURE__ */ jsx52("th", { scope: "col", children: "Concepto" }),
+            /* @__PURE__ */ jsx52("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
+            /* @__PURE__ */ jsx52("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
+          ] }) }),
+          /* @__PURE__ */ jsx52("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs42("tr", { children: [
+            /* @__PURE__ */ jsx52("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
+            /* @__PURE__ */ jsxs42("td", { children: [
+              item.concepto,
+              item.nota && /* @__PURE__ */ jsx52("small", { className: "block oc-print-suave", children: item.nota })
+            ] }),
+            /* @__PURE__ */ jsx52("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx52(Money, { value: item.unitario, currency: moneda }) }),
+            /* @__PURE__ */ jsx52("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx52(Money, { value: item.subtotal, currency: moneda }) })
+          ] }, item.id ?? indice)) })
+        ] }) : /* @__PURE__ */ jsx52("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
+      ] }),
+      tieneLiquidacion && /* @__PURE__ */ jsxs42("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
+        /* @__PURE__ */ jsx52("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
+        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda }),
+        liquidacion.descuento ? /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda }) : null,
+        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda }, otro.etiqueta ?? indice)),
+        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx52(
+          FilaLiquidacion,
+          {
+            etiqueta: `IVA ${iva.tasa}%`,
+            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs42(Fragment8, { children: [
+              "sobre ",
+              /* @__PURE__ */ jsx52(Money, { value: iva.base, currency: moneda })
+            ] }) : null,
+            valor: iva.monto,
+            moneda
+          },
+          `${iva.tasa}-${indice}`
+        )),
+        liquidacion.total !== void 0 && /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, fuerte: true })
+      ] }),
+      notas && /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx52("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
+        /* @__PURE__ */ jsx52("div", { className: "oc-print-nota", children: notas })
+      ] }),
+      pie && /* @__PURE__ */ jsx52("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
+    ] })
+  ] });
+}
+
+// src/components/SubidaImagen.jsx
+import { useId as useId5, useRef as useRef10, useState as useState18 } from "react";
+import { jsx as jsx53, jsxs as jsxs43 } from "react/jsx-runtime";
+var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
+var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
+var TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024;
+var TAMANO_OBJETIVO_IMAGEN = 1024 * 1024;
+var ETIQUETA_TIPO = { "image/jpeg": "JPG", "image/png": "PNG", "image/webp": "WebP" };
+function asciiEn(bytes, offset, length) {
+  return String.fromCharCode(...bytes.slice(offset, offset + length));
+}
+function mimeDeImagen(bytes) {
+  if (!bytes || bytes.length < 4) return null;
+  const empiezaCon = (...firma) => firma.every((byte, indice) => bytes[indice] === byte);
+  if (empiezaCon(255, 216, 255)) return "image/jpeg";
+  if (empiezaCon(137, 80, 78, 71, 13, 10, 26, 10)) return "image/png";
+  if (bytes.length >= 12 && asciiEn(bytes, 0, 4) === "RIFF" && asciiEn(bytes, 8, 4) === "WEBP") return "image/webp";
+  return null;
+}
+function pesoLegible(bytes) {
+  if (bytes >= 1024 * 1024) return `${Math.round(bytes / (1024 * 1024))} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+}
+function validarImagen(archivo, { tipos = MIMES_IMAGEN, tamanoMaximo = TAMANO_MAXIMO_IMAGEN } = {}) {
+  if (!archivo) return { ok: false, error: "No se eligi\xF3 ning\xFAn archivo." };
+  if (!archivo.size) return { ok: false, error: "El archivo est\xE1 vac\xEDo; prob\xE1 de nuevo." };
+  if (archivo.size > tamanoMaximo) {
+    return { ok: false, error: `El archivo supera los ${pesoLegible(tamanoMaximo)}; prob\xE1 con una imagen m\xE1s chica.` };
+  }
+  const mime = String(archivo.type ?? "").toLowerCase();
+  if (mime && !tipos.includes(mime)) {
+    return { ok: false, error: `Solo se aceptan im\xE1genes ${tipos.map((tipo) => ETIQUETA_TIPO[tipo] || tipo).join(", ")}.` };
+  }
+  return { ok: true };
+}
+async function cargarFuente(archivo) {
+  if (typeof createImageBitmap === "function") {
+    try {
+      const bitmap = await createImageBitmap(archivo, { imageOrientation: "from-image" });
+      return { imagen: bitmap, ancho: bitmap.width, alto: bitmap.height, liberar: () => bitmap.close() };
+    } catch {
+    }
+  }
+  const url = URL.createObjectURL(archivo);
+  try {
+    const imagen = await new Promise((resolve, reject) => {
+      const elemento = new Image();
+      elemento.onload = () => resolve(elemento);
+      elemento.onerror = () => reject(new Error("No pudimos leer la imagen."));
+      elemento.src = url;
+    });
+    return { imagen, ancho: imagen.naturalWidth, alto: imagen.naturalHeight, liberar: () => URL.revokeObjectURL(url) };
+  } catch {
+    URL.revokeObjectURL(url);
+    return null;
+  }
+}
+function blobABase64(blob) {
+  return new Promise((resolve) => {
+    const lector = new FileReader();
+    lector.onload = () => {
+      const resultado = typeof lector.result === "string" ? lector.result : "";
+      const coma = resultado.indexOf(",");
+      resolve(coma >= 0 ? resultado.slice(coma + 1) : null);
+    };
+    lector.onerror = () => resolve(null);
+    lector.readAsDataURL(blob);
+  });
+}
+function canvasABlob(canvas, calidad) {
+  return new Promise((resolve) => canvas.toBlob(resolve, "image/webp", calidad));
+}
+var CALIDADES = [0.86, 0.7, 0.55];
+async function prepararImagen(archivo, { cuadrado = false, ladoMaximo = 1024, objetivo = TAMANO_OBJETIVO_IMAGEN } = {}) {
+  const rapida = validarImagen(archivo);
+  if (!rapida.ok) return rapida;
+  if (typeof document === "undefined") return { ok: false, error: "La imagen se prepara en el navegador." };
+  const cabecera = new Uint8Array(await archivo.slice(0, 16).arrayBuffer());
+  const tipo = mimeDeImagen(cabecera);
+  if (!tipo) return { ok: false, error: "El archivo no es un JPG, PNG o WebP real: revis\xE1 que no est\xE9 renombrado." };
+  const fuente = await cargarFuente(archivo);
+  if (!fuente || fuente.ancho < 1 || fuente.alto < 1) {
+    fuente?.liberar();
+    return { ok: false, error: "No pudimos leer la imagen; prob\xE1 con otro archivo." };
+  }
+  try {
+    const escala = Math.min(1, ladoMaximo / Math.max(fuente.ancho, fuente.alto));
+    const lado = cuadrado ? Math.min(fuente.ancho, fuente.alto) : 0;
+    const ancho = cuadrado ? Math.max(1, Math.round(lado * escala)) : Math.max(1, Math.round(fuente.ancho * escala));
+    const alto = cuadrado ? ancho : Math.max(1, Math.round(fuente.alto * escala));
+    const canvas = document.createElement("canvas");
+    canvas.width = ancho;
+    canvas.height = alto;
+    const contexto = canvas.getContext("2d");
+    if (!contexto) return { ok: false, error: "No pudimos procesar la imagen en este navegador." };
+    if (cuadrado) {
+      const origen = Math.min(fuente.ancho, fuente.alto);
+      contexto.drawImage(fuente.imagen, (fuente.ancho - origen) / 2, (fuente.alto - origen) / 2, origen, origen, 0, 0, ancho, alto);
+    } else {
+      contexto.drawImage(fuente.imagen, 0, 0, ancho, alto);
+    }
+    let blob = null;
+    for (const calidad of CALIDADES) {
+      blob = await canvasABlob(canvas, calidad);
+      if (blob && blob.size > 0 && blob.size <= objetivo) break;
+    }
+    if (!blob || blob.size === 0) return { ok: false, error: "No pudimos comprimir la imagen; prob\xE1 con otra." };
+    if (blob.size > objetivo) return { ok: false, error: `La imagen sigue superando ${pesoLegible(objetivo)} despu\xE9s de comprimirla; prob\xE1 con una m\xE1s chica.` };
+    const base64 = await blobABase64(blob);
+    if (!base64) return { ok: false, error: "No pudimos leer la imagen; prob\xE1 de nuevo." };
+    return {
+      ok: true,
+      imagen: {
+        base64,
+        tipo: "image/webp",
+        ancho,
+        alto,
+        tamano: blob.size,
+        dataUrl: `data:image/webp;base64,${base64}`
+      }
+    };
+  } finally {
+    fuente.liberar();
+  }
+}
+function SubidaImagen({
+  /** Etiqueta del campo. */
+  etiqueta,
+  /** Aclaración debajo del campo (nunca junto al error). */
+  descripcion,
+  /** Vista previa de una imagen ya guardada (data URL servida por la app). */
+  valor = null,
+  /** Error externo (del API); se muestra con `role="alert"`. */
+  error = null,
+  /** Tipos aceptados; por defecto JPG, PNG y WebP. */
+  tipos = MIMES_IMAGEN,
+  /** Tamaño máximo del archivo elegido, en bytes. */
+  tamanoMaximo = TAMANO_MAXIMO_IMAGEN,
+  /** Comprime en el navegador antes de avisar (canvas, sin librerías). */
+  comprimir = true,
+  /** Recorta cuadrado desde el centro (avatar) o conserva la relación (logo). */
+  cuadrado = false,
+  /** Lado máximo de la imagen final, en px. */
+  ladoMaximo = 1024,
+  /** Tamaño objetivo de la imagen comprimida, en bytes. */
+  tamanoObjetivo = TAMANO_OBJETIVO_IMAGEN,
+  /** Recibe `{ archivo, dataUrl, tipo, ancho, alto, tamano, base64?, preparada }`. */
+  onImagen,
+  /** Quita la imagen (limpia la vista previa y avisa al consumidor). */
+  onLimpiar,
+  limpiarEtiqueta = "Quitar imagen",
+  subirEtiqueta = "Subir imagen",
+  cambiarEtiqueta = "Cambiar imagen",
+  disabled = false,
+  /** Ocupado externo (por ejemplo, mientras el API guarda). */
+  ocupado = false,
+  className
+}) {
+  const inputRef = useRef10(null);
+  const campoId = useId5();
+  const errorId = `${campoId}-error`;
+  const ayudaId = `${campoId}-ayuda`;
+  const [preparando, setPreparando] = useState18(false);
+  const [errorLocal, setErrorLocal] = useState18("");
+  const [vistaLocal, setVistaLocal] = useState18(null);
+  const [arrastrando, setArrastrando] = useState18(false);
+  const mensaje = error || errorLocal;
+  const trabajando = Boolean(ocupado) || preparando;
+  const vista = vistaLocal ?? valor;
+  const acepta = tipos.map((tipo) => EXTENSION_IMAGEN[tipo] ? `.${EXTENSION_IMAGEN[tipo]}` : tipo).join(",");
+  async function elegir(archivo) {
+    if (!archivo || trabajando || disabled) return;
+    setErrorLocal("");
+    const rapida = validarImagen(archivo, { tipos, tamanoMaximo });
+    if (!rapida.ok) {
+      setErrorLocal(rapida.error);
+      return;
+    }
+    if (!comprimir) {
+      onImagen?.({ archivo, tipo: archivo.type, tamano: archivo.size, preparada: false });
+      return;
+    }
+    setPreparando(true);
+    const resultado = await prepararImagen(archivo, { cuadrado, ladoMaximo, objetivo: tamanoObjetivo });
+    setPreparando(false);
+    if (!resultado.ok) {
+      setErrorLocal(resultado.error);
+      return;
+    }
+    setVistaLocal(resultado.imagen.dataUrl);
+    onImagen?.({ archivo, ...resultado.imagen, preparada: true });
+  }
+  function limpiar() {
+    setVistaLocal(null);
+    setErrorLocal("");
+    if (inputRef.current) inputRef.current.value = "";
+    onLimpiar?.();
+  }
+  return /* @__PURE__ */ jsxs43("div", { className: cn("min-w-0", className), children: [
+    etiqueta && /* @__PURE__ */ jsx53("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
+    /* @__PURE__ */ jsxs43(
+      "div",
+      {
+        className: cn(
+          "flex flex-wrap items-center gap-3 rounded-2xl border-2 border-dashed p-3 transition",
+          arrastrando ? "border-fono/70 bg-fono/5" : "border-ink-500",
+          (disabled || trabajando) && "opacity-70"
+        ),
+        onDragOver: (event) => {
+          if (disabled || trabajando) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = "copy";
+          setArrastrando(true);
+        },
+        onDragLeave: () => setArrastrando(false),
+        onDrop: (event) => {
+          if (disabled || trabajando) return;
+          event.preventDefault();
+          setArrastrando(false);
+          void elegir(event.dataTransfer.files?.[0] ?? null);
+        },
+        children: [
+          vista ? /* @__PURE__ */ jsx53("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx53("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx53("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx53(Icon, { name: "image", className: "h-6 w-6" }) }),
+          /* @__PURE__ */ jsxs43("div", { className: "min-w-0 flex-1", children: [
+            /* @__PURE__ */ jsx53("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
+            /* @__PURE__ */ jsxs43("p", { className: "mt-0.5 text-[11px] text-mute", children: [
+              tipos.map((tipo) => ETIQUETA_TIPO[tipo] || tipo).join(" \xB7 "),
+              " \xB7 hasta ",
+              pesoLegible(tamanoMaximo)
+            ] }),
+            /* @__PURE__ */ jsxs43("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
+              /* @__PURE__ */ jsxs43(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
+                /* @__PURE__ */ jsx53(Icon, { name: "upload", className: "h-4 w-4" }),
+                trabajando ? "Procesando\u2026" : vista ? cambiarEtiqueta : subirEtiqueta
+              ] }),
+              (vista || vistaLocal) && /* @__PURE__ */ jsx53(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
+            ] })
+          ] }),
+          /* @__PURE__ */ jsx53(
+            "input",
+            {
+              ref: inputRef,
+              className: "sr-only",
+              type: "file",
+              accept: acepta,
+              "aria-label": etiqueta || subirEtiqueta,
+              disabled: disabled || trabajando,
+              onChange: (event) => {
+                void elegir(event.target.files?.[0] ?? null);
+                event.target.value = "";
+              }
+            }
+          )
+        ]
+      }
+    ),
+    mensaje ? /* @__PURE__ */ jsx53("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx53("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
+  ] });
+}
+
+// src/components/ProgresoChecklist.jsx
+import { jsx as jsx54, jsxs as jsxs44 } from "react/jsx-runtime";
+function progresoChecklist({
+  hechas = 0,
+  total = 0,
+  vencidas = 0,
+  riesgo = false,
+  sustantivo = "tareas",
+  textoVacio = "Sin datos"
+} = {}) {
+  const totalNum = Math.max(0, Math.floor(Number(total) || 0));
+  const hechasNum = Math.min(totalNum, Math.max(0, Math.floor(Number(hechas) || 0)));
+  const vencidasNum = Math.min(totalNum - hechasNum, Math.max(0, Math.floor(Number(vencidas) || 0)));
+  const pendientes = totalNum - hechasNum;
+  const completo = totalNum > 0 && hechasNum === totalNum;
+  const enRiesgo = Boolean(riesgo) && totalNum > 0 && hechasNum === 0;
+  const tono = enRiesgo ? "bad" : vencidasNum > 0 ? "warn" : completo ? "ok" : "fono";
+  const porcentaje = totalNum > 0 ? Math.round(hechasNum / totalNum * 100) : 0;
+  const etiqueta = totalNum > 0 ? `${hechasNum} de ${totalNum} ${sustantivo}` : textoVacio;
+  const partes = totalNum > 0 ? [`${hechasNum} de ${totalNum} ${sustantivo} cumplidas`] : [textoVacio];
+  if (pendientes > 0) partes.push(`${pendientes} pendiente${pendientes === 1 ? "" : "s"}`);
+  if (vencidasNum > 0) partes.push(`${vencidasNum} vencida${vencidasNum === 1 ? "" : "s"}`);
+  if (enRiesgo) partes.push("sin avance: riesgo");
+  return {
+    hechas: hechasNum,
+    total: totalNum,
+    pendientes,
+    vencidas: vencidasNum,
+    riesgo: enRiesgo,
+    completo,
+    tono: tonoCanonico(tono),
+    porcentaje,
+    etiqueta,
+    detalle: partes.join(" \xB7 ")
+  };
+}
+function ProgresoChecklist({
+  hechas = 0,
+  total = 0,
+  /** Pendientes ya vencidas (la pantalla las cuenta con su calendario real). */
+  vencidas = 0,
+  /** Checklist de un trabajo próximo sin ningún avance. */
+  riesgo = false,
+  /** Sustantivo del conteo («tareas», «ítems», «pass»). */
+  sustantivo = "tareas",
+  /** Muestra el porcentaje a la derecha del conteo. */
+  porcentaje = true,
+  /** Muestra el detalle de pendientes/vencidas debajo de la barra. */
+  mostrarDetalle = true,
+  /** Altura de la barra (`sm`, `md`, `lg`). */
+  alto = "md",
+  textoVacio = "Sin datos",
+  className
+}) {
+  const avance = progresoChecklist({ hechas, total, vencidas, riesgo, sustantivo, textoVacio });
+  const tonoTexto = avance.tono === "ok" ? "text-ok" : avance.tono === "bad" ? "text-bad" : avance.tono === "warn" ? "text-warn" : "text-fore";
+  const hayDetalle = avance.vencidas > 0 || avance.riesgo;
+  return /* @__PURE__ */ jsxs44("div", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsxs44("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx54("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
+      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs44("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
+        avance.porcentaje,
+        "%"
+      ] })
+    ] }),
+    avance.total > 0 && /* @__PURE__ */ jsx54(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
+    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs44("p", { className: "mt-1 text-[11px] text-mute", children: [
+      avance.riesgo && /* @__PURE__ */ jsx54("span", { className: "text-bad", children: "Sin avance" }),
+      avance.riesgo && avance.vencidas > 0 && " \xB7 ",
+      avance.vencidas > 0 && /* @__PURE__ */ jsxs44("span", { className: "text-warn", children: [
+        avance.vencidas,
+        " vencida",
+        avance.vencidas === 1 ? "" : "s"
+      ] })
+    ] })
+  ] });
+}
+
 // src/utils/nombre.js
 var PARTICULAS = /* @__PURE__ */ new Set(["de", "del", "la", "las", "los", "y", "e", "da", "das", "do", "dos", "van", "von", "san", "santa"]);
 var titulo = (palabra) => {
@@ -4715,7 +5843,7 @@ var azar = (max) => Math.floor(Math.random() * max);
 var validacionDe = () => String(azar(1e4)).padStart(4, "0");
 var sufijoDe = () => String(azar(10));
 var refDePrueba = () => `TEST-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`;
-var fechaCorta = (iso) => new Date(iso).toLocaleString("es-PY", { dateStyle: "short", timeStyle: "short" });
+var fechaCorta2 = (iso) => new Date(iso).toLocaleString("es-PY", { dateStyle: "short", timeStyle: "short" });
 function paginaDePrueba({
   tipo = "caracteres",
   ancho = 80,
@@ -4754,7 +5882,7 @@ function paginaDePrueba({
     t.par("Ancho", `${ancho} mm`);
     t.par("Copias", String(copias));
     t.par("Usuario", usuario || "\u2014");
-    t.par("Fecha", fechaCorta(ahora));
+    t.par("Fecha", fechaCorta2(ahora));
     t.par("Equipo", equipo || "\u2014");
     t.par("Trabajo", ref);
   };
@@ -4806,7 +5934,7 @@ function paginaDePrueba({
   if (tipo === "venta") {
     t.centrado(`${nombreApp} \xB7 SUCURSAL CENTRAL`).centrado("Comprobante de venta");
     t.linea();
-    t.par("Fecha", fechaCorta(ahora));
+    t.par("Fecha", fechaCorta2(ahora));
     t.par("Vendedor", "Vendedor de prueba");
     t.par("Cliente", "Cliente de prueba");
     t.linea();
@@ -4960,34 +6088,6 @@ function buscarEnCatalogo(catalogo = [], texto = "") {
   return catalogo.filter((item) => norm2(item).includes(q));
 }
 
-// src/utils/fecha.js
-var ES_PY2 = "es-PY";
-var OPCIONES_HORA = { hour12: false };
-function fechaValida(value) {
-  if (!value) return null;
-  const fecha = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(fecha.getTime()) ? null : fecha;
-}
-function fechaHora(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleString(ES_PY2, { dateStyle: "short", timeStyle: "short", ...OPCIONES_HORA }) : vacio;
-}
-function fechaDia(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleDateString(ES_PY2) : vacio;
-}
-function fechaHoraCorta(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleString(ES_PY2, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }) : vacio;
-}
-function fechaCorta2(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  if (!fecha) return vacio;
-  const dia = fecha.toLocaleDateString(ES_PY2, { day: "2-digit", month: "short" });
-  const hora = fecha.toLocaleTimeString(ES_PY2, { hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA });
-  return `${dia} \xB7 ${hora}`;
-}
-
 // src/utils/serial.js
 function ultimos4(serial) {
   return String(serial ?? "").slice(-4);
@@ -5041,21 +6141,26 @@ export {
   CodigoQr,
   ConfirmDialog,
   ConteoChecklist,
+  Cronologia,
   CurrencySelect,
   DEPARTAMENTOS_PARAGUAY,
   DIAS_SEMANA,
   DOMINIOS_EMAIL,
   DataTable,
+  DocumentoImpresion,
   Dot,
   Drawer,
   ESPACIO_BARRA_INFERIOR,
   ESTADOS_CHIP,
+  ESTADOS_CUOTA,
   ESTADOS_ITEM,
   ESTADOS_LOCK,
   ESTADO_IMPRESORA,
+  ETIQUETAS_HITO,
   ETIQUETA_ESTADO,
   ETIQUETA_PERIODO,
   ETIQUETA_TRABAJO,
+  EXTENSION_IMAGEN,
   EmailField,
   EmptyState,
   ErrorState,
@@ -5072,6 +6177,7 @@ export {
   GoogleMark,
   GradoBadge,
   GraficoBarras,
+  ICONOS_HITO,
   ICONO_CATEGORIA,
   Icon,
   IconAction,
@@ -5089,6 +6195,7 @@ export {
   LoadingScreen,
   MARCAS_ACCESORIOS,
   MENSAJE_TELEFONO,
+  MIMES_IMAGEN,
   MODELOS_IPHONE,
   MedidorBateria,
   MenuDesplegable,
@@ -5109,7 +6216,9 @@ export {
   PercentField,
   PhoneField,
   PinInput,
+  PlanPagos,
   ProductFooter,
+  ProgresoChecklist,
   QR_OPCIONES,
   ROTULO_DATO,
   ROTULO_SECCION,
@@ -5122,16 +6231,22 @@ export {
   Skeleton,
   Stat,
   Stepper,
+  SubidaImagen,
   Subtabs,
   Switch,
   TAMANOS_AVATAR,
   TAMANOS_CAMPO,
   TAMANOS_MODAL,
+  TAMANO_MAXIMO_IMAGEN,
   TAMANO_MODAL_PREDETERMINADO,
+  TAMANO_OBJETIVO_IMAGEN,
   TIPOS_PRUEBA,
   TIPOS_TICKET_PRUEBA,
   TONOS,
+  TONOS_ALIAS,
+  TONOS_HITO,
   TONO_ESTADO,
+  TableroKanban,
   TarjetaAjuste,
   Textarea,
   TileEquipo,
@@ -5140,13 +6255,16 @@ export {
   UMBRAL_BATERIA_OK,
   VARIANTES_CORTE,
   agregarEstado,
+  agruparHitos,
   agruparPorDia,
   agruparResultados,
+  agruparTarjetas,
   anchoParaLargo,
   bloqueFirma,
   buscarCiudad,
   buscarEnCatalogo,
   categoriaDe,
+  chipDeTono,
   claveColorDeNombre,
   claveDia,
   cn,
@@ -5156,12 +6274,14 @@ export {
   colorDeNombre,
   colorTrabajo,
   columnasDeAncho,
+  columnasDelTablero,
   componerTelefono,
   conexionDeDestino,
   contarSinLeer,
   crearTicket,
   departamentoDe,
   destinoDeConexion,
+  destinosDeTarjeta,
   envolver,
   esApellidosPrimero,
   esAtajo,
@@ -5174,13 +6294,14 @@ export {
   estadoLock,
   estadoPaleta,
   etiquetaDeCategoria,
+  etiquetaDeHito,
   etiquetaDia,
   etiquetaDiaCorta,
   etiquetaMes,
   etiquetaTrabajo,
   excedeMonto,
   extractTokenFromUrl,
-  fechaCorta2 as fechaCorta,
+  fechaCorta,
   fechaDeClave,
   fechaDia,
   fechaHora,
@@ -5204,6 +6325,7 @@ export {
   limpiarPercent,
   logoDeBanco,
   maximoDeBarras,
+  mimeDeImagen,
   mismoMes,
   montoConSigno,
   montoGs,
@@ -5226,7 +6348,10 @@ export {
   partirSerial,
   periodoDeRango,
   porcentajeBarra,
+  prepararImagen,
   primerNombre,
+  progresoChecklist,
+  puntoDeTono,
   qrDataUrl,
   rangoDePeriodo,
   rangoInvertido,
@@ -5243,11 +6368,15 @@ export {
   telefonoValido,
   telefonoVisible,
   textoContador,
+  textoDeTono,
   textoVerificacion,
   tonoBateria,
+  tonoCanonico,
   tonoDelta,
   ultimos4,
+  useTableroOptimista,
   useToast,
+  validarImagen,
   whatsappUrl
 };
 //# sourceMappingURL=index.js.map

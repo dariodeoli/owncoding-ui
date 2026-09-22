@@ -62,7 +62,7 @@ cups:<cola>           → cola local del sistema (USB o compartida)
 | Configuración LAN/USB | `AjustesImpresion` | ✅ en la librería |
 | Disparo de impresión | `BotonImprimir` | ✅ en la librería |
 | Comprobantes/etiquetas/remitos/recibos (modelos por documento) | `ticketComprobante`, `ticketEtiqueta*`, `ticketRemito`, `ticketReserva`, `ticketNotaEntrega`, `ticketRemision`, `ticketReciboInterno`, `ticketProforma`, `ticketRecepcionServicio`, `ticketVerificacionImei` | ⏳ siguiente lote: se portan sobre `crearTicket` con datos por props |
-| Páginas A4/firmas | `bloqueFirma` + documentos | ⏳ parcial (firma ya está); el resto, siguiente lote |
+| Páginas A4/firmas | `DocumentoImpresion` (hoja A4: emisor/receptor, detalle, liquidación, notas y pie con reglas `@media print`) + `bloqueFirma` para el ticket | ✅ hoja A4 en la librería (lote LedBox); firma también |
 
 ## Referencia en MobOS (lo que ya funciona)
 - Pantalla: `src/components/control/Impresoras.jsx` (cola, puentes, actividad,
