@@ -216,6 +216,33 @@ compatibilidad).
   verse bien en ambos temas.
 - Un solo activo de marca por app; los componentes no traen logos.
 
+### Iconos (#1)
+
+Set único **`Icon`** (`name` + `className`): no se incrustan SVG sueltos en los
+componentes. Los glifos existentes **no se renombran**; si falta uno, se suma al
+set. La cosecha de PagaYa sumó los glifos de pago y operación: `home`, `arrow`,
+`link`, `building`, `play`, `pause`, `archive`, `backspace`, `call`, `mail`,
+`pin`, `code`, `qr`, `transfer`, `subscription`, `bank`, `card`, `terminal` y
+`nfc`.
+
+Equivalencias con `components/app-icon.tsx` de PagaYa (se usa el glifo de la
+librería; no se agrega un segundo nombre para lo mismo):
+
+- `activity` → `pulse`
+- `trend` → `trending`
+- `person` → `user`
+- `more` → `dots`
+- `products` → `package`
+- `orders` → `report`
+- `company` → `building`
+- `phone` (auricular) → `call` (el `phone` de la librería es el equipo móvil)
+- Nombres que ya coinciden y no se tocan: `close`, `check`, `plus`, `users`,
+  `settings`, `search`, `receipt`, `wallet`, `refresh`, `clock`, `copy`,
+  `external`, `calendar`, `shield`.
+
+Los colores y el grosor del trazo salen del ícono (heredan `currentColor`); no
+se les pasa `stroke` ni `fill` por pantalla.
+
 ## 8 bis. Operación de equipos (#240/#241)
 
 Base del piloto de DSN: checklist/tile/rack de inspección. Todo es portable
