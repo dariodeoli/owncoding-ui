@@ -236,7 +236,54 @@ stores ni conocen el router. Textos y datos entran por props.
 | `GraficoBarras` | `datos` `[{ etiqueta, valor, tono? }]`, `max`, `orientacion` (`vertical`/`horizontal`), `altura` (160), `tono`, `formatoValor`, `etiqueta`, `mostrarValores` | Barras CSS sin dependencias, con lista accesible para lectores de pantalla. Los negativos se dibujan en 0 y el valor real queda en el tooltip: no se inventa una escala |
 | `formatoNumero` / `signoDe` / `montoConSigno` | `valor`, `{ decimales, vacio }` / `valor` / `valor`, `moneda`, `vacio` | Cantidades y signos en el formato único (es-PY); un dato ausente devuelve el vacío, nunca 0 |
 
-Reglas: los días no se corren de zona (clave pura); un rango invertido se dice;
-la paleta no busca ni navega por su cuenta; el avatar no inventa fotos; el
-contador de avisos cuenta lo que hay; un gráfico sin datos lo dice.
+### 10.3 Ejemplo (la app resuelve datos y navegación)
+
+```jsx
+import { useState } from 'react'
+import {
+  Avatar, BarraInferior, Calendario, ESPACIO_BARRA_INFERIOR, PaletaComandos,
+  RangoFecha,
+} from 'owncoding-ui'
+
+export function Agenda({ items, buscar, ir }) {
+  const [rango, setRango] = useState({ desde: '', hasta: '' })
+  const [abierta, setAbierta] = useState(false)
+
+  return (
+    <div className={ESPACIO_BARRA_INFERIOR}>
+      <RangoFecha
+        desde={rango.desde}
+        hasta={rango.hasta}
+        onCambio={(desde, hasta) => setRango({ desde, hasta })}
+      />
+      <Calendario
+        items={items} // [{ id, fecha: '2026-09-22', titulo, hora, tono, href }]
+        vistas={['mes', 'semana']}
+        onCambiarPeriodo={(ancla, range) => pedir(range.desde, range.hasta)}
+        onElegirItem={(item) => item.href && ir(item.href)}
+      />
+      <PaletaComandos
+        abierta={abierta}
+        onCerrar={() => setAbierta(false)}
+        buscar={buscar} // async (consulta) => [{ id, tipo, titulo, detalle }]
+        onElegir={(resultado) => ir(resultado.datos.href)}
+        boton
+      />
+      <BarraInferior
+        items={NAVEGACION} // [{ id, etiqueta, icono, href }]
+        activo="calendario"
+        onMas={abrirMenu}
+      />
+      <Avatar nombre={usuario.nombre} src={usuario.fotoUrl} tamano="sm" />
+    </div>
+  )
+}
+```
+
+### 10.4 Reglas
+
+Los días no se corren de zona (clave pura); un rango invertido se dice; la
+paleta no busca ni navega por su cuenta; el avatar no inventa fotos; el contador
+de avisos cuenta lo que hay; un gráfico sin datos lo dice.
+
 
