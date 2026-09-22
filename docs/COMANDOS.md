@@ -12,6 +12,24 @@ ciclo está en `docs/MODOS-DE-TRABAJO.md`.
 | **`ht`** | Ciclo completo de integración + deploy: **merge → suite de checks → push → `NOVEDADES.md` → release + smoke** de producción. |
 | **`hd`** | Alias de `ht` (mismo ciclo). |
 
+## Política automática de integración
+
+Para que las ramas no se acumulen sin integrar:
+
+- Cuando el repo tiene **≥ 15 commits nuevos sin integrar** (suma de
+  `git log --oneline main..<rama>` de las ramas con trabajo) **y el integrador
+  está libre**, el orquestador dispara un **`hd` automático** — el mismo ciclo
+  que `ht`: merge → suite de checks → push → `NOVEDADES.md` → release + smoke.
+- **Cooldown de 20 minutos** entre disparos automáticos: si el `hd` recién
+  terminó (o falló), no se vuelve a disparar hasta que pase la ventana.
+- El umbral y el cooldown se miden sobre el estado real del repo, no sobre la
+  cantidad de pedidos: con 14 commits se espera, con 15 se dispara.
+- Si hay un merge o un `hd` en curso, el disparo automático espera: nunca hay
+  dos ciclos de integración a la vez.
+- El dueño puede adelantarlo escribiendo `ht`/`hd` a mano. El disparo
+  automático se suma a la política, no la reemplaza: sigue vigente que nada se
+  mergea, pushea ni despliega fuera de un `hd`/`ht` o una ronda ordenada.
+
 ## Reglas
 
 - **Nada se mergea, pushea ni despliega sin `ht`** (o una ronda explícitamente

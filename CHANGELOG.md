@@ -58,6 +58,15 @@ integrador decide el número final).
   construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
   `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
 
+## v0.14.2 — 2026-09-22
+
+- **Documentación (sin cambios de código):** `docs/COMANDOS.md` suma la
+  **política automática de integración** — con **≥ 15 commits nuevos sin
+  integrar** y el integrador libre, el orquestador dispara un **`hd`
+  automático** (merge → suite → push → NOVEDADES → release + smoke), con
+  **cooldown de 20 minutos**, un solo ciclo a la vez y el `ht`/`hd` manual
+  siempre disponible para adelantarlo.
+
 ## v0.14.1 — 2026-09-22
 
 - **Documentación (sin cambios de código):** `docs/COMANDOS.md` con los
