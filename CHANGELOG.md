@@ -58,6 +58,14 @@ integrador decide el número final).
   construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
   `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
 
+## v0.14.0 — 2026-09-22
+
+- **Adopción sin fricción (pedido del piloto de LedBox):** `owncodingContent`
+  exportado del preset, **tipos** (`.d.ts`) publicados, `styles.css` partido en
+  **`tokens.css` + `base.css`**, fechas con **`timeZone`**, **`formatGs`** con
+  símbolo configurable (default `Gs 1.234.567`), **`ChipEstado`** con estados de
+  negocio, **23 íconos nuevos** (78 en total) y **`Stat`** con `tono` y `nota`.
+  Todo compatible con v0.13.1.
 ## v0.13.1 — 2026-09-22
 
 - **Release completa:** suma al lote LedBox ya etiquetado el **lote 2** (agenda,
