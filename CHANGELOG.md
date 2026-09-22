@@ -4,6 +4,60 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Sin publicar — v0.14.0 propuesta (2026-09-22)
+
+Cierre de los huecos que dejó el piloto de adopción en LedBox/EventOS (issue
+#3). Todos los agregados son opcionales: nada de lo que consumía `v0.13.1`
+cambia de firma ni de valor por defecto. **Versión sugerida: v0.14.0** (la rama
+`lib`, con la cosecha de PagaYa/ScaleOS, también apunta a esa versión: el
+integrador decide el número final).
+
+- **Tailwind — `owncodingContent`:** Tailwind 3.4 ignora el `content` que
+  declara un preset, así que la librería exporta `owncodingContent` (globs de
+  `owncoding-ui/dist/**/*.js` y `src/**/*.jsx`) desde `tailwind-preset.js` y el
+  README explica cómo sumarlo (`content: [...owncodingContent, …]`). El preset
+  mantiene su clave `content` y avisa del bug; sin sumarlo, los componentes se
+  purgaban en silencio (íconos gigantes).
+- **Tipos publicados:** `types/index.d.ts` (declarado a mano, aditivo) con los
+  objetos principales, los campos, los estados, las tablas y los formatos;
+  `package.json` expone `types` y la condición `types` del `exports`, y el build
+  lo copia a `dist/index.d.ts`. `tailwind-preset` también tiene tipos. Una app
+  TypeScript `strict` ya no necesita un shim propio.
+- **Hojas CSS separadas:** `tokens.css` (solo variables, no toca el documento)
+  y `base.css` (base global opt-in: `html`/`body`, tipografías, foco, tabulares,
+  animaciones y `@media print` de `DocumentoImpresion`). `styles.css` sigue
+  siendo tokens + base concatenadas, autocontenido, compatible con v0.13.1.
+  `exports` publica las tres.
+- **Fechas con zona:** `fechaHora`, `fechaDia`, `fechaHoraCorta` y `fechaCorta`
+  aceptan `{ timeZone }` (o un objeto de opciones como segundo argumento); sin
+  zona se mantiene el huso del navegador. Una fecha pura `YYYY-MM-DD` se dibuja
+  como día de calendario (no se corre de zona).
+- **`formatGs` con símbolo configurable:** `formatGs(valor, { simbolo })` (o
+  una cadena suelta), propagado a `montoTexto`, `montoGs`, `montoConSigno`,
+  `formatMoney`, `Money`, `CeldaMoneda`, `MoneyInput` (`symbol`),
+  `PlanPagos`, `DocumentoImpresion` e `ImporteDelta`. El default sigue siendo
+  `Gs 1.234.567`; `SIMBOLOS_MONEDA` es la fuente única del prefijo.
+- **`ChipEstado` genérico:** suma los estados de negocio (borrador, enviado,
+  aprobado, rechazado, vencido, cobrado/pagado, por cobrar, activo, pausado,
+  anulado, cancelado y en revisión) con tonos coherentes, lectura tolerante
+  (mayúsculas, acentos, espacios y género) y `title`/`data-estado` accesibles.
+  Los estados de dispositivo no cambian.
+- **Íconos (23 nuevos, 78 en total):** `overview`, `events`, `clients`, `leads`,
+  `budgets`, `finance`, `inventory`, `suppliers`, `promoters`, `building`,
+  `plan`, `audit`, `arrowRight`, `arrowLeft`, `sun`, `moon`, `power`, `mail`,
+  `bank`, `checkin`, `globe`, `database` e `instagram`, con el trazo de la
+  librería (1.75) y el mapa `AdminIcon` → librería en el README. `ICONOS` expone
+  la lista; ningún glifo existente se renombró ni cambió.
+- **`Stat` con `tono` y `nota`:** el valor se colorea con el tono semántico y el
+  KPI suma el dato al pie (lo que cubría `AdminKpi`), sin cambiar la firma
+  anterior.
+- **Fix — `.pin-oculto`:** la clase que `PinInput` usa para no mostrar los
+  dígitos reales sobre los puntos no existía en la librería; ahora vive en
+  `base.css`.
+- 18 tests nuevos (149 en total), con verificación de consumo real del paquete
+  construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
+  `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
+
 ## v0.13.1 — 2026-09-22
 
 - **Release completa:** suma al lote LedBox ya etiquetado el **lote 2** (agenda,

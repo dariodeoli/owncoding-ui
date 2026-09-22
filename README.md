@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.12.0
+npm install github:dariodeoli/owncoding-ui#v0.13.1
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.12.0
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.13.1
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -36,17 +36,49 @@ Requisitos: **React 18+** y **Tailwind CSS 3.4+**.
 
 ```js
 // tailwind.config.js
-import preset from 'owncoding-ui/tailwind-preset'
-export default { presets: [preset], content: ['./index.html', './src/**/*.{js,jsx}'] }
+import preset, { owncodingContent } from 'owncoding-ui/tailwind-preset'
+export default {
+  presets: [preset],
+  // Tailwind 3.4 IGNORA el `content` de un preset: sin sumar
+  // `owncodingContent` se purgan las clases de los componentes (íconos
+  // gigantes, estilos perdidos) y no hay ningún error. Sumalo siempre.
+  content: [...owncodingContent, './src/**/*.{js,jsx,ts,tsx}'],
+}
 ```
+
+`owncodingContent` apunta al bundle
+(`node_modules/owncoding-ui/dist/**/*.js`) y a las fuentes
+(`node_modules/owncoding-ui/src/**/*.jsx`), así funciona también si el paquete
+se instaló con `--ignore-scripts`; si el `node_modules` está hoisted (monorepo),
+ajustá la ruta al `node_modules` real.
 
 ```css
 /* tu CSS principal, después de las directivas de Tailwind */
+
+/* Opción A — todo (tokens + base global), igual que v0.13.1 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import 'owncoding-ui/styles.css'; /* tokens de tema (claro/oscuro) y base */
+@import 'owncoding-ui/styles.css';
+
+/* Opción B — solo tokens (app con diseño propio: no toca html/body) */
+@import 'owncoding-ui/tokens.css';
+
+/* Opción C — tokens + base, por separado */
+@import 'owncoding-ui/tokens.css';
+@import 'owncoding-ui/base.css'; /* html, body, tipografías, foco, .oc-print */
 ```
+
+`tokens.css` es **solo variables** (`--c-*`, temas `consola` y `tema-v2`):
+importarlo no cambia ni un píxel del documento. `base.css` es la base global
+opt-in (fondo, tipografía de títulos/botones, foco, placeholders, números
+tabulares, `.pin-oculto` y las reglas `@media print` de `DocumentoImpresion`).
+`styles.css` sigue siendo las dos concatenadas (autocontenido).
+
+Los **tipos** viajan en el paquete (`dist/index.d.ts`, declarados a mano y
+expuestos por `types`/`exports`): una app TypeScript `strict` los resuelve sin
+shim propio. Cubren los objetos principales, los campos, los estados, las
+tablas y los formatos (`Money`, fechas, etc.).
 
 ```jsx
 import { Button, Aviso, EmptyState, montoTexto, CELDA_DATO } from 'owncoding-ui'
@@ -62,6 +94,12 @@ la de MobOS.
 
 ### Notas de release
 
+- **v0.14.0 (propuesta, sin publicar)** — cierre del piloto de LedBox (issue #3):
+  `owncodingContent` para el `content` de Tailwind 3.4, tipos `.d.ts` publicados,
+  `tokens.css`/`base.css` separados, `timeZone` en las fechas, símbolo
+  configurable en los montos, estados de negocio en `ChipEstado`, 23 íconos de
+  módulo/acción y `Stat` con `tono`/`nota`. Compatible hacia atrás; el detalle
+  está en «Formatos, estados, íconos y tipos».
 - **v0.13.0 (propuesta, sin publicar)** — lote de objetos genéricos portado de
   LedBox: `TableroKanban`, `Cronologia`, `PlanPagos`, `DocumentoImpresion`,
   `SubidaImagen` y `ProgresoChecklist`; `qrcode` pasa a import dinámico (la peer
@@ -135,15 +173,17 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 
 ### Adopción en una app (checklist)
 
-1. Instalar la versión fija por tag y configurar el preset en Tailwind.
-2. Importar `owncoding-ui/styles.css` después de las directivas de Tailwind.
+1. Instalar la versión fija por tag y configurar el preset en Tailwind **sumando
+   `owncodingContent`** al `content` (si no, se purgan los componentes).
+2. Importar el CSS: `owncoding-ui/styles.css` completo, o `tokens.css` (y
+   `base.css` si querés también la base global) para una app con diseño propio.
 3. Definir la paleta de la app en `:root`/`.dark` (si no usa la de referencia).
 4. Reemplazar los objetos locales por los de la librería, de a un objeto por
    commit (sin mezclar con cambios de negocio).
 5. Correr lint + tests + build + e2e smoke de la app.
 6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
-## Qué incluye (v0.12.0)
+## Qué incluye
 
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
@@ -189,9 +229,10 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   (aclaración sin `role`: warn/info/neutra, `compact`), `EmptyState`,
   `ErrorState`, `Skeleton`, `Badge`, `Dot`.
 - **Operación de equipos (#240/#241):** `SemaforoItem`, `FilaChecklist` (+
-  `ConteoChecklist` "x de y pass"), `ChipEstado`, `ChipsLocks`,
-  `MedidorBateria`, `GradoBadge`, `TileEquipo`, `Stepper` y los estados en
-  `utils/estadoEquipo.js`; tema **consola** y verde `pass` en `styles.css`.
+  `ConteoChecklist` "x de y pass"), `ChipEstado` (estados de dispositivo **y de
+  negocio**), `ChipsLocks`, `MedidorBateria`, `GradoBadge`, `TileEquipo`,
+  `Stepper` y los estados en `utils/estadoEquipo.js`; tema **consola** y verde
+  `pass` en `styles.css`.
 - **Categorías de producto (#242):** `IconoCategoria` (mobile/laptop/tablet/
   watch/buds/cable) + `CATEGORIAS_PRODUCTO`, `ICONO_CATEGORIA` y
   `normalizarCategoria` en `utils/categorias.js`.
@@ -199,10 +240,15 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   (`pista`/`relleno` para las barras de gráfico),
   `DataTable`, `PageHeader`, `Eyebrow`, clases de tabla `CELDA_DATO`,
   `CELDA_NUMERO`, `CELDA_ENCABEZADO`, `ROTULO_DATO`, `ROTULO_SECCION`.
-- **Lógica:** `cn`, `primerNombre`, moneda (`formatGs`, `montoTexto`, …),
-  fechas (`fechaHora`, `fechaCorta`, …), teléfono/WhatsApp (`whatsappUrl`,
-  `telefonoVisible`, …), seriales (`ultimos4`, `serialEnmascarado`) y tokens de
-  acción (`extractTokenFromUrl`).
+- **Lógica:** `cn`, `primerNombre`, moneda (`formatGs` con símbolo configurable,
+  `montoTexto`, …), fechas (`fechaHora`, `fechaCorta`, … con `timeZone`),
+  teléfono/WhatsApp (`whatsappUrl`, `telefonoVisible`, …), seriales (`ultimos4`,
+  `serialEnmascarado`) y tokens de acción (`extractTokenFromUrl`).
+- **Íconos:** `Icon` (78 glifos con `ICONOS`) con los módulos y las acciones del
+  panel de LedBox (`overview`, `events`, `clients`, `budgets`, `finance`,
+  `inventory`, `suppliers`, `promoters`, `building`, `plan`, `audit`,
+  `arrowRight`, `mail`, `bank`, `checkin`, `database`, `instagram`, …). El mapa
+  `AdminIcon` → librería está en «Formatos, estados, íconos y tipos».
 - **Agenda, filtros y shell (lote 2, sin publicar):** `Calendario` (grilla
   mensual + lista por día en mobile, detalle del día y `renderItem` a medida),
   `RangoFecha` (atajos + campos desde/hasta), `PaletaComandos` (⌘/Ctrl+K con
@@ -412,16 +458,135 @@ Props: `hechas`, `total`, `vencidas`, `riesgo`, `sustantivo`, `porcentaje`,
 calculados por la pantalla. Sin tareas no dibuja una barra en 0 %: dice «Sin
 datos».
 
+## Formatos, estados, íconos y tipos (cierre del piloto de LedBox)
+
+Los huecos que dejó el piloto de adopción en LedBox/EventOS (issue #3), cerrados
+en la librería. Todos los agregados son opcionales: nada de lo que ya consumía
+`v0.13.1` cambia de firma ni de valor por defecto.
+
+### Dinero: símbolo configurable (`formatGs` y compañía)
+
+El default sigue siendo **`Gs 1.234.567`** (sin punto). Una app que escribe
+distinto pasa el símbolo por llamada (cadena suelta u objeto, recortado y unido
+con un solo espacio):
+
+```jsx
+import { formatGs, montoTexto, montoConSigno, Money, CeldaMoneda, MoneyInput } from 'owncoding-ui'
+
+formatGs(1201032)                        // 'Gs 1.201.032' (igual que antes)
+formatGs(1201032, { simbolo: 'Gs.' })    // 'Gs. 1.201.032'
+formatGs(1201032, '₲')                   // '₲ 1.201.032'
+montoTexto(total, 'PYG', '—', { simbolo: 'Gs.' })
+montoConSigno(-500000, 'PYG', '—', { simbolo: '₲' })
+
+<Money value={total} simbolo="Gs." />
+<CeldaMoneda valor={total} simbolo="Gs." />
+<MoneyInput value={total} onValueChange={setTotal} symbol="₲" /> // `symbol` ya existía
+```
+
+`PlanPagos`, `DocumentoImpresion` e `ImporteDelta` suman la prop opcional
+`simbolo` y la propagan a todos sus montos. El mapa `SIMBOLOS_MONEDA`
+(`PYG` → `Gs`, `USD` → `US$`, …) es la fuente única del prefijo.
+
+### Fechas con zona (`timeZone`)
+
+`fechaHora`, `fechaDia`, `fechaHoraCorta` y `fechaCorta` aceptan un tercer
+argumento con `timeZone` (o un objeto de opciones como segundo argumento). Sin
+zona se mantiene el huso del navegador (compatible) y las fechas puras
+`YYYY-MM-DD` se dibujan como día de calendario, sin corrimiento:
+
+```jsx
+import { fechaHora, fechaDia } from 'owncoding-ui'
+
+fechaDia(pago.dueAt, '—', { timeZone: 'America/Asuncion' })   // '21/9/2026'
+fechaHora(evento.startsAt, { timeZone: 'America/Asuncion' })  // '21/9/26, 23:30'
+fechaHora(evento.startsAt, '—', { timeZone: 'UTC' })           // '22/9/26, 02:30'
+fechaDia('2026-09-22', '—', { timeZone: 'America/Asuncion' })  // '22/9/2026' (día puro)
+```
+
+### `ChipEstado`: estados de negocio
+
+El chip de dispositivos (`pass`, `revision`, `pendiente`, `falla`) suma los
+estados de negocio habituales, con lectura tolerante (mayúsculas, acentos,
+espacios y género):
+
+```jsx
+<ChipEstado estado="aprobado" />              // Aprobado · verde
+<ChipEstado estado="Pagada" />                // Pagado · verde pass
+<ChipEstado estado="En revisión" />           // En revisión · azul
+<ChipEstado estado="POR COBRAR" />            // Por cobrar · ámbar
+<ChipEstado estado="vencido" />               // Vencido · rojo
+<ChipEstado estado="cancelado" etiqueta="Anulado por el cliente" />
+```
+
+Mapa: `borrador` (neutro), `enviado` (azul), `aprobado` (verde), `rechazado`
+(rojo), `vencido` (rojo), `cobrado`/`pagado` (verde pass), `por cobrar`
+(ámbar), `activo` (verde), `pausado` (ámbar), `anulado` (neutro), `cancelado`
+(rojo) y `en revisión` (azul). La etiqueta y el `tono` por props siguen pisando
+el mapa; `title` lleva la etiqueta y el ícono es decorativo (`aria-hidden`).
+
+### `Stat` con tono y nota
+
+```jsx
+<Stat label="Por cobrar" valor={montoTexto(total)} tono="danger" nota="3 cobros vencidos" />
+<Stat label="Ventas" valor={montoTexto(ventas)} delta={12.5} sub="vs. agosto" />
+```
+
+`tono` colorea el valor con el mapa semántico (`ok`/`warn`/`bad`/`info`/`mute`,
+con alias como `danger` o `accent`) y `nota` agrega el pie del KPI
+(`AdminKpi`). Sin `tono`/`nota`, la tarjeta se dibuja exactamente como antes.
+
+### Íconos nuevos (mapa desde el panel de LedBox)
+
+El set suma 23 glifos con el trazo de la librería (1.75) para los módulos y las
+acciones que el panel ya usaba; ningún nombre existente se renombró ni cambió de
+glifo. `ICONOS` expone la lista completa.
+
+| `AdminIcon` (LedBox) | Librería | | `AdminIcon` (LedBox) | Librería |
+| --- | --- | --- | --- | --- |
+| `overview` | `overview` | | `arrow-right` | `arrowRight` |
+| `events` | `events` | | `arrow-left` | `arrowLeft` |
+| `calendar` | `calendar` | | `sun` | `sun` |
+| `clients` | `clients` | | `moon` | `moon` |
+| `leads` | `leads` | | `power` | `power` |
+| `budgets` | `budgets` | | `mail` | `mail` |
+| `receipt` (Facturación) | `receipt` | | `print` | `printer` |
+| `finance` | `finance` | | `bank` | `bank` |
+| `inventory` | `inventory` | | `checkin` | `checkin` |
+| `suppliers` | `suppliers` | | `globe` | `globe` |
+| `promoters` | `promoters` | | `database` (Sistema) | `database` |
+| `building` (Empresa) | `building` | | `instagram` | `instagram` |
+| `plan` | `plan` | | `eye-off` | `eyeOff` |
+| `audit` | `audit` | | `chevron-down` | `chevron` |
+| `users` | `users` | | `refresh`, `clock`, `info`, `trash`, `upload`, `download`, `lock`, `image`, `external`, `search`, `plus`, `check`, `edit`, `alert`, `wallet`, `bell`, `menu`, `close`, `logout`, `user` | los mismos nombres |
+
+Los glifos de `calendar`, `receipt`, `users`, `wallet`, `image`, `lock`,
+`refresh`, `clock`, `info`, `search`, `edit`, `trash`, `download`, `upload`,
+`external`, `bell`, `menu`, `close`, `logout`, `plus`, `check` y `alert` son
+los que la librería ya tenía: no se pisan para no cambiar pantallas existentes.
+
+### Preset, hojas CSS y tipos
+
+- **`owncodingContent`** (Tailwind 3.4 ignora el `content` del preset): ver el
+  arranque del README.
+- **`tokens.css` / `base.css` / `styles.css`**: ver el arranque del README.
+- **Tipos `.d.ts`**: `package.json` declara `types` y la condición `types` del
+  `exports`; `npm run build` copia `types/index.d.ts` a `dist/index.d.ts`. Los
+  tipos son aditivos: la app los consume sin cambiar su código.
+
+
+
 ## Estructura
 
 ```
 src/components/   objetos portables (ui.jsx = primitivas y objetos)
 src/utils/        lógica compartida pura (moneda, fechas, teléfono, nombre, bancos, tabla, cn)
 src/printing/     estado de impresoras y trabajos (puro)
-src/styles/       tokens.css
+src/styles/       tokens.css (solo variables) · base.css (base opt-in) · styles.css (las dos)
+types/            declaraciones .d.ts escritas a mano (el build las copia a dist/)
 docs/             REGLAS.md · V2.md · MODOS-DE-TRABAJO.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
-scripts/build.mjs build (esbuild → dist/index.js + dist/styles.css)
-test/             smoke de render (vitest + renderToStaticMarkup) y lógica
+scripts/build.mjs build (esbuild → dist/index.js + dist/index.d.ts + dist/styles.css + tokens.css/base.css)
+test/             smoke de render (vitest + renderToStaticMarkup), lógica y contrato del paquete
 ```
 
 ## Alimentar la biblioteca
@@ -443,7 +608,9 @@ traerlo).
   (`PersonaChip`/`UsuarioIdentidad`). El `Avatar` de iniciales/color e imagen
   con caída ya vive acá; falta la cadena foto local → foto de identidad →
   iniciales.
-- **Tipos:** el paquete se distribuye en JS/JSX; falta generar `.d.ts`.
+- **Tipos:** el paquete publica `dist/index.d.ts` con los objetos principales
+  (props de uso real). Sigue pendiente que los tipos sean exhaustivos y se
+  generen desde el código (hoy se escriben a mano en `types/index.d.ts`).
 - **Adopción por app:** migrar MobOS (y luego ScaleOS, LedBox, PagaYa) a
   consumir el paquete sin romper nada. Ver `docs/MODOS-DE-TRABAJO.md`.
 - Objetos de MobOS que aún no se portaron: `ComprobantePreview`,

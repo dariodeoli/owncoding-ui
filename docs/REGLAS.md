@@ -85,6 +85,14 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - Carga: `Skeleton` para placeholders; las pulsaciones decorativas (un ícono,
   un punto de estado) no son skeletons.
 - Errores de pantalla completa: `ErrorState` con reintento.
+- **Estados de negocio:** también se dibujan con `ChipEstado` (un solo chip en
+  toda la app): `borrador`, `enviado`, `aprobado`, `rechazado`, `vencido`,
+  `cobrado`/`pagado`, `por cobrar`, `activo`, `pausado`, `anulado`, `cancelado`
+  y `en revisión`, con la etiqueta y el tono del mapa `ESTADOS_CHIP`
+  (`utils/estadoEquipo.js`). La lectura tolera mayúsculas, acentos, espacios y
+  género («Pagada», «EN REVISIÓN»). La app no copia el `<span>` con borde y
+  fondo: usa el chip, pisa `etiqueta`/`tono` si su módulo lo necesita y nunca
+  inventa un estado (uno desconocido cae en «Pendiente»).
 
 ## 4. Datos y tablas
 
@@ -132,6 +140,15 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - Un solo lugar para cada formato: `moneda.js` (`formatGs`, `formatUsd`,
   `montoGs`/`montoUsd`/`montoTexto`), `fecha.js` (24 h, vacío explícito,
   nunca “Invalid Date”), `telefono.js` (`whatsappUrl` arma el único enlace).
+- **Símbolo del guaraní configurable:** el default es `Gs 1.234.567` (sin
+  punto); la app que escribe distinto pasa `{ simbolo: 'Gs.' }` (o `'₲'`) por
+  llamada a `formatGs`/`montoTexto`/`Money`/`CeldaMoneda`/`MoneyInput`
+  (`symbol`)/`PlanPagos`/`DocumentoImpresion`/`ImporteDelta`. No se arma el
+  prefijo a mano ni se copia el mapa de símbolos (`SIMBOLOS_MONEDA`).
+- **Zona horaria explícita:** `fechaHora`/`fechaDia`/`fechaHoraCorta`/
+  `fechaCorta` aceptan `{ timeZone }` (p. ej. `America/Asuncion`) para que el
+  servidor y el cliente dibujen el mismo día; sin zona se usa la del navegador.
+  Una clave `YYYY-MM-DD` es un día de calendario y no se corre de zona.
 - Prohibido `toLocaleString` de dinero/fechas por pantalla y los helpers
   locales (`fmt`, `fecha`, `precio`).
 - Los montos y las fechas no se convierten ni se inventan: dato ausente → texto
@@ -141,6 +158,21 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 
 - Colores, tipografía y sombras salen del preset + `styles.css`; prohibido
   hardcodear colores o usar estilos inline salvo valores dinámicos.
+- **Hojas separadas (22-09-2026):** `tokens.css` trae **solo variables**
+  (importable en una app con diseño propio sin que le toque `html`/`body`);
+  `base.css` es la base global opt-in (`html`, `body`, tipografías, foco,
+  placeholders, tabulares, `.pin-oculto` y `@media print` de
+  `DocumentoImpresion`); `styles.css` es las dos concatenadas (compatibilidad
+  total con las apps que ya lo importan).
+- **Tailwind — `owncodingContent`:** el preset **no alcanza** en Tailwind 3.4
+  (el `content` de un preset se ignora): la app suma `owncodingContent` a su
+  propio `content` o los componentes se purgan en silencio (íconos gigantes).
+- **Íconos:** un solo set (`Icon`, 78 glifos, `ICONOS`) con el trazo de la
+  librería; los nombres del panel de LedBox ya existen (mapa en el README) y no
+  se renombran glifos existentes. Un nombre desconocido no dibuja nada (nunca
+  un cuadrado roto).
+- **KPI:** `Stat` con `tono` (color del valor por tono semántico) y `nota`
+  (dato al pie); `destacado` sigue siendo la tarjeta de marca.
 - Modo oscuro con la clase `dark` en `<html>`; toda superficie nueva tiene que
   verse bien en ambos temas.
 - Un solo activo de marca por app; los componentes no traen logos.
