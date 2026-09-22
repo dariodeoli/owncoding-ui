@@ -109,3 +109,43 @@ export function largoMaximoMonto(max = LIMITE_MONTO_GENERAL, { decimales = false
   const separadores = Math.floor((digitos - 1) / 3)
   return digitos + separadores + (decimales ? 3 : 0)
 }
+
+// ── Números y signos (tableros, deltas) ─────────────────────────────────────
+// Cantidades con el formato es-PY (separa miles con punto): la usan los
+// gráficos y los contadores para no armar `toLocaleString` por pantalla.
+
+const NUMEROS_FORMATTER = new Intl.NumberFormat('es-PY', { maximumFractionDigits: 0 })
+const NUMEROS_DECIMALES = new Map()
+
+function formateadorNumero(decimales) {
+  const clave = Number(decimales) || 0
+  if (clave <= 0) return NUMEROS_FORMATTER
+  if (!NUMEROS_DECIMALES.has(clave)) {
+    NUMEROS_DECIMALES.set(clave, new Intl.NumberFormat('es-PY', { minimumFractionDigits: clave, maximumFractionDigits: clave }))
+  }
+  return NUMEROS_DECIMALES.get(clave)
+}
+
+/** Cantidad con separador de miles es-PY; el vacío es explícito (no es 0). */
+export function formatoNumero(value, { decimales = 0, vacio = '—' } = {}) {
+  const amount = numeroDe(value)
+  return amount === null ? vacio : formateadorNumero(decimales).format(amount)
+}
+
+/** Signo tipográfico de un importe: `+`, `−` (menos real) o vacío si es 0/ausente. */
+export function signoDe(value) {
+  const amount = numeroDe(value)
+  if (amount === null || amount === 0) return ''
+  return amount > 0 ? '+' : '−'
+}
+
+/**
+ * Importe con signo: `+ Gs 1.200.000` / `− Gs 500.000`. El cero no lleva signo;
+ * un dato ausente devuelve el texto de vacío. No convierte moneda.
+ */
+export function montoConSigno(value, currency = 'PYG', vacio = '—') {
+  const amount = numeroDe(value)
+  if (amount === null) return vacio
+  const signo = signoDe(amount)
+  return signo ? `${signo} ${montoTexto(Math.abs(amount), currency)}` : montoTexto(amount, currency)
+}
