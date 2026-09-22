@@ -1,0 +1,99 @@
+/* ============================================================================
+   OwnCoding UI — tokens de tema
+   Importar después de las directivas de Tailwind:
+     @tailwind base; @tailwind components; @tailwind utilities;
+     @import 'owncoding-ui/styles.css';
+   El tema oscuro se activa con la clase `dark` en <html>.
+   Cada app puede pisar cualquier variable en su propio CSS.
+   ============================================================================ */
+
+:root {
+  /* Paleta clara (valores de referencia: verde MobOS) */
+  --c-paper: 244 247 250;
+  --c-fore: 8 14 26;
+  --c-ink: 255 255 255;
+  --c-ink-950: 244 247 250;
+  --c-ink-900: 233 238 246;
+  --c-ink-800: 233 238 246;
+  --c-ink-700: 224 231 240;
+  --c-ink-600: 203 213 226;
+  --c-ink-500: 148 163 184;
+  --c-mute: 58 70 90;
+  --c-fono: 16 185 129;
+  --c-fono-dark: 5 150 105;
+  --c-fono-light: 5 150 105;
+  --c-fono-glow: 16 185 129;
+  --c-ok: 21 128 61;
+  --c-bad: 185 28 28;
+  --c-warn: 180 83 9;
+  --c-info: 3 105 161;
+  --c-reserved: 109 40 217;
+  --c-onbrand: 4 28 18;
+
+  /* Tokens de superficie */
+  --oc-brand: rgb(var(--c-fono));
+  --oc-canvas: rgb(var(--c-paper));
+  --oc-surface: rgb(var(--c-ink));
+  --oc-border: rgb(var(--c-ink-600));
+  --oc-radius: 1rem;
+}
+
+html.dark {
+  /* Paleta oscura */
+  --c-paper: 9 13 22;
+  --c-fore: 255 255 255;
+  --c-ink: 16 23 34;
+  --c-ink-950: 9 13 22;
+  --c-ink-900: 16 23 34;
+  --c-ink-800: 16 23 34;
+  --c-ink-700: 23 33 49;
+  --c-ink-600: 38 52 72;
+  --c-ink-500: 58 77 103;
+  --c-mute: 138 147 163;
+  --c-fono: 5 241 156;
+  --c-fono-dark: 4 185 120;
+  --c-fono-light: 124 255 201;
+  --c-fono-glow: 5 241 156;
+  --c-ok: 34 197 94;
+  --c-bad: 239 68 68;
+  --c-warn: 245 158 11;
+  --c-info: 125 211 252;
+  --c-reserved: 196 181 253;
+  --c-onbrand: 6 30 20;
+
+  --oc-canvas: rgb(var(--c-paper));
+  --oc-surface: rgb(var(--c-ink));
+  --oc-border: rgb(var(--c-ink-600));
+}
+
+/* Base recomendada (opcional: si la app ya define esto, no la importe) */
+html {
+  -webkit-tap-highlight-color: transparent;
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+body {
+  background: rgb(var(--c-paper));
+  color: rgb(var(--c-fore));
+  -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+}
+h1, h2, h3, nav, button, label {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+}
+h1, h2, h3 {
+  letter-spacing: -.035em;
+  text-wrap: balance;
+}
+input, td, [data-money] {
+  font-variant-numeric: tabular-nums;
+}
+:focus-visible {
+  outline: 2px solid var(--oc-brand);
+  outline-offset: 3px;
+}
+input::placeholder, textarea::placeholder {
+  color: #8197a5;
+}

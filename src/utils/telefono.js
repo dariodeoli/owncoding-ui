@@ -1,0 +1,60 @@
+// Validación de teléfono para WhatsApp y clientes.
+// Paraguay (+595): solo móviles 9XXXXXXXX (9 dígitos después del código).
+// Otros países: entre 6 y 12 dígitos, sin formato estricto.
+
+export function normalizarTelefono(value) {
+  return String(value || '').replace(/[^\d+]/g, '')
+}
+
+// Devuelve el teléfono en formato internacional sin signos (para wa.me).
+export function internationalPhone(value, countryCode = '+595') {
+  let digits = String(value || '').replace(/\D/g, '')
+  const code = String(countryCode || '+595').replace(/\D/g, '') || '595'
+  if (!digits) return ''
+  if (digits.startsWith('00')) digits = digits.slice(2)
+  if (digits.startsWith(code)) return digits
+  if (digits.startsWith('0')) digits = digits.slice(1)
+  return `${code}${digits}`
+}
+
+// Enlace de WhatsApp: número en formato internacional y mensaje escapado.
+// Sin teléfono no hay enlace (''). Es el único lugar donde se arma el `wa.me`.
+export function whatsappUrl(phone, message = '', countryCode = '+595') {
+  const numero = internationalPhone(phone, countryCode)
+  return numero ? `https://wa.me/${numero}?text=${encodeURIComponent(String(message ?? ''))}` : ''
+}
+
+// Entrada de los campos de teléfono: sin letras, espacios ni separadores.
+export function soloDigitos(value, max = 0) {
+  const digits = String(value ?? '').replace(/\D/g, '')
+  return max > 0 ? digits.slice(0, max) : digits
+}
+
+// Código de país editable: siempre con "+" y hasta 4 dígitos (ej. +595, +55).
+export function codigoPais(value) {
+  const digits = soloDigitos(value, 4)
+  return digits ? `+${digits}` : ''
+}
+
+// Teléfono visible en toda la plataforma: SIEMPRE con código de país.
+// Paraguay se agrupa 3-3-3 (9 dígitos); el resto se muestra tal cual.
+export function telefonoVisible(phone, countryCode = '+595') {
+  const code = String(countryCode || '+595').replace(/\D/g, '') || '595'
+  let digits = String(phone || '').replace(/\D/g, '')
+  if (digits.startsWith(code)) digits = digits.slice(code.length)
+  if (digits.startsWith('0')) digits = digits.slice(1)
+  if (!digits) return ''
+  const local = digits.length === 9 ? `${digits.slice(0, 3)} ${digits.slice(3, 6)} ${digits.slice(6)}` : digits
+  return `+${code} ${local}`
+}
+
+export function telefonoValido(value, countryCode = '+595') {
+  const digits = String(value || '').replace(/\D/g, '')
+  if (!digits) return false
+  const code = String(countryCode || '+595').replace(/\D/g, '')
+  const local = digits.startsWith(code) ? digits.slice(code.length) : digits.startsWith('0') ? digits.slice(1) : digits
+  if (code === '595') return /^9\d{8}$/.test(local)
+  return local.length >= 6 && local.length <= 12
+}
+
+export const MENSAJE_TELEFONO = 'Teléfono inválido. Para Paraguay usá un móvil de 9 dígitos, ej: 981 123 456 o +595 971 234567.'
