@@ -93,6 +93,9 @@ export { default as PegarEnlaceToken } from './components/PegarEnlaceToken.jsx'
 export { default as NavLateral } from './components/NavLateral.jsx'
 export { default as MenuDesplegable } from './components/MenuDesplegable.jsx'
 
+// Tema claro/oscuro: la clase `dark` en <html> es el contrato (styles.css)
+export { default as ThemeToggle, aplicarTema, TEMA_CLARO, TEMA_OSCURO } from './components/ThemeToggle.jsx'
+
 // Ajustes (modelo de configuración) e impresión LAN/USB
 export { default as PanelDerecho } from './components/PanelDerecho.jsx'
 export { default as TarjetaAjuste } from './components/TarjetaAjuste.jsx'

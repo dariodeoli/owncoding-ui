@@ -215,7 +215,10 @@ var PATHS = {
   package: "M16.5 9.4 7.5 4.2M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z",
   list: "M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01",
   cart: "M2.5 3h1.6l2.2 10.4a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.3L19.5 7H6M9 19.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM18 19.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z",
-  grid: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"
+  grid: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z",
+  // Tema (claro/oscuro)
+  sun: "M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4",
+  moon: "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"
 };
 function Icon({ name, className, ...props }) {
   const d = PATHS[name];
@@ -1810,28 +1813,87 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
   ] });
 }
 
+// src/components/ThemeToggle.jsx
+import { useSyncExternalStore } from "react";
+import { jsx as jsx22 } from "react/jsx-runtime";
+var TEMA_CLARO = "claro";
+var TEMA_OSCURO = "oscuro";
+var CLAVE_PREDETERMINADA = "owncoding-theme";
+var suscriptores = /* @__PURE__ */ new Set();
+function suscribir(listener) {
+  suscriptores.add(listener);
+  return () => {
+    suscriptores.delete(listener);
+  };
+}
+function leerTema() {
+  return document.documentElement.classList.contains("dark") ? TEMA_OSCURO : TEMA_CLARO;
+}
+function aplicarTema(tema, clave = CLAVE_PREDETERMINADA) {
+  const oscuro = tema === TEMA_OSCURO;
+  document.documentElement.classList.toggle("dark", oscuro);
+  if (clave) {
+    try {
+      window.localStorage.setItem(clave, oscuro ? TEMA_OSCURO : TEMA_CLARO);
+    } catch {
+    }
+  }
+  for (const listener of suscriptores) listener();
+}
+function ThemeToggle({
+  clave = CLAVE_PREDETERMINADA,
+  alCambiar,
+  etiquetaClaro = "Cambiar a modo claro",
+  etiquetaOscuro = "Cambiar a modo oscuro",
+  className
+}) {
+  const tema = useSyncExternalStore(suscribir, leerTema, () => TEMA_CLARO);
+  const oscuro = tema === TEMA_OSCURO;
+  const etiqueta = oscuro ? etiquetaClaro : etiquetaOscuro;
+  return /* @__PURE__ */ jsx22(
+    "button",
+    {
+      type: "button",
+      onClick: () => {
+        const siguiente = oscuro ? TEMA_CLARO : TEMA_OSCURO;
+        aplicarTema(siguiente, clave);
+        alCambiar?.(siguiente);
+      },
+      "aria-label": etiqueta,
+      title: etiqueta,
+      "aria-pressed": oscuro,
+      className: cn(
+        "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition",
+        "hover:border-fono hover:bg-fono/10 hover:text-fore",
+        className
+      ),
+      children: /* @__PURE__ */ jsx22(Icon, { name: oscuro ? "sun" : "moon", className: "h-4 w-4" })
+    }
+  );
+}
+
 // src/components/PanelDerecho.jsx
-import { jsx as jsx22, jsxs as jsxs17 } from "react/jsx-runtime";
+import { jsx as jsx23, jsxs as jsxs17 } from "react/jsx-runtime";
 function PanelDerecho({ children, panel, id, className, classNamePanel }) {
   return /* @__PURE__ */ jsxs17("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
-    /* @__PURE__ */ jsx22("div", { className: "min-w-0 space-y-4", children }),
-    /* @__PURE__ */ jsx22("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
+    /* @__PURE__ */ jsx23("div", { className: "min-w-0 space-y-4", children }),
+    /* @__PURE__ */ jsx23("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
   ] });
 }
 
 // src/components/TarjetaAjuste.jsx
-import { jsx as jsx23, jsxs as jsxs18 } from "react/jsx-runtime";
+import { jsx as jsx24, jsxs as jsxs18 } from "react/jsx-runtime";
 function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, children, className, id }) {
   return /* @__PURE__ */ jsxs18(Card, { id, className: cn("space-y-3", className), children: [
     /* @__PURE__ */ jsxs18("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
       /* @__PURE__ */ jsxs18("div", { className: "min-w-0", children: [
         /* @__PURE__ */ jsxs18("h2", { className: "flex items-center gap-2 font-semibold", children: [
-          icono && /* @__PURE__ */ jsx23(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
+          icono && /* @__PURE__ */ jsx24(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
           titulo2
         ] }),
-        descripcion && /* @__PURE__ */ jsx23("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        descripcion && /* @__PURE__ */ jsx24("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      accion && /* @__PURE__ */ jsx23("div", { className: "shrink-0", children: accion })
+      accion && /* @__PURE__ */ jsx24("div", { className: "shrink-0", children: accion })
     ] }),
     children
   ] });
@@ -1935,7 +1997,7 @@ function agregarEstado(impresoras = [], estados = {}) {
 }
 
 // src/components/AjustesImpresion.jsx
-import { jsx as jsx24, jsxs as jsxs19 } from "react/jsx-runtime";
+import { jsx as jsx25, jsxs as jsxs19 } from "react/jsx-runtime";
 var VACIO = () => ({
   id: null,
   nombre: "",
@@ -2000,34 +2062,34 @@ function AjustesImpresion({
     /* @__PURE__ */ jsxs19("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
       /* @__PURE__ */ jsxs19("div", { className: "min-w-0", children: [
         /* @__PURE__ */ jsxs19("h2", { className: "flex items-center gap-2 font-semibold", children: [
-          /* @__PURE__ */ jsx24(Icon, { name: "printer", className: "h-4 w-4" }),
+          /* @__PURE__ */ jsx25(Icon, { name: "printer", className: "h-4 w-4" }),
           titulo2
         ] }),
-        /* @__PURE__ */ jsx24("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        /* @__PURE__ */ jsx25("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
       /* @__PURE__ */ jsxs19("div", { className: "flex flex-wrap items-center gap-2", children: [
-        /* @__PURE__ */ jsx24(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
+        /* @__PURE__ */ jsx25(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
         onVerificar && /* @__PURE__ */ jsxs19(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
-          /* @__PURE__ */ jsx24(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
+          /* @__PURE__ */ jsx25(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
           "Verificar"
         ] }),
         /* @__PURE__ */ jsxs19(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
-          /* @__PURE__ */ jsx24(Icon, { name: "plus", className: "h-4 w-4" }),
+          /* @__PURE__ */ jsx25(Icon, { name: "plus", className: "h-4 w-4" }),
           "Agregar impresora"
         ] })
       ] })
     ] }),
-    impresoras.length === 0 && /* @__PURE__ */ jsx24("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
-    /* @__PURE__ */ jsx24("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
+    impresoras.length === 0 && /* @__PURE__ */ jsx25("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
+    /* @__PURE__ */ jsx25("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
       const registro = estado?.[impresora.id];
       const tono = TONO_ESTADO[registro?.estado] || "slate";
       return /* @__PURE__ */ jsxs19("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
         /* @__PURE__ */ jsxs19("div", { className: "min-w-0", children: [
           /* @__PURE__ */ jsxs19("p", { className: "flex items-center gap-2 font-medium", children: [
-            /* @__PURE__ */ jsx24(Dot, { color: tono }),
+            /* @__PURE__ */ jsx25(Dot, { color: tono }),
             impresora.nombre || "Impresora",
-            impresora.predeterminada && /* @__PURE__ */ jsx24(Badge, { color: "fono", children: "Predeterminada" }),
-            impresora.activa === false && /* @__PURE__ */ jsx24(Badge, { color: "slate", children: "Inactiva" })
+            impresora.predeterminada && /* @__PURE__ */ jsx25(Badge, { color: "fono", children: "Predeterminada" }),
+            impresora.activa === false && /* @__PURE__ */ jsx25(Badge, { color: "slate", children: "Inactiva" })
           ] }),
           /* @__PURE__ */ jsxs19("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
             conexionDeDestino(impresora.destino) === "cups" ? "USB / cola local" : "LAN",
@@ -2040,78 +2102,78 @@ function AjustesImpresion({
           ] })
         ] }),
         /* @__PURE__ */ jsxs19("div", { className: "flex flex-wrap items-center gap-1", children: [
-          onProbar && /* @__PURE__ */ jsx24(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
-          /* @__PURE__ */ jsx24(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
-          onEliminar && /* @__PURE__ */ jsx24(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
+          onProbar && /* @__PURE__ */ jsx25(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
+          /* @__PURE__ */ jsx25(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
+          onEliminar && /* @__PURE__ */ jsx25(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
         ] })
       ] }, impresora.id);
     }) }),
     form && /* @__PURE__ */ jsxs19("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
       /* @__PURE__ */ jsxs19("div", { className: "grid gap-3 sm:grid-cols-2", children: [
         /* @__PURE__ */ jsxs19("div", { children: [
-          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
-          /* @__PURE__ */ jsx24(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
+          /* @__PURE__ */ jsx25(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
+          /* @__PURE__ */ jsx25(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
         ] }),
         /* @__PURE__ */ jsxs19("div", { children: [
-          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
-          /* @__PURE__ */ jsx24(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
+          /* @__PURE__ */ jsx25(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
+          /* @__PURE__ */ jsx25(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
         ] })
       ] }),
       /* @__PURE__ */ jsxs19("div", { className: "grid gap-3 sm:grid-cols-2", children: [
         /* @__PURE__ */ jsxs19("div", { children: [
-          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
+          /* @__PURE__ */ jsx25(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
           /* @__PURE__ */ jsxs19(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
-            /* @__PURE__ */ jsx24("option", { value: "lan", children: "LAN (impresora de red)" }),
-            /* @__PURE__ */ jsx24("option", { value: "cups", children: "USB / cola local (CUPS)" })
+            /* @__PURE__ */ jsx25("option", { value: "lan", children: "LAN (impresora de red)" }),
+            /* @__PURE__ */ jsx25("option", { value: "cups", children: "USB / cola local (CUPS)" })
           ] })
         ] }),
         form.conexion === "lan" ? /* @__PURE__ */ jsxs19("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
           /* @__PURE__ */ jsxs19("div", { children: [
-            /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-ip", children: "IP" }),
-            /* @__PURE__ */ jsx24(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
+            /* @__PURE__ */ jsx25(Label, { htmlFor: "imp-ip", children: "IP" }),
+            /* @__PURE__ */ jsx25(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
           ] }),
           /* @__PURE__ */ jsxs19("div", { children: [
-            /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
-            /* @__PURE__ */ jsx24(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
+            /* @__PURE__ */ jsx25(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
+            /* @__PURE__ */ jsx25(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
           ] })
         ] }) : /* @__PURE__ */ jsxs19("div", { children: [
-          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-cola", children: "Cola local" }),
-          /* @__PURE__ */ jsx24(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
-          /* @__PURE__ */ jsx24("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
+          /* @__PURE__ */ jsx25(Label, { htmlFor: "imp-cola", children: "Cola local" }),
+          /* @__PURE__ */ jsx25(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
+          /* @__PURE__ */ jsx25("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
         ] })
       ] }),
       /* @__PURE__ */ jsxs19("div", { className: "grid gap-3 sm:grid-cols-3", children: [
         /* @__PURE__ */ jsxs19("div", { children: [
-          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
-          /* @__PURE__ */ jsx24(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx24("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
+          /* @__PURE__ */ jsx25(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
+          /* @__PURE__ */ jsx25(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx25("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
         ] }),
         /* @__PURE__ */ jsxs19("div", { children: [
-          /* @__PURE__ */ jsx24(Label, { htmlFor: "imp-copias", children: "Copias" }),
-          /* @__PURE__ */ jsx24(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
+          /* @__PURE__ */ jsx25(Label, { htmlFor: "imp-copias", children: "Copias" }),
+          /* @__PURE__ */ jsx25(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
         ] }),
         /* @__PURE__ */ jsxs19("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
-          /* @__PURE__ */ jsx24("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
+          /* @__PURE__ */ jsx25("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
           "Predeterminada"
         ] })
       ] }),
-      /* @__PURE__ */ jsx24("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
+      /* @__PURE__ */ jsx25("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
       /* @__PURE__ */ jsxs19("div", { className: "flex flex-wrap justify-end gap-2", children: [
-        /* @__PURE__ */ jsx24(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
-        /* @__PURE__ */ jsx24(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
+        /* @__PURE__ */ jsx25(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
+        /* @__PURE__ */ jsx25(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
       ] })
     ] }),
     /* @__PURE__ */ jsxs19("p", { className: "text-xs text-mute", children: [
       "La impresi\xF3n sale por el ",
-      /* @__PURE__ */ jsx24("b", { className: "text-fore", children: "agente local" }),
+      /* @__PURE__ */ jsx25("b", { className: "text-fore", children: "agente local" }),
       ": instalalo en la computadora que tiene la impresora (LAN o USB conectada) y vinculala con el c\xF3digo. Con el agente ca\xEDdo, los trabajos quedan en cola; nunca se pierden. Ver ",
-      /* @__PURE__ */ jsx24("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
+      /* @__PURE__ */ jsx25("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
       "."
     ] })
   ] });
 }
 
 // src/components/BotonImprimir.jsx
-import { jsx as jsx25, jsxs as jsxs20 } from "react/jsx-runtime";
+import { jsx as jsx26, jsxs as jsxs20 } from "react/jsx-runtime";
 function BotonImprimir({
   onImprimir,
   estado = null,
@@ -2125,10 +2187,10 @@ function BotonImprimir({
   const texto = enCurso ? etiquetaTrabajo(estado) : etiqueta;
   return /* @__PURE__ */ jsxs20("span", { className: cn("inline-flex items-center gap-2", className), children: [
     /* @__PURE__ */ jsxs20(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
-      /* @__PURE__ */ jsx25(Icon, { name: icono, className: "h-4 w-4" }),
+      /* @__PURE__ */ jsx26(Icon, { name: icono, className: "h-4 w-4" }),
       texto
     ] }),
-    estado && !enCurso && /* @__PURE__ */ jsx25(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
+    estado && !enCurso && /* @__PURE__ */ jsx26(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
   ] });
 }
 
@@ -2224,7 +2286,7 @@ function sugerenciasDeBanco(texto, catalogo = BANCOS_PARAGUAY) {
 
 // src/components/BancoLogo.jsx
 import { useState as useState8 } from "react";
-import { jsx as jsx26 } from "react/jsx-runtime";
+import { jsx as jsx27 } from "react/jsx-runtime";
 function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseAssets = "/bancos", marcas = {} }) {
   const [fallo, setFallo] = useState8(false);
   const texto = String(banco || "").trim();
@@ -2233,11 +2295,11 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
   const marca = registro.tipo === "marca" ? registro.marca : null;
   if (marca && marcas[marca]) {
     const Logo = marcas[marca];
-    return /* @__PURE__ */ jsx26("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx26(Logo, {}) });
+    return /* @__PURE__ */ jsx27("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx27(Logo, {}) });
   }
   if (soloCatalogo && registro.generico) return null;
   if (registro.tipo === "archivo" && !fallo) {
-    return /* @__PURE__ */ jsx26("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx26(
+    return /* @__PURE__ */ jsx27("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx27(
       "img",
       {
         src: baseAssets ? `${baseAssets.replace(/\/$/, "")}/${registro.archivo}` : registro.archivo,
@@ -2250,7 +2312,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
   }
   const iniciales = registro.iniciales || inicialesDeBanco(texto);
   const color = registro.color || colorDeBanco(texto);
-  return /* @__PURE__ */ jsx26("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx26(
+  return /* @__PURE__ */ jsx27("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx27(
     "span",
     {
       "aria-hidden": "true",
@@ -2262,7 +2324,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
 }
 
 // src/components/BancoCombobox.jsx
-import { jsx as jsx27, jsxs as jsxs21 } from "react/jsx-runtime";
+import { jsx as jsx28, jsxs as jsxs21 } from "react/jsx-runtime";
 function BancoCombobox({
   id,
   value = "",
@@ -2320,7 +2382,7 @@ function BancoCombobox({
   }
   const listaVisible = abierto && sugerencias.length > 0;
   return /* @__PURE__ */ jsxs21("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx27(
+    /* @__PURE__ */ jsx28(
       Input,
       {
         id,
@@ -2343,7 +2405,7 @@ function BancoCombobox({
         onKeyDown: alTeclear
       }
     ),
-    listaVisible && /* @__PURE__ */ jsx27(
+    listaVisible && /* @__PURE__ */ jsx28(
       "ul",
       {
         id: listaId,
@@ -2351,7 +2413,7 @@ function BancoCombobox({
         role: "listbox",
         "aria-label": "Bancos",
         className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-paper p-1 shadow-xl",
-        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx27("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs21(
+        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx28("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs21(
           "button",
           {
             type: "button",
@@ -2360,8 +2422,8 @@ function BancoCombobox({
             onMouseDown: (event) => event.preventDefault(),
             onClick: () => elegir(banco),
             children: [
-              /* @__PURE__ */ jsx27(BancoLogo, { banco, alto: "h-4", ...logoProps }),
-              /* @__PURE__ */ jsx27("span", { className: "min-w-0 flex-1 truncate", children: banco })
+              /* @__PURE__ */ jsx28(BancoLogo, { banco, alto: "h-4", ...logoProps }),
+              /* @__PURE__ */ jsx28("span", { className: "min-w-0 flex-1 truncate", children: banco })
             ]
           }
         ) }, banco))
@@ -2677,7 +2739,7 @@ function buscarCiudad(texto, limite = 8) {
 }
 
 // src/components/CityAutocomplete.jsx
-import { jsx as jsx28, jsxs as jsxs22 } from "react/jsx-runtime";
+import { jsx as jsx29, jsxs as jsxs22 } from "react/jsx-runtime";
 function CityAutocomplete({
   value = "",
   onSelect,
@@ -2743,7 +2805,7 @@ function CityAutocomplete({
     if (departamento) onSelect?.(value, departamento);
   }
   return /* @__PURE__ */ jsxs22("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx28(
+    /* @__PURE__ */ jsx29(
       Input,
       {
         maxLength,
@@ -2762,7 +2824,7 @@ function CityAutocomplete({
         ...inputProps
       }
     ),
-    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx28("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx28("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs22(
+    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx29("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx29("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs22(
       "button",
       {
         type: "button",
@@ -2770,8 +2832,8 @@ function CityAutocomplete({
         onMouseDown: (event) => event.preventDefault(),
         onClick: () => elegir(fila),
         children: [
-          /* @__PURE__ */ jsx28("span", { className: "truncate font-medium text-fore", children: fila.city }),
-          /* @__PURE__ */ jsx28("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
+          /* @__PURE__ */ jsx29("span", { className: "truncate font-medium text-fore", children: fila.city }),
+          /* @__PURE__ */ jsx29("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
         ]
       }
     ) }, `${fila.city}-${fila.department}`)) })
@@ -2840,7 +2902,7 @@ var TONOS = {
 };
 
 // src/components/SemaforoItem.jsx
-import { jsx as jsx29, jsxs as jsxs23 } from "react/jsx-runtime";
+import { jsx as jsx30, jsxs as jsxs23 } from "react/jsx-runtime";
 function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li", className, ...props }) {
   const config = estadoItem(estado);
   const Etiqueta = como === "div" ? "div" : "li";
@@ -2851,10 +2913,10 @@ function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li",
       "aria-label": etiqueta ? `${etiqueta}: ${config.etiqueta}` : config.etiqueta,
       ...props,
       children: [
-        /* @__PURE__ */ jsx29("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx29(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+        /* @__PURE__ */ jsx30("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx30(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
         /* @__PURE__ */ jsxs23("span", { className: "min-w-0 flex-1", children: [
-          /* @__PURE__ */ jsx29("span", { className: "block truncate text-sm", children: etiqueta }),
-          detalle && /* @__PURE__ */ jsx29("span", { className: "block truncate text-xs text-mute", children: detalle })
+          /* @__PURE__ */ jsx30("span", { className: "block truncate text-sm", children: etiqueta }),
+          detalle && /* @__PURE__ */ jsx30("span", { className: "block truncate text-xs text-mute", children: detalle })
         ] })
       ]
     }
@@ -2862,16 +2924,16 @@ function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li",
 }
 
 // src/components/FilaChecklist.jsx
-import { jsx as jsx30, jsxs as jsxs24 } from "react/jsx-runtime";
+import { jsx as jsx31, jsxs as jsxs24 } from "react/jsx-runtime";
 function FilaChecklist({ etiqueta, estado = "sinVerificar", nota, accion, className }) {
   const config = estadoItem(estado);
   return /* @__PURE__ */ jsxs24("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
-    /* @__PURE__ */ jsx30("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx30(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsx31("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx31(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
     /* @__PURE__ */ jsxs24("div", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx30("p", { className: "truncate text-sm", children: etiqueta }),
-      nota && /* @__PURE__ */ jsx30("p", { className: "mt-0.5 text-xs text-mute", children: nota })
+      /* @__PURE__ */ jsx31("p", { className: "truncate text-sm", children: etiqueta }),
+      nota && /* @__PURE__ */ jsx31("p", { className: "mt-0.5 text-xs text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx30("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
+    /* @__PURE__ */ jsx31("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
     accion
   ] });
 }
@@ -2894,20 +2956,20 @@ function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass"
 }
 
 // src/components/ChipEstado.jsx
-import { jsx as jsx31, jsxs as jsxs25 } from "react/jsx-runtime";
+import { jsx as jsx32, jsxs as jsxs25 } from "react/jsx-runtime";
 function ChipEstado({ estado = "pendiente", etiqueta, icono, className }) {
   const config = estadoChip(estado);
   return /* @__PURE__ */ jsxs25("span", { className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono], className), children: [
-    /* @__PURE__ */ jsx31(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+    /* @__PURE__ */ jsx32(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
     etiqueta || config.etiqueta
   ] });
 }
 
 // src/components/ChipsLocks.jsx
-import { jsx as jsx32, jsxs as jsxs26 } from "react/jsx-runtime";
+import { jsx as jsx33, jsxs as jsxs26 } from "react/jsx-runtime";
 function ChipsLocks({ locks = [], conEstado = false, className }) {
   if (!locks.length) return null;
-  return /* @__PURE__ */ jsx32("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
+  return /* @__PURE__ */ jsx33("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
     const config = estadoLock(lock.estado);
     const etiqueta = lock.etiqueta || LOCKS_DISPOSITIVO[lock.clave] || lock.clave;
     return /* @__PURE__ */ jsxs26(
@@ -2916,7 +2978,7 @@ function ChipsLocks({ locks = [], conEstado = false, className }) {
         className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono]),
         title: lock.detalle || `${etiqueta}: ${config.etiqueta}`,
         children: [
-          /* @__PURE__ */ jsx32(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx33(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
           etiqueta,
           conEstado ? ` \xB7 ${config.etiqueta}` : ""
         ]
@@ -2927,7 +2989,7 @@ function ChipsLocks({ locks = [], conEstado = false, className }) {
 }
 
 // src/components/MedidorBateria.jsx
-import { jsx as jsx33, jsxs as jsxs27 } from "react/jsx-runtime";
+import { jsx as jsx34, jsxs as jsxs27 } from "react/jsx-runtime";
 function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, className }) {
   const hay = porcentaje !== null && porcentaje !== void 0 && porcentaje !== "" && Number.isFinite(Number(porcentaje));
   const valor = hay ? Number(porcentaje) : null;
@@ -2935,25 +2997,25 @@ function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante 
   const texto = hay ? `${valor}%` : "\u2014";
   const title = hay ? `${etiqueta}: ${valor}%${ciclos ? ` \xB7 ${ciclos} ciclos` : ""}` : `${etiqueta}: sin dato`;
   if (variante === "chip") {
-    return /* @__PURE__ */ jsx33("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: texto });
+    return /* @__PURE__ */ jsx34("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: texto });
   }
   return /* @__PURE__ */ jsxs27("div", { className: cn("space-y-1", className), title, children: [
     /* @__PURE__ */ jsxs27("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx33("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
-      /* @__PURE__ */ jsx33("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
+      /* @__PURE__ */ jsx34("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
+      /* @__PURE__ */ jsx34("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
     ] }),
-    hay ? /* @__PURE__ */ jsx33(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx33(Badge, { color: "slate", children: "Sin dato" })
+    hay ? /* @__PURE__ */ jsx34(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx34(Badge, { color: "slate", children: "Sin dato" })
   ] });
 }
 
 // src/components/GradoBadge.jsx
-import { jsx as jsx34, jsxs as jsxs28 } from "react/jsx-runtime";
+import { jsx as jsx35, jsxs as jsxs28 } from "react/jsx-runtime";
 function GradoBadge({ grado, conDescripcion = false, className }) {
   const config = gradoCondicion(grado);
-  if (!config) return /* @__PURE__ */ jsx34(Badge, { className, children: grado || "Sin grado" });
+  if (!config) return /* @__PURE__ */ jsx35(Badge, { className, children: grado || "Sin grado" });
   return /* @__PURE__ */ jsxs28("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsx34(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
-    conDescripcion && /* @__PURE__ */ jsx34("span", { className: "text-xs text-mute", children: config.descripcion })
+    /* @__PURE__ */ jsx35(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
+    conDescripcion && /* @__PURE__ */ jsx35("span", { className: "text-xs text-mute", children: config.descripcion })
   ] });
 }
 
@@ -2986,7 +3048,7 @@ var iconoDeCategoria = (texto) => normalizarCategoria(texto).icono;
 var etiquetaDeCategoria = (texto) => normalizarCategoria(texto).etiqueta;
 
 // src/components/IconoCategoria.jsx
-import { jsx as jsx35 } from "react/jsx-runtime";
+import { jsx as jsx36 } from "react/jsx-runtime";
 var GLIFOS_CATEGORIA = {
   // Celular: marco redondeado con parlante y botón.
   mobile: "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM10 5h4M11 18.5h2",
@@ -3004,8 +3066,8 @@ var GLIFOS_CATEGORIA = {
 function IconoCategoria({ categoria, icono, className, ...props }) {
   const glifo = icono || iconoDeCategoria(categoria);
   const clases = cn("shrink-0", className || "h-5 w-5");
-  if (!GLIFOS_CATEGORIA[glifo]) return /* @__PURE__ */ jsx35(Icon, { name: glifo, className: clases, ...props });
-  return /* @__PURE__ */ jsx35(
+  if (!GLIFOS_CATEGORIA[glifo]) return /* @__PURE__ */ jsx36(Icon, { name: glifo, className: clases, ...props });
+  return /* @__PURE__ */ jsx36(
     "svg",
     {
       viewBox: "0 0 24 24",
@@ -3017,13 +3079,13 @@ function IconoCategoria({ categoria, icono, className, ...props }) {
       "aria-hidden": "true",
       className: clases,
       ...props,
-      children: /* @__PURE__ */ jsx35("path", { d: GLIFOS_CATEGORIA[glifo] })
+      children: /* @__PURE__ */ jsx36("path", { d: GLIFOS_CATEGORIA[glifo] })
     }
   );
 }
 
 // src/components/TileEquipo.jsx
-import { Fragment as Fragment3, jsx as jsx36, jsxs as jsxs29 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx37, jsxs as jsxs29 } from "react/jsx-runtime";
 function TileEquipo({
   modelo,
   imei,
@@ -3041,38 +3103,38 @@ function TileEquipo({
   const raiz = cn("w-full space-y-2.5 rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left", onOpen && "transition hover:border-fono active:scale-[.995]", className);
   const contenido = /* @__PURE__ */ jsxs29(Fragment3, { children: [
     /* @__PURE__ */ jsxs29("div", { className: "flex items-start gap-3", children: [
-      foto ? /* @__PURE__ */ jsx36("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx36("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx36(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
+      foto ? /* @__PURE__ */ jsx37("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx37("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx37(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
       /* @__PURE__ */ jsxs29("div", { className: "min-w-0 flex-1", children: [
-        /* @__PURE__ */ jsx36("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
-        imei && /* @__PURE__ */ jsx36("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
-        detalle && /* @__PURE__ */ jsx36("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
+        /* @__PURE__ */ jsx37("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
+        imei && /* @__PURE__ */ jsx37("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
+        detalle && /* @__PURE__ */ jsx37("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
       ] }),
-      estado && /* @__PURE__ */ jsx36(ChipEstado, { estado })
+      estado && /* @__PURE__ */ jsx37(ChipEstado, { estado })
     ] }),
     /* @__PURE__ */ jsxs29("div", { className: "flex flex-wrap items-center gap-2", children: [
-      grado && /* @__PURE__ */ jsx36(GradoBadge, { grado }),
-      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx36(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
-      locks?.length ? /* @__PURE__ */ jsx36(ChipsLocks, { locks }) : null
+      grado && /* @__PURE__ */ jsx37(GradoBadge, { grado }),
+      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx37(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
+      locks?.length ? /* @__PURE__ */ jsx37(ChipsLocks, { locks }) : null
     ] }),
-    acciones && /* @__PURE__ */ jsx36("div", { className: "flex flex-wrap gap-2", children: acciones })
+    acciones && /* @__PURE__ */ jsx37("div", { className: "flex flex-wrap gap-2", children: acciones })
   ] });
   if (onOpen) {
-    return /* @__PURE__ */ jsx36("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
+    return /* @__PURE__ */ jsx37("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
   }
-  return /* @__PURE__ */ jsx36("article", { className: raiz, children: contenido });
+  return /* @__PURE__ */ jsx37("article", { className: raiz, children: contenido });
 }
 
 // src/components/Stepper.jsx
-import { jsx as jsx37, jsxs as jsxs30 } from "react/jsx-runtime";
+import { jsx as jsx38, jsxs as jsxs30 } from "react/jsx-runtime";
 function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
   if (!pasos.length) return null;
   const esHecho = (paso, indice) => hechos.includes(paso.id ?? indice) || typeof actual === "number" && indice < actual;
   const esActual = (paso, indice) => paso.id !== void 0 ? paso.id === actual : indice === actual;
-  return /* @__PURE__ */ jsx37("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), children: pasos.map((paso, indice) => {
+  return /* @__PURE__ */ jsx38("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), children: pasos.map((paso, indice) => {
     const hecho = esHecho(paso, indice);
     const enCurso = esActual(paso, indice);
     return /* @__PURE__ */ jsxs30("li", { className: "flex items-center gap-2", children: [
-      /* @__PURE__ */ jsx37(
+      /* @__PURE__ */ jsx38(
         "span",
         {
           className: cn(
@@ -3082,7 +3144,7 @@ function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
             !hecho && !enCurso && "border-ink-600 bg-ink-800 text-mute"
           ),
           "aria-hidden": "true",
-          children: hecho ? /* @__PURE__ */ jsx37(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+          children: hecho ? /* @__PURE__ */ jsx38(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
         }
       ),
       /* @__PURE__ */ jsxs30("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
@@ -3092,7 +3154,7 @@ function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
           paso.detalle
         ] })
       ] }),
-      indice < pasos.length - 1 && /* @__PURE__ */ jsx37("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
+      indice < pasos.length - 1 && /* @__PURE__ */ jsx38("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
     ] }, paso.id ?? indice);
   }) });
 }
@@ -3114,7 +3176,7 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 }
 
 // src/components/CodigoQr.jsx
-import { jsx as jsx38 } from "react/jsx-runtime";
+import { jsx as jsx39 } from "react/jsx-runtime";
 function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
   const [imagen, setImagen] = useState11("");
   useEffect5(() => {
@@ -3127,11 +3189,11 @@ function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3dig
     };
   }, [valor, ancho, nivel, margen]);
   if (!imagen) return null;
-  return /* @__PURE__ */ jsx38("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
+  return /* @__PURE__ */ jsx39("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
 }
 
 // src/components/FichaCertificado.jsx
-import { jsx as jsx39, jsxs as jsxs31 } from "react/jsx-runtime";
+import { jsx as jsx40, jsxs as jsxs31 } from "react/jsx-runtime";
 function FichaCertificado({
   empresa,
   modelo,
@@ -3154,18 +3216,18 @@ function FichaCertificado({
   return /* @__PURE__ */ jsxs31("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
     /* @__PURE__ */ jsxs31("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
       /* @__PURE__ */ jsxs31("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx39("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
-        /* @__PURE__ */ jsx39("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
+        /* @__PURE__ */ jsx40("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
+        /* @__PURE__ */ jsx40("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
       ] }),
-      /* @__PURE__ */ jsx39(ChipEstado, { estado: "pass" })
+      /* @__PURE__ */ jsx40(ChipEstado, { estado: "pass" })
     ] }),
     /* @__PURE__ */ jsxs31("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
       /* @__PURE__ */ jsxs31("div", { className: "min-w-0 space-y-3", children: [
         /* @__PURE__ */ jsxs31("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
-          /* @__PURE__ */ jsx39(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
-          /* @__PURE__ */ jsx39(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx39(GradoBadge, { grado }) : "Sin grado asignado" }),
-          /* @__PURE__ */ jsx39(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx39(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
-          /* @__PURE__ */ jsx39(
+          /* @__PURE__ */ jsx40(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
+          /* @__PURE__ */ jsx40(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx40(GradoBadge, { grado }) : "Sin grado asignado" }),
+          /* @__PURE__ */ jsx40(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx40(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
+          /* @__PURE__ */ jsx40(
             FilaDato,
             {
               etiqueta: "Checklist",
@@ -3178,18 +3240,18 @@ function FichaCertificado({
             }
           )
         ] }),
-        locks.length ? /* @__PURE__ */ jsx39(ChipsLocks, { locks, conEstado: true }) : null,
+        locks.length ? /* @__PURE__ */ jsx40(ChipsLocks, { locks, conEstado: true }) : null,
         /* @__PURE__ */ jsxs31("p", { className: "text-xs text-mute", children: [
           verificadoPor ? `Verificado por ${verificadoPor}` : "Verificaci\xF3n pendiente",
           verificadoAt ? ` \xB7 ${verificadoAt}` : ""
         ] })
       ] }),
       enlace ? /* @__PURE__ */ jsxs31("div", { className: "flex flex-col items-center gap-2", children: [
-        /* @__PURE__ */ jsx39(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
-        /* @__PURE__ */ jsx39("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
+        /* @__PURE__ */ jsx40(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
+        /* @__PURE__ */ jsx40("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
       ] }) : null
     ] }),
-    acciones ? /* @__PURE__ */ jsx39("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
+    acciones ? /* @__PURE__ */ jsx40("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
   ] });
 }
 
@@ -3917,6 +3979,8 @@ export {
   TAMANOS_CAMPO,
   TAMANOS_MODAL,
   TAMANO_MODAL_PREDETERMINADO,
+  TEMA_CLARO,
+  TEMA_OSCURO,
   TIPOS_PRUEBA,
   TIPOS_TICKET_PRUEBA,
   TONOS,
@@ -3924,6 +3988,7 @@ export {
   TarjetaAjuste,
   TaxIdField,
   Textarea,
+  ThemeToggle,
   TileEquipo,
   ToastProvider,
   UMBRAL_BATERIA_ATENCION,
@@ -3931,6 +3996,7 @@ export {
   VARIANTES_CORTE,
   agregarEstado,
   anchoParaLargo,
+  aplicarTema,
   bloqueFirma,
   buscarCiudad,
   buscarEnCatalogo,

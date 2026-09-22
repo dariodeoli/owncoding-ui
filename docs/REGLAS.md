@@ -216,6 +216,17 @@ compatibilidad).
   verse bien en ambos temas.
 - Un solo activo de marca por app; los componentes no traen logos.
 
+### Tema (claro/oscuro, #1)
+
+`ThemeToggle` es el único control de tema: alterna la clase `dark` en `<html>`
+(el contrato de `styles.css`), persiste en `localStorage[clave]` (clave por
+prop; sin clave no persiste) y avisa por `alCambiar(tema)`. La app aplica la
+preferencia guardada antes del primer pintado con `aplicarTema(tema, clave)`;
+el control lee la clase vigente, así varios toggles comparten el mismo estado y
+no hay parpadeo. Iconos sol/luna y etiqueta de la acción accesible
+(`etiquetaClaro`/`etiquetaOscuro`, `aria-label` + `title`, estado con
+`aria-pressed`).
+
 ### Iconos (#1)
 
 Set único **`Icon`** (`name` + `className`): no se incrustan SVG sueltos en los
