@@ -4,6 +4,41 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Sin publicar — cosecha de PagaYa (#1)
+
+Portado de PagaYa (`app/tokens.css`, `docs/ui-kit.md`, `components/app-icon.tsx`,
+`lib/shared/inputs.ts`, `components/fields/tax-id-field.tsx` y
+`lib/hooks/use-dialog.ts`). Sin subir versión ni tag: la versión la decide el
+integrador. Todas las reglas quedan en `docs/REGLAS.md`.
+
+- **`TaxIdField` (RUC paraguayo):** campo de identificación fiscal con
+  `taxIdValid` / `normalizeTaxId` (más `taxIdGenericoValid`,
+  `taxIdValidoParaPais` y `limpiarTaxId`) en `utils/taxId.js`. La consulta de
+  razón social es un callback de la app
+  (`onBuscarRazonSocial` / `onAplicarRazonSocial`): la librería no hace `fetch`.
+  `FormField` ahora dibuja el mensaje con `id` para enlazarlo por
+  `aria-describedby`.
+- **Iconos de pago y operación:** se suman a `Icon` los glifos que faltaban
+  (`home`, `arrow`, `link`, `play`, `pause`, `archive`, `call`, `pin`, `code`,
+  `qr`, `transfer`, `subscription`, `card`, `terminal` y `nfc`) sin renombrar
+  los existentes; `building`, `mail`, `bank` y `backspace` ya estaban en la
+  librería y conservan su glifo (paridad #253). Las equivalencias con `AppIcon`
+  de PagaYa quedan documentadas en `docs/REGLAS.md` §8.
+- **`ThemeToggle`:** único control de tema sobre la clase `dark` de la
+  librería, con persistencia configurable por prop (`clave`), etiquetas
+  accesibles e iconos sol/luna. `aplicarTema(tema, clave)` queda exportada para
+  que la app restaure la preferencia antes del primer pintado.
+- **Sistema `--ds-*`:** espaciado, radios, tipografía, elevación, halos,
+  gradientes y ritmo de contenedores del rediseño de PagaYa, con el contrato de
+  densidad `--ds-row: 54px` / `--ds-cell-min: 150px` y la regla «se miden, no
+  se declaran». Aditivo: ningún token existente cambia de valor.
+- **`SectionState`:** vacío, cargando o error en un solo objeto, compacto y con
+  acción o reintento; compone `EmptyState`, `Skeleton` y `ErrorState` en vez de
+  duplicar su markup.
+- **`useDialogFocusTrap`:** scroll bloqueado, foco inicial, ciclo de Tab, `Esc`
+  y devolución del foco en un hook compartido por `Modal` y `Drawer` (antes
+  estaba copiado en cada uno).
+
 ## v0.38.0 — 2026-09-26
 
 - **Abastecimiento F5 — recepción e incidencias (#250):**
@@ -690,7 +725,6 @@ el README. Sin cambios incompatibles.
   local (como los `dueAt` del API) y no como medianoche UTC, que en Asunción
   mostraba el día anterior; un día inexistente (31/9) sigue siendo inválido.
 - 30 tests nuevos (86 en total) y `dist/` regenerado.
-
 ## v0.12.0 — 2026-09-22
 
 - **Informe público (#240):** `FichaCertificado` — tarjeta del informe de
