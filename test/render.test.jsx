@@ -32,6 +32,7 @@ import {
   Switch,
   Textarea,
   TileEquipo,
+  VistaPreviaPapel,
 } from '../src/index.js'
 import { BotonDentroCampo } from '../src/index.js'
 import { CELDA_DATO, CELDA_ENCABEZADO, CELDA_NUMERO, ROTULO_DATO, ROTULO_SECCION } from '../src/index.js'
@@ -235,5 +236,15 @@ describe('render de los objetos base', () => {
     const etiquetaPropia = renderToStaticMarkup(<ChipEstado estado="vencido" etiqueta="Pago vencido" tono="warn" />)
     expect(etiquetaPropia).toContain('Pago vencido')
     expect(etiquetaPropia).toContain('border-warn/30')
+  })
+
+  test('la vista previa del papel usa el ancho real del formato (#241)', () => {
+    const previa = renderToStaticMarkup(<VistaPreviaPapel formato="thermal-80" contenido="<p>Hola</p>" titulo="Vista previa del comprobante" />)
+    expect(previa).toContain('max-w-[302px]')
+    expect(previa).toContain('mx-auto')
+    expect(previa).toContain('title="Vista previa del comprobante"')
+    expect(renderToStaticMarkup(<VistaPreviaPapel formato="a4" contenido="<p>A4</p>" />)).toContain('max-w-[794px]')
+    expect(renderToStaticMarkup(<VistaPreviaPapel formato="thermal-58" contenido="x" />)).toContain('max-w-[219px]')
+    expect(renderToStaticMarkup(<VistaPreviaPapel formato="desconocido" contenido="x" />)).not.toContain('mx-auto')
   })
 })

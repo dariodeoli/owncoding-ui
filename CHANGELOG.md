@@ -58,6 +58,20 @@ integrador decide el número final).
   construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
   `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
 
+## v0.14.5 — 2026-09-22
+
+- **`VistaPreviaPapel` + `ANCHOS_PAPEL` (preview v2, #241):** la vista previa
+  del documento impreso con el ancho real del papel (mm a 96 dpi): `thermal-80`
+  (302 px), `thermal-58` (219 px), `thermal-55` (208 px) y `a4` (794 px), con
+  centro automático y alto configurable. Cierra el combo del informe junto a
+  `FichaCertificado`, `CodigoQr` y `qrDataUrl`.
+- **Resumen de lo nuevo de la línea v0.14** (todo incluido en esta versión):
+  `tools/auto-ht.sh` y la política automática de integración (v0.14.3/2),
+  `GradoBadge` y `MedidorBateria` —con `mostrarEtiqueta` en el chip— (v0.10.0 /
+  v0.14.4), `CodigoQr` + `qrDataUrl` (v0.12.0), `FichaCertificado` (v0.12.0) y
+  `VistaPreviaPapel` (v0.14.5). Props en `docs/REGLAS.md` §8 bis; adopción en
+  `docs/V2.md`.
+
 ## v0.14.4 — 2026-09-22
 
 - **`MedidorBateria` con `mostrarEtiqueta`:** el chip puede mostrar la palabra
