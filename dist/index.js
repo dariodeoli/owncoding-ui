@@ -18,6 +18,16 @@ var GS_FORMATTER = new Intl.NumberFormat("es-PY", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 0
 });
+var SIMBOLO_PYG = "Gs";
+var SIMBOLOS_MONEDA = { PYG: "Gs", USD: "US$", BRL: "R$", EUR: "\u20AC", USDT: "USDT" };
+function simboloDe(opciones) {
+  const crudo = typeof opciones === "string" ? opciones : opciones?.simbolo;
+  return String(crudo ?? "").trim() || SIMBOLO_PYG;
+}
+function opcionesDeVacio(vacio, opciones) {
+  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio ?? "\u2014", simbolo: vacio.simbolo };
+  return { vacio: vacio ?? "\u2014", simbolo: opciones?.simbolo };
+}
 var LIMITE_MONTO_GENERAL = 1e10;
 var LIMITE_MONTO_VENTAS = 99e9;
 function excedeMonto(value, limite = LIMITE_MONTO_GENERAL) {
@@ -30,9 +40,9 @@ var USD_FORMATTER = new Intl.NumberFormat("es-PY", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
-function formatGs(value) {
+function formatGs(value, opciones) {
   const amount = Number(value);
-  return `Gs ${GS_FORMATTER.format(Number.isFinite(amount) ? Math.round(amount) : 0)}`;
+  return `${simboloDe(opciones)} ${GS_FORMATTER.format(Number.isFinite(amount) ? Math.round(amount) : 0)}`;
 }
 function formatGsInput(value) {
   const digits = String(value ?? "").replace(/\D/g, "");
@@ -63,19 +73,22 @@ function formatUsd(value) {
   const amount = Number(value);
   return `USD ${USD_FORMATTER.format(Number.isFinite(amount) ? amount : 0)}`;
 }
-function formatMoney(value, currency = "PYG") {
-  return currency === "USD" ? formatUsd(value) : formatGs(value);
+function formatMoney(value, currency = "PYG", opciones) {
+  return currency === "USD" ? formatUsd(value) : formatGs(value, opciones);
 }
-function montoGs(value, vacio = "\u2014") {
+function montoGs(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, simbolo } = opcionesDeVacio(vacio, opciones);
   const amount = numeroDe(value);
-  return amount === null ? vacio : formatGs(amount);
+  return amount === null ? vacioFinal : formatGs(amount, { simbolo });
 }
-function montoUsd(value, vacio = "\u2014") {
+function montoUsd(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, simbolo } = opcionesDeVacio(vacio, opciones);
   const amount = numeroDe(value);
-  return amount === null ? vacio : `US$ ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  const prefijo = String(simbolo ?? "").trim() || SIMBOLOS_MONEDA.USD;
+  return amount === null ? vacioFinal : `${prefijo} ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 }
-function montoTexto(value, currency = "PYG", vacio = "\u2014") {
-  return currency === "USD" ? montoUsd(value, vacio) : montoGs(value, vacio);
+function montoTexto(value, currency = "PYG", vacio = "\u2014", opciones) {
+  return currency === "USD" ? montoUsd(value, vacio, opciones) : montoGs(value, vacio, opciones);
 }
 function numeroDe(value) {
   if (value === null || value === void 0 || value === "") return null;
@@ -106,11 +119,12 @@ function signoDe(value) {
   if (amount === null || amount === 0) return "";
   return amount > 0 ? "+" : "\u2212";
 }
-function montoConSigno(value, currency = "PYG", vacio = "\u2014") {
+function montoConSigno(value, currency = "PYG", vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal } = opcionesDeVacio(vacio, opciones);
   const amount = numeroDe(value);
-  if (amount === null) return vacio;
+  if (amount === null) return vacioFinal;
   const signo = signoDe(amount);
-  return signo ? `${signo} ${montoTexto(Math.abs(amount), currency)}` : montoTexto(amount, currency);
+  return signo ? `${signo} ${montoTexto(Math.abs(amount), currency, "\u2014", opciones)}` : montoTexto(amount, currency, "\u2014", opciones);
 }
 
 // src/utils/tamanos.js
@@ -156,6 +170,62 @@ var TAMANOS_MODAL = {
   // editores y pantallas grandes
 };
 var TAMANO_MODAL_PREDETERMINADO = "formulario";
+
+// src/utils/tonos.js
+var TONOS = {
+  punto: {
+    ok: "bg-ok/15 text-ok",
+    warn: "bg-warn/15 text-warn",
+    bad: "bg-bad/15 text-bad",
+    mute: "bg-ink-700 text-mute",
+    info: "bg-info/15 text-info",
+    pass: "bg-pass/15 text-pass",
+    fono: "bg-fono/15 text-fono-light"
+  },
+  chip: {
+    ok: "border-ok/30 bg-ok/10 text-ok",
+    warn: "border-warn/30 bg-warn/10 text-warn",
+    bad: "border-bad/30 bg-bad/10 text-bad",
+    mute: "border-ink-600 bg-ink-800/40 text-mute",
+    info: "border-info/30 bg-info/10 text-info",
+    pass: "border-pass/30 bg-pass/10 text-pass",
+    fono: "border-fono/30 bg-fono/10 text-fono-light"
+  },
+  texto: {
+    ok: "text-ok",
+    warn: "text-warn",
+    bad: "text-bad",
+    mute: "text-mute",
+    info: "text-info",
+    pass: "text-pass",
+    fono: "text-fono-light"
+  }
+};
+var TONOS_ALIAS = {
+  neutral: "mute",
+  neutro: "mute",
+  accent: "info",
+  acento: "info",
+  danger: "bad",
+  error: "bad",
+  success: "ok",
+  warning: "warn"
+};
+function tonoCanonico(valor) {
+  const clave = String(valor ?? "").trim().toLowerCase();
+  if (!clave) return "mute";
+  const canonico = TONOS_ALIAS[clave] || clave;
+  return TONOS.punto[canonico] ? canonico : "mute";
+}
+function puntoDeTono(valor) {
+  return TONOS.punto[tonoCanonico(valor)];
+}
+function chipDeTono(valor) {
+  return TONOS.chip[tonoCanonico(valor)];
+}
+function textoDeTono(valor) {
+  return TONOS.texto[tonoCanonico(valor)];
+}
 
 // src/components/Icon.jsx
 import { jsx } from "react/jsx-runtime";
@@ -220,8 +290,35 @@ var PATHS = {
   package: "M16.5 9.4 7.5 4.2M21 16V8a2 2 0 0 0-1-1.7l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.7l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z",
   list: "M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01",
   cart: "M2.5 3h1.6l2.2 10.4a1.6 1.6 0 0 0 1.6 1.3h8.6a1.6 1.6 0 0 0 1.6-1.3L19.5 7H6M9 19.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0ZM18 19.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z",
-  grid: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z"
+  grid: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z",
+  // ── Módulos y acciones portados del panel de LedBox (AdminIcons, 22-09-2026)
+  // Los nombres son estables y la app no necesita un mapa propio; el mapa
+  // LedBox → librería está en el README.
+  overview: "M4.5 3h6A1.5 1.5 0 0 1 12 4.5v6A1.5 1.5 0 0 1 10.5 12h-6A1.5 1.5 0 0 1 3 10.5v-6A1.5 1.5 0 0 1 4.5 3ZM15 3h6a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 21 12h-6a1.5 1.5 0 0 1-1.5-1.5v-6A1.5 1.5 0 0 1 15 3ZM15 13.5h6a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5h-6a1.5 1.5 0 0 1-1.5-1.5v-6a1.5 1.5 0 0 1 1.5-1.5ZM4.5 13.5h6A1.5 1.5 0 0 1 12 15v6a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 3 21v-6a1.5 1.5 0 0 1 1.5-1.5Z",
+  events: "M4.5 5h15A1.5 1.5 0 0 1 21 6.5v14a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 20.5v-14A1.5 1.5 0 0 1 4.5 5ZM8 3v4M16 3v4M3 10.5h18",
+  clients: "M12.2 8a3.2 3.2 0 1 1-6.4 0 3.2 3.2 0 0 1 6.4 0ZM3.5 20a5.5 5.5 0 0 1 11 0M16 10.8a3 3 0 1 0 0-5.6M18 19.8a5.4 5.4 0 0 0-2.8-4.6",
+  leads: "M4 5h16l-6.2 7.2V20l-3.6-2v-5.8z",
+  budgets: "M6 3h8l4 4v14H6zM14 3v4h4M9 12.5h6M9 16h4",
+  finance: "M4.5 6h15A2 2 0 0 1 21.5 8v8a2 2 0 0 1-2 2h-15a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2ZM12 14.6a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2ZM6 9.8v4.4M18 9.8v4.4",
+  inventory: "M3.5 8 12 4l8.5 4v8L12 20l-8.5-4zM3.5 8 12 12l8.5-4M12 12v8",
+  suppliers: "M3 7h11v9H3zM14 10h3.6L21 13.2V16h-7zM8.7 18.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0ZM18.7 18.4a1.7 1.7 0 1 1-3.4 0 1.7 1.7 0 0 1 3.4 0Z",
+  promoters: "M4 10v4h2.6l7.4 4V6l-7.4 4H4zM17 9.2a4 4 0 0 1 0 5.6",
+  building: "M5 20V5.5A1.5 1.5 0 0 1 6.5 4h7A1.5 1.5 0 0 1 15 5.5V20M15 10h3.5A1.5 1.5 0 0 1 20 11.5V20M3 20h18M8 8h4M8 12h4M8 16h4",
+  plan: "M12 3.6 20 8l-8 4.4L4 8zM4 12.4 12 16.8l8-4.4M4 16.4 12 20.8l8-4.4",
+  audit: "M7 4h8.5L19 7.5V20H7zM15.5 4v3.5H19M9.8 13.6l1.7 1.8 3-3.6M9.8 17.6h4.4",
+  arrowRight: "M4 12h15M13.5 6.5 19.5 12l-6 5.5",
+  arrowLeft: "M20 12H5M10.5 6.5 4.5 12l6 5.5",
+  sun: "M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6",
+  moon: "M20 14.6A8.6 8.6 0 0 1 9.4 4 8.6 8.6 0 1 0 20 14.6z",
+  power: "M12 4v7.5M7.6 7a6.8 6.8 0 1 0 8.8 0",
+  mail: "M4.5 5.5h15A1.5 1.5 0 0 1 21 7v10a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17V7a1.5 1.5 0 0 1 1.5-1.5ZM4 7.2l8 5.8 8-5.8",
+  bank: "M3.5 9.5 12 4l8.5 5.5M5.5 10v8M10 10v8M14 10v8M18.5 10v8M3 19.5h18",
+  checkin: "M4 12h11M10.5 7.5 15 12l-4.5 4.5M20 4.5v15",
+  globe: "M20 12a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM4 12h16M15.6 12a3.6 8 0 1 1-7.2 0 3.6 8 0 0 1 7.2 0Z",
+  database: "M19.6 6.2a7.6 2.9 0 1 1-15.2 0 7.6 2.9 0 0 1 15.2 0ZM4.4 6.2v11.6c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9V6.2M4.4 12c0 1.6 3.4 2.9 7.6 2.9s7.6-1.3 7.6-2.9",
+  instagram: "M8.1 3.5h7.8a4.6 4.6 0 0 1 4.6 4.6v7.8a4.6 4.6 0 0 1-4.6 4.6H8.1a4.6 4.6 0 0 1-4.6-4.6V8.1a4.6 4.6 0 0 1 4.6-4.6ZM16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM17.2 6.9h.01"
 };
+var ICONOS = Object.keys(PATHS);
 function Icon({ name, className, ...props }) {
   const d = PATHS[name];
   if (!d) return null;
@@ -333,10 +430,9 @@ function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, 
     )) })
   ] });
 }
-var MONEY_SYMBOL = { PYG: "Gs", USD: "US$", BRL: "R$", EUR: "\u20AC", USDT: "USDT" };
 function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
   const isPyg = currency === "PYG";
-  const prefix = symbol || MONEY_SYMBOL[currency] || currency;
+  const prefix = String(symbol ?? "").trim() || SIMBOLOS_MONEDA[currency] || currency;
   const display = isPyg ? formatGsInput(value) : formatUsdInput(value);
   const excede = excedeMonto(value, max);
   const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !isPyg });
@@ -360,10 +456,10 @@ function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className,
     )
   ] });
 }
-function Money({ value, currency = "PYG", className }) {
+function Money({ value, currency = "PYG", simbolo, className }) {
   const amount = Number(value);
   if (!Number.isFinite(amount)) return /* @__PURE__ */ jsx2("span", { className, children: "\u2014" });
-  return /* @__PURE__ */ jsx2("span", { className, children: currency === "USD" ? `US$ ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : formatGs(amount) });
+  return /* @__PURE__ */ jsx2("span", { className, children: currency === "USD" ? `${String(simbolo ?? "").trim() || SIMBOLOS_MONEDA.USD} ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : formatGs(amount, { simbolo }) });
 }
 function Select({ className, children, ...props }) {
   return /* @__PURE__ */ jsx2(
@@ -753,8 +849,9 @@ function FormField({ label, hint, error, children, htmlFor }) {
     error ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "mt-1.5 text-xs text-bad", children: error }) : hint ? /* @__PURE__ */ jsx2("p", { className: "mt-1.5 text-xs text-mute", children: hint }) : null
   ] });
 }
-function Stat({ label, valor, delta, sub, destacado = false, className }) {
+function Stat({ label, valor, delta, sub, nota, tono, destacado = false, className }) {
   const sube = typeof delta === "number" && delta >= 0;
+  const colorValor = destacado ? "text-onbrand" : tono ? textoDeTono(tono) : "text-fore";
   return /* @__PURE__ */ jsxs(
     "div",
     {
@@ -765,7 +862,7 @@ function Stat({ label, valor, delta, sub, destacado = false, className }) {
       ),
       children: [
         /* @__PURE__ */ jsx2("div", { className: cn("text-[11px] font-medium uppercase tracking-wider", destacado ? "text-onbrand/75" : "text-mute"), children: label }),
-        /* @__PURE__ */ jsx2("div", { className: cn("mt-1.5 text-2xl font-semibold tracking-tight md:text-3xl", destacado ? "text-onbrand" : "text-fore"), children: valor }),
+        /* @__PURE__ */ jsx2("div", { className: cn("mt-1.5 text-2xl font-semibold tracking-tight md:text-3xl", colorValor), children: valor }),
         /* @__PURE__ */ jsxs("div", { className: "mt-1.5 flex items-center gap-2 text-xs", children: [
           typeof delta === "number" && /* @__PURE__ */ jsxs("span", { className: cn("font-medium", sube ? "text-ok" : "text-bad"), children: [
             sube ? "" : "",
@@ -774,7 +871,8 @@ function Stat({ label, valor, delta, sub, destacado = false, className }) {
             "%"
           ] }),
           sub && /* @__PURE__ */ jsx2("span", { className: destacado ? "text-onbrand/75" : "text-mute", children: sub })
-        ] })
+        ] }),
+        nota && /* @__PURE__ */ jsx2("div", { className: cn("mt-1 text-[11px]", destacado ? "text-onbrand/75" : "text-mute"), children: nota })
       ]
     }
   );
@@ -804,9 +902,9 @@ function FilaDato({ etiqueta, valor, tono = "", etiquetaComo: Etiqueta = "span",
     /* @__PURE__ */ jsx2(Valor, { className: cn("shrink-0 font-semibold tabular-nums", TONOS_VALOR[tono], valorClassName), children: valor })
   ] });
 }
-function CeldaMoneda({ valor, tono = "", currency = "PYG", className, children }) {
+function CeldaMoneda({ valor, tono = "", currency = "PYG", simbolo, className, children }) {
   return /* @__PURE__ */ jsxs("span", { className: cn("inline-flex shrink-0 items-center justify-end gap-1 font-semibold tabular-nums", TONOS_VALOR[tono], className), children: [
-    /* @__PURE__ */ jsx2(Money, { value: Number(valor || 0), currency }),
+    /* @__PURE__ */ jsx2(Money, { value: Number(valor || 0), currency, simbolo }),
     children
   ] });
 }
@@ -2652,62 +2750,6 @@ var CELDA_NUMERO = "text-right tabular-nums";
 var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
 var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
 
-// src/utils/tonos.js
-var TONOS = {
-  punto: {
-    ok: "bg-ok/15 text-ok",
-    warn: "bg-warn/15 text-warn",
-    bad: "bg-bad/15 text-bad",
-    mute: "bg-ink-700 text-mute",
-    info: "bg-info/15 text-info",
-    pass: "bg-pass/15 text-pass",
-    fono: "bg-fono/15 text-fono-light"
-  },
-  chip: {
-    ok: "border-ok/30 bg-ok/10 text-ok",
-    warn: "border-warn/30 bg-warn/10 text-warn",
-    bad: "border-bad/30 bg-bad/10 text-bad",
-    mute: "border-ink-600 bg-ink-800/40 text-mute",
-    info: "border-info/30 bg-info/10 text-info",
-    pass: "border-pass/30 bg-pass/10 text-pass",
-    fono: "border-fono/30 bg-fono/10 text-fono-light"
-  },
-  texto: {
-    ok: "text-ok",
-    warn: "text-warn",
-    bad: "text-bad",
-    mute: "text-mute",
-    info: "text-info",
-    pass: "text-pass",
-    fono: "text-fono-light"
-  }
-};
-var TONOS_ALIAS = {
-  neutral: "mute",
-  neutro: "mute",
-  accent: "info",
-  acento: "info",
-  danger: "bad",
-  error: "bad",
-  success: "ok",
-  warning: "warn"
-};
-function tonoCanonico(valor) {
-  const clave = String(valor ?? "").trim().toLowerCase();
-  if (!clave) return "mute";
-  const canonico = TONOS_ALIAS[clave] || clave;
-  return TONOS.punto[canonico] ? canonico : "mute";
-}
-function puntoDeTono(valor) {
-  return TONOS.punto[tonoCanonico(valor)];
-}
-function chipDeTono(valor) {
-  return TONOS.chip[tonoCanonico(valor)];
-}
-function textoDeTono(valor) {
-  return TONOS.texto[tonoCanonico(valor)];
-}
-
 // src/utils/estadoEquipo.js
 var ESTADOS_ITEM = {
   ok: { etiqueta: "Bien", tono: "ok", icono: "check" },
@@ -2716,13 +2758,42 @@ var ESTADOS_ITEM = {
   sinVerificar: { etiqueta: "Sin verificar", tono: "mute", icono: "clock" }
 };
 var estadoItem = (clave) => ESTADOS_ITEM[clave] || ESTADOS_ITEM.sinVerificar;
+var REVISION = { etiqueta: "En revisi\xF3n", tono: "info", icono: "refresh" };
+var POR_COBRAR = { etiqueta: "Por cobrar", tono: "warn", icono: "clock" };
 var ESTADOS_CHIP = {
+  // — Dispositivos (#241) —
   pass: { etiqueta: "Certificado", tono: "pass", icono: "check" },
-  revision: { etiqueta: "En revisi\xF3n", tono: "info", icono: "refresh" },
+  revision: REVISION,
+  enrevision: REVISION,
   pendiente: { etiqueta: "Pendiente", tono: "mute", icono: "clock" },
-  falla: { etiqueta: "Con fallas", tono: "bad", icono: "alert" }
+  falla: { etiqueta: "Con fallas", tono: "bad", icono: "alert" },
+  // — Documentos y pipelines —
+  borrador: { etiqueta: "Borrador", tono: "mute", icono: "edit" },
+  enviado: { etiqueta: "Enviado", tono: "info", icono: "send" },
+  aprobado: { etiqueta: "Aprobado", tono: "ok", icono: "check" },
+  rechazado: { etiqueta: "Rechazado", tono: "bad", icono: "close" },
+  anulado: { etiqueta: "Anulado", tono: "mute", icono: "close" },
+  cancelado: { etiqueta: "Cancelado", tono: "bad", icono: "close" },
+  // — Cobros y cuentas —
+  cobrado: { etiqueta: "Cobrado", tono: "pass", icono: "money" },
+  porcobrar: POR_COBRAR,
+  pagado: { etiqueta: "Pagado", tono: "pass", icono: "check" },
+  vencido: { etiqueta: "Vencido", tono: "bad", icono: "alert" },
+  activo: { etiqueta: "Activo", tono: "ok", icono: "check" },
+  pausado: { etiqueta: "Pausado", tono: "warn", icono: "clock" }
 };
-var estadoChip = (clave) => ESTADOS_CHIP[clave] || ESTADOS_CHIP.pendiente;
+function claveDeEstado(valor) {
+  return String(valor ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+}
+function estadoChip(clave) {
+  const normalizada = claveDeEstado(clave);
+  if (ESTADOS_CHIP[normalizada]) return ESTADOS_CHIP[normalizada];
+  if (normalizada.endsWith("a")) {
+    const masculina = `${normalizada.slice(0, -1)}o`;
+    if (ESTADOS_CHIP[masculina]) return ESTADOS_CHIP[masculina];
+  }
+  return ESTADOS_CHIP.pendiente;
+}
 var LOCKS_DISPOSITIVO = {
   icloud: "iCloud / Find My",
   mdm: "MDM",
@@ -2811,12 +2882,21 @@ function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass"
 
 // src/components/ChipEstado.jsx
 import { jsx as jsx30, jsxs as jsxs24 } from "react/jsx-runtime";
-function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, className }) {
+function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, title, className }) {
   const config = estadoChip(estado);
-  return /* @__PURE__ */ jsxs24("span", { className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[tonoCanonico(tono || config.tono)], className), children: [
-    /* @__PURE__ */ jsx30(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
-    etiqueta || config.etiqueta
-  ] });
+  const texto = etiqueta || config.etiqueta;
+  return /* @__PURE__ */ jsxs24(
+    "span",
+    {
+      "data-estado": estado,
+      title: title ?? texto,
+      className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[tonoCanonico(tono || config.tono)], className),
+      children: [
+        /* @__PURE__ */ jsx30(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+        texto
+      ]
+    }
+  );
 }
 
 // src/components/ChipsLocks.jsx
@@ -4165,12 +4245,13 @@ function ImporteDelta({
   formato = "moneda",
   invertir = false,
   vacio = "\u2014",
+  simbolo,
   className
 }) {
   const numero = Number(valor);
   const ausente = valor === null || valor === void 0 || valor === "" || !Number.isFinite(numero);
   if (ausente) return /* @__PURE__ */ jsx45("span", { className: cn("tabular-nums text-mute", className), children: vacio });
-  const texto = formato === "porcentaje" ? `${signoDe(numero) ? `${signoDe(numero)} ` : ""}${formatPercent(Math.abs(numero))} %` : montoConSigno(numero, moneda, vacio);
+  const texto = formato === "porcentaje" ? `${signoDe(numero) ? `${signoDe(numero)} ` : ""}${formatPercent(Math.abs(numero))} %` : montoConSigno(numero, moneda, vacio, { simbolo });
   return /* @__PURE__ */ jsx45(
     "span",
     {
@@ -4451,6 +4532,17 @@ import { useCallback as useCallback2, useEffect as useEffect9, useMemo as useMem
 var ES_PY2 = "es-PY";
 var OPCIONES_HORA = { hour12: false };
 var SOLO_DIA = /^(\d{4})-(\d{2})-(\d{2})$/;
+function diaDeCalendario(value) {
+  if (typeof value !== "string") return null;
+  const partes = SOLO_DIA.exec(value.trim());
+  if (!partes) return null;
+  const anio = Number(partes[1]);
+  const mes = Number(partes[2]);
+  const dia = Number(partes[3]);
+  const fecha = new Date(Date.UTC(anio, mes - 1, dia));
+  const real = fecha.getUTCFullYear() === anio && fecha.getUTCMonth() === mes - 1 && fecha.getUTCDate() === dia;
+  return real ? fecha : null;
+}
 function fechaValida(value) {
   if (!value) return null;
   if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
@@ -4468,24 +4560,42 @@ function fechaValida(value) {
   const fecha = new Date(value);
   return Number.isNaN(fecha.getTime()) ? null : fecha;
 }
-function fechaHora(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleString(ES_PY2, { dateStyle: "short", timeStyle: "short", ...OPCIONES_HORA }) : vacio;
+function opcionesDe(vacio, opciones) {
+  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio, timeZone: vacio.timeZone };
+  return { vacio, timeZone: opciones?.timeZone };
 }
-function fechaDia(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleDateString(ES_PY2) : vacio;
+function formateador(formato, timeZone) {
+  return new Intl.DateTimeFormat(ES_PY2, timeZone ? { ...formato, timeZone } : formato);
 }
-function fechaHoraCorta(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleString(ES_PY2, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }) : vacio;
-}
-function fechaCorta(value, vacio = "\u2014") {
+function textoFormateado(value, formato, { vacio = "\u2014", timeZone } = {}) {
+  const dia = diaDeCalendario(value);
+  if (dia) return formateador(formato, "UTC").format(dia);
   const fecha = fechaValida(value);
   if (!fecha) return vacio;
-  const dia = fecha.toLocaleDateString(ES_PY2, { day: "2-digit", month: "short" });
-  const hora = fecha.toLocaleTimeString(ES_PY2, { hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA });
-  return `${dia} \xB7 ${hora}`;
+  return formateador(formato, timeZone).format(fecha);
+}
+function fechaHora(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
+  return textoFormateado(value, { dateStyle: "short", timeStyle: "short", ...OPCIONES_HORA }, { vacio: vacioFinal ?? "\u2014", timeZone });
+}
+function fechaDia(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
+  return textoFormateado(value, {}, { vacio: vacioFinal ?? "\u2014", timeZone });
+}
+function fechaHoraCorta(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
+  return textoFormateado(value, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, { vacio: vacioFinal ?? "\u2014", timeZone });
+}
+function fechaCorta(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
+  const vacioReal = vacioFinal ?? "\u2014";
+  const dia = diaDeCalendario(value);
+  const fecha = dia || fechaValida(value);
+  if (!fecha) return vacioReal;
+  const zona = dia ? "UTC" : timeZone;
+  const parteDia = formateador({ day: "2-digit", month: "short" }, zona).format(fecha);
+  const parteHora = formateador({ hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, zona).format(fecha);
+  return `${parteDia} \xB7 ${parteHora}`;
 }
 
 // src/components/TableroKanban.jsx
@@ -4901,14 +5011,14 @@ function ChipCuota({ estado, estados }) {
   if (!config) return null;
   return /* @__PURE__ */ jsx51(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
 }
-function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, estados, destacada, conEstado }) {
+function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, simbolo, estados, destacada, conEstado }) {
   return /* @__PURE__ */ jsxs41("tr", { className: "border-t border-ink-700", children: [
     /* @__PURE__ */ jsxs41("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
       /* @__PURE__ */ jsx51("span", { className: "font-semibold", children: etiqueta }),
       destacada && /* @__PURE__ */ jsx51("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
       nota && /* @__PURE__ */ jsx51("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx51("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx51(Money, { value: monto, currency: moneda }) }),
+    /* @__PURE__ */ jsx51("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx51(Money, { value: monto, currency: moneda, simbolo }) }),
     /* @__PURE__ */ jsx51("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
     conEstado && /* @__PURE__ */ jsx51("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx51(ChipCuota, { estado, estados }) : null })
   ] });
@@ -4935,6 +5045,8 @@ function PlanPagos({
   condiciones = null,
   /** Moneda de los montos (`PYG` entero o `USD` con decimales). */
   moneda = "PYG",
+  /** Símbolo del guaraní para el panel de la app (p. ej. `'Gs.'` o `'₲'`). */
+  simbolo,
   /** Mapa `estado → chip`; pisa `ESTADOS_CUOTA`. */
   estados = ESTADOS_CUOTA,
   /** Texto del vacío: no hay anticipo ni cuotas. */
@@ -4951,7 +5063,7 @@ function PlanPagos({
   return /* @__PURE__ */ jsxs41("div", { className: cn("space-y-2.5", className), children: [
     aTransferir && /* @__PURE__ */ jsxs41("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
       /* @__PURE__ */ jsx51("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
-      /* @__PURE__ */ jsx51("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: aTransferir.monto, currency: moneda }) })
+      /* @__PURE__ */ jsx51("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
     ] }),
     vacioPlan ? /* @__PURE__ */ jsx51("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs41("table", { className: "w-full", children: [
       /* @__PURE__ */ jsx51("caption", { className: "sr-only", children: "Plan de pagos" }),
@@ -4969,6 +5081,7 @@ function PlanPagos({
             monto: montoAnticipo,
             vence: anticipoVence,
             moneda,
+            simbolo,
             estados,
             conEstado: false,
             destacada: aTransferir?.id === "anticipo"
@@ -4983,6 +5096,7 @@ function PlanPagos({
             estado: cuota.estado,
             nota: cuota.nota,
             moneda,
+            simbolo,
             estados,
             conEstado,
             destacada: Boolean(aTransferir?.id && aTransferir.id === cuota.id)
@@ -4992,18 +5106,18 @@ function PlanPagos({
       ] }),
       total !== null && /* @__PURE__ */ jsx51("tfoot", { children: /* @__PURE__ */ jsxs41("tr", { className: "border-t border-ink-500", children: [
         /* @__PURE__ */ jsx51("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
-        /* @__PURE__ */ jsx51("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx51(Money, { value: total, currency: moneda }) })
+        /* @__PURE__ */ jsx51("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx51(Money, { value: total, currency: moneda, simbolo }) })
       ] }) })
     ] }),
     vacioPlan && total !== null && /* @__PURE__ */ jsxs41("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
       /* @__PURE__ */ jsx51("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
-      /* @__PURE__ */ jsx51("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: total, currency: moneda }) })
+      /* @__PURE__ */ jsx51("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: total, currency: moneda, simbolo }) })
     ] }),
     saldoSinCuota > 0 && /* @__PURE__ */ jsxs41("p", { className: "text-xs text-mute", children: [
       saldoEtiqueta,
       ":",
       " ",
-      /* @__PURE__ */ jsx51("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: saldoSinCuota, currency: moneda }) })
+      /* @__PURE__ */ jsx51("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx51(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
     ] }),
     condiciones && /* @__PURE__ */ jsx51(Nota, { tono: "info", compact: true, children: condiciones })
   ] });
@@ -5039,7 +5153,7 @@ function Identidad({ titulo: titulo2, datos, logo, monograma }) {
     ] })
   ] });
 }
-function FilaLiquidacion({ etiqueta, valor, moneda, nota, fuerte = false }) {
+function FilaLiquidacion({ etiqueta, valor, moneda, simbolo, nota, fuerte = false }) {
   const numero = Number(valor);
   const negativo = Number.isFinite(numero) && numero < 0;
   return /* @__PURE__ */ jsxs42("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
@@ -5052,7 +5166,7 @@ function FilaLiquidacion({ etiqueta, valor, moneda, nota, fuerte = false }) {
     ] }),
     /* @__PURE__ */ jsxs42("span", { className: "oc-print-num shrink-0 font-semibold", children: [
       negativo && "\u2212 ",
-      /* @__PURE__ */ jsx52(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda })
+      /* @__PURE__ */ jsx52(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
     ] })
   ] });
 }
@@ -5092,6 +5206,8 @@ function DocumentoImpresion({
   etiquetaImprimir = "Imprimir",
   /** Moneda de los montos (`PYG` entero o `USD` con decimales). */
   moneda = "PYG",
+  /** Símbolo del guaraní para el panel de la app (p. ej. `Gs.`). */
+  simbolo,
   etiquetaDetalle = "Detalle",
   etiquetaEmisor = "Emisor",
   etiquetaReceptor = "Receptor",
@@ -5149,30 +5265,31 @@ function DocumentoImpresion({
               item.concepto,
               item.nota && /* @__PURE__ */ jsx52("small", { className: "block oc-print-suave", children: item.nota })
             ] }),
-            /* @__PURE__ */ jsx52("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx52(Money, { value: item.unitario, currency: moneda }) }),
-            /* @__PURE__ */ jsx52("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx52(Money, { value: item.subtotal, currency: moneda }) })
+            /* @__PURE__ */ jsx52("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx52(Money, { value: item.unitario, currency: moneda, simbolo }) }),
+            /* @__PURE__ */ jsx52("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx52(Money, { value: item.subtotal, currency: moneda, simbolo }) })
           ] }, item.id ?? indice)) })
         ] }) : /* @__PURE__ */ jsx52("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
       ] }),
       tieneLiquidacion && /* @__PURE__ */ jsxs42("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
         /* @__PURE__ */ jsx52("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
-        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda }),
-        liquidacion.descuento ? /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda }) : null,
-        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda }, otro.etiqueta ?? indice)),
+        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
+        liquidacion.descuento ? /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
+        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
         liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx52(
           FilaLiquidacion,
           {
             etiqueta: `IVA ${iva.tasa}%`,
             nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs42(Fragment8, { children: [
               "sobre ",
-              /* @__PURE__ */ jsx52(Money, { value: iva.base, currency: moneda })
+              /* @__PURE__ */ jsx52(Money, { value: iva.base, currency: moneda, simbolo })
             ] }) : null,
             valor: iva.monto,
-            moneda
+            moneda,
+            simbolo
           },
           `${iva.tasa}-${indice}`
         )),
-        liquidacion.total !== void 0 && /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, fuerte: true })
+        liquidacion.total !== void 0 && /* @__PURE__ */ jsx52(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
       ] }),
       notas && /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque mt-3.5", children: [
         /* @__PURE__ */ jsx52("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
@@ -6177,6 +6294,7 @@ export {
   GoogleMark,
   GradoBadge,
   GraficoBarras,
+  ICONOS,
   ICONOS_HITO,
   ICONO_CATEGORIA,
   Icon,
@@ -6223,6 +6341,8 @@ export {
   ROTULO_DATO,
   ROTULO_SECCION,
   RangoFecha,
+  SIMBOLOS_MONEDA,
+  SIMBOLO_PYG,
   SearchField_default as SearchField,
   SegmentedField,
   Select,
