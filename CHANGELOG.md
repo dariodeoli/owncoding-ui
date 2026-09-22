@@ -4,6 +4,22 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.10.0 — 2026-09-22
+
+- **Sistema v2 "device ops" (épicas #240/#241):** tokens del tema consola
+  (`.consola` con fondo #0E1116, panel #1F2430, borde #2D2D30, texto #F1F3F5) y
+  verde **pass** (`--c-pass` #22C55E + variantes) y azul **acción**
+  (`--c-accion` #4D7CFE), disponibles también fuera del tema consola.
+- **Objetos:** `ChipEstado` (certificado/en revisión/pendiente/con fallas),
+  `ChipsLocks` (iCloud/MDM/ESN/carrier/OEM), `SemaforoItem`,
+  `FilaChecklist` + `ConteoChecklist` ("x de y pass"), `MedidorBateria`
+  (barra/chip, umbrales 90/80), `GradoBadge` (A/B/C), `TileEquipo` y `Stepper`;
+  estados y tonos en `utils/estadoEquipo.js`. Props en `docs/REGLAS.md` §8 bis.
+- **Categorías con icono (#242):** `IconoCategoria` con los glifos mobile,
+  laptop, tablet, watch, buds y cable; `CATEGORIAS_PRODUCTO`, `ICONO_CATEGORIA`
+  y normalización de texto libre (`normalizarCategoria`) en
+  `utils/categorias.js` ("Funda iPhone" → accesorios, "CELULAR" → iPhone).
+
 ## v0.9.0 — 2026-09-22
 
 - **`Nota`:** superficie informativa para aclaraciones que no son resultado (no

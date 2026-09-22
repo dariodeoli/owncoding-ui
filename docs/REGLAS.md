@@ -145,6 +145,43 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   verse bien en ambos temas.
 - Un solo activo de marca por app; los componentes no traen logos.
 
+## 8 bis. Operación de equipos (#240/#241)
+
+Base del piloto de DSN: checklist/tile/rack de inspección. Todo es portable
+(recibe props y avisa por callbacks); los estados, etiquetas y tonos viven en
+`utils/estadoEquipo.js` y las categorías en `utils/categorias.js`.
+
+### Tokens consola
+
+`styles.css` agrega el verde **pass** (`--c-pass` #22C55E, `--c-pass-dark`
+#1A8D4F, `--c-pass-soft` #E7F8EE) y el azul **acción** (`--c-accion` #4D7CFE),
+disponibles en cualquier tema. La clase **`consola`** (en `<html>` o en el
+contenedor) aplica la base oscura de PhoneCheck: fondo #0E1116, panel #1F2430,
+borde #2D2D30, texto #F1F3F5, mute #A8B0BE y el verde pass como acento. Los
+IMEI/serial van en monoespaciada (`data-serial`).
+
+### Objetos y props
+
+| Objeto | Props | Notas |
+| --- | --- | --- |
+| `ChipEstado` | `estado` (`pass`/`revision`/`pendiente`/`falla`), `etiqueta`, `icono`, `className` | Chip de estado del equipo en la consola/rack; `pass` = verde certificado |
+| `ChipsLocks` | `locks` = `[{ clave, estado, etiqueta?, detalle? }]`, `conEstado`, `className` | `clave` de `LOCKS_DISPOSITIVO` (`icloud`/`mdm`/`esn`/`carrier`/`oem`); `estado` = `libre`/`activo`/`desconocido` |
+| `SemaforoItem` | `estado` (`ok`/`aviso`/`falla`/`sinVerificar`), `etiqueta`, `detalle`, `como` (`li`/`div`) | Punto con ícono + texto accesible (`Etiqueta: Estado`) |
+| `FilaChecklist` | `etiqueta`, `estado`, `nota`, `accion`, `className` | Fila del checklist con el semáforo y la nota de la inspección |
+| `ConteoChecklist` | `pasan`, `total`, `fallas`, `sustantivo` (default `pass`), `className` | "12 de 12 pass" en verde `pass`; las fallas aparte en rojo |
+| `MedidorBateria` | `porcentaje`, `ciclos`, `etiqueta`, `variante` (`barra`/`chip`), `compact`, `className` | Umbrales 90/80; sin dato → `—` y "Sin dato" (nunca 0) |
+| `GradoBadge` | `grado` (`A`/`B`/`C`), `conDescripcion`, `className` | A verde, B naranja, C rojo; un grado inválido se muestra crudo |
+| `TileEquipo` | `modelo`, `imei`, `detalle`, `foto`, `estado`, `grado`, `bateria`, `ciclos`, `locks`, `acciones`, `onOpen` | Compone chip, grado, batería, locks e icono de categoría; `onOpen` lo vuelve botón |
+| `Stepper` | `pasos` = `[{ id, etiqueta, detalle? }]`, `actual`, `hechos`, `className` | Hecho verde `pass`, actual con anillo, pendiente gris |
+| `IconoCategoria` | `categoria` (texto libre) o `icono`, `className` | Glifos `mobile`/`laptop`/`tablet`/`watch`/`buds`/`cable`; `servicio`/`otro` delegan en `Icon` |
+| `CATEGORIAS_PRODUCTO` | — | iPhone/MacBook/iPad/Watch/AirPods/Accesorios/Servicio/Otro con `etiqueta`, `icono` y `alias` |
+| `ICONO_CATEGORIA` | — | Mapa `categoría → glifo` para filtros y chips |
+| `normalizarCategoria` / `categoriaDe` / `iconoDeCategoria` / `etiquetaDeCategoria` | `texto` | "Funda iPhone" → accesorios; "CELULAR" → iPhone; desconocido → Otro |
+
+Reglas: la batería y el grado **nunca** se inventan (sin dato se dice sin
+dato); los chips de locks usan color + tooltip (el color solo no alcanza); los
+estados no se re-etiquetan por pantalla.
+
 ## 9. Cómo se fija una regla
 
 1. El objeto se crea en este paquete con props claras y sin acoplarse a una app.

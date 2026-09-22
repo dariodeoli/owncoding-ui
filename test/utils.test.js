@@ -1,6 +1,21 @@
 import { describe, expect, test } from 'vitest'
 
 import {
+  CATEGORIAS_PRODUCTO,
+  ICONO_CATEGORIA,
+  LOCKS_DISPOSITIVO,
+  TONOS,
+  UMBRAL_BATERIA_ATENCION,
+  UMBRAL_BATERIA_OK,
+  categoriaDe,
+  colorBadge,
+  estadoChip,
+  estadoItem,
+  estadoLock,
+  etiquetaDeCategoria,
+  gradoCondicion,
+  iconoDeCategoria,
+  tonoBateria,
   fechaCorta,
   fechaDia,
   fechaHora,
@@ -88,5 +103,40 @@ describe('lógica compartida', () => {
       expect(esRazonSocial(razon)).toBe(true)
     }
     expect(esRazonSocial('PEREZ GOMEZ JUAN CARLOS')).toBe(false)
+  })
+
+  test('estados de la operación de equipos (#240/#241)', () => {
+    expect(estadoItem('aviso').tono).toBe('warn')
+    expect(estadoItem('nada').etiqueta).toBe('Sin verificar')
+    expect(estadoChip('pass').tono).toBe('pass')
+    expect(estadoChip('falla').etiqueta).toBe('Con fallas')
+    expect(Object.keys(LOCKS_DISPOSITIVO)).toEqual(['icloud', 'mdm', 'esn', 'carrier', 'oem'])
+    expect(estadoLock('libre').tono).toBe('ok')
+    expect(estadoLock('activo').tono).toBe('bad')
+    expect(tonoBateria(100)).toBe('ok')
+    expect(tonoBateria(UMBRAL_BATERIA_OK - 1)).toBe('warn')
+    expect(tonoBateria(UMBRAL_BATERIA_ATENCION - 1)).toBe('bad')
+    expect(tonoBateria('')).toBe('mute')
+    expect(gradoCondicion('b').tono).toBe('warn')
+    expect(gradoCondicion('Z')).toBe(null)
+    expect(colorBadge('pass')).toBe('green')
+    expect(TONOS.chip.bad).toContain('border-bad/30')
+  })
+
+  test('categorías de producto con icono (#242)', () => {
+    expect(ICONO_CATEGORIA).toEqual({
+      iphone: 'mobile', macbook: 'laptop', ipad: 'tablet', watch: 'watch',
+      airpods: 'buds', accesorios: 'cable', servicio: 'wrench', otro: 'box',
+    })
+    expect(categoriaDe('MacBook Pro 14')).toBe('macbook')
+    expect(categoriaDe('CELULAR')).toBe('iphone')
+    expect(categoriaDe('Apple Watch')).toBe('watch')
+    expect(categoriaDe('AirPods Pro')).toBe('airpods')
+    expect(categoriaDe('Funda iPhone 15')).toBe('accesorios')
+    expect(categoriaDe('Cable USB-C')).toBe('accesorios')
+    expect(categoriaDe('Servicio técnico')).toBe('servicio')
+    expect(categoriaDe('ZZZ')).toBe('otro')
+    expect(iconoDeCategoria('iPad Air')).toBe('tablet')
+    expect(etiquetaDeCategoria('auriculares')).toBe('AirPods')
   })
 })

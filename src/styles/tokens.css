@@ -29,6 +29,11 @@
   --c-info: 3 105 161;
   --c-reserved: 109 40 217;
   --c-onbrand: 4 28 18;
+  /* Verde pass/certificado y azul acción (tema consola, épica #241) */
+  --c-pass: 22 197 94;
+  --c-pass-dark: 26 141 79;
+  --c-pass-soft: 231 248 238;
+  --c-accion: 77 124 254;
 
   /* Tokens de superficie */
   --oc-brand: rgb(var(--c-fono));
@@ -66,6 +71,36 @@ html.dark {
   --oc-border: rgb(var(--c-ink-600));
 }
 
+/* ── Tema consola (épica #241) ──────────────────────────────────────────────
+   Base oscura tipo consola para lo operativo (inspección, rack, certificación)
+   con verde pass para lo certificado y azul acción. Se activa con la clase
+   `consola` en <html> o en el contenedor de la pantalla; el verde pass y el
+   azul acción quedan disponibles en cualquier tema.
+   Paleta de referencia: #0E1116 fondo, #1F2430 panel, #2D2D30 borde,
+   #F1F3F5 texto, #22C55E pass, #1A8D4F pass oscuro, #E7F8EE pass suave,
+   #4D7CFE acción. */
+.consola {
+  --c-paper: 14 17 22;
+  --c-ink: 31 36 48;
+  --c-ink-950: 14 17 22;
+  --c-ink-900: 24 29 39;
+  --c-ink-800: 31 36 48;
+  --c-ink-700: 39 45 58;
+  --c-ink-600: 45 45 48;
+  --c-ink-500: 90 96 110;
+  --c-fore: 241 243 245;
+  --c-mute: 168 176 190;
+  --c-fono: 34 197 94;
+  --c-fono-dark: 26 141 79;
+  --c-fono-light: 74 222 128;
+  --c-fono-glow: 34 197 94;
+  --c-onbrand: 6 30 20;
+
+  --oc-canvas: rgb(var(--c-paper));
+  --oc-surface: rgb(var(--c-ink));
+  --oc-border: rgb(var(--c-ink-600));
+}
+
 /* Base recomendada (opcional: si la app ya define esto, no la importe) */
 html {
   -webkit-tap-highlight-color: transparent;
@@ -89,6 +124,10 @@ h1, h2, h3 {
 }
 input, td, [data-money] {
   font-variant-numeric: tabular-nums;
+}
+/* Identificadores (IMEI, serial, códigos): siempre monoespaciados */
+input[inputmode="numeric"], [data-serial] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 :focus-visible {
   outline: 2px solid var(--oc-brand);

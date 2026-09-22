@@ -74,6 +74,45 @@ export { default as CityAutocomplete } from './components/CityAutocomplete.jsx'
 // Clases de tabla/listado
 export { ROTULO_DATO, CELDA_ENCABEZADO, ROTULO_SECCION, CELDA_DATO, CELDA_NUMERO, CELDA_IDENTIDAD, CELDA_IDENTIDAD_GRANDE } from './utils/tabla.js'
 
+// Operación de equipos (épicas #240/#241): checklist, locks, batería, grado,
+// tile y stepper. Los estados y sus tonos viven en utils/estadoEquipo.js.
+export { default as SemaforoItem } from './components/SemaforoItem.jsx'
+export { default as FilaChecklist, ConteoChecklist } from './components/FilaChecklist.jsx'
+export { default as ChipEstado } from './components/ChipEstado.jsx'
+export { default as ChipsLocks } from './components/ChipsLocks.jsx'
+export { default as MedidorBateria } from './components/MedidorBateria.jsx'
+export { default as GradoBadge } from './components/GradoBadge.jsx'
+export { default as TileEquipo } from './components/TileEquipo.jsx'
+export { default as Stepper } from './components/Stepper.jsx'
+export {
+  ESTADOS_ITEM,
+  ESTADOS_CHIP,
+  ESTADOS_LOCK,
+  LOCKS_DISPOSITIVO,
+  GRADOS_CONDICION,
+  COLOR_BADGE,
+  TONOS,
+  UMBRAL_BATERIA_OK,
+  UMBRAL_BATERIA_ATENCION,
+  estadoItem,
+  estadoChip,
+  estadoLock,
+  gradoCondicion,
+  colorBadge,
+  tonoBateria,
+} from './utils/estadoEquipo.js'
+
+// Categorías de producto con icono (#242)
+export { default as IconoCategoria, GLIFOS_CATEGORIA } from './components/IconoCategoria.jsx'
+export {
+  CATEGORIAS_PRODUCTO,
+  ICONO_CATEGORIA,
+  normalizarCategoria,
+  categoriaDe,
+  iconoDeCategoria,
+  etiquetaDeCategoria,
+} from './utils/categorias.js'
+
 // Lógica compartida
 export { cn, primerNombre } from './utils/cn.js'
 export { normalizarNombre, nombrePartes, esApellidosPrimero, esRazonSocial } from './utils/nombre.js'

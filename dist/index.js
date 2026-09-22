@@ -2627,6 +2627,316 @@ var CELDA_NUMERO = "text-right tabular-nums";
 var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
 var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
 
+// src/utils/estadoEquipo.js
+var ESTADOS_ITEM = {
+  ok: { etiqueta: "Bien", tono: "ok", icono: "check" },
+  aviso: { etiqueta: "Con observaci\xF3n", tono: "warn", icono: "alert" },
+  falla: { etiqueta: "Falla", tono: "bad", icono: "close" },
+  sinVerificar: { etiqueta: "Sin verificar", tono: "mute", icono: "clock" }
+};
+var estadoItem = (clave) => ESTADOS_ITEM[clave] || ESTADOS_ITEM.sinVerificar;
+var ESTADOS_CHIP = {
+  pass: { etiqueta: "Certificado", tono: "pass", icono: "check" },
+  revision: { etiqueta: "En revisi\xF3n", tono: "info", icono: "refresh" },
+  pendiente: { etiqueta: "Pendiente", tono: "mute", icono: "clock" },
+  falla: { etiqueta: "Con fallas", tono: "bad", icono: "alert" }
+};
+var estadoChip = (clave) => ESTADOS_CHIP[clave] || ESTADOS_CHIP.pendiente;
+var LOCKS_DISPOSITIVO = {
+  icloud: "iCloud / Find My",
+  mdm: "MDM",
+  esn: "ESN / lista negra",
+  carrier: "Carrier / SIM lock",
+  oem: "Repuesto no OEM"
+};
+var ESTADOS_LOCK = {
+  libre: { etiqueta: "Libre", tono: "ok", icono: "unlock" },
+  activo: { etiqueta: "Activo", tono: "bad", icono: "lock" },
+  desconocido: { etiqueta: "Sin dato", tono: "mute", icono: "clock" }
+};
+var estadoLock = (clave) => ESTADOS_LOCK[clave] || ESTADOS_LOCK.desconocido;
+var UMBRAL_BATERIA_OK = 90;
+var UMBRAL_BATERIA_ATENCION = 80;
+function tonoBateria(porcentaje) {
+  if (porcentaje === null || porcentaje === void 0 || porcentaje === "") return "mute";
+  const valor = Number(porcentaje);
+  if (!Number.isFinite(valor)) return "mute";
+  if (valor >= UMBRAL_BATERIA_OK) return "ok";
+  if (valor >= UMBRAL_BATERIA_ATENCION) return "warn";
+  return "bad";
+}
+var GRADOS_CONDICION = {
+  A: { etiqueta: "Grado A", tono: "ok", descripcion: "Como nuevo, sin marcas visibles" },
+  B: { etiqueta: "Grado B", tono: "warn", descripcion: "Marcas leves de uso" },
+  C: { etiqueta: "Grado C", tono: "bad", descripcion: "Marcas o detalles visibles" }
+};
+var gradoCondicion = (clave) => GRADOS_CONDICION[String(clave || "").trim().toUpperCase()] || null;
+var COLOR_BADGE = { ok: "green", warn: "orange", bad: "red", mute: "slate", info: "blue", pass: "green" };
+var colorBadge = (tono) => COLOR_BADGE[tono] || "slate";
+var TONOS = {
+  punto: { ok: "bg-ok/15 text-ok", warn: "bg-warn/15 text-warn", bad: "bg-bad/15 text-bad", mute: "bg-ink-700 text-mute", info: "bg-info/15 text-info", pass: "bg-pass/15 text-pass" },
+  chip: { ok: "border-ok/30 bg-ok/10 text-ok", warn: "border-warn/30 bg-warn/10 text-warn", bad: "border-bad/30 bg-bad/10 text-bad", mute: "border-ink-600 bg-ink-800/40 text-mute", info: "border-info/30 bg-info/10 text-info", pass: "border-pass/30 bg-pass/10 text-pass" },
+  texto: { ok: "text-ok", warn: "text-warn", bad: "text-bad", mute: "text-mute", info: "text-info", pass: "text-pass" }
+};
+
+// src/components/SemaforoItem.jsx
+import { jsx as jsx28, jsxs as jsxs22 } from "react/jsx-runtime";
+function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li", className, ...props }) {
+  const config = estadoItem(estado);
+  const Etiqueta = como === "div" ? "div" : "li";
+  return /* @__PURE__ */ jsxs22(
+    Etiqueta,
+    {
+      className: cn("flex items-center gap-2.5", className),
+      "aria-label": etiqueta ? `${etiqueta}: ${config.etiqueta}` : config.etiqueta,
+      ...props,
+      children: [
+        /* @__PURE__ */ jsx28("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx28(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+        /* @__PURE__ */ jsxs22("span", { className: "min-w-0 flex-1", children: [
+          /* @__PURE__ */ jsx28("span", { className: "block truncate text-sm", children: etiqueta }),
+          detalle && /* @__PURE__ */ jsx28("span", { className: "block truncate text-xs text-mute", children: detalle })
+        ] })
+      ]
+    }
+  );
+}
+
+// src/components/FilaChecklist.jsx
+import { jsx as jsx29, jsxs as jsxs23 } from "react/jsx-runtime";
+function FilaChecklist({ etiqueta, estado = "sinVerificar", nota, accion, className }) {
+  const config = estadoItem(estado);
+  return /* @__PURE__ */ jsxs23("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
+    /* @__PURE__ */ jsx29("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx29(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs23("div", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx29("p", { className: "truncate text-sm", children: etiqueta }),
+      nota && /* @__PURE__ */ jsx29("p", { className: "mt-0.5 text-xs text-mute", children: nota })
+    ] }),
+    /* @__PURE__ */ jsx29("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
+    accion
+  ] });
+}
+function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass", className }) {
+  const completo = total > 0 && pasan === total;
+  return /* @__PURE__ */ jsxs23("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
+    /* @__PURE__ */ jsxs23("span", { className: completo ? "text-pass" : "text-mute", children: [
+      pasan,
+      " de ",
+      total,
+      " ",
+      sustantivo
+    ] }),
+    fallas > 0 && /* @__PURE__ */ jsxs23("span", { className: "text-bad", children: [
+      fallas,
+      " ",
+      fallas === 1 ? "falla" : "fallas"
+    ] })
+  ] });
+}
+
+// src/components/ChipEstado.jsx
+import { jsx as jsx30, jsxs as jsxs24 } from "react/jsx-runtime";
+function ChipEstado({ estado = "pendiente", etiqueta, icono, className }) {
+  const config = estadoChip(estado);
+  return /* @__PURE__ */ jsxs24("span", { className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono], className), children: [
+    /* @__PURE__ */ jsx30(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+    etiqueta || config.etiqueta
+  ] });
+}
+
+// src/components/ChipsLocks.jsx
+import { jsx as jsx31, jsxs as jsxs25 } from "react/jsx-runtime";
+function ChipsLocks({ locks = [], conEstado = false, className }) {
+  if (!locks.length) return null;
+  return /* @__PURE__ */ jsx31("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
+    const config = estadoLock(lock.estado);
+    const etiqueta = lock.etiqueta || LOCKS_DISPOSITIVO[lock.clave] || lock.clave;
+    return /* @__PURE__ */ jsxs25(
+      "li",
+      {
+        className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono]),
+        title: lock.detalle || `${etiqueta}: ${config.etiqueta}`,
+        children: [
+          /* @__PURE__ */ jsx31(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+          etiqueta,
+          conEstado ? ` \xB7 ${config.etiqueta}` : ""
+        ]
+      },
+      lock.clave || etiqueta
+    );
+  }) });
+}
+
+// src/components/MedidorBateria.jsx
+import { jsx as jsx32, jsxs as jsxs26 } from "react/jsx-runtime";
+function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, className }) {
+  const hay = porcentaje !== null && porcentaje !== void 0 && porcentaje !== "" && Number.isFinite(Number(porcentaje));
+  const valor = hay ? Number(porcentaje) : null;
+  const tono = tonoBateria(hay ? valor : null);
+  const texto = hay ? `${valor}%` : "\u2014";
+  const title = hay ? `${etiqueta}: ${valor}%${ciclos ? ` \xB7 ${ciclos} ciclos` : ""}` : `${etiqueta}: sin dato`;
+  if (variante === "chip") {
+    return /* @__PURE__ */ jsx32("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: texto });
+  }
+  return /* @__PURE__ */ jsxs26("div", { className: cn("space-y-1", className), title, children: [
+    /* @__PURE__ */ jsxs26("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx32("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
+      /* @__PURE__ */ jsx32("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
+    ] }),
+    hay ? /* @__PURE__ */ jsx32(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx32(Badge, { color: "slate", children: "Sin dato" })
+  ] });
+}
+
+// src/components/GradoBadge.jsx
+import { jsx as jsx33, jsxs as jsxs27 } from "react/jsx-runtime";
+function GradoBadge({ grado, conDescripcion = false, className }) {
+  const config = gradoCondicion(grado);
+  if (!config) return /* @__PURE__ */ jsx33(Badge, { className, children: grado || "Sin grado" });
+  return /* @__PURE__ */ jsxs27("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsx33(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
+    conDescripcion && /* @__PURE__ */ jsx33("span", { className: "text-xs text-mute", children: config.descripcion })
+  ] });
+}
+
+// src/utils/categorias.js
+var CATEGORIAS_PRODUCTO = [
+  { clave: "iphone", etiqueta: "iPhone", icono: "mobile", alias: ["iphone", "mobile", "celular", "telefono", "smartphone"] },
+  { clave: "macbook", etiqueta: "MacBook", icono: "laptop", alias: ["macbook", "mac", "laptop", "notebook", "computadora"] },
+  { clave: "ipad", etiqueta: "iPad", icono: "tablet", alias: ["ipad", "tablet", "tableta"] },
+  { clave: "watch", etiqueta: "Watch", icono: "watch", alias: ["watch", "reloj", "apple watch"] },
+  { clave: "airpods", etiqueta: "AirPods", icono: "buds", alias: ["airpods", "auriculares", "audifonos", "buds", "earbuds"] },
+  { clave: "accesorios", etiqueta: "Accesorios", icono: "cable", alias: ["accesorios", "cable", "cables", "cargador", "cargadores", "funda", "fundas", "vidrio", "lamina", "templado", "adaptador"] },
+  { clave: "servicio", etiqueta: "Servicio", icono: "wrench", alias: ["servicio", "servicios", "reparacion"] },
+  { clave: "otro", etiqueta: "Otro", icono: "box", alias: [] }
+];
+var ICONO_CATEGORIA = Object.fromEntries(CATEGORIAS_PRODUCTO.map(({ clave, icono }) => [clave, icono]));
+var PALABRAS_ACCESORIO = ["funda", "cable", "cargador", "vidrio", "lamina", "templado", "adaptador", "protector", "soporte"];
+var sinAcentos = (texto) => String(texto ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
+function normalizarCategoria(texto) {
+  const limpio = sinAcentos(texto);
+  const buscar = (clave) => CATEGORIAS_PRODUCTO.find((categoria) => categoria.clave === clave);
+  if (!limpio) return buscar("otro");
+  if (PALABRAS_ACCESORIO.some((palabra) => limpio.includes(palabra))) return buscar("accesorios");
+  const exacta = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.includes(limpio));
+  if (exacta) return exacta;
+  const contiene = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.some((alias) => alias.length > 3 && limpio.includes(alias)));
+  return contiene || buscar("otro");
+}
+var categoriaDe = (texto) => normalizarCategoria(texto).clave;
+var iconoDeCategoria = (texto) => normalizarCategoria(texto).icono;
+var etiquetaDeCategoria = (texto) => normalizarCategoria(texto).etiqueta;
+
+// src/components/IconoCategoria.jsx
+import { jsx as jsx34 } from "react/jsx-runtime";
+var GLIFOS_CATEGORIA = {
+  // Celular: marco redondeado con parlante y botón.
+  mobile: "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM10 5h4M11 18.5h2",
+  // Laptop: pantalla arriba, base ancha.
+  laptop: "M5 5h14v10H5zM2.5 19h19M9 15l-.5 4M15 15l.5 4",
+  // Tablet: marco redondeado más ancho que el celular.
+  tablet: "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM11 18.5h2",
+  // Reloj: caja central con correas.
+  watch: "M9 2h6l.8 4H8.2L9 2ZM8.2 18h7.6l-.8 4H9l-.8-4ZM6 8h12v8H6zM12 10.5v3l2 1",
+  // Auriculares: dos buds con su tallo.
+  buds: "M7 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM7 16.5V21M17 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM17 16.5V21",
+  // Cable: curva con conectores en los extremos.
+  cable: "M4 3v5a4 4 0 0 0 4 4h4a4 4 0 0 1 4 4v5M2 3h4M18 21h4"
+};
+function IconoCategoria({ categoria, icono, className, ...props }) {
+  const glifo = icono || iconoDeCategoria(categoria);
+  const clases = cn("shrink-0", className || "h-5 w-5");
+  if (!GLIFOS_CATEGORIA[glifo]) return /* @__PURE__ */ jsx34(Icon, { name: glifo, className: clases, ...props });
+  return /* @__PURE__ */ jsx34(
+    "svg",
+    {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "1.7",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": "true",
+      className: clases,
+      ...props,
+      children: /* @__PURE__ */ jsx34("path", { d: GLIFOS_CATEGORIA[glifo] })
+    }
+  );
+}
+
+// src/components/TileEquipo.jsx
+import { Fragment as Fragment3, jsx as jsx35, jsxs as jsxs28 } from "react/jsx-runtime";
+function TileEquipo({
+  modelo,
+  imei,
+  detalle,
+  foto,
+  estado,
+  grado,
+  bateria,
+  ciclos,
+  locks,
+  acciones,
+  onOpen,
+  className
+}) {
+  const raiz = cn("w-full space-y-2.5 rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left", onOpen && "transition hover:border-fono active:scale-[.995]", className);
+  const contenido = /* @__PURE__ */ jsxs28(Fragment3, { children: [
+    /* @__PURE__ */ jsxs28("div", { className: "flex items-start gap-3", children: [
+      foto ? /* @__PURE__ */ jsx35("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx35("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx35(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
+      /* @__PURE__ */ jsxs28("div", { className: "min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsx35("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
+        imei && /* @__PURE__ */ jsx35("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
+        detalle && /* @__PURE__ */ jsx35("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
+      ] }),
+      estado && /* @__PURE__ */ jsx35(ChipEstado, { estado })
+    ] }),
+    /* @__PURE__ */ jsxs28("div", { className: "flex flex-wrap items-center gap-2", children: [
+      grado && /* @__PURE__ */ jsx35(GradoBadge, { grado }),
+      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx35(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
+      locks?.length ? /* @__PURE__ */ jsx35(ChipsLocks, { locks }) : null
+    ] }),
+    acciones && /* @__PURE__ */ jsx35("div", { className: "flex flex-wrap gap-2", children: acciones })
+  ] });
+  if (onOpen) {
+    return /* @__PURE__ */ jsx35("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
+  }
+  return /* @__PURE__ */ jsx35("article", { className: raiz, children: contenido });
+}
+
+// src/components/Stepper.jsx
+import { jsx as jsx36, jsxs as jsxs29 } from "react/jsx-runtime";
+function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
+  if (!pasos.length) return null;
+  const esHecho = (paso, indice) => hechos.includes(paso.id ?? indice) || typeof actual === "number" && indice < actual;
+  const esActual = (paso, indice) => paso.id !== void 0 ? paso.id === actual : indice === actual;
+  return /* @__PURE__ */ jsx36("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), children: pasos.map((paso, indice) => {
+    const hecho = esHecho(paso, indice);
+    const enCurso = esActual(paso, indice);
+    return /* @__PURE__ */ jsxs29("li", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsx36(
+        "span",
+        {
+          className: cn(
+            "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[11px] font-bold",
+            hecho && "border-pass/40 bg-pass/15 text-pass",
+            !hecho && enCurso && "border-fono bg-fono/10 text-fono-light",
+            !hecho && !enCurso && "border-ink-600 bg-ink-800 text-mute"
+          ),
+          "aria-hidden": "true",
+          children: hecho ? /* @__PURE__ */ jsx36(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+        }
+      ),
+      /* @__PURE__ */ jsxs29("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
+        paso.etiqueta,
+        paso.detalle && /* @__PURE__ */ jsxs29("span", { className: "ml-1 font-normal text-mute", children: [
+          "\xB7 ",
+          paso.detalle
+        ] })
+      ] }),
+      indice < pasos.length - 1 && /* @__PURE__ */ jsx36("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
+    ] }, paso.id ?? indice);
+  }) });
+}
+
 // src/utils/nombre.js
 var PARTICULAS = /* @__PURE__ */ new Set(["de", "del", "la", "las", "los", "y", "e", "da", "das", "do", "dos", "van", "von", "san", "santa"]);
 var titulo = (palabra) => {
@@ -3250,6 +3560,7 @@ export {
   Button,
   CAPACIDADES_IPHONE,
   CATEGORIAS_ACCESORIOS,
+  CATEGORIAS_PRODUCTO,
   CELDA_DATO,
   CELDA_ENCABEZADO,
   CELDA_IDENTIDAD,
@@ -3259,16 +3570,23 @@ export {
   CODIGOS_PAIS,
   COLORES_BANCO_RESPALDO,
   COLORES_IPHONE,
+  COLOR_BADGE,
   Card,
   CeldaMoneda,
+  ChipEstado,
+  ChipsLocks,
   CityAutocomplete,
   ConfirmDialog,
+  ConteoChecklist,
   CurrencySelect,
   DEPARTAMENTOS_PARAGUAY,
   DOMINIOS_EMAIL,
   DataTable,
   Dot,
   Drawer,
+  ESTADOS_CHIP,
+  ESTADOS_ITEM,
+  ESTADOS_LOCK,
   ESTADO_IMPRESORA,
   ETIQUETA_ESTADO,
   ETIQUETA_TRABAJO,
@@ -3276,18 +3594,25 @@ export {
   EmptyState,
   ErrorState,
   Eyebrow,
+  FilaChecklist,
   FilaDato,
   FormField,
+  GLIFOS_CATEGORIA,
+  GRADOS_CONDICION,
   GRILLA_DOS_COLUMNAS,
   GRILLA_DOS_COLUMNAS_COMPACTA,
   GoogleButton,
   GoogleMark,
+  GradoBadge,
+  ICONO_CATEGORIA,
   Icon,
   IconAction,
+  IconoCategoria,
   Input,
   InstagramField,
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
+  LOCKS_DISPOSITIVO,
   LOGOS_BANCOS,
   Label,
   ListGridToggle,
@@ -3295,6 +3620,7 @@ export {
   MARCAS_ACCESORIOS,
   MENSAJE_TELEFONO,
   MODELOS_IPHONE,
+  MedidorBateria,
   MenuDesplegable,
   Modal,
   Money,
@@ -3317,9 +3643,11 @@ export {
   SearchField_default as SearchField,
   SegmentedField,
   Select,
+  SemaforoItem,
   SerialField,
   Skeleton,
   Stat,
+  Stepper,
   Subtabs,
   Switch,
   TAMANOS_CAMPO,
@@ -3327,18 +3655,24 @@ export {
   TAMANO_MODAL_PREDETERMINADO,
   TIPOS_PRUEBA,
   TIPOS_TICKET_PRUEBA,
+  TONOS,
   TONO_ESTADO,
   TarjetaAjuste,
   Textarea,
+  TileEquipo,
   ToastProvider,
+  UMBRAL_BATERIA_ATENCION,
+  UMBRAL_BATERIA_OK,
   VARIANTES_CORTE,
   agregarEstado,
   anchoParaLargo,
   bloqueFirma,
   buscarCiudad,
   buscarEnCatalogo,
+  categoriaDe,
   cn,
   codigoPais,
+  colorBadge,
   colorDeBanco,
   colorTrabajo,
   columnasDeAncho,
@@ -3351,7 +3685,11 @@ export {
   esApellidosPrimero,
   esRazonSocial,
   esToken,
+  estadoChip,
   estadoDeDiagnostico,
+  estadoItem,
+  estadoLock,
+  etiquetaDeCategoria,
   etiquetaTrabajo,
   excedeMonto,
   extractTokenFromUrl,
@@ -3366,6 +3704,8 @@ export {
   formatPercent,
   formatUsd,
   formatUsdInput,
+  gradoCondicion,
+  iconoDeCategoria,
   inicialesDeBanco,
   internationalPhone,
   largoMaximoMonto,
@@ -3377,6 +3717,7 @@ export {
   motivoDeDiagnostico,
   nombrePartes,
   normalizarBanco,
+  normalizarCategoria,
   normalizarInstagram,
   normalizarNombre,
   normalizarSerial,
@@ -3397,6 +3738,7 @@ export {
   telefonoValido,
   telefonoVisible,
   textoVerificacion,
+  tonoBateria,
   ultimos4,
   useToast,
   whatsappUrl

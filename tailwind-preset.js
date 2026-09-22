@@ -43,6 +43,13 @@ export default {
         warn: 'rgb(var(--c-warn) / <alpha-value>)',
         info: 'rgb(var(--c-info) / <alpha-value>)',
         reserved: 'rgb(var(--c-reserved) / <alpha-value>)',
+        // Verde pass/certificado y azul acción del tema consola (épica #241)
+        pass: {
+          DEFAULT: 'rgb(var(--c-pass) / <alpha-value>)',
+          dark: 'rgb(var(--c-pass-dark) / <alpha-value>)',
+          soft: 'rgb(var(--c-pass-soft) / <alpha-value>)',
+        },
+        accion: 'rgb(var(--c-accion) / <alpha-value>)',
         mute: 'rgb(var(--c-mute) / <alpha-value>)',
         // Texto sobre el color de marca (en ambos temas)
         onbrand: 'rgb(var(--c-onbrand) / <alpha-value>)',

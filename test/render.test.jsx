@@ -8,19 +8,29 @@ import {
   Button,
   Card,
   CeldaMoneda,
+  ChipEstado,
+  ChipsLocks,
+  ConteoChecklist,
   EmptyState,
   ErrorState,
+  FilaChecklist,
   FilaDato,
+  GradoBadge,
+  IconoCategoria,
   Input,
   Label,
+  MedidorBateria,
   Money,
   Modal,
   Nota,
   Select,
+  SemaforoItem,
   Skeleton,
   Stat,
+  Stepper,
   Switch,
   Textarea,
+  TileEquipo,
 } from '../src/index.js'
 import { BotonDentroCampo } from '../src/index.js'
 import { CELDA_DATO, CELDA_ENCABEZADO, CELDA_NUMERO, ROTULO_DATO, ROTULO_SECCION } from '../src/index.js'
@@ -113,5 +123,62 @@ describe('render de los objetos base', () => {
     expect(barra).toContain('bg-blue-line')
     expect(barra).toContain('aria-valuenow="50"')
     expect(renderToStaticMarkup(<BarraProgreso valor={10} tono="onbrand" />)).toContain('bg-onbrand')
+  })
+
+  test('operación de equipos: semáforo, chips, batería, grado, tile y stepper (#240/#241)', () => {
+    const punto = renderToStaticMarkup(<SemaforoItem estado="falla" etiqueta="Pantalla" detalle="Rayón profundo" />)
+    expect(punto).toContain('Pantalla: Falla')
+    expect(punto).toContain('Rayón profundo')
+    expect(punto).toContain('text-bad')
+
+    const fila = renderToStaticMarkup(<FilaChecklist etiqueta="Face ID" estado="ok" nota="Probado en 3 intentos" />)
+    expect(fila).toContain('Face ID')
+    expect(fila).toContain('Probado en 3 intentos')
+    const conteo = renderToStaticMarkup(<ConteoChecklist pasan={12} total={12} />)
+    expect(conteo).toContain('12 de 12 pass')
+    expect(conteo).toContain('text-pass')
+    expect(renderToStaticMarkup(<ConteoChecklist pasan={10} total={12} fallas={2} />)).toContain('2 fallas')
+
+    const chip = renderToStaticMarkup(<ChipEstado estado="pass" />)
+    expect(chip).toContain('Certificado')
+    expect(chip).toContain('border-pass/30')
+    expect(renderToStaticMarkup(<ChipEstado estado="falla" />)).toContain('Con fallas')
+
+    const locks = renderToStaticMarkup(<ChipsLocks locks={[{ clave: 'icloud', estado: 'libre' }, { clave: 'mdm', estado: 'activo' }, { clave: 'esn', estado: 'desconocido' }]} />)
+    expect(locks).toContain('iCloud / Find My')
+    expect(locks).toContain('MDM: Activo')
+    expect(locks).toContain('ESN / lista negra: Sin dato')
+
+    const bateria = renderToStaticMarkup(<MedidorBateria porcentaje={86} ciclos={412} />)
+    expect(bateria).toContain('86%')
+    expect(bateria).toContain('412 ciclos')
+    expect(bateria).toContain('role="progressbar"')
+    expect(renderToStaticMarkup(<MedidorBateria porcentaje={null} />)).toContain('Sin dato')
+    expect(renderToStaticMarkup(<MedidorBateria porcentaje={72} variante="chip" />)).toContain('text-bad')
+
+    const grado = renderToStaticMarkup(<GradoBadge grado="B" conDescripcion />)
+    expect(grado).toContain('Grado B')
+    expect(grado).toContain('Marcas leves de uso')
+    expect(renderToStaticMarkup(<GradoBadge grado="Z" />)).toContain('Z')
+
+    const stepper = renderToStaticMarkup(<Stepper pasos={[{ id: 'intake', etiqueta: 'Intake' }, { id: 'diag', etiqueta: 'Diagnóstico' }, { id: 'listo', etiqueta: 'Listo' }]} actual="diag" hechos={['intake']} />)
+    expect(stepper).toContain('Intake')
+    expect(stepper).toContain('Diagnóstico')
+    expect(stepper).toContain('text-pass')
+
+    const tile = renderToStaticMarkup(<TileEquipo modelo="iPhone 13" imei="•••• 1234" estado="pass" grado="A" bateria={94} locks={[{ clave: 'icloud', estado: 'libre' }]} />)
+    expect(tile).toContain('iPhone 13')
+    expect(tile).toContain('•••• 1234')
+    expect(tile).toContain('Certificado')
+    expect(tile).toContain('Grado A')
+    expect(tile).toContain('94%')
+    expect(tile).toContain('iCloud / Find My')
+    expect(renderToStaticMarkup(<TileEquipo modelo="MacBook Pro" />)).toContain('M5 5h14v10H5z')
+
+    const icono = renderToStaticMarkup(<IconoCategoria categoria="AirPods" />)
+    expect(icono).toContain('<svg')
+    expect(icono).toContain('M7 3.5a3 3 0 0 1 3 3v7')
+    expect(renderToStaticMarkup(<IconoCategoria categoria="Servicio" />)).toContain('<svg')
+    expect(renderToStaticMarkup(<IconoCategoria icono="mobile" />)).toContain('M8 2h8a2 2 0 0 1 2 2v16')
   })
 })

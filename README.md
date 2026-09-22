@@ -58,6 +58,11 @@ la de MobOS.
 
 ### Notas de release
 
+- **v0.10.0** — sistema v2 "device ops" (#240/#241): tokens consola (`.consola`
+  + verde `pass` + azul `accion`), `ChipEstado`, `ChipsLocks`, `SemaforoItem`,
+  `FilaChecklist`/`ConteoChecklist`, `TileEquipo`, `Stepper`, `MedidorBateria`
+  y `GradoBadge`; iconos de categoría `IconoCategoria` + `CATEGORIAS_PRODUCTO`
+  / `ICONO_CATEGORIA` (#242). Props y reglas en `docs/REGLAS.md` §8 bis.
 - **v0.9.0** — `Nota` (superficie informativa warn/info/neutra, sin `role`),
   `BarraProgreso` con `pista`/`relleno` y tono `onbrand` para las barras de
   gráfico, `BotonDentroCampo`, `esRazonSocial` y el tamaño estándar de modal
@@ -123,7 +128,7 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 5. Correr lint + tests + build + e2e smoke de la app.
 6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
-## Qué incluye (v0.9.0)
+## Qué incluye (v0.10.0)
 
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
@@ -168,6 +173,13 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 - **Estados y avisos:** `Aviso` (error/ok/warn, con contenedor), `Nota`
   (aclaración sin `role`: warn/info/neutra, `compact`), `EmptyState`,
   `ErrorState`, `Skeleton`, `Badge`, `Dot`.
+- **Operación de equipos (#240/#241):** `SemaforoItem`, `FilaChecklist` (+
+  `ConteoChecklist` "x de y pass"), `ChipEstado`, `ChipsLocks`,
+  `MedidorBateria`, `GradoBadge`, `TileEquipo`, `Stepper` y los estados en
+  `utils/estadoEquipo.js`; tema **consola** y verde `pass` en `styles.css`.
+- **Categorías de producto (#242):** `IconoCategoria` (mobile/laptop/tablet/
+  watch/buds/cable) + `CATEGORIAS_PRODUCTO`, `ICONO_CATEGORIA` y
+  `normalizarCategoria` en `utils/categorias.js`.
 - **Datos:** `Money`, `FilaDato`, `CeldaMoneda`, `BarraProgreso`
   (`pista`/`relleno` para las barras de gráfico),
   `DataTable`, `PageHeader`, `Eyebrow`, clases de tabla `CELDA_DATO`,
