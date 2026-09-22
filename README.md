@@ -19,7 +19,7 @@ npm install github:dariodeoli/owncoding-ui#v0.11.0
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.2.2
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.11.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
