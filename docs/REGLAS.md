@@ -160,6 +160,15 @@ contenedor) aplica la base oscura de PhoneCheck: fondo #0E1116, panel #1F2430,
 borde #2D2D30, texto #F1F3F5, mute #A8B0BE y el verde pass como acento. Los
 IMEI/serial van en monoespaciada (`data-serial`).
 
+**Tema v2 `device ops`** (`tema-v2`, alias `v2-piloto` para las pantallas del
+piloto): variante clara y oscura del mismo lenguaje, promovida desde el piloto
+de DSN. En claro: fondo #F6F8FB, superficie #FFFFFF, borde #D6DCE6, texto
+#0E1116, ok #16A34A, bad #DC2626, warn #D97706 y azul acción #4D7CFE. En oscuro
+(`html.dark`): fondo #0E1116, panel #1F2430, borde #373F51, texto #F4F6FA, ok
+#22C55E, bad #EF4444, warn #F59E0B. Los números grandes van con `.v2-numero`
+(tabular + tracking ajustado). Se aplica por clase al contenedor de la pantalla,
+así el resto de la app no cambia.
+
 ### Objetos y props
 
 | Objeto | Props | Notas |

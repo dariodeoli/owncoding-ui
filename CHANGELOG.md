@@ -4,6 +4,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.11.0 — 2026-09-22
+
+- **Tokens v2 del piloto (promovidos desde `slot/diseno`, #241):** scope
+  `.tema-v2` con alias `.v2-piloto` — variante **clara** (fondo #F6F8FB,
+  superficie #FFFFFF, borde #D6DCE6, texto #0E1116, ok #16A34A, bad #DC2626,
+  warn #D97706) y **oscura** (`html.dark`: fondo #0E1116, panel #1F2430, borde
+  #373F51, texto #F4F6FA, ok #22C55E, bad #EF4444, warn #F59E0B), con el azul
+  acción #4D7CFE como `info`. Se aplica por clase al contenedor de la pantalla
+  y suma `.v2-numero` (tabular, tracking ajustado) para los números grandes del
+  checklist y los tableros.
+- Así las pantallas del piloto pueden borrar su bloque local de `index.css` y
+  consumir los tokens desde la biblioteca; el resto de la app no cambia.
+
 ## v0.10.0 — 2026-09-22
 
 - **Sistema v2 "device ops" (épicas #240/#241):** tokens del tema consola

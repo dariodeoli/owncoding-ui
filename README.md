@@ -13,7 +13,7 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.9.0
+npm install github:dariodeoli/owncoding-ui#v0.11.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
@@ -58,6 +58,9 @@ la de MobOS.
 
 ### Notas de release
 
+- **v0.11.0** — tokens v2 del piloto promovidos desde el rediseño:
+  `.tema-v2` (alias `.v2-piloto`) con variante clara y oscura del lenguaje
+  consola, azul acción como `info` y `.v2-numero` para números grandes.
 - **v0.10.0** — sistema v2 "device ops" (#240/#241): tokens consola (`.consola`
   + verde `pass` + azul `accion`), `ChipEstado`, `ChipsLocks`, `SemaforoItem`,
   `FilaChecklist`/`ConteoChecklist`, `TileEquipo`, `Stepper`, `MedidorBateria`
