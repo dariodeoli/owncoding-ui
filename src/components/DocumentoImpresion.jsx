@@ -64,7 +64,7 @@ function Identidad({ titulo, datos, logo, monograma }) {
 }
 
 /** Fila de la liquidación (subtotal, descuento, IVA, total u otros). */
-function FilaLiquidacion({ etiqueta, valor, moneda, nota, fuerte = false }) {
+function FilaLiquidacion({ etiqueta, valor, moneda, simbolo, nota, fuerte = false }) {
   const numero = Number(valor)
   const negativo = Number.isFinite(numero) && numero < 0
   return (
@@ -75,7 +75,7 @@ function FilaLiquidacion({ etiqueta, valor, moneda, nota, fuerte = false }) {
       </span>
       <span className="oc-print-num shrink-0 font-semibold">
         {negativo && '− '}
-        <Money value={negativo ? Math.abs(numero) : valor} currency={moneda} />
+        <Money value={negativo ? Math.abs(numero) : valor} currency={moneda} simbolo={simbolo} />
       </span>
     </div>
   )
@@ -117,6 +117,8 @@ export default function DocumentoImpresion({
   etiquetaImprimir = 'Imprimir',
   /** Moneda de los montos (`PYG` entero o `USD` con decimales). */
   moneda = 'PYG',
+  /** Símbolo del guaraní para el panel de la app (p. ej. `Gs.`). */
+  simbolo,
   etiquetaDetalle = 'Detalle',
   etiquetaEmisor = 'Emisor',
   etiquetaReceptor = 'Receptor',
@@ -206,10 +208,10 @@ export default function DocumentoImpresion({
                       {item.nota && <small className="block oc-print-suave">{item.nota}</small>}
                     </td>
                     <td className="oc-print-num">
-                      <Money value={item.unitario} currency={moneda} />
+                      <Money value={item.unitario} currency={moneda} simbolo={simbolo} />
                     </td>
                     <td className="oc-print-num">
-                      <Money value={item.subtotal} currency={moneda} />
+                      <Money value={item.subtotal} currency={moneda} simbolo={simbolo} />
                     </td>
                   </tr>
                 ))}
@@ -223,23 +225,23 @@ export default function DocumentoImpresion({
         {tieneLiquidacion && (
           <section className="oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]">
             <h2 className="mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea">{etiquetaLiquidacion}</h2>
-            {liquidacion.subtotal !== undefined && <FilaLiquidacion etiqueta="Subtotal" valor={liquidacion.subtotal} moneda={moneda} />}
+            {liquidacion.subtotal !== undefined && <FilaLiquidacion etiqueta="Subtotal" valor={liquidacion.subtotal} moneda={moneda} simbolo={simbolo} />}
             {liquidacion.descuento ? (
-              <FilaLiquidacion etiqueta={liquidacion.descuentoEtiqueta || 'Descuento'} valor={-Number(liquidacion.descuento)} moneda={moneda} />
+              <FilaLiquidacion etiqueta={liquidacion.descuentoEtiqueta || 'Descuento'} valor={-Number(liquidacion.descuento)} moneda={moneda} simbolo={simbolo} />
             ) : null}
             {liquidacion.otros?.map((otro, indice) => (
-              <FilaLiquidacion key={otro.etiqueta ?? indice} etiqueta={otro.etiqueta} valor={otro.monto} moneda={moneda} />
+              <FilaLiquidacion key={otro.etiqueta ?? indice} etiqueta={otro.etiqueta} valor={otro.monto} moneda={moneda} simbolo={simbolo} />
             ))}
             {liquidacion.iva?.map((iva, indice) => (
               <FilaLiquidacion
                 key={`${iva.tasa}-${indice}`}
                 etiqueta={`IVA ${iva.tasa}%`}
-                nota={iva.base !== undefined ? <>sobre <Money value={iva.base} currency={moneda} /></> : null}
+                nota={iva.base !== undefined ? <>sobre <Money value={iva.base} currency={moneda} simbolo={simbolo} /></> : null}
                 valor={iva.monto}
-                moneda={moneda}
+                moneda={moneda} simbolo={simbolo}
               />
             ))}
-            {liquidacion.total !== undefined && <FilaLiquidacion etiqueta="Total" valor={liquidacion.total} moneda={moneda} fuerte />}
+            {liquidacion.total !== undefined && <FilaLiquidacion etiqueta="Total" valor={liquidacion.total} moneda={moneda} simbolo={simbolo} fuerte />}
           </section>
         )}
 

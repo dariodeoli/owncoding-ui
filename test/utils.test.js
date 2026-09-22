@@ -22,8 +22,10 @@ import {
   fechaHoraCorta,
   fechaValida,
   formatGs,
+  formatMoney,
   formatUsd,
   internationalPhone,
+  montoConSigno,
   montoGs,
   montoTexto,
   montoUsd,
@@ -55,6 +57,22 @@ describe('lógica compartida', () => {
     expect(montoGs(0)).toBe('Gs 0')
   })
 
+  test('el símbolo de guaraníes es configurable por app (default Gs, sin punto)', () => {
+    // La firma vieja sigue igual.
+    expect(formatGs(1201032)).toBe('Gs 1.201.032')
+    // Símbolo con punto (LedBox), con espacio de más y alternativo (₲).
+    expect(formatGs(1201032, { simbolo: 'Gs.' })).toBe('Gs. 1.201.032')
+    expect(formatGs(1201032, 'Gs  ')).toBe('Gs 1.201.032')
+    expect(formatGs(1201032, '₲')).toBe('₲ 1.201.032')
+    // Se propaga a los helpers de pantalla (vacío incluido).
+    expect(montoGs(1201032, '—', { simbolo: 'Gs.' })).toBe('Gs. 1.201.032')
+    expect(montoGs(null, '—', { simbolo: 'Gs.' })).toBe('—')
+    expect(montoTexto(1201032, 'PYG', '', { simbolo: '₲' })).toBe('₲ 1.201.032')
+    expect(montoTexto(null, 'PYG', 'Sin monto', { simbolo: '₲' })).toBe('Sin monto')
+    expect(montoConSigno(-500000, 'PYG', '—', { simbolo: 'Gs.' })).toBe('− Gs. 500.000')
+    expect(formatMoney(1201032, 'PYG', { simbolo: 'Gs.' })).toBe('Gs. 1.201.032')
+  })
+
   test('montos de entrada: PYG entero y USD con 2 decimales', () => {
     expect(parseGsInput('Gs 1.201.032')).toBe(1201032)
     expect(parseUsdInput('1.234,50')).toBe('1234.5')
@@ -84,6 +102,27 @@ describe('lógica compartida', () => {
     expect(fechaDia('2026-09-30')).toContain('30/9/2026')
     expect(fechaDia('2026-12-31')).toContain('31/12/2026')
     expect(fechaValida('2026-09-31')).toBe(null)
+  })
+
+  test('fechas con huso: el mismo instante cambia de día según la zona', () => {
+    // 22/9/2026 02:30 UTC: en Asunción (UTC−3/−4) todavía es el 21.
+    const instante = '2026-09-22T02:30:00.000Z'
+    expect(fechaDia(instante, '—', { timeZone: 'America/Asuncion' })).toBe('21/9/2026')
+    expect(fechaHora(instante, '—', { timeZone: 'America/Asuncion' })).toContain('21/9/26')
+    expect(fechaHora(instante, { timeZone: 'UTC' })).toContain('22/9/26')
+    // Zonas sin horario de verano: el día cambia para el mismo instante.
+    const cercano = '2026-09-22T10:30:00.000Z'
+    expect(fechaDia(cercano, '—', { timeZone: 'Pacific/Kiritimati' })).toBe('23/9/2026')
+    expect(fechaDia(cercano, '—', { timeZone: 'Pacific/Midway' })).toBe('21/9/2026')
+    // La hora y el formato corto también aceptan la zona.
+    expect(fechaHoraCorta(instante, '—', { timeZone: 'America/Asuncion' })).toContain('23:30')
+    expect(fechaCorta(instante, '—', { timeZone: 'America/Asuncion' })).toContain('21-sept.')
+    expect(fechaCorta(instante, '—', { timeZone: 'America/Asuncion' })).toContain('23:30')
+    // Una fecha pura (`YYYY-MM-DD`) es un día de calendario: no se corre con la zona.
+    expect(fechaDia('2026-09-22', '—', { timeZone: 'America/Asuncion' })).toBe('22/9/2026')
+    expect(fechaDia('2026-09-22', '—', { timeZone: 'Pacific/Kiritimati' })).toBe('22/9/2026')
+    // Sin zona, el huso sigue siendo el del navegador (compatible).
+    expect(fechaDia(instante)).not.toBe('')
   })
 
   test('teléfono y WhatsApp', () => {
@@ -126,6 +165,32 @@ describe('lógica compartida', () => {
     expect(gradoCondicion('Z')).toBe(null)
     expect(colorBadge('pass')).toBe('green')
     expect(TONOS.chip.bad).toContain('border-bad/30')
+  })
+
+  test('los chips cubren los estados de negocio, con lectura tolerante', () => {
+    const tonos = (clave) => estadoChip(clave).tono
+    expect(estadoChip('borrador').etiqueta).toBe('Borrador')
+    expect(tonos('enviado')).toBe('info')
+    expect(estadoChip('aprobado').etiqueta).toBe('Aprobado')
+    expect(tonos('aprobado')).toBe('ok')
+    expect(tonos('rechazado')).toBe('bad')
+    expect(tonos('vencido')).toBe('bad')
+    expect(estadoChip('pagado').etiqueta).toBe('Pagado')
+    expect(tonos('anulado')).toBe('mute')
+    expect(estadoChip('cancelado').etiqueta).toBe('Cancelado')
+    // Mayúsculas, acentos, espacios y género caen en el mismo estado.
+    expect(estadoChip('En revisión').etiqueta).toBe('En revisión')
+    expect(estadoChip('EN REVISION').tono).toBe('info')
+    expect(estadoChip('Por cobrar').etiqueta).toBe('Por cobrar')
+    expect(estadoChip('POR_COBRAR').tono).toBe('warn')
+    expect(estadoChip('Pagada').etiqueta).toBe('Pagado')
+    expect(estadoChip('APROBADA').tono).toBe('ok')
+    expect(estadoChip('Cobrada').etiqueta).toBe('Cobrado')
+    // Un estado desconocido no inventa chip.
+    expect(estadoChip('zzz').etiqueta).toBe('Pendiente')
+    // Los estados de dispositivo siguen igual.
+    expect(estadoChip('pass').etiqueta).toBe('Certificado')
+    expect(estadoChip('falla').tono).toBe('bad')
   })
 
   test('categorías de producto con icono (#242)', () => {

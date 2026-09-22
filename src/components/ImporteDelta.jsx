@@ -27,6 +27,7 @@ export default function ImporteDelta({
   formato = 'moneda',
   invertir = false,
   vacio = '—',
+  simbolo,
   className,
 }) {
   const numero = Number(valor)
@@ -36,7 +37,7 @@ export default function ImporteDelta({
   const texto =
     formato === 'porcentaje'
       ? `${signoDe(numero) ? `${signoDe(numero)} ` : ''}${formatPercent(Math.abs(numero))} %`
-      : montoConSigno(numero, moneda, vacio)
+      : montoConSigno(numero, moneda, vacio, { simbolo })
 
   return (
     <span

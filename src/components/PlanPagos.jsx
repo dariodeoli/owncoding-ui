@@ -27,7 +27,7 @@ function ChipCuota({ estado, estados }) {
   return <ChipEstado estado={config.chip} etiqueta={config.etiqueta} icono={config.icono} tono={config.tono} />
 }
 
-function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, estados, destacada, conEstado }) {
+function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, simbolo, estados, destacada, conEstado }) {
   return (
     <tr className="border-t border-ink-700">
       <td className={cn(CELDA_DATO, 'py-1.5 pr-3 text-xs text-fore')}>
@@ -36,7 +36,7 @@ function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, estados, desta
         {nota && <small className="mt-0.5 block text-[11px] text-mute">{nota}</small>}
       </td>
       <td className={cn(CELDA_NUMERO, 'py-1.5 pr-3 text-xs font-semibold text-fore')}>
-        <Money value={monto} currency={moneda} />
+        <Money value={monto} currency={moneda} simbolo={simbolo} />
       </td>
       <td className={cn(CELDA_DATO, 'py-1.5 pr-3 whitespace-nowrap text-xs')}>{vence ? fechaDia(vence) : '—'}</td>
       {conEstado && (
@@ -70,6 +70,8 @@ export default function PlanPagos({
   condiciones = null,
   /** Moneda de los montos (`PYG` entero o `USD` con decimales). */
   moneda = 'PYG',
+  /** Símbolo del guaraní para el panel de la app (p. ej. `'Gs.'` o `'₲'`). */
+  simbolo,
   /** Mapa `estado → chip`; pisa `ESTADOS_CUOTA`. */
   estados = ESTADOS_CUOTA,
   /** Texto del vacío: no hay anticipo ni cuotas. */
@@ -91,7 +93,7 @@ export default function PlanPagos({
         <div className="flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2">
           <span className="text-xs font-semibold text-fono-light">{aTransferir.etiqueta || 'A transferir ahora'}</span>
           <strong className="text-lg font-bold tabular-nums text-fore">
-            <Money value={aTransferir.monto} currency={moneda} />
+            <Money value={aTransferir.monto} currency={moneda} simbolo={simbolo} />
           </strong>
         </div>
       )}
@@ -118,6 +120,7 @@ export default function PlanPagos({
                 monto={montoAnticipo}
                 vence={anticipoVence}
                 moneda={moneda}
+                simbolo={simbolo}
                 estados={estados}
                 conEstado={false}
                 destacada={aTransferir?.id === 'anticipo'}
@@ -132,6 +135,7 @@ export default function PlanPagos({
                 estado={cuota.estado}
                 nota={cuota.nota}
                 moneda={moneda}
+                simbolo={simbolo}
                 estados={estados}
                 conEstado={conEstado}
                 destacada={Boolean(aTransferir?.id && aTransferir.id === cuota.id)}
@@ -145,7 +149,7 @@ export default function PlanPagos({
                   {totalEtiqueta}
                 </td>
                 <td className={cn(CELDA_NUMERO, 'py-2 text-sm font-bold text-fore')}>
-                  <Money value={total} currency={moneda} />
+                  <Money value={total} currency={moneda} simbolo={simbolo} />
                 </td>
               </tr>
             </tfoot>
@@ -157,7 +161,7 @@ export default function PlanPagos({
         <div className="flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2">
           <span className="text-xs font-semibold text-fore">{totalEtiqueta}</span>
           <span className="text-sm font-bold tabular-nums text-fore">
-            <Money value={total} currency={moneda} />
+            <Money value={total} currency={moneda} simbolo={simbolo} />
           </span>
         </div>
       )}
@@ -166,7 +170,7 @@ export default function PlanPagos({
         <p className="text-xs text-mute">
           {saldoEtiqueta}:{' '}
           <span className="font-semibold tabular-nums text-fore">
-            <Money value={saldoSinCuota} currency={moneda} />
+            <Money value={saldoSinCuota} currency={moneda} simbolo={simbolo} />
           </span>
         </p>
       )}

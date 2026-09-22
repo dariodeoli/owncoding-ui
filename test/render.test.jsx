@@ -214,4 +214,26 @@ describe('render de los objetos base', () => {
     expect(ficha).not.toContain('<img')
     expect(renderToStaticMarkup(<FichaCertificado modelo="iPad" total={0} />)).toContain('Sin verificación física')
   })
+
+  test('Stat con tono y nota, dinero con símbolo propio y chip de negocio', () => {
+    const kpi = renderToStaticMarkup(<Stat label="Por cobrar" valor="Gs 1.200.000" tono="danger" nota="3 cobros vencidos" />)
+    expect(kpi).toContain('Por cobrar')
+    expect(kpi).toContain('text-bad')
+    expect(kpi).toContain('3 cobros vencidos')
+    // Compatibilidad: sin tono el valor sigue en el color de texto de siempre.
+    expect(renderToStaticMarkup(<Stat label="Ventas" valor="10" />)).toContain('text-fore')
+
+    expect(renderToStaticMarkup(<Money value={1201032} simbolo="Gs." />)).toContain('Gs. 1.201.032')
+    expect(renderToStaticMarkup(<Money value={1201032} />)).toContain('Gs 1.201.032')
+    expect(renderToStaticMarkup(<CeldaMoneda valor={150000} simbolo="₲" />)).toContain('₲ 150.000')
+
+    const chip = renderToStaticMarkup(<ChipEstado estado="aprobado" />)
+    expect(chip).toContain('Aprobado')
+    expect(chip).toContain('border-ok/30')
+    expect(chip).toContain('data-estado="aprobado"')
+    expect(chip).toContain('title="Aprobado"')
+    const etiquetaPropia = renderToStaticMarkup(<ChipEstado estado="vencido" etiqueta="Pago vencido" tono="warn" />)
+    expect(etiquetaPropia).toContain('Pago vencido')
+    expect(etiquetaPropia).toContain('border-warn/30')
+  })
 })

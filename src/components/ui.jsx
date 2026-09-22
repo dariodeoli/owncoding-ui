@@ -1,8 +1,9 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { cn } from '../utils/cn.js'
-import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto } from '../utils/moneda.js'
+import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
 import { TAMANOS_CAMPO } from '../utils/tamanos.js'
 import { TAMANO_MODAL_PREDETERMINADO, TAMANOS_MODAL } from '../utils/modal.js'
+import { textoDeTono } from '../utils/tonos.js'
 import Icon from './Icon.jsx'
 
 // ── Button ──────────────────────────────────────────────────────────
@@ -108,14 +109,14 @@ export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = 
 // Campo monetario central: PYG se escribe siempre con separador de miles;
 // el resto de las monedas conserva 2 decimales (coma es-PY). Entrega el
 // número limpio al formulario padre. `symbol` sobreescribe el prefijo cuando
-// el campo muestra un importe en una moneda distinta a su etiqueta. `max` es
+// el campo muestra un importe en una moneda distinta a su etiqueta (el default
+// sale de `SIMBOLOS_MONEDA`: `Gs`, `US$`, `R$`, …). `max` es
 // el tamaño máximo del monto (por defecto el general de #148; las ventas
 // pasan `LIMITE_MONTO_VENTAS`): el campo nunca trunca lo escrito, solo lo
 // marca con `aria-invalid` para que el formulario lo valide.
-const MONEY_SYMBOL = { PYG: 'Gs', USD: 'US$', BRL: 'R$', EUR: '€', USDT: 'USDT' }
 export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
   const isPyg = currency === 'PYG'
-  const prefix = symbol || MONEY_SYMBOL[currency] || currency
+  const prefix = String(symbol ?? '').trim() || SIMBOLOS_MONEDA[currency] || currency
   const display = isPyg ? formatGsInput(value) : formatUsdInput(value)
   const excede = excedeMonto(value, max)
   // Largo máximo del campo: el monto más grande documentado (con separadores)
@@ -146,15 +147,16 @@ export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, cla
 // ── Money ───────────────────────────────────────────────────────────
 // Importe de solo lectura: guaraníes con el formato canónico del repo y
 // dólares con separador en-US, sin convertir moneda. Un valor no finito
-// se muestra como raya para no inventar cifras.
-export function Money({ value, currency = 'PYG', className }) {
+// se muestra como raya para no inventar cifras. `simbolo` pisa el prefijo
+// (p. ej. `Gs.` o `₲` en un panel que escribe distinto el guaraní).
+export function Money({ value, currency = 'PYG', simbolo, className }) {
   const amount = Number(value)
   if (!Number.isFinite(amount)) return <span className={className}>—</span>
   return (
     <span className={className}>
       {currency === 'USD'
-        ? `US$ ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
-        : formatGs(amount)}
+        ? `${String(simbolo ?? '').trim() || SIMBOLOS_MONEDA.USD} ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+        : formatGs(amount, { simbolo })}
     </span>
   )
 }
@@ -645,8 +647,13 @@ export function FormField({ label, hint, error, children, htmlFor }) {
 }
 
 // ── Tarjeta de métrica (KPI con tendencia) ──────────────────────────
-export function Stat({ label, valor, delta, sub, destacado = false, className }) {
+// `tono` colorea el valor con el tono semántico compartido (`ok`/`warn`/`bad`/
+// `info`/`mute`, con alias como `danger` o `accent`) y `nota` agrega el dato al
+// pie, como el KPI del panel de LedBox; ambos son opcionales y no cambian la
+// firma anterior. `destacado` (tarjeta de marca) gana sobre `tono`.
+export function Stat({ label, valor, delta, sub, nota, tono, destacado = false, className }) {
   const sube = typeof delta === 'number' && delta >= 0
+  const colorValor = destacado ? 'text-onbrand' : tono ? textoDeTono(tono) : 'text-fore'
   return (
     <div
       className={cn(
@@ -656,7 +663,7 @@ export function Stat({ label, valor, delta, sub, destacado = false, className })
       )}
     >
       <div className={cn('text-[11px] font-medium uppercase tracking-wider', destacado ? 'text-onbrand/75' : 'text-mute')}>{label}</div>
-      <div className={cn('mt-1.5 text-2xl font-semibold tracking-tight md:text-3xl', destacado ? 'text-onbrand' : 'text-fore')}>
+      <div className={cn('mt-1.5 text-2xl font-semibold tracking-tight md:text-3xl', colorValor)}>
         {valor}
       </div>
       <div className="mt-1.5 flex items-center gap-2 text-xs">
@@ -667,6 +674,7 @@ export function Stat({ label, valor, delta, sub, destacado = false, className })
         )}
         {sub && <span className={destacado ? 'text-onbrand/75' : 'text-mute'}>{sub}</span>}
       </div>
+      {nota && <div className={cn('mt-1 text-[11px]', destacado ? 'text-onbrand/75' : 'text-mute')}>{nota}</div>}
     </div>
   )
 }
@@ -717,11 +725,11 @@ export function FilaDato({ etiqueta, valor, tono = '', etiquetaComo: Etiqueta = 
 // ── CeldaMoneda ─────────────────────────────────────────────────────
 // Celda de dinero para listas y tablas: alineada a la derecha, con `Money`
 // (el mismo formato que el resto de la app), números tabulares y tono. El
-// contenido extra (moneda, sufijo) va como children.
-export function CeldaMoneda({ valor, tono = '', currency = 'PYG', className, children }) {
+// contenido extra (moneda, sufijo) va como children; `simbolo` se propaga.
+export function CeldaMoneda({ valor, tono = '', currency = 'PYG', simbolo, className, children }) {
   return (
     <span className={cn('inline-flex shrink-0 items-center justify-end gap-1 font-semibold tabular-nums', TONOS_VALOR[tono], className)}>
-      <Money value={Number(valor || 0)} currency={currency} />
+      <Money value={Number(valor || 0)} currency={currency} simbolo={simbolo} />
       {children}
     </span>
   )

@@ -40,7 +40,7 @@ export {
 } from './components/ui.jsx'
 
 // Campos y objetos compartidos
-export { default as Icon } from './components/Icon.jsx'
+export { default as Icon, ICONOS } from './components/Icon.jsx'
 export { default as Switch } from './components/Switch.jsx'
 export { default as SearchField } from './components/SearchField.jsx'
 export { default as BotonDentroCampo } from './components/BotonDentroCampo.jsx'
@@ -252,6 +252,8 @@ export {
   formatoNumero,
   signoDe,
   montoConSigno,
+  SIMBOLO_PYG,
+  SIMBOLOS_MONEDA,
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
 } from './utils/moneda.js'

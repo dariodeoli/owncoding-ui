@@ -3,6 +3,26 @@ const GS_FORMATTER = new Intl.NumberFormat('es-PY', {
   maximumFractionDigits: 0,
 })
 
+// Símbolo de cada moneda: único lugar del paquete (lo usan `Money`, `MoneyInput`
+// y los helpers). El guaraní va **sin punto**: `Gs 1.234.567`.
+export const SIMBOLO_PYG = 'Gs'
+export const SIMBOLOS_MONEDA = { PYG: 'Gs', USD: 'US$', BRL: 'R$', EUR: '€', USDT: 'USDT' }
+
+// Opciones del símbolo: cadena suelta (`'₲'`) u objeto (`{ simbolo: 'Gs.' }`).
+// Vacío o ausente → el símbolo por defecto. Se recorta y se une con un solo
+// espacio, así `'Gs  '` no deja el monto separado de más.
+function simboloDe(opciones) {
+  const crudo = typeof opciones === 'string' ? opciones : opciones?.simbolo
+  return String(crudo ?? '').trim() || SIMBOLO_PYG
+}
+
+// El vacío puede venir como segundo/tercer argumento (firma histórica) o dentro
+// del objeto de opciones, igual que en `utils/fecha.js`.
+function opcionesDeVacio(vacio, opciones) {
+  if (vacio && typeof vacio === 'object') return { vacio: vacio.vacio ?? '—', simbolo: vacio.simbolo }
+  return { vacio: vacio ?? '—', simbolo: opciones?.simbolo }
+}
+
 // Tamaños de monto de la app (épica #148, sección 9): el campo general
 // soporta hasta 10.000.000.000 y las ventas hasta 99.000.000.000. El campo
 // nunca recorta lo que se escribe; el formulario valida con estos límites.
@@ -23,9 +43,12 @@ const USD_FORMATTER = new Intl.NumberFormat('es-PY', {
   maximumFractionDigits: 2,
 })
 
-export function formatGs(value) {
+// Formato único de guaraníes: `Gs 1.234.567`. El símbolo es configurable por
+// app (`formatGs(1250000, { simbolo: 'Gs.' })` o `formatGs(1250000, '₲')`) sin
+// cambiar la firma histórica `formatGs(valor)`; el default sigue siendo `Gs`.
+export function formatGs(value, opciones) {
   const amount = Number(value)
-  return `Gs ${GS_FORMATTER.format(Number.isFinite(amount) ? Math.round(amount) : 0)}`
+  return `${simboloDe(opciones)} ${GS_FORMATTER.format(Number.isFinite(amount) ? Math.round(amount) : 0)}`
 }
 
 // Presentación editable: conserva solo dígitos y agrega separadores de miles.
@@ -71,27 +94,35 @@ export function formatUsd(value) {
 }
 
 // Formato único de presentación. No convierte monedas: cada movimiento conserva
-// su moneda y, cuando aplica, su cotización congelada en el backend.
-export function formatMoney(value, currency = 'PYG') {
-  return currency === 'USD' ? formatUsd(value) : formatGs(value)
+// su moneda y, cuando aplica, su cotización congelada en el backend. El símbolo
+// del guaraní se puede pisar con `{ simbolo }` (misma opción que `formatGs`).
+export function formatMoney(value, currency = 'PYG', opciones) {
+  return currency === 'USD' ? formatUsd(value) : formatGs(value, opciones)
 }
 
 // ── Montos de pantalla (el formato que ya usan ui/Money y las listas) ────────// "Gs 12.500" y "US$ 1,234.56": es la presentación dominante del repo (la de
 // `Money`, `gs()` y `formatGs`). Los montos se escriben con estos helpers y no
 // con `toLocaleString` a mano; el vacío es explícito ('—' por defecto) para no
 // mostrar 0 cuando falta el dato. No convierten moneda.
-export function montoGs(value, vacio = '—') {
+//
+// `montoGs(1250000, '—', { simbolo: 'Gs.' })` y `montoTexto(total, 'PYG', '')`
+// siguen funcionando: el vacío mantiene su lugar y las opciones van al final (o
+// dentro del objeto de vacío).
+export function montoGs(value, vacio = '—', opciones) {
+  const { vacio: vacioFinal, simbolo } = opcionesDeVacio(vacio, opciones)
   const amount = numeroDe(value)
-  return amount === null ? vacio : formatGs(amount)
+  return amount === null ? vacioFinal : formatGs(amount, { simbolo })
 }
 
-export function montoUsd(value, vacio = '—') {
+export function montoUsd(value, vacio = '—', opciones) {
+  const { vacio: vacioFinal, simbolo } = opcionesDeVacio(vacio, opciones)
   const amount = numeroDe(value)
-  return amount === null ? vacio : `US$ ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
+  const prefijo = String(simbolo ?? '').trim() || SIMBOLOS_MONEDA.USD
+  return amount === null ? vacioFinal : `${prefijo} ${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`
 }
 
-export function montoTexto(value, currency = 'PYG', vacio = '—') {
-  return currency === 'USD' ? montoUsd(value, vacio) : montoGs(value, vacio)
+export function montoTexto(value, currency = 'PYG', vacio = '—', opciones) {
+  return currency === 'USD' ? montoUsd(value, vacio, opciones) : montoGs(value, vacio, opciones)
 }
 
 // null / undefined / '' no son 0: son dato ausente.
@@ -141,11 +172,13 @@ export function signoDe(value) {
 
 /**
  * Importe con signo: `+ Gs 1.200.000` / `− Gs 500.000`. El cero no lleva signo;
- * un dato ausente devuelve el texto de vacío. No convierte moneda.
+ * un dato ausente devuelve el texto de vacío. No convierte moneda. El símbolo
+ * del guaraní se puede pisar con las mismas opciones que `formatGs`.
  */
-export function montoConSigno(value, currency = 'PYG', vacio = '—') {
+export function montoConSigno(value, currency = 'PYG', vacio = '—', opciones) {
+  const { vacio: vacioFinal } = opcionesDeVacio(vacio, opciones)
   const amount = numeroDe(value)
-  if (amount === null) return vacio
+  if (amount === null) return vacioFinal
   const signo = signoDe(amount)
-  return signo ? `${signo} ${montoTexto(Math.abs(amount), currency)}` : montoTexto(amount, currency)
+  return signo ? `${signo} ${montoTexto(Math.abs(amount), currency, '—', opciones)}` : montoTexto(amount, currency, '—', opciones)
 }
