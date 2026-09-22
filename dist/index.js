@@ -333,7 +333,7 @@ function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, 
     )) })
   ] });
 }
-var MONEY_SYMBOL = { PYG: "Gs.", USD: "US$", BRL: "R$", EUR: "\u20AC", USDT: "USDT" };
+var MONEY_SYMBOL = { PYG: "Gs", USD: "US$", BRL: "R$", EUR: "\u20AC", USDT: "USDT" };
 function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
   const isPyg = currency === "PYG";
   const prefix = symbol || MONEY_SYMBOL[currency] || currency;

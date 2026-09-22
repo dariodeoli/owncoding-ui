@@ -112,7 +112,7 @@ export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = 
 // el tamaño máximo del monto (por defecto el general de #148; las ventas
 // pasan `LIMITE_MONTO_VENTAS`): el campo nunca trunca lo escrito, solo lo
 // marca con `aria-invalid` para que el formulario lo valide.
-const MONEY_SYMBOL = { PYG: 'Gs.', USD: 'US$', BRL: 'R$', EUR: '€', USDT: 'USDT' }
+const MONEY_SYMBOL = { PYG: 'Gs', USD: 'US$', BRL: 'R$', EUR: '€', USDT: 'USDT' }
 export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
   const isPyg = currency === 'PYG'
   const prefix = symbol || MONEY_SYMBOL[currency] || currency
