@@ -1,7 +1,7 @@
 "use client"
 
 // src/components/ui.jsx
-import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createContext, forwardRef, useCallback, useContext, useEffect as useEffect2, useId, useMemo, useRef as useRef2, useState } from "react";
 
 // src/utils/cn.js
 import { clsx } from "clsx";
@@ -234,6 +234,70 @@ function chipDeTono(valor) {
 }
 function textoDeTono(valor) {
   return TONOS.texto[tonoCanonico(valor)];
+}
+
+// src/hooks/useDialogFocusTrap.js
+import { useEffect, useRef } from "react";
+var SELECTOR_ENFOCABLES = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]';
+function destinoDeTab({ shiftKey, activo, primero, ultimo, contenedor, fuera = false }) {
+  if (!primero) return null;
+  const enPrimero = activo === primero || activo === contenedor;
+  const enUltimo = activo === ultimo;
+  if (shiftKey && (enPrimero || fuera)) return ultimo;
+  if (!shiftKey && (enUltimo || fuera)) return primero;
+  return null;
+}
+function useDialogFocusTrap(open, onClose, ref, { initialFocus, bloquearScroll = true } = {}) {
+  const cerrar = useRef(onClose);
+  const opciones = useRef({ initialFocus, bloquearScroll });
+  useEffect(() => {
+    cerrar.current = onClose;
+  }, [onClose]);
+  useEffect(() => {
+    opciones.current = { initialFocus, bloquearScroll };
+  }, [initialFocus, bloquearScroll]);
+  useEffect(() => {
+    if (!open) return void 0;
+    const contenedor = ref.current;
+    const anterior = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const overflow = document.body.style.overflow;
+    const bloquear = opciones.current.bloquearScroll;
+    if (bloquear) document.body.style.overflow = "hidden";
+    const inicial = opciones.current.initialFocus?.() ?? contenedor;
+    inicial?.focus?.();
+    const alTeclear = (evento) => {
+      if (evento.key === "Escape") {
+        evento.preventDefault();
+        cerrar.current?.();
+        return;
+      }
+      if (evento.key !== "Tab" || !contenedor) return;
+      const nodos = [...contenedor.querySelectorAll(SELECTOR_ENFOCABLES)].filter((el) => el.getClientRects().length);
+      if (!nodos.length) {
+        evento.preventDefault();
+        contenedor.focus?.();
+        return;
+      }
+      const destino = destinoDeTab({
+        shiftKey: evento.shiftKey,
+        activo: document.activeElement,
+        primero: nodos[0],
+        ultimo: nodos[nodos.length - 1],
+        contenedor,
+        fuera: !contenedor.contains(document.activeElement)
+      });
+      if (destino) {
+        evento.preventDefault();
+        destino.focus();
+      }
+    };
+    document.addEventListener("keydown", alTeclear);
+    return () => {
+      document.removeEventListener("keydown", alTeclear);
+      if (bloquear) document.body.style.overflow = overflow;
+      if (anterior?.isConnected) anterior.focus();
+    };
+  }, [open, ref]);
 }
 
 // src/components/Icon.jsx
@@ -545,40 +609,9 @@ function Card({ className, ...props }) {
   return /* @__PURE__ */ jsx2("div", { className: cn("rounded-2xl border border-ink-600 bg-ink p-5 shadow-card", className), ...props });
 }
 function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
-  const dialog = useRef(null);
-  const close = useRef(onClose);
-  close.current = onClose;
+  const dialog = useRef2(null);
   const titleId = useId();
-  useEffect(() => {
-    if (!open) return void 0;
-    const previous = document.activeElement;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    dialog.current?.focus();
-    const onKey = (e) => {
-      if (e.key === "Escape") close.current?.();
-      if (e.key !== "Tab") return;
-      const nodes = [...dialog.current?.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || []].filter((el) => el.getClientRects().length);
-      const first = nodes[0], last = nodes[nodes.length - 1];
-      if (!first) {
-        e.preventDefault();
-        return;
-      }
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog.current)) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
-      previous?.focus?.();
-    };
-  }, [open]);
+  useDialogFocusTrap(open, onClose, dialog);
   if (!open) return null;
   return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className), children: [
     /* @__PURE__ */ jsxs("div", { className: "mb-4 flex items-center justify-between gap-3", children: [
@@ -671,40 +704,9 @@ function IconAction({ icon, label, tone = "mute", onClick, disabled = false, siz
   );
 }
 function Drawer({ open, onClose, title, children, side = "right", className }) {
-  const panel = useRef(null);
-  const close = useRef(onClose);
-  close.current = onClose;
+  const panel = useRef2(null);
   const titleId = useId();
-  useEffect(() => {
-    if (!open) return void 0;
-    const previous = document.activeElement;
-    const overflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    panel.current?.focus();
-    const onKey = (e) => {
-      if (e.key === "Escape") close.current?.();
-      if (e.key !== "Tab") return;
-      const nodes = [...panel.current?.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || []].filter((el) => el.getClientRects().length);
-      const first = nodes[0], last = nodes[nodes.length - 1];
-      if (!first) {
-        e.preventDefault();
-        return;
-      }
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
-      previous?.focus?.();
-    };
-  }, [open]);
+  useDialogFocusTrap(open, onClose, panel);
   if (!open) return null;
   return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 bg-black/60", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs(
     "div",
@@ -736,14 +738,14 @@ var TOAST_TONE = { success: "text-ok", error: "text-bad", info: "text-fono-light
 function ToastProvider({ children, demo = false }) {
   const [toasts, setToasts] = useState([]);
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect2(() => setMounted(true), []);
   const dismiss = useCallback((id) => setToasts((current) => current.filter((toast2) => toast2.id !== id)), []);
   const toast = useCallback((variant, title, description) => {
     const id = `toast-${++toastCounter}`;
     setToasts((current) => [...current, { id, variant: TOAST_ICON[variant] ? variant : "info", title, description }]);
     setTimeout(() => dismiss(id), 4e3);
   }, [dismiss]);
-  useEffect(() => {
+  useEffect2(() => {
     if (!demo) return void 0;
     let ultimo = 0;
     const aviso = () => {
@@ -1366,7 +1368,7 @@ function BarraLote({ cantidad = 0, onLimpiar, children, etiqueta, className }) {
 }
 
 // src/components/EmailField.jsx
-import { useRef as useRef2, useState as useState2 } from "react";
+import { useRef as useRef3, useState as useState2 } from "react";
 import { jsx as jsx14, jsxs as jsxs9 } from "react/jsx-runtime";
 var DOMINIOS_EMAIL = [
   "gmail.com",
@@ -1402,9 +1404,9 @@ function EmailField({
   ...props
 }) {
   const [open, setOpen] = useState2(false);
-  const tecleando = useRef2(false);
-  const tipeoReciente = useRef2(false);
-  const inputRef = useRef2(null);
+  const tecleando = useRef3(false);
+  const tipeoReciente = useRef3(false);
+  const inputRef = useRef3(null);
   const sugerencias = sugerenciasDe(value, dominios);
   function manejarKeyDown(event) {
     onKeyDown?.(event);
@@ -1716,7 +1718,7 @@ function InstagramField({ value = "", onChange, disabled = false, placeholder = 
 }
 
 // src/components/ProductCombobox.jsx
-import { useCallback as useCallback2, useEffect as useEffect2, useId as useId3, useMemo as useMemo2, useRef as useRef3, useState as useState4 } from "react";
+import { useCallback as useCallback2, useEffect as useEffect3, useId as useId3, useMemo as useMemo2, useRef as useRef4, useState as useState4 } from "react";
 
 // src/utils/categorias.js
 var CATEGORIAS_PRODUCTO = [
@@ -1795,8 +1797,8 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
   const [highlight, setHighlight] = useState4(0);
   const [creating, setCreating] = useState4(false);
   const listId = useId3();
-  const rootRef = useRef3(null);
-  useEffect2(() => {
+  const rootRef = useRef4(null);
+  useEffect3(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && rootRef.current?.contains(event.target)) return;
       close();
@@ -1808,7 +1810,7 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
     setQuery(next);
     onQueryChange?.(next);
   }, [onQueryChange]);
-  useEffect2(() => {
+  useEffect3(() => {
     if (!selectedId) return;
     const selected = products.find((product) => product.id === selectedId);
     if (selected) setearQuery(productName(selected));
@@ -1942,7 +1944,7 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
 }
 
 // src/components/BuscadorDispositivo.jsx
-import { useEffect as useEffect3, useId as useId4, useMemo as useMemo3, useRef as useRef4, useState as useState5 } from "react";
+import { useEffect as useEffect4, useId as useId4, useMemo as useMemo3, useRef as useRef5, useState as useState5 } from "react";
 
 // src/catalog/productos.js
 var MODELOS_IPHONE = [
@@ -2135,11 +2137,11 @@ function BuscadorDispositivo({
   const [abierto, setAbierto] = useState5(false);
   const [resaltado, setResaltado] = useState5(0);
   const listaId = useId4();
-  const raiz = useRef4(null);
-  useEffect3(() => {
+  const raiz = useRef5(null);
+  useEffect4(() => {
     setTexto(valor.modelo || "");
   }, [valor.modelo]);
-  useEffect3(() => {
+  useEffect4(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -2942,12 +2944,12 @@ function NavLateral({
 }
 
 // src/components/MenuDesplegable.jsx
-import { useEffect as useEffect4, useRef as useRef5, useState as useState12 } from "react";
+import { useEffect as useEffect5, useRef as useRef6, useState as useState12 } from "react";
 import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
 function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel = "Men\xFA", className }) {
   const [abierto, setAbierto] = useState12(false);
-  const raiz = useRef5(null);
-  useEffect4(() => {
+  const raiz = useRef6(null);
+  useEffect5(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -3401,7 +3403,7 @@ function BotonImprimir({
 }
 
 // src/components/BancoCombobox.jsx
-import { useEffect as useEffect5, useId as useId7, useMemo as useMemo5, useRef as useRef6, useState as useState15 } from "react";
+import { useEffect as useEffect6, useId as useId7, useMemo as useMemo5, useRef as useRef7, useState as useState15 } from "react";
 
 // src/utils/bancos.js
 var BANCOS_PARAGUAY = [
@@ -3545,9 +3547,9 @@ function BancoCombobox({
   const [abierto, setAbierto] = useState15(false);
   const [resaltado, setResaltado] = useState15(0);
   const listaId = useId7();
-  const raiz = useRef6(null);
-  const lista = useRef6(null);
-  useEffect5(() => {
+  const raiz = useRef7(null);
+  const lista = useRef7(null);
+  useEffect6(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -3556,7 +3558,7 @@ function BancoCombobox({
     return () => document.removeEventListener("click", cerrarFuera);
   }, []);
   const sugerencias = useMemo5(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
-  useEffect5(() => {
+  useEffect6(() => {
     if (!abierto) return;
     lista.current?.querySelector(`#${CSS.escape(`${listaId}-${resaltado}`)}`)?.scrollIntoView({ block: "nearest" });
   }, [abierto, resaltado, listaId]);
@@ -3639,7 +3641,7 @@ function BancoCombobox({
 }
 
 // src/components/CityAutocomplete.jsx
-import { useEffect as useEffect6, useRef as useRef7, useState as useState16 } from "react";
+import { useEffect as useEffect7, useRef as useRef8, useState as useState16 } from "react";
 
 // src/catalog/ciudades.js
 var CIUDADES_PARAGUAY = [
@@ -3961,9 +3963,9 @@ function CityAutocomplete({
   const [sugerencias, setSugerencias] = useState16([]);
   const [abierto, setAbierto] = useState16(false);
   const [error, setError] = useState16("");
-  const timer = useRef7(null);
-  const raiz = useRef7(null);
-  useEffect6(() => {
+  const timer = useRef8(null);
+  const raiz = useRef8(null);
+  useEffect7(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -3971,7 +3973,7 @@ function CityAutocomplete({
     document.addEventListener("mousedown", cerrarFuera);
     return () => document.removeEventListener("mousedown", cerrarFuera);
   }, []);
-  useEffect6(() => () => {
+  useEffect7(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
   function resolver(texto) {
@@ -4919,7 +4921,7 @@ function TarjetaRecepcion({
 }
 
 // src/components/CodigoQr.jsx
-import { useEffect as useEffect7, useState as useState17 } from "react";
+import { useEffect as useEffect8, useState as useState17 } from "react";
 
 // src/utils/qr.js
 var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
@@ -4938,7 +4940,7 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 import { jsx as jsx59 } from "react/jsx-runtime";
 function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
   const [imagen, setImagen] = useState17("");
-  useEffect7(() => {
+  useEffect8(() => {
     let activo = true;
     qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
       if (activo) setImagen(data);
@@ -5792,7 +5794,7 @@ function Calendario({
 }
 
 // src/components/RangoFecha.jsx
-import { useId as useId9, useRef as useRef8, useState as useState20 } from "react";
+import { useId as useId9, useRef as useRef9, useState as useState20 } from "react";
 
 // src/utils/rangoFecha.js
 var PERIODOS_FECHA = ["hoy", "esta-semana", "este-mes", "mes-pasado", "ultimos-30", "personalizado"];
@@ -5866,7 +5868,7 @@ function RangoFecha({
   });
   const idDesde = useId9();
   const idHasta = useId9();
-  const refDesde = useRef8(null);
+  const refDesde = useRef9(null);
   const actual = controlado ? { desde: desde ?? "", hasta: hasta ?? "" } : interno;
   const activo = periodoDeRango(actual.desde, actual.hasta, { hoy });
   const invertido = rangoInvertido(actual.desde, actual.hasta);
@@ -5933,7 +5935,7 @@ function RangoFecha({
 }
 
 // src/components/PaletaComandos.jsx
-import { useEffect as useEffect8, useId as useId10, useMemo as useMemo7, useRef as useRef9, useState as useState21 } from "react";
+import { useEffect as useEffect9, useId as useId10, useMemo as useMemo7, useRef as useRef10, useState as useState21 } from "react";
 import { Fragment as Fragment10, jsx as jsx76, jsxs as jsxs60 } from "react/jsx-runtime";
 var CAPITALIZAR = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
 function agruparResultados(resultados = [], { etiquetasTipo = {}, iconosTipo = {} } = {}) {
@@ -5995,11 +5997,11 @@ function PaletaComandos({
   const [error, setError] = useState21("");
   const [activo, setActivo] = useState21(0);
   const [intento, setIntento] = useState21(0);
-  const raiz = useRef9(null);
-  const entrada = useRef9(null);
-  const buscarRef = useRef9(buscar);
+  const raiz = useRef10(null);
+  const entrada = useRef10(null);
+  const buscarRef = useRef10(buscar);
   buscarRef.current = buscar;
-  const onAbrirRef = useRef9(onAbrir);
+  const onAbrirRef = useRef10(onAbrir);
   onAbrirRef.current = onAbrir;
   const idLista = useId10();
   const controlada = abierta !== void 0;
@@ -6012,7 +6014,7 @@ function PaletaComandos({
     if (!controlada) setInterna(false);
     onCerrar?.();
   }
-  useEffect8(() => {
+  useEffect9(() => {
     if (!conAtajo) return void 0;
     const onKeyDown2 = (event) => {
       if (event.defaultPrevented || event.altKey || event.shiftKey) return;
@@ -6025,7 +6027,7 @@ function PaletaComandos({
     document.addEventListener("keydown", onKeyDown2);
     return () => document.removeEventListener("keydown", onKeyDown2);
   }, [conAtajo, atajo, controlada]);
-  useEffect8(() => {
+  useEffect9(() => {
     if (!visible) return void 0;
     setConsulta("");
     setResultados(null);
@@ -6036,7 +6038,7 @@ function PaletaComandos({
     const frame = requestAnimationFrame(() => entrada.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [visible]);
-  useEffect8(() => {
+  useEffect9(() => {
     if (!visible) return void 0;
     const termino2 = consulta.trim();
     if (termino2.length < minimo) {
@@ -6074,10 +6076,10 @@ function PaletaComandos({
   const planos = useMemo7(() => grupos.flatMap((grupo) => grupo.items), [grupos]);
   const estado = estadoPaleta({ listo, cargando, error, total: planos.length });
   const indice = useMemo7(() => new Map(planos.map((item, posicion) => [item, posicion])), [planos]);
-  useEffect8(() => {
+  useEffect9(() => {
     setActivo(0);
   }, [resultados]);
-  useEffect8(() => {
+  useEffect9(() => {
     if (!visible) return;
     raiz.current?.querySelector(`[data-paleta-index="${activo}"]`)?.scrollIntoView?.({ block: "nearest" });
   }, [activo, visible, planos.length]);
@@ -6404,7 +6406,7 @@ function BarraInferior({
 }
 
 // src/components/Avatar.jsx
-import { useEffect as useEffect9, useState as useState23 } from "react";
+import { useEffect as useEffect10, useState as useState23 } from "react";
 
 // src/utils/avatar.js
 var COLORES_AVATAR = {
@@ -6465,7 +6467,7 @@ function Avatar({
   className
 }) {
   const [fallo, setFallo] = useState23(false);
-  useEffect9(() => {
+  useEffect10(() => {
     setFallo(false);
   }, [src]);
   const cuadro = empresa ? "cuadrado" : forma || "redondo";
@@ -6505,7 +6507,7 @@ function Avatar({
 }
 
 // src/components/PersonaChip.jsx
-import { useEffect as useEffect10, useState as useState24 } from "react";
+import { useEffect as useEffect11, useState as useState24 } from "react";
 
 // src/utils/identidad.js
 var primerTexto = (...valores) => {
@@ -6567,7 +6569,7 @@ function PersonaChip({
   const local = foto ?? (identidad.hasAvatar === false ? "" : identidad.fotoLocal);
   const google = picture ?? identidad.picture;
   const [localRota, setLocalRota] = useState24(false);
-  useEffect10(() => {
+  useEffect11(() => {
     setLocalRota(false);
   }, [local]);
   const src = !localRota && local ? local : google;
@@ -6774,7 +6776,7 @@ function IndicadorConexion({
 }
 
 // src/components/CampanaAvisos.jsx
-import { useEffect as useEffect11, useRef as useRef10, useState as useState25 } from "react";
+import { useEffect as useEffect12, useRef as useRef11, useState as useState25 } from "react";
 import { Fragment as Fragment13, jsx as jsx84, jsxs as jsxs66 } from "react/jsx-runtime";
 function contarSinLeer(avisos = []) {
   const conEstado = avisos.filter((aviso) => aviso && typeof aviso.leido === "boolean");
@@ -6798,9 +6800,9 @@ function CampanaAvisos({
   className
 }) {
   const [abierto, setAbierto] = useState25(false);
-  const raiz = useRef10(null);
+  const raiz = useRef11(null);
   const sinLeer = contarSinLeer(avisos);
-  useEffect11(() => {
+  useEffect12(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -6978,7 +6980,7 @@ function GraficoBarras({
 }
 
 // src/components/TableroKanban.jsx
-import { useCallback as useCallback3, useEffect as useEffect12, useMemo as useMemo8, useRef as useRef11, useState as useState26 } from "react";
+import { useCallback as useCallback3, useEffect as useEffect13, useMemo as useMemo8, useRef as useRef12, useState as useState26 } from "react";
 import { jsx as jsx86, jsxs as jsxs68 } from "react/jsx-runtime";
 var SIN_MOVIMIENTOS = /* @__PURE__ */ new Set();
 function columnasDelTablero(columnas = [], tarjetas = []) {
@@ -7002,16 +7004,16 @@ function destinosDeTarjeta(tarjeta, columnas = []) {
 function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
   const [overrides, setOverrides] = useState26({});
   const [moviendo, setMoviendo] = useState26(SIN_MOVIMIENTOS);
-  const tarjetasRef = useRef11(tarjetas);
-  const overridesRef = useRef11(overrides);
-  const enVueloRef = useRef11(/* @__PURE__ */ new Set());
-  useEffect12(() => {
+  const tarjetasRef = useRef12(tarjetas);
+  const overridesRef = useRef12(overrides);
+  const enVueloRef = useRef12(/* @__PURE__ */ new Set());
+  useEffect13(() => {
     tarjetasRef.current = tarjetas;
   }, [tarjetas]);
-  useEffect12(() => {
+  useEffect13(() => {
     overridesRef.current = overrides;
   }, [overrides]);
-  useEffect12(() => {
+  useEffect13(() => {
     setOverrides((actual) => {
       const entradas = Object.entries(actual);
       if (entradas.length === 0) return actual;
@@ -7681,7 +7683,7 @@ function DocumentoImpresion({
 }
 
 // src/components/SubidaImagen.jsx
-import { useId as useId11, useRef as useRef12, useState as useState27 } from "react";
+import { useId as useId11, useRef as useRef13, useState as useState27 } from "react";
 import { jsx as jsx90, jsxs as jsxs72 } from "react/jsx-runtime";
 var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
 var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
@@ -7838,7 +7840,7 @@ function SubidaImagen({
   ocupado = false,
   className
 }) {
-  const inputRef = useRef12(null);
+  const inputRef = useRef13(null);
   const campoId = useId11();
   const errorId = `${campoId}-error`;
   const ayudaId = `${campoId}-ayuda`;
@@ -8662,6 +8664,7 @@ export {
   ResumenIncidencias,
   ResumenRecepcion,
   RucField,
+  SELECTOR_ENFOCABLES,
   SIMBOLOS_MONEDA,
   SIMBOLO_PYG,
   SearchField_default as SearchField,
@@ -8748,6 +8751,7 @@ export {
   crearTicket,
   departamentoDe,
   destinoDeConexion,
+  destinoDeTab,
   destinosDeTarjeta,
   envolver,
   errorMonto,
@@ -8889,6 +8893,7 @@ export {
   tonoRecepcion,
   tonoRevision,
   ultimos4,
+  useDialogFocusTrap,
   useTableroOptimista,
   useToast,
   validarImagen,

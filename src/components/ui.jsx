@@ -4,6 +4,7 @@ import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, e
 import { TAMANOS_CAMPO } from '../utils/tamanos.js'
 import { TAMANO_MODAL_PREDETERMINADO, TAMANOS_MODAL } from '../utils/modal.js'
 import { textoDeTono } from '../utils/tonos.js'
+import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js'
 import Icon from './Icon.jsx'
 
 // ── Button ──────────────────────────────────────────────────────────
@@ -227,29 +228,11 @@ export function Card({ className, ...props }) {
 
 // Popup estándar: Esc, clic afuera, botón cerrar y cierre opcional al guardar.
 // El ancho se elige con `size` (TAMANOS_MODAL): no se pasa `max-w-*` suelto.
+// El foco, el Esc y el scroll bloqueado son de useDialogFocusTrap.
 export function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
   const dialog = useRef(null)
-  const close = useRef(onClose)
-  close.current = onClose
   const titleId = useId()
-  useEffect(() => {
-    if (!open) return undefined
-    const previous = document.activeElement
-    const overflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    dialog.current?.focus()
-    const onKey = (e) => {
-      if (e.key === 'Escape') close.current?.()
-      if (e.key !== 'Tab') return
-      const nodes = [...(dialog.current?.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || [])].filter(el => el.getClientRects().length)
-      const first = nodes[0], last = nodes[nodes.length - 1]
-      if (!first) { e.preventDefault(); return }
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog.current)) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = overflow; previous?.focus?.() }
-  }, [open])
+  useDialogFocusTrap(open, onClose, dialog)
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
@@ -367,31 +350,13 @@ export function IconAction({ icon, label, tone = 'mute', onClick, disabled = fal
 }
 
 // ── Drawer ──────────────────────────────────────────────────────────
-// Panel lateral móvil: overlay, foco atrapado, Esc y clic afuera. Mismo
-// nivel de robustez que el Modal; entra deslizándose desde el costado.
+// Panel lateral móvil: overlay y clic afuera; el foco atrapado, Esc y el
+// scroll bloqueado salen del mismo hook que el Modal. Entra deslizándose
+// desde el costado.
 export function Drawer({ open, onClose, title, children, side = 'right', className }) {
   const panel = useRef(null)
-  const close = useRef(onClose)
-  close.current = onClose
   const titleId = useId()
-  useEffect(() => {
-    if (!open) return undefined
-    const previous = document.activeElement
-    const overflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    panel.current?.focus()
-    const onKey = (e) => {
-      if (e.key === 'Escape') close.current?.()
-      if (e.key !== 'Tab') return
-      const nodes = [...(panel.current?.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || [])].filter(el => el.getClientRects().length)
-      const first = nodes[0], last = nodes[nodes.length - 1]
-      if (!first) { e.preventDefault(); return }
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = overflow; previous?.focus?.() }
-  }, [open])
+  useDialogFocusTrap(open, onClose, panel)
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 bg-black/60" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>

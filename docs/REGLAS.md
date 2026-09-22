@@ -151,6 +151,11 @@ compatibilidad).
   columna angosta con la mitad del modal vacía.
 - `Modal`/`ConfirmDialog` con foco atrapado, `Esc`, scroll bloqueado y retorno
   de foco; el pie de guardado va asociado al formulario y bloquea doble clic.
+- Ese comportamiento vive en `useDialogFocusTrap(open, onClose, ref)`
+  (`src/hooks/`), compartido por `Modal` y `Drawer`: bloquea el scroll, enfoca
+  al abrir (o lo que devuelva `initialFocus()`), cicla Tab, cierra con `Esc` y
+  devuelve el foco al elemento anterior. Un overlay propio usa el hook en vez de
+  copiar la trampa.
 - Eliminación destructiva: confirmación propia; datos críticos con doble
   confirmación y plazo recuperable.
 
