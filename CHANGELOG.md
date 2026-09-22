@@ -4,6 +4,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.7.0 — 2026-09-22
+
+- **Piezas de formulario:** `GRILLA_DOS_COLUMNAS` (+ `_COMPACTA`),
+  `PIE_ACCIONES` y `PIE_ACCIONES_REVERSO` en `utils/formulario.js`, portadas
+  del barrido de MobOS (90 usos migrados allá).
+
 ## v0.6.0 — 2026-09-22
 
 - `CELDA_IDENTIDAD` (`truncate text-[13px] font-semibold`) para la celda de

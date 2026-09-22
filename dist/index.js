@@ -3023,6 +3023,12 @@ function paginaDePruebaSimple(opciones = {}) {
   return paginaDePrueba({ ...opciones, tipo: "caracteres" });
 }
 
+// src/utils/formulario.js
+var GRILLA_DOS_COLUMNAS = "grid gap-3 sm:grid-cols-2";
+var GRILLA_DOS_COLUMNAS_COMPACTA = "grid gap-2 sm:grid-cols-2";
+var PIE_ACCIONES = "flex flex-wrap justify-end gap-2";
+var PIE_ACCIONES_REVERSO = "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end";
+
 // src/catalog/productos.js
 var MODELOS_IPHONE = [
   // Generación actual y anteriores (del más nuevo al más viejo)
@@ -3202,6 +3208,8 @@ export {
   Eyebrow,
   FilaDato,
   FormField,
+  GRILLA_DOS_COLUMNAS,
+  GRILLA_DOS_COLUMNAS_COMPACTA,
   GoogleButton,
   GoogleMark,
   Icon,
@@ -3223,6 +3231,8 @@ export {
   MoneyInput,
   NavLateral,
   OAuthDivider,
+  PIE_ACCIONES,
+  PIE_ACCIONES_REVERSO,
   PageHeader,
   PanelDerecho,
   PasswordInput,

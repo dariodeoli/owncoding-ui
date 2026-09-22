@@ -58,6 +58,9 @@ la de MobOS.
 
 ### Notas de release
 
+- **v0.7.0** — piezas de formulario: `GRILLA_DOS_COLUMNAS` (+ `_COMPACTA`),
+  `PIE_ACCIONES` y `PIE_ACCIONES_REVERSO` (mismo criterio que las clases de
+  tabla).
 - **v0.6.0** — `CELDA_IDENTIDAD` (celda de nombre en tablas) y consumo más
   simple: el preset ya incluye el bundle de la librería en el `content` de
   Tailwind (si no, las clases de los componentes se purgan).
@@ -111,7 +114,7 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 5. Correr lint + tests + build + e2e smoke de la app.
 6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
-## Qué incluye (v0.1.0)
+## Qué incluye (v0.7.0)
 
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
@@ -143,6 +146,8 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 - **Tamaños de campo:** `TAMANOS_CAMPO` (`moneda: w-36`, `porcentaje: w-24`,
   `cantidad: w-20`, `fecha: w-40`, …) para que los campos no se estiren de más;
   `MoneyInput` y `PercentField` ya traen su ancho recomendado.
+- **Piezas de formulario:** `GRILLA_DOS_COLUMNAS` (+ `_COMPACTA`) y
+  `PIE_ACCIONES`/`PIE_ACCIONES_REVERSO` en `utils/formulario.js`.
 - **Impresión — modelos:** `crearTicket` (ESC/POS 58/80 mm) y `paginaDePrueba`
   (verificador con validación de 4 dígitos y secciones por tipo). Ver
   `docs/IMPRESION.md`.

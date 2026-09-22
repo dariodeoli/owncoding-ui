@@ -110,6 +110,7 @@ export {
 } from './printing/escpos.js'
 export { paginaDePrueba, paginaDePruebaSimple, TIPOS_PRUEBA, TIPOS_TICKET_PRUEBA } from './printing/prueba.js'
 export { TAMANOS_CAMPO, anchoParaLargo } from './utils/tamanos.js'
+export { GRILLA_DOS_COLUMNAS, GRILLA_DOS_COLUMNAS_COMPACTA, PIE_ACCIONES, PIE_ACCIONES_REVERSO } from './utils/formulario.js'
 export { CIUDADES_PARAGUAY, DEPARTAMENTOS_PARAGUAY, departamentoDe, buscarCiudad } from './catalog/ciudades.js'
 export {
   MODELOS_IPHONE,
