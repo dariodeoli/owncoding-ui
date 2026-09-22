@@ -67,6 +67,7 @@ export { default as AjustesImpresion } from './components/AjustesImpresion.jsx'
 export { default as BotonImprimir } from './components/BotonImprimir.jsx'
 export { default as BancoCombobox } from './components/BancoCombobox.jsx'
 export { default as BancoLogo } from './components/BancoLogo.jsx'
+export { default as CityAutocomplete } from './components/CityAutocomplete.jsx'
 
 // Clases de tabla/listado
 export { ROTULO_DATO, CELDA_ENCABEZADO, ROTULO_SECCION, CELDA_DATO, CELDA_NUMERO } from './utils/tabla.js'
@@ -98,6 +99,26 @@ export {
   textoVerificacion,
   agregarEstado,
 } from './printing/estadoImpresoras.js'
+export {
+  crearTicket,
+  columnasDeAncho,
+  envolver,
+  repartirLinea,
+  bloqueFirma,
+  AVANCES_FIRMA,
+  VARIANTES_CORTE,
+} from './printing/escpos.js'
+export { paginaDePrueba, paginaDePruebaSimple, TIPOS_PRUEBA, TIPOS_TICKET_PRUEBA } from './printing/prueba.js'
+export { TAMANOS_CAMPO, anchoParaLargo } from './utils/tamanos.js'
+export { CIUDADES_PARAGUAY, DEPARTAMENTOS_PARAGUAY, departamentoDe, buscarCiudad } from './catalog/ciudades.js'
+export {
+  MODELOS_IPHONE,
+  CAPACIDADES_IPHONE,
+  COLORES_IPHONE,
+  CATEGORIAS_ACCESORIOS,
+  MARCAS_ACCESORIOS,
+  buscarEnCatalogo,
+} from './catalog/productos.js'
 export {
   formatGs,
   formatGsInput,

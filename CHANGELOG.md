@@ -4,6 +4,24 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.5.0 — 2026-09-22
+
+- **Ciudades de Paraguay:** catálogo `CIUDADES_PARAGUAY` (263 municipios + 18
+  departamentos), `departamentoDe` y `buscarCiudad`; `CityAutocomplete` resuelve
+  el departamento solo con la ciudad (al tipear coincidencia exacta, al elegir
+  una sugerencia y al salir del campo), con `buscar` inyectable para usar la API
+  propia.
+- **Catálogos de productos:** `MODELOS_IPHONE`, `CAPACIDADES_IPHONE`,
+  `COLORES_IPHONE`, `CATEGORIAS_ACCESORIOS`, `MARCAS_ACCESORIOS` y
+  `buscarEnCatalogo` como predeterminados actualizables por release.
+- **Tamaños de campo:** `TAMANOS_CAMPO` + `anchoParaLargo`; `MoneyInput`
+  (`w-36`) y `PercentField` (`w-24`) aplican su ancho recomendado.
+- **Impresión — builder y prueba:** `printing/escpos.js` (`crearTicket`,
+  columnas, líneas, cortes, `bloqueFirma`) y `printing/prueba.js`
+  (`paginaDePrueba` con verificador). `docs/IMPRESION.md` queda con los
+  apartados por tipo y lo que falta portar.
+- 8 tests nuevos (45 en total).
+
 ## v0.4.0 — 2026-09-22
 
 - **Impresión LAN/USB funcional:** `AjustesImpresion`, `BotonImprimir` y

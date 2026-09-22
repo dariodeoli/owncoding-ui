@@ -1,6 +1,7 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { cn } from '../utils/cn.js'
 import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto } from '../utils/moneda.js'
+import { TAMANOS_CAMPO } from '../utils/tamanos.js'
 import Icon from './Icon.jsx'
 
 // ── Button ──────────────────────────────────────────────────────────
@@ -135,7 +136,7 @@ export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, cla
           const next = event.target.value.replace(/[^\d.,]/g, '')
           onValueChange?.(isPyg ? (next.trim() ? parseGsInput(next) : '') : parseUsdInput(next))
         }}
-        className={cn(prefix.length > 3 ? 'pl-14' : 'pl-12', 'tabular-nums', className)}
+        className={cn(TAMANOS_CAMPO.moneda, prefix.length > 3 ? 'pl-14' : 'pl-12', 'tabular-nums', className)}
       />
     </div>
   )

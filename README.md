@@ -105,6 +105,16 @@ la de MobOS.
   y `cups:<cola>`). Guía completa: `docs/IMPRESION.md`.
 - **Bancos de Paraguay:** catálogo `BANCOS_PARAGUAY` como predeterminado,
   `BancoCombobox` y `BancoLogo` (archivo/marca/monograma, sin cuadros rotos).
+- **Catálogos por defecto (Paraguay):** `CIUDADES_PARAGUAY` (263 municipios con
+  departamento) + `CityAutocomplete` (el departamento se resuelve solo con la
+  ciudad), `MODELOS_IPHONE`, `CAPACIDADES_IPHONE`, `COLORES_IPHONE` y
+  `CATEGORIAS_ACCESORIOS`. Se actualizan acá y llegan a todas las apps.
+- **Tamaños de campo:** `TAMANOS_CAMPO` (`moneda: w-36`, `porcentaje: w-24`,
+  `cantidad: w-20`, `fecha: w-40`, …) para que los campos no se estiren de más;
+  `MoneyInput` y `PercentField` ya traen su ancho recomendado.
+- **Impresión — modelos:** `crearTicket` (ESC/POS 58/80 mm) y `paginaDePrueba`
+  (verificador con validación de 4 dígitos y secciones por tipo). Ver
+  `docs/IMPRESION.md`.
 - **Estados y avisos:** `Aviso` (error/ok/warn, con contenedor), `EmptyState`,
   `ErrorState`, `Skeleton`, `Badge`, `Dot`.
 - **Datos:** `Money`, `FilaDato`, `CeldaMoneda`, `BarraProgreso`,

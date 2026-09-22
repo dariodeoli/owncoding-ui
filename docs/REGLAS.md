@@ -6,6 +6,8 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 
 ## 1. Campos de formulario
 
+### Tabla por tipo de dato
+
 | Tipo | Objeto | Patrón |
 | --- | --- | --- |
 | Texto libre | `Input` + `Label`/`FormField` | label arriba (`htmlFor`), `required` real, `maxLength` por tipo (120/200) |
@@ -24,6 +26,25 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | Catálogo cerrado | `Select` | nunca texto libre para catálogos |
 | Lista/cuadrícula | `ListGridToggle` | solo íconos, `aria-pressed` |
 | Búsqueda instantánea | `SearchField` | lupa + limpiar; el debounce vive en la pantalla |
+| Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el texto libre sigue permitido |
+
+### Tamaños recomendados (#148, portable)
+
+| Dato | Clase | Ejemplo |
+| --- | --- | --- |
+| Monto | `w-36` (`monedaAmplia`: `w-44` en ventas) | Gs 12.500.000 |
+| Porcentaje | `w-24` | 12,5 |
+| Cantidad | `w-20` | 999 |
+| Fecha | `w-40` | 17/09/2026 |
+| Teléfono | `w-44` | +595 981 123 456 |
+| RUC/CI | `w-44` | 80012345-6 |
+| IP | `w-40` | 192.168.1.50 |
+| Ciudad | `w-56` | Ciudad del Este |
+
+`TAMANOS_CAMPO` (librería) trae los valores; `MoneyInput` y `PercentField` ya
+aplican su ancho por defecto y la pantalla puede pisarlo (`w-full` cuando el
+campo va solo). Regla: **el campo no se estira más de lo que el dato necesita**;
+si hay espacio libre, se lo lleva el layout, no el input.
 
 Transversales: error **o** hint (nunca ambos), `aria-invalid` +
 `aria-describedby`, error con `role="alert"`, teclado móvil correcto y nada de

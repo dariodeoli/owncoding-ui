@@ -88,6 +88,37 @@ function largoMaximoMonto(max = LIMITE_MONTO_GENERAL, { decimales = false } = {}
   return digitos + separadores + (decimales ? 3 : 0);
 }
 
+// src/utils/tamanos.js
+var TAMANOS_CAMPO = Object.freeze({
+  // Anchos recomendados (Tailwind) por tipo de dato
+  moneda: "w-36",
+  // Gs 12.500.000
+  monedaAmplia: "w-44",
+  // montos de venta (hasta 99.000.000.000)
+  porcentaje: "w-24",
+  // 12,5
+  cantidad: "w-20",
+  // 999
+  anio: "w-20",
+  dias: "w-24",
+  fecha: "w-40",
+  // 17/09/2026
+  fechaHora: "w-52",
+  telefono: "w-44",
+  codigoPostal: "w-28",
+  ip: "w-40",
+  puerto: "w-24",
+  documento: "w-44",
+  // RUC/CI
+  ciudad: "w-56"
+});
+function anchoParaLargo(largoMin = 0, largoMax = 0) {
+  if (largoMax <= 12) return "w-28";
+  if (largoMax <= 24) return "w-40";
+  if (largoMax <= 40) return "w-56";
+  return "w-full";
+}
+
 // src/components/Icon.jsx
 import { jsx } from "react/jsx-runtime";
 var PATHS = {
@@ -286,7 +317,7 @@ function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className,
           const next = event.target.value.replace(/[^\d.,]/g, "");
           onValueChange?.(isPyg ? next.trim() ? parseGsInput(next) : "" : parseUsdInput(next));
         },
-        className: cn(prefix.length > 3 ? "pl-14" : "pl-12", "tabular-nums", className)
+        className: cn(TAMANOS_CAMPO.moneda, prefix.length > 3 ? "pl-14" : "pl-12", "tabular-nums", className)
       }
     )
   ] });
@@ -890,7 +921,7 @@ function PercentField({
     Input,
     {
       id,
-      className,
+      className: cn(TAMANOS_CAMPO.porcentaje, className),
       type: "text",
       inputMode: "decimal",
       autoComplete: "off",
@@ -2115,6 +2146,414 @@ function BancoCombobox({
   ] });
 }
 
+// src/components/CityAutocomplete.jsx
+import { useEffect as useEffect4, useRef as useRef5, useState as useState9 } from "react";
+
+// src/catalog/ciudades.js
+var CIUDADES_PARAGUAY = [
+  { ciudad: "Bah\xEDa Negra", departamento: "Alto Paraguay" },
+  { ciudad: "Capit\xE1n Carmelo Peralta", departamento: "Alto Paraguay" },
+  { ciudad: "Fuerte Olimpo", departamento: "Alto Paraguay" },
+  { ciudad: "Puerto Casado", departamento: "Alto Paraguay" },
+  { ciudad: "Ciudad del Este", departamento: "Alto Paran\xE1" },
+  { ciudad: "Doctor Juan Le\xF3n Mallorqu\xEDn", departamento: "Alto Paran\xE1" },
+  { ciudad: "Doctor Ra\xFAl Pe\xF1a", departamento: "Alto Paran\xE1" },
+  { ciudad: "Domingo Mart\xEDnez de Irala", departamento: "Alto Paran\xE1" },
+  { ciudad: "Hernandarias", departamento: "Alto Paran\xE1" },
+  { ciudad: "Iru\xF1a", departamento: "Alto Paran\xE1" },
+  { ciudad: "Itakyry", departamento: "Alto Paran\xE1" },
+  { ciudad: "Juan Emiliano O''Leary", departamento: "Alto Paran\xE1" },
+  { ciudad: "Los Cedrales", departamento: "Alto Paran\xE1" },
+  { ciudad: "Mbaracay\xFA", departamento: "Alto Paran\xE1" },
+  { ciudad: "Minga Guaz\xFA", departamento: "Alto Paran\xE1" },
+  { ciudad: "Minga Por\xE1", departamento: "Alto Paran\xE1" },
+  { ciudad: "Naranjal", departamento: "Alto Paran\xE1" },
+  { ciudad: "\xD1acunday", departamento: "Alto Paran\xE1" },
+  { ciudad: "Presidente Franco", departamento: "Alto Paran\xE1" },
+  { ciudad: "San Alberto", departamento: "Alto Paran\xE1" },
+  { ciudad: "San Crist\xF3bal", departamento: "Alto Paran\xE1" },
+  { ciudad: "Santa Fe del Paran\xE1", departamento: "Alto Paran\xE1" },
+  { ciudad: "Santa Rita", departamento: "Alto Paran\xE1" },
+  { ciudad: "Santa Rosa del Monday", departamento: "Alto Paran\xE1" },
+  { ciudad: "Tavapy", departamento: "Alto Paran\xE1" },
+  { ciudad: "Yguaz\xFA", departamento: "Alto Paran\xE1" },
+  { ciudad: "Bella Vista Norte", departamento: "Amambay" },
+  { ciudad: "Capit\xE1n Bado", departamento: "Amambay" },
+  { ciudad: "Cerro Cor\xE1", departamento: "Amambay" },
+  { ciudad: "Karapa\xED", departamento: "Amambay" },
+  { ciudad: "Pedro Juan Caballero", departamento: "Amambay" },
+  { ciudad: "Zanja Pyt\xE1", departamento: "Amambay" },
+  { ciudad: "Asunci\xF3n", departamento: "Asunci\xF3n" },
+  { ciudad: "Boquer\xF3n", departamento: "Boquer\xF3n" },
+  { ciudad: "Filadelfia", departamento: "Boquer\xF3n" },
+  { ciudad: "Loma Plata", departamento: "Boquer\xF3n" },
+  { ciudad: "Mariscal Jos\xE9 F\xE9lix Estigarribia", departamento: "Boquer\xF3n" },
+  { ciudad: "Caaguaz\xFA", departamento: "Caaguaz\xFA" },
+  { ciudad: "Caraya\xF3", departamento: "Caaguaz\xFA" },
+  { ciudad: "Coronel Oviedo", departamento: "Caaguaz\xFA" },
+  { ciudad: "Doctor Cecilio B\xE1ez", departamento: "Caaguaz\xFA" },
+  { ciudad: "Doctor Juan Eulogio Estigarribia", departamento: "Caaguaz\xFA" },
+  { ciudad: "Doctor Juan Manuel Frutos", departamento: "Caaguaz\xFA" },
+  { ciudad: "Jos\xE9 Domingo Ocampos", departamento: "Caaguaz\xFA" },
+  { ciudad: "La Pastora", departamento: "Caaguaz\xFA" },
+  { ciudad: "Mariscal Francisco Solano L\xF3pez", departamento: "Caaguaz\xFA" },
+  { ciudad: "Nueva Londres", departamento: "Caaguaz\xFA" },
+  { ciudad: "Nueva Toledo", departamento: "Caaguaz\xFA" },
+  { ciudad: "Ra\xFAl Arsenio Oviedo", departamento: "Caaguaz\xFA" },
+  { ciudad: "Regimiento de Infanter\xEDa Tres Corrales", departamento: "Caaguaz\xFA" },
+  { ciudad: "Repatriaci\xF3n", departamento: "Caaguaz\xFA" },
+  { ciudad: "San Joaqu\xEDn", departamento: "Caaguaz\xFA" },
+  { ciudad: "San Jos\xE9 de los Arroyos", departamento: "Caaguaz\xFA" },
+  { ciudad: "Santa Rosa del Mbutuy", departamento: "Caaguaz\xFA" },
+  { ciudad: "Sim\xF3n Bol\xEDvar", departamento: "Caaguaz\xFA" },
+  { ciudad: "Tembiapor\xE1", departamento: "Caaguaz\xFA" },
+  { ciudad: "Tres de Febrero", departamento: "Caaguaz\xFA" },
+  { ciudad: "Vaquer\xEDa", departamento: "Caaguaz\xFA" },
+  { ciudad: "Yh\xFA", departamento: "Caaguaz\xFA" },
+  { ciudad: "Aba\xED", departamento: "Caazap\xE1" },
+  { ciudad: "Buena Vista", departamento: "Caazap\xE1" },
+  { ciudad: "Caazap\xE1", departamento: "Caazap\xE1" },
+  { ciudad: "Doctor Mois\xE9s Santiago Bertoni", departamento: "Caazap\xE1" },
+  { ciudad: "Fulgencio Yegros", departamento: "Caazap\xE1" },
+  { ciudad: "General Higinio Mor\xEDnigo", departamento: "Caazap\xE1" },
+  { ciudad: "Maciel", departamento: "Caazap\xE1" },
+  { ciudad: "San Juan Nepomuceno", departamento: "Caazap\xE1" },
+  { ciudad: "Tava\xED", departamento: "Caazap\xE1" },
+  { ciudad: "Tres de Mayo", departamento: "Caazap\xE1" },
+  { ciudad: "Yuty", departamento: "Caazap\xE1" },
+  { ciudad: "Corpus Christi", departamento: "Canindey\xFA" },
+  { ciudad: "Curuguaty", departamento: "Canindey\xFA" },
+  { ciudad: "General Francisco Caballero \xC1lvarez", departamento: "Canindey\xFA" },
+  { ciudad: "Itanar\xE1", departamento: "Canindey\xFA" },
+  { ciudad: "Katuet\xE9", departamento: "Canindey\xFA" },
+  { ciudad: "La Paloma del Esp\xEDritu Santo", departamento: "Canindey\xFA" },
+  { ciudad: "Laurel", departamento: "Canindey\xFA" },
+  { ciudad: "Maracan\xE1", departamento: "Canindey\xFA" },
+  { ciudad: "Nueva Esperanza", departamento: "Canindey\xFA" },
+  { ciudad: "Puerto Adela", departamento: "Canindey\xFA" },
+  { ciudad: "Saltos del Guair\xE1", departamento: "Canindey\xFA" },
+  { ciudad: "Villa Ygatim\xED", departamento: "Canindey\xFA" },
+  { ciudad: "Yasy Ca\xF1y", departamento: "Canindey\xFA" },
+  { ciudad: "Yby Pyt\xE1", departamento: "Canindey\xFA" },
+  { ciudad: "Ybyraroban\xE1", departamento: "Canindey\xFA" },
+  { ciudad: "Ypejh\xFA", departamento: "Canindey\xFA" },
+  { ciudad: "Aregu\xE1", departamento: "Central" },
+  { ciudad: "Capiat\xE1", departamento: "Central" },
+  { ciudad: "Fernando de la Mora", departamento: "Central" },
+  { ciudad: "Guarambar\xE9", departamento: "Central" },
+  { ciudad: "It\xE1", departamento: "Central" },
+  { ciudad: "Itaugu\xE1", departamento: "Central" },
+  { ciudad: "Juli\xE1n Augusto Sald\xEDvar", departamento: "Central" },
+  { ciudad: "Lambar\xE9", departamento: "Central" },
+  { ciudad: "Limpio", departamento: "Central" },
+  { ciudad: "Luque", departamento: "Central" },
+  { ciudad: "Mariano Roque Alonso", departamento: "Central" },
+  { ciudad: "Nueva Italia", departamento: "Central" },
+  { ciudad: "\xD1emby", departamento: "Central" },
+  { ciudad: "San Antonio", departamento: "Central" },
+  { ciudad: "San Lorenzo", departamento: "Central" },
+  { ciudad: "Villa Elisa", departamento: "Central" },
+  { ciudad: "Villeta", departamento: "Central" },
+  { ciudad: "Ypacara\xED", departamento: "Central" },
+  { ciudad: "Ypan\xE9", departamento: "Central" },
+  { ciudad: "Arroyito", departamento: "Concepci\xF3n" },
+  { ciudad: "Azotey", departamento: "Concepci\xF3n" },
+  { ciudad: "Bel\xE9n", departamento: "Concepci\xF3n" },
+  { ciudad: "Concepci\xF3n", departamento: "Concepci\xF3n" },
+  { ciudad: "Horqueta", departamento: "Concepci\xF3n" },
+  { ciudad: "Itacu\xE1", departamento: "Concepci\xF3n" },
+  { ciudad: "Loreto", departamento: "Concepci\xF3n" },
+  { ciudad: "Paso Barreto", departamento: "Concepci\xF3n" },
+  { ciudad: "Paso Horqueta", departamento: "Concepci\xF3n" },
+  { ciudad: "San Alfredo", departamento: "Concepci\xF3n" },
+  { ciudad: "San Carlos del Apa", departamento: "Concepci\xF3n" },
+  { ciudad: "San L\xE1zaro", departamento: "Concepci\xF3n" },
+  { ciudad: "Sargento Jos\xE9 F\xE9lix L\xF3pez", departamento: "Concepci\xF3n" },
+  { ciudad: "Yby Ya\xFA", departamento: "Concepci\xF3n" },
+  { ciudad: "Altos", departamento: "Cordillera" },
+  { ciudad: "Arroyos y Esteros", departamento: "Cordillera" },
+  { ciudad: "Atyr\xE1", departamento: "Cordillera" },
+  { ciudad: "Caacup\xE9", departamento: "Cordillera" },
+  { ciudad: "Caraguatay", departamento: "Cordillera" },
+  { ciudad: "Emboscada", departamento: "Cordillera" },
+  { ciudad: "Eusebio Ayala", departamento: "Cordillera" },
+  { ciudad: "Isla Puc\xFA", departamento: "Cordillera" },
+  { ciudad: "Itacurub\xED de la Cordillera", departamento: "Cordillera" },
+  { ciudad: "Juan de Mena", departamento: "Cordillera" },
+  { ciudad: "Loma Grande", departamento: "Cordillera" },
+  { ciudad: "Mbocayaty del Yhaguy", departamento: "Cordillera" },
+  { ciudad: "Nueva Colombia", departamento: "Cordillera" },
+  { ciudad: "Piribebuy", departamento: "Cordillera" },
+  { ciudad: "Primero de Marzo", departamento: "Cordillera" },
+  { ciudad: "San Bernardino", departamento: "Cordillera" },
+  { ciudad: "San Jos\xE9 Obrero", departamento: "Cordillera" },
+  { ciudad: "Santa Elena", departamento: "Cordillera" },
+  { ciudad: "Tobat\xED", departamento: "Cordillera" },
+  { ciudad: "Valenzuela", departamento: "Cordillera" },
+  { ciudad: "Borja", departamento: "Guair\xE1" },
+  { ciudad: "Capit\xE1n Mauricio Jos\xE9 Troche", departamento: "Guair\xE1" },
+  { ciudad: "Coronel Mart\xEDnez", departamento: "Guair\xE1" },
+  { ciudad: "Doctor Botrell", departamento: "Guair\xE1" },
+  { ciudad: "F\xE9lix P\xE9rez Cardozo", departamento: "Guair\xE1" },
+  { ciudad: "General Eugenio Alejandrino Garay", departamento: "Guair\xE1" },
+  { ciudad: "Independencia", departamento: "Guair\xE1" },
+  { ciudad: "Itap\xE9", departamento: "Guair\xE1" },
+  { ciudad: "Iturbe", departamento: "Guair\xE1" },
+  { ciudad: "Jos\xE9 A. Fassardi", departamento: "Guair\xE1" },
+  { ciudad: "Mbocayaty del Guair\xE1", departamento: "Guair\xE1" },
+  { ciudad: "Natalicio Talavera", departamento: "Guair\xE1" },
+  { ciudad: "\xD1um\xED", departamento: "Guair\xE1" },
+  { ciudad: "Paso Yob\xE1i", departamento: "Guair\xE1" },
+  { ciudad: "San Salvador", departamento: "Guair\xE1" },
+  { ciudad: "Tebicuary", departamento: "Guair\xE1" },
+  { ciudad: "Villarrica", departamento: "Guair\xE1" },
+  { ciudad: "Yataity del Guair\xE1", departamento: "Guair\xE1" },
+  { ciudad: "Alto Ver\xE1", departamento: "Itap\xFAa" },
+  { ciudad: "Bella Vista", departamento: "Itap\xFAa" },
+  { ciudad: "Cambyret\xE1", departamento: "Itap\xFAa" },
+  { ciudad: "Capit\xE1n Meza", departamento: "Itap\xFAa" },
+  { ciudad: "Capit\xE1n Miranda", departamento: "Itap\xFAa" },
+  { ciudad: "Carlos Antonio L\xF3pez", departamento: "Itap\xFAa" },
+  { ciudad: "Carmen del Paran\xE1", departamento: "Itap\xFAa" },
+  { ciudad: "Coronel Jos\xE9 F\xE9lix Bogado", departamento: "Itap\xFAa" },
+  { ciudad: "Edelira", departamento: "Itap\xFAa" },
+  { ciudad: "Encarnaci\xF3n", departamento: "Itap\xFAa" },
+  { ciudad: "Fram", departamento: "Itap\xFAa" },
+  { ciudad: "General Artigas", departamento: "Itap\xFAa" },
+  { ciudad: "General Delgado", departamento: "Itap\xFAa" },
+  { ciudad: "Hohenau", departamento: "Itap\xFAa" },
+  { ciudad: "Itap\xFAa Poty", departamento: "Itap\xFAa" },
+  { ciudad: "Jes\xFAs de Tavarang\xFC\xE9", departamento: "Itap\xFAa" },
+  { ciudad: "Jos\xE9 Leandro Oviedo", departamento: "Itap\xFAa" },
+  { ciudad: "La Paz", departamento: "Itap\xFAa" },
+  { ciudad: "Mayor Julio Dionisio Ota\xF1o", departamento: "Itap\xFAa" },
+  { ciudad: "Natalio", departamento: "Itap\xFAa" },
+  { ciudad: "Nueva Alborada", departamento: "Itap\xFAa" },
+  { ciudad: "Obligado", departamento: "Itap\xFAa" },
+  { ciudad: "Pirap\xF3", departamento: "Itap\xFAa" },
+  { ciudad: "San Cosme y Dami\xE1n", departamento: "Itap\xFAa" },
+  { ciudad: "San Juan del Paran\xE1", departamento: "Itap\xFAa" },
+  { ciudad: "San Pedro del Paran\xE1", departamento: "Itap\xFAa" },
+  { ciudad: "San Rafael del Paran\xE1", departamento: "Itap\xFAa" },
+  { ciudad: "Tom\xE1s Romero Pereira", departamento: "Itap\xFAa" },
+  { ciudad: "Trinidad", departamento: "Itap\xFAa" },
+  { ciudad: "Yatytay", departamento: "Itap\xFAa" },
+  { ciudad: "Ayolas", departamento: "Misiones" },
+  { ciudad: "San Ignacio Guaz\xFA", departamento: "Misiones" },
+  { ciudad: "San Juan Bautista", departamento: "Misiones" },
+  { ciudad: "San Miguel", departamento: "Misiones" },
+  { ciudad: "San Patricio", departamento: "Misiones" },
+  { ciudad: "Santa Mar\xEDa de Fe", departamento: "Misiones" },
+  { ciudad: "Santa Rosa de Lima", departamento: "Misiones" },
+  { ciudad: "Santiago", departamento: "Misiones" },
+  { ciudad: "Villa Florida", departamento: "Misiones" },
+  { ciudad: "Yabebyry", departamento: "Misiones" },
+  { ciudad: "Alberdi", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Cerrito", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Desmochados", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "General Jos\xE9 Eduvigis D\xEDaz", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Guaz\xFA Cu\xE1", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Humait\xE1", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Isla Umb\xFA", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Laureles", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Mayor Jos\xE9 Mart\xEDnez", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Paso de Patria", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Pilar", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "San Juan Bautista de \xD1eembuc\xFA", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Tacuaras", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Villa Franca", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Villa Oliva", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Villalb\xEDn", departamento: "\xD1eembuc\xFA" },
+  { ciudad: "Acahay", departamento: "Paraguar\xED" },
+  { ciudad: "Caapuc\xFA", departamento: "Paraguar\xED" },
+  { ciudad: "Carapegu\xE1", departamento: "Paraguar\xED" },
+  { ciudad: "Escobar", departamento: "Paraguar\xED" },
+  { ciudad: "General Bernardino Caballero", departamento: "Paraguar\xED" },
+  { ciudad: "La Colmena", departamento: "Paraguar\xED" },
+  { ciudad: "Mar\xEDa Antonia", departamento: "Paraguar\xED" },
+  { ciudad: "Mbuyapey", departamento: "Paraguar\xED" },
+  { ciudad: "Paraguar\xED", departamento: "Paraguar\xED" },
+  { ciudad: "Piray\xFA", departamento: "Paraguar\xED" },
+  { ciudad: "Quiindy", departamento: "Paraguar\xED" },
+  { ciudad: "Quyquyh\xF3", departamento: "Paraguar\xED" },
+  { ciudad: "San Roque Gonz\xE1lez de Santa Cruz", departamento: "Paraguar\xED" },
+  { ciudad: "Sapucai", departamento: "Paraguar\xED" },
+  { ciudad: "Tebicuarym\xED", departamento: "Paraguar\xED" },
+  { ciudad: "Yaguar\xF3n", departamento: "Paraguar\xED" },
+  { ciudad: "Ybycu\xED", departamento: "Paraguar\xED" },
+  { ciudad: "Ybytym\xED", departamento: "Paraguar\xED" },
+  { ciudad: "Benjam\xEDn Aceval", departamento: "Presidente Hayes" },
+  { ciudad: "Campo Aceval", departamento: "Presidente Hayes" },
+  { ciudad: "General Jos\xE9 Mar\xEDa Bruguez", departamento: "Presidente Hayes" },
+  { ciudad: "Jos\xE9 Falc\xF3n", departamento: "Presidente Hayes" },
+  { ciudad: "Nanawa", departamento: "Presidente Hayes" },
+  { ciudad: "Nueva Asunci\xF3n", departamento: "Presidente Hayes" },
+  { ciudad: "Puerto Pinasco", departamento: "Presidente Hayes" },
+  { ciudad: "Teniente Esteban Mart\xEDnez", departamento: "Presidente Hayes" },
+  { ciudad: "Teniente Primero Manuel Irala Fern\xE1ndez", departamento: "Presidente Hayes" },
+  { ciudad: "Villa Hayes", departamento: "Presidente Hayes" },
+  { ciudad: "Antequera", departamento: "San Pedro" },
+  { ciudad: "Capiibary", departamento: "San Pedro" },
+  { ciudad: "Chor\xE9", departamento: "San Pedro" },
+  { ciudad: "General Elizardo Aquino", departamento: "San Pedro" },
+  { ciudad: "General Isidoro Resqu\xEDn", departamento: "San Pedro" },
+  { ciudad: "Guayaib\xED", departamento: "San Pedro" },
+  { ciudad: "Itacurub\xED del Rosario", departamento: "San Pedro" },
+  { ciudad: "Liberaci\xF3n", departamento: "San Pedro" },
+  { ciudad: "Lima", departamento: "San Pedro" },
+  { ciudad: "Nueva Germania", departamento: "San Pedro" },
+  { ciudad: "San Jos\xE9 del Rosario", departamento: "San Pedro" },
+  { ciudad: "San Estanislao", departamento: "San Pedro" },
+  { ciudad: "San Pablo", departamento: "San Pedro" },
+  { ciudad: "San Pedro de Ycuamandiy\xFA", departamento: "San Pedro" },
+  { ciudad: "San Vicente Pancholo", departamento: "San Pedro" },
+  { ciudad: "Santa Rosa del Aguaray", departamento: "San Pedro" },
+  { ciudad: "Tacuat\xED", departamento: "San Pedro" },
+  { ciudad: "Uni\xF3n", departamento: "San Pedro" },
+  { ciudad: "Veinticinco de Diciembre", departamento: "San Pedro" },
+  { ciudad: "Villa del Rosario", departamento: "San Pedro" },
+  { ciudad: "Yataity del Norte", departamento: "San Pedro" },
+  { ciudad: "Yrybucu\xE1", departamento: "San Pedro" }
+];
+var DEPARTAMENTOS_PARAGUAY = [
+  "Alto Paraguay",
+  "Alto Paran\xE1",
+  "Amambay",
+  "Asunci\xF3n",
+  "Boquer\xF3n",
+  "Caaguaz\xFA",
+  "Caazap\xE1",
+  "Canindey\xFA",
+  "Central",
+  "Concepci\xF3n",
+  "Cordillera",
+  "Guair\xE1",
+  "Itap\xFAa",
+  "Misiones",
+  "\xD1eembuc\xFA",
+  "Paraguar\xED",
+  "Presidente Hayes",
+  "San Pedro"
+];
+var norm = (valor) => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+function departamentoDe(ciudad) {
+  const buscado = norm(ciudad);
+  if (!buscado) return "";
+  const fila = CIUDADES_PARAGUAY.find((item) => norm(item.ciudad) === buscado);
+  return fila?.departamento || "";
+}
+function buscarCiudad(texto, limite = 8) {
+  const q = norm(texto);
+  if (q.length < 2) return [];
+  return CIUDADES_PARAGUAY.filter(({ ciudad, departamento }) => norm(ciudad).includes(q) || norm(departamento).includes(q)).sort((a, b) => {
+    const aInicio = norm(a.ciudad).startsWith(q) ? 0 : 1;
+    const bInicio = norm(b.ciudad).startsWith(q) ? 0 : 1;
+    return aInicio - bInicio || a.ciudad.localeCompare(b.ciudad, "es");
+  }).slice(0, limite).map(({ ciudad, departamento }) => ({ city: ciudad, department: departamento }));
+}
+
+// src/components/CityAutocomplete.jsx
+import { jsx as jsx26, jsxs as jsxs20 } from "react/jsx-runtime";
+function CityAutocomplete({
+  value = "",
+  onSelect,
+  placeholder = "Ej: Asunci\xF3n, Ciudad del Este\u2026",
+  disabled = false,
+  className,
+  buscar,
+  limite = 8,
+  maxLength = 100,
+  inputProps
+}) {
+  const [sugerencias, setSugerencias] = useState9([]);
+  const [abierto, setAbierto] = useState9(false);
+  const timer = useRef5(null);
+  const raiz = useRef5(null);
+  useEffect4(() => {
+    const cerrarFuera = (event) => {
+      if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
+      setAbierto(false);
+    };
+    document.addEventListener("mousedown", cerrarFuera);
+    return () => document.removeEventListener("mousedown", cerrarFuera);
+  }, []);
+  useEffect4(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
+  function resolver(texto) {
+    const q = String(texto || "").trim();
+    if (q.length < 2) {
+      setSugerencias([]);
+      setAbierto(false);
+      return;
+    }
+    if (!buscar) {
+      setSugerencias(buscarCiudad(q, limite));
+      setAbierto(true);
+      return;
+    }
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(async () => {
+      try {
+        const filas = await buscar(q);
+        setSugerencias(Array.isArray(filas) ? filas.slice(0, limite) : []);
+        setAbierto(true);
+      } catch {
+        setSugerencias([]);
+        setAbierto(false);
+      }
+    }, 250);
+  }
+  function change(texto) {
+    onSelect?.(texto, departamentoDe(texto));
+    resolver(texto);
+  }
+  function elegir(fila) {
+    if (timer.current) clearTimeout(timer.current);
+    onSelect?.(fila.city, fila.department || departamentoDe(fila.city));
+    setSugerencias([]);
+    setAbierto(false);
+  }
+  function alPerderFoco() {
+    const departamento = departamentoDe(value);
+    if (departamento) onSelect?.(value, departamento);
+  }
+  return /* @__PURE__ */ jsxs20("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx26(
+      Input,
+      {
+        maxLength,
+        disabled,
+        value,
+        onChange: (event) => change(event.target.value),
+        onFocus: () => {
+          if (value.trim().length >= 2 && sugerencias.length) setAbierto(true);
+        },
+        onBlur: alPerderFoco,
+        placeholder,
+        autoComplete: "off",
+        "aria-label": "Ciudad",
+        role: "combobox",
+        "aria-expanded": abierto && sugerencias.length > 0,
+        ...inputProps
+      }
+    ),
+    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx26("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx26("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs20(
+      "button",
+      {
+        type: "button",
+        className: "flex w-full items-baseline justify-between gap-3 px-3 py-2 text-left text-sm transition hover:bg-ink-700",
+        onMouseDown: (event) => event.preventDefault(),
+        onClick: () => elegir(fila),
+        children: [
+          /* @__PURE__ */ jsx26("span", { className: "truncate font-medium text-fore", children: fila.city }),
+          /* @__PURE__ */ jsx26("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
+        ]
+      }
+    ) }, `${fila.city}-${fila.department}`)) })
+  ] });
+}
+
 // src/utils/tabla.js
 var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
 var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
@@ -2166,6 +2605,518 @@ function esApellidosPrimero(texto) {
   return String(texto ?? "").includes(",");
 }
 
+// src/printing/escpos.js
+var CP850 = {
+  "\xE1": 160,
+  "\xE9": 130,
+  "\xED": 161,
+  "\xF3": 162,
+  "\xFA": 163,
+  "\xFC": 129,
+  "\xF1": 164,
+  "\xD1": 165,
+  "\xC1": 181,
+  "\xC9": 144,
+  "\xCD": 214,
+  "\xD3": 224,
+  "\xDA": 233,
+  "\xDC": 154,
+  "\xBF": 168,
+  "\xA1": 173,
+  "\xB0": 248,
+  "\xB7": 250,
+  "\xAC": 172,
+  "\xBC": 172,
+  "\xBD": 171
+};
+var SUSTITUCIONES = { "\u2192": "->", "\u2190": "<-", "\u2026": "...", "\u2013": "-", "\u2014": "-", "\u2019": "'", "\u2018": "'", "\u201C": '"', "\u201D": '"', "\xD7": "x", "\u2022": "-", "\u2713": "v", "\xA0": " ", "\u202F": " " };
+var normalizarParaImpresora = (texto) => String(texto ?? "").replace(/[→←…–—’‘“”×•✓\u00a0\u202f]/g, (caracter) => SUSTITUCIONES[caracter] ?? caracter);
+var ESC = 27;
+var GS = 29;
+var CORTES = {
+  "completo": [GS, 86, 0],
+  "parcial": [GS, 86, 1],
+  "avanza-completo": [GS, 86, 65, 0],
+  "avanza-parcial": [GS, 86, 66, 0]
+};
+var VARIANTES_CORTE = Object.keys(CORTES);
+var bytesDeTexto = (texto) => {
+  const salida = [];
+  for (const caracter of normalizarParaImpresora(texto)) {
+    const codigo = CP850[caracter];
+    if (codigo !== void 0) {
+      salida.push(codigo);
+      continue;
+    }
+    const punto = caracter.codePointAt(0);
+    salida.push(punto > 255 ? 63 : punto);
+  }
+  return salida;
+};
+var columnasDeAncho = (ancho = 58) => Number(ancho) >= 80 ? 48 : 32;
+function envolver(texto, columnas) {
+  const lineas = [];
+  for (const parrafo of String(texto ?? "").split("\n")) {
+    let actual = "";
+    for (const palabra of parrafo.split(/\s+/).filter(Boolean)) {
+      let resto = palabra;
+      while (resto.length > columnas) {
+        if (actual) {
+          lineas.push(actual);
+          actual = "";
+        }
+        lineas.push(resto.slice(0, columnas));
+        resto = resto.slice(columnas);
+      }
+      if (!actual) actual = resto;
+      else if (actual.length + 1 + resto.length <= columnas) actual += ` ${resto}`;
+      else {
+        lineas.push(actual);
+        actual = resto;
+      }
+    }
+    lineas.push(actual);
+  }
+  return lineas;
+}
+function repartirLinea(izquierda, derecha, columnas) {
+  const izq = String(izquierda ?? "");
+  const der = String(derecha ?? "");
+  if (izq.length + der.length + 1 > columnas) {
+    const recorte = Math.max(0, columnas - der.length - 1);
+    return `${izq.slice(0, recorte)} ${der}`.trimEnd();
+  }
+  return `${izq}${" ".repeat(columnas - izq.length - der.length)}${der}`;
+}
+function crearTicket({ ancho = 80, margen = 2 } = {}) {
+  const columnasBase = columnasDeAncho(ancho);
+  const sangria = Math.max(0, Math.min(6, Number(margen) || 0));
+  const columnas = columnasBase - sangria * 2;
+  const prefijo = " ".repeat(sangria);
+  const partes = [];
+  const espejo = [];
+  let doble = false;
+  let conCorte = false;
+  const anchoActual = () => doble ? Math.floor(columnas / 2) : columnas;
+  const escribir = (texto) => {
+    const linea = `${prefijo}${texto}`;
+    espejo.push(linea);
+    partes.push(...bytesDeTexto(linea));
+  };
+  const centrar = (texto) => {
+    const recorte = String(texto).slice(0, anchoActual());
+    const aire = Math.max(0, Math.floor((anchoActual() - recorte.length) / 2));
+    return `${" ".repeat(aire)}${recorte}`;
+  };
+  const espejoCentrado = (texto) => espejo.push(`${prefijo}${centrar(texto)}
+`);
+  const api = {
+    columnas,
+    iniciar() {
+      partes.push(ESC, 64);
+      partes.push(ESC, 116, 2);
+      partes.push(ESC, 97, 0);
+      return api;
+    },
+    texto(texto = "") {
+      for (const linea of envolver(texto, anchoActual())) {
+        escribir(`${linea}
+`);
+      }
+      return api;
+    },
+    linea(caracter = "-") {
+      escribir(`${String(caracter).repeat(anchoActual())}
+`);
+      return api;
+    },
+    par(izquierda, derecha = "") {
+      escribir(`${repartirLinea(izquierda, derecha, anchoActual())}
+`);
+      return api;
+    },
+    centrado(texto = "") {
+      const anchoVisual = doble ? columnas : anchoActual();
+      for (const linea of envolver(texto, anchoActual())) {
+        const largo = doble ? linea.length * 2 : linea.length;
+        const margen2 = Math.max(0, Math.floor((anchoVisual - largo) / 2));
+        escribir(`${" ".repeat(margen2)}${linea}
+`);
+      }
+      return api;
+    },
+    negrita(activo = true) {
+      partes.push(ESC, 69, activo ? 1 : 0);
+      return api;
+    },
+    doble(activo = true) {
+      doble = Boolean(activo);
+      partes.push(GS, 33, activo ? 17 : 0);
+      return api;
+    },
+    // QR nativo de la impresora (modelo 2). `tamano` va de 1 a 16; `etiqueta`
+    // imprime un rótulo centrado arriba del código.
+    qr(datos, { tamano = 6, etiqueta = "" } = {}) {
+      if (etiqueta) escribir(`${centrar(etiqueta)}
+`);
+      espejoCentrado(`[QR] ${String(datos).slice(0, 48)}`);
+      partes.push(ESC, 97, 1);
+      const contenido = bytesDeTexto(datos);
+      const parameterLength = contenido.length + 3;
+      const parameterLengthLow = parameterLength % 256;
+      const parameterLengthHigh = Math.floor(parameterLength / 256);
+      const modulo = Math.min(16, Math.max(1, Number(tamano) || 6));
+      partes.push(GS, 40, 107, 4, 0, 49, 65, 50, 0);
+      partes.push(GS, 40, 107, 3, 0, 49, 67, modulo);
+      partes.push(GS, 40, 107, 3, 0, 49, 69, 49);
+      partes.push(GS, 40, 107, parameterLengthLow, parameterLengthHigh, 49, 80, 48, ...contenido);
+      partes.push(GS, 40, 107, 3, 0, 49, 81, 48);
+      partes.push(ESC, 97, 0);
+      return api;
+    },
+    // Código de barras. CODE128 (GS k 73: incluye el largo) con el juego de
+    // códigos B declarado como {B, o EAN-13 nativo (GS k 67: 12 dígitos, la
+    // impresora calcula el verificador). `datos` ya viene normalizado por quien
+    // llama (ver codigos.js): módulo 2 = barras legibles por lectores de local.
+    barcode(datos, { etiqueta = "", formato = "code128" } = {}) {
+      if (etiqueta) escribir(`${centrar(etiqueta)}
+`);
+      espejoCentrado(`[BARRA] ${datos}`);
+      partes.push(ESC, 97, 1);
+      partes.push(GS, 104, 80);
+      partes.push(GS, 119, 2);
+      partes.push(GS, 72, 2);
+      if (String(formato).toLowerCase() === "ean13") {
+        const contenido = bytesDeTexto(String(datos).replace(/\D/g, "").slice(0, 12));
+        if (contenido.length === 12) partes.push(GS, 107, 67, 12, ...contenido);
+      } else {
+        const contenido = [123, 66, ...bytesDeTexto(datos)];
+        if (contenido.length && contenido.length <= 255) partes.push(GS, 107, 73, contenido.length, ...contenido);
+      }
+      partes.push(ESC, 97, 0);
+      return api;
+    },
+    // Imagen raster monocroma (GS v 0): `bytes` viene empaquetado en filas de
+    // ancho/8 bytes con 1 = punto negro. `ancho` en píxeles (múltiplo de 8).
+    imagenRaster(bytes, { ancho: ancho2 = 0, alto = 0 } = {}) {
+      const anchoBytes = Math.ceil(Number(ancho2) / 8);
+      const filas = Number(alto);
+      if (!bytes?.length || !anchoBytes || !filas || bytes.length < anchoBytes * filas) return api;
+      espejoCentrado("[LOGO]");
+      partes.push(ESC, 97, 1);
+      partes.push(GS, 118, 48, 0, anchoBytes % 256, Math.floor(anchoBytes / 256), filas % 256, Math.floor(filas / 256), ...bytes.slice(0, anchoBytes * filas));
+      partes.push(ESC, 97, 0);
+      return api;
+    },
+    avanza(lineas = 1) {
+      const cuantas = Math.min(255, Math.max(1, Number(lineas) || 1));
+      partes.push(ESC, 100, cuantas);
+      espejo.push("\n".repeat(cuantas));
+      return api;
+    },
+    // Corte GS V según el estándar ESC/POS (sin `ESC i`): alimenta 4 líneas y
+    // corta. `variante` permite probar la que soporte el firmware:
+    // completo · parcial · avanza-completo · avanza-parcial.
+    corte(variante = "completo") {
+      conCorte = true;
+      espejoCentrado(variante === "completo" ? "[CORTE]" : `[CORTE: ${variante}]`);
+      partes.push(ESC, 100, 4);
+      partes.push(...CORTES[variante] || CORTES.completo);
+      return api;
+    },
+    corteEnviado() {
+      return conCorte;
+    },
+    bytes() {
+      return new Uint8Array(partes);
+    },
+    base64() {
+      let binario = "";
+      for (const byte of partes) binario += String.fromCharCode(byte);
+      return btoa(binario);
+    },
+    lineas() {
+      return [...espejo];
+    }
+  };
+  return api;
+}
+var AVANCES_FIRMA = 3;
+function bloqueFirma(t, roles = [], { ancho = 80, observaciones = true } = {}) {
+  const corto = Number(ancho) <= 58;
+  for (const rol of roles) {
+    t.avanza(1);
+    t.texto(`${rol}:`);
+    t.avanza(AVANCES_FIRMA);
+    t.linea();
+    t.texto(corto ? "Aclaraci\xF3n: ______________" : "Aclaraci\xF3n: ______________________________");
+    if (corto) {
+      t.texto("CI: ______________________");
+      t.texto("Fecha: ____/____/_________");
+    } else {
+      t.texto("CI: __________________  Fecha: ___/___/______");
+    }
+  }
+  if (observaciones) {
+    t.avanza(1);
+    t.texto("Observaciones:");
+    t.avanza(2);
+  }
+}
+
+// src/printing/prueba.js
+var TIPOS_PRUEBA = {
+  corta: "Prueba corta",
+  pedido: "Ticket de pedido",
+  qr: "Ticket con QR",
+  venta: "Ticket completo de venta",
+  caracteres: "Caracteres y formato",
+  corte: "Prueba de corte"
+};
+var TIPOS_TICKET_PRUEBA = TIPOS_PRUEBA;
+var azar = (max) => Math.floor(Math.random() * max);
+var validacionDe = () => String(azar(1e4)).padStart(4, "0");
+var sufijoDe = () => String(azar(10));
+var refDePrueba = () => `TEST-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(16).slice(2, 6).toUpperCase()}`;
+var fechaCorta = (iso) => new Date(iso).toLocaleString("es-PY", { dateStyle: "short", timeStyle: "short" });
+function paginaDePrueba({
+  tipo = "caracteres",
+  ancho = 80,
+  impresora = "",
+  nombre = "",
+  equipo = "",
+  copias = 1,
+  metodo = "",
+  conexion = "",
+  puente = "",
+  tokenPista = "",
+  usuario = "",
+  marca = "",
+  nombreApp = "OwnCoding",
+  validacion: validacionFija = "",
+  qr = null
+} = {}) {
+  const metodoReal = metodo || (/^(usb|cups):/.test(String(impresora || "")) ? "CUPS (cola local)" : "LAN (TCP directo)");
+  const conexionReal = /^(usb|cups)/.test(String(conexion || "")) ? "Cola CUPS local" : "LAN (TCP directo)";
+  const validacion = validacionFija || validacionDe();
+  const sufijo = sufijoDe();
+  const validador = `${validacion}-${sufijo}`;
+  const ref = refDePrueba();
+  const ahora = (/* @__PURE__ */ new Date()).toISOString();
+  const t = crearTicket({ ancho }).iniciar();
+  const pie = () => {
+    t.linea();
+    t.negrita().centrado(`VALIDACI\xD3N ${validador}`).negrita(false);
+    t.linea();
+    t.par("Impresora", nombre || "\u2014");
+    t.par("M\xE9todo", metodoReal);
+    t.par("Conexi\xF3n", conexionReal);
+    t.par("Destino", impresora || "\u2014");
+    t.par("Puente", puente || "\u2014");
+    t.par("Token", tokenPista || "sin token");
+    t.par("Ancho", `${ancho} mm`);
+    t.par("Copias", String(copias));
+    t.par("Usuario", usuario || "\u2014");
+    t.par("Fecha", fechaCorta(ahora));
+    t.par("Equipo", equipo || "\u2014");
+    t.par("Trabajo", ref);
+  };
+  const codigos = (etiqueta) => {
+    t.linea();
+    t.centrado("Escanear");
+    const contenido = qr ? qr({ destino: impresora, validacion, fecha: ahora, tipo }) : `OWNCODING:PRUEBA:${etiqueta}:${validacion}`;
+    if (contenido) t.qr(contenido, { tamano: 6, etiqueta: "QR" });
+    t.barcode(`OC-${etiqueta}-${validacion}`, { etiqueta: "C\xF3digo de barras" });
+    t.linea();
+    t.texto("Acentos: \xE1 \xE9 \xED \xF3 \xFA \xFC \xF1 \xD1 \xBF? \xA1!");
+  };
+  t.centrado(nombreApp).negrita().doble().centrado("TICKET DE PRUEBA").doble(false).negrita(false);
+  t.centrado(TIPOS_PRUEBA[tipo] || "Prueba");
+  if (marca) t.centrado(`Comparativa ${marca}`);
+  t.linea();
+  t.negrita().doble().centrado(`VALIDACI\xD3N ${validador}`).doble(false).negrita(false);
+  t.linea();
+  if (tipo === "corta") {
+    t.par("Prueba", metodoReal);
+    t.par("Destino", impresora || "\u2014");
+    t.par("Resultado", "PENDIENTE");
+    codigos("CORTA");
+  }
+  if (tipo === "pedido") {
+    t.par("Pedido", `P-${validacionDe()}`);
+    t.par("Cliente", "Cliente de prueba");
+    t.linea();
+    t.texto("iPhone 16 Pro 128GB");
+    t.par("  x1", "7.950.000");
+    t.texto("Case MagSafe silicona");
+    t.par("  x1", "180.000");
+    t.texto("L\xE1mina 9H");
+    t.par("  x2", "60.000");
+    t.linea();
+    t.par("Subtotal", "8.250.000");
+    t.par("Descuento", "-250.000");
+    t.negrita().par("Total", "8.000.000").negrita(false);
+    t.par("Medio de pago", "Efectivo");
+    t.par("Vendedor", "Vendedor de prueba");
+    codigos("PEDIDO");
+  }
+  if (tipo === "qr") {
+    t.par("Pedido", `P-${validacionDe()}`);
+    t.par("Cliente", "Cliente de prueba");
+    t.negrita().par("Total", "1.234.000").negrita(false);
+    codigos("QR");
+  }
+  if (tipo === "venta") {
+    t.centrado(`${nombreApp} \xB7 SUCURSAL CENTRAL`).centrado("Comprobante de venta");
+    t.linea();
+    t.par("Fecha", fechaCorta(ahora));
+    t.par("Vendedor", "Vendedor de prueba");
+    t.par("Cliente", "Cliente de prueba");
+    t.linea();
+    t.texto("iPhone 16 Pro 128GB");
+    t.par("  x1", "7.950.000");
+    t.texto("Case MagSafe silicona");
+    t.par("  x1", "180.000");
+    t.linea();
+    t.par("Subtotal", "8.130.000");
+    t.par("IVA 10%", "813.000");
+    t.negrita().par("Total", "8.943.000").negrita(false);
+    t.par("Medio de pago", "Transferencia");
+    codigos("VENTA");
+  }
+  if (tipo === "caracteres") {
+    t.texto("Texto normal");
+    t.negrita().texto("Negrita").negrita(false);
+    t.doble().par("DOBLE", "123").doble(false);
+    t.centrado("Centrado");
+    t.par("Columna izquierda", "derecha");
+    codigos("CHARS");
+  }
+  if (tipo === "corte") {
+    t.par("Prueba", "Corte f\xEDsico por variantes");
+    t.linea();
+    t.texto("Cada secci\xF3n etiquetada intenta un corte distinto: mir\xE1 en qu\xE9 secci\xF3n se separ\xF3 el papel.");
+    t.linea();
+    t.centrado("1) GS V 0 \xB7 completo");
+    t.texto("Corte completo puro (el est\xE1ndar de recibos).");
+    t.avanza(1).corte("completo");
+    t.centrado("2) GS V 1 \xB7 parcial");
+    t.texto("Corte parcial: deja una tirita sin cortar.");
+    t.avanza(1).corte("parcial");
+    t.centrado("3) GS V 65 0 \xB7 avanza + completo");
+    t.texto("Primero avanza hasta la cuchilla y despu\xE9s corta todo.");
+    t.avanza(1).corte("avanza-completo");
+    t.centrado("4) GS V 66 0 \xB7 avanza + parcial");
+    t.texto("Avanza hasta la cuchilla y corta parcial.");
+    t.avanza(1).corte("avanza-parcial");
+    t.linea();
+    t.texto("Si ninguna cort\xF3, revis\xE1 Cutter Enable: YES y que el rollo est\xE9 bien cargado.");
+    codigos("CORTE");
+  }
+  pie();
+  t.avanza(2).corte();
+  return { base64: () => t.base64(), lineas: () => t.lineas(), ref, validacion, sufijo, validador, corte: t.corteEnviado() };
+}
+function paginaDePruebaSimple(opciones = {}) {
+  return paginaDePrueba({ ...opciones, tipo: "caracteres" });
+}
+
+// src/catalog/productos.js
+var MODELOS_IPHONE = [
+  // Generación actual y anteriores (del más nuevo al más viejo)
+  "iPhone 17 Pro Max",
+  "iPhone 17 Pro",
+  "iPhone 17 Plus",
+  "iPhone 17",
+  "iPhone 16 Pro Max",
+  "iPhone 16 Pro",
+  "iPhone 16 Plus",
+  "iPhone 16",
+  "iPhone 15 Pro Max",
+  "iPhone 15 Pro",
+  "iPhone 15 Plus",
+  "iPhone 15",
+  "iPhone 14 Pro Max",
+  "iPhone 14 Pro",
+  "iPhone 14 Plus",
+  "iPhone 14",
+  "iPhone 13 Pro Max",
+  "iPhone 13 Pro",
+  "iPhone 13 mini",
+  "iPhone 13",
+  "iPhone 12 Pro Max",
+  "iPhone 12 Pro",
+  "iPhone 12 mini",
+  "iPhone 12",
+  "iPhone 11 Pro Max",
+  "iPhone 11 Pro",
+  "iPhone 11",
+  "iPhone XS Max",
+  "iPhone XS",
+  "iPhone XR",
+  "iPhone X",
+  "iPhone 8 Plus",
+  "iPhone 8",
+  "iPhone 7 Plus",
+  "iPhone 7",
+  "iPhone SE (3.\xAA generaci\xF3n)",
+  "iPhone SE (2.\xAA generaci\xF3n)"
+];
+var CAPACIDADES_IPHONE = ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"];
+var COLORES_IPHONE = [
+  "Negro",
+  "Blanco",
+  "Plata",
+  "Gris espacial",
+  "Dorado",
+  "Azul",
+  "Verde",
+  "Rojo",
+  "Rosa",
+  "Morado",
+  "Amarillo",
+  "Titanio natural",
+  "Titanio azul",
+  "Titanio blanco",
+  "Titanio negro",
+  "Titanio desierto"
+];
+var CATEGORIAS_ACCESORIOS = [
+  "Fundas",
+  "Vidrios templados",
+  "Cargadores",
+  "Cables",
+  "Auriculares",
+  "Bater\xEDas",
+  "Parlantes",
+  "Relojes y correas",
+  "Soportes",
+  "Power banks",
+  "Adaptadores",
+  "L\xE1pices y stylus",
+  "Memorias y almacenamiento",
+  "C\xE1maras y accesorios",
+  "Repuestos",
+  "Otros accesorios"
+];
+var MARCAS_ACCESORIOS = [
+  "Apple",
+  "Samsung",
+  "Xiaomi",
+  "JBL",
+  "Baseus",
+  "Anker",
+  "Hoco",
+  "Generic",
+  "Otro"
+];
+function buscarEnCatalogo(catalogo = [], texto = "") {
+  const norm2 = (valor) => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  const q = norm2(texto);
+  if (!q) return catalogo;
+  return catalogo.filter((item) => norm2(item).includes(q));
+}
+
 // src/utils/fecha.js
 var ES_PY = "es-PY";
 var OPCIONES_HORA = { hour12: false };
@@ -2186,7 +3137,7 @@ function fechaHoraCorta(value, vacio = "\u2014") {
   const fecha = fechaValida(value);
   return fecha ? fecha.toLocaleString(ES_PY, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }) : vacio;
 }
-function fechaCorta(value, vacio = "\u2014") {
+function fechaCorta2(value, vacio = "\u2014") {
   const fecha = fechaValida(value);
   if (!fecha) return vacio;
   const dia = fecha.toLocaleDateString(ES_PY, { day: "2-digit", month: "short" });
@@ -2208,6 +3159,7 @@ function serialEnmascarado(serial) {
   return cola ? `\u2022\u2022\u2022\u2022${cola}` : "";
 }
 export {
+  AVANCES_FIRMA,
   AjustesImpresion,
   AuthLayout,
   Aviso,
@@ -2218,15 +3170,21 @@ export {
   BarraProgreso,
   BotonImprimir,
   Button,
+  CAPACIDADES_IPHONE,
+  CATEGORIAS_ACCESORIOS,
   CELDA_DATO,
   CELDA_ENCABEZADO,
   CELDA_NUMERO,
+  CIUDADES_PARAGUAY,
   CODIGOS_PAIS,
   COLORES_BANCO_RESPALDO,
+  COLORES_IPHONE,
   Card,
   CeldaMoneda,
+  CityAutocomplete,
   ConfirmDialog,
   CurrencySelect,
+  DEPARTAMENTOS_PARAGUAY,
   DOMINIOS_EMAIL,
   DataTable,
   Dot,
@@ -2252,7 +3210,9 @@ export {
   Label,
   ListGridToggle,
   LoadingScreen,
+  MARCAS_ACCESORIOS,
   MENSAJE_TELEFONO,
+  MODELOS_IPHONE,
   MenuDesplegable,
   Modal,
   Money,
@@ -2277,25 +3237,37 @@ export {
   Stat,
   Subtabs,
   Switch,
+  TAMANOS_CAMPO,
+  TIPOS_PRUEBA,
+  TIPOS_TICKET_PRUEBA,
   TONO_ESTADO,
   TarjetaAjuste,
   Textarea,
   ToastProvider,
+  VARIANTES_CORTE,
   agregarEstado,
+  anchoParaLargo,
+  bloqueFirma,
+  buscarCiudad,
+  buscarEnCatalogo,
   cn,
   codigoPais,
   colorDeBanco,
   colorTrabajo,
+  columnasDeAncho,
   componerTelefono,
   conexionDeDestino,
+  crearTicket,
+  departamentoDe,
   destinoDeConexion,
+  envolver,
   esApellidosPrimero,
   esToken,
   estadoDeDiagnostico,
   etiquetaTrabajo,
   excedeMonto,
   extractTokenFromUrl,
-  fechaCorta,
+  fechaCorta2 as fechaCorta,
   fechaDia,
   fechaHora,
   fechaHoraCorta,
@@ -2321,12 +3293,15 @@ export {
   normalizarNombre,
   normalizarSerial,
   normalizarTelefono,
+  paginaDePrueba,
+  paginaDePruebaSimple,
   parseGsInput,
   parsePercent,
   parseTelefono,
   parseUsdInput,
   partirSerial,
   primerNombre,
+  repartirLinea,
   serialEnmascarado,
   soloDigitos,
   sugerenciasDe,

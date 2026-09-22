@@ -52,8 +52,19 @@ cups:<cola>           → cola local del sistema (USB o compartida)
 - El ancho de papel (58/80/A4) y las copias son de la impresora, no del trabajo:
   se configuran una vez y todas las pantallas los respetan.
 
-## Referencia en MobOS (lo que ya funciona)
+## Apartados por tipo de impresión (qué hay y qué falta)
 
+| Apartado | Objeto | Estado |
+| --- | --- | --- |
+| Constructor térmico 58/80 mm | `crearTicket` + `columnasDeAncho`/`envolver`/`repartirLinea` (`printing/escpos.js`) | ✅ en la librería (con CP850, cortes y firmas) |
+| Página de prueba / verificador | `paginaDePrueba` (`printing/prueba.js`) con tipos `corta`, `pedido`, `qr`, `venta`, `caracteres`, `corte`, validación de 4 dígitos y pie auditable | ✅ en la librería (la app pasa el QR si lo tiene) |
+| Estado y verificación | `printing/estadoImpresoras.js` | ✅ en la librería |
+| Configuración LAN/USB | `AjustesImpresion` | ✅ en la librería |
+| Disparo de impresión | `BotonImprimir` | ✅ en la librería |
+| Comprobantes/etiquetas/remitos/recibos (modelos por documento) | `ticketComprobante`, `ticketEtiqueta*`, `ticketRemito`, `ticketReserva`, `ticketNotaEntrega`, `ticketRemision`, `ticketReciboInterno`, `ticketProforma`, `ticketRecepcionServicio`, `ticketVerificacionImei` | ⏳ siguiente lote: se portan sobre `crearTicket` con datos por props |
+| Páginas A4/firmas | `bloqueFirma` + documentos | ⏳ parcial (firma ya está); el resto, siguiente lote |
+
+## Referencia en MobOS (lo que ya funciona)
 - Pantalla: `src/components/control/Impresoras.jsx` (cola, puentes, actividad,
   diagnóstico y prueba) — es la fuente de la que se portaron los componentes.
 - Agente: `print-agent/` (artefacto versionado en `backend/public/print-agent/`).
