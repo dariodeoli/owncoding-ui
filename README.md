@@ -62,11 +62,12 @@ la de MobOS.
 
 ### Notas de release
 
-- **v0.13.0 (propuesta, sin publicar)** — lote de objetos genéricos portado de
-  LedBox: `TableroKanban`, `Cronologia`, `PlanPagos`, `DocumentoImpresion`,
-  `SubidaImagen` y `ProgresoChecklist`; `qrcode` pasa a import dinámico (la peer
-  opcional ya no rompe el import del paquete). Props y reglas en
-  `docs/REGLAS.md` §8 ter; ejemplos en «Objetos genéricos del lote LedBox».
+- **v0.13.0** — lote de objetos genéricos portado de LedBox (`TableroKanban`,
+  `Cronologia`, `PlanPagos`, `DocumentoImpresion`, `SubidaImagen` y
+  `ProgresoChecklist`; `qrcode` pasa a import dinámico) más el preview v2
+  `VistaPreviaPapel` + `ANCHOS_PAPEL` (documento impreso con el ancho real del
+  papel: 80/58/55 mm y A4). Props y reglas en `docs/REGLAS.md` §8 ter y §8 bis;
+  ejemplos en «Objetos genéricos del lote LedBox».
 - **v0.12.0** — informe público: `FichaCertificado` (tarjeta del informe de
   dispositivo) y `CodigoQr` + `qrDataUrl` (QR unificado, peer opcional
   `qrcode`).
@@ -143,7 +144,7 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 5. Correr lint + tests + build + e2e smoke de la app.
 6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
-## Qué incluye (v0.12.0)
+## Qué incluye (v0.13.0)
 
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
@@ -182,8 +183,9 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   pasa `max-w-*` suelto.
 - **Piezas de formulario:** `GRILLA_DOS_COLUMNAS` (+ `_COMPACTA`) y
   `PIE_ACCIONES`/`PIE_ACCIONES_REVERSO` en `utils/formulario.js`.
-- **Impresión — modelos:** `crearTicket` (ESC/POS 58/80 mm) y `paginaDePrueba`
-  (verificador con validación de 4 dígitos y secciones por tipo). Ver
+- **Impresión — modelos:** `crearTicket` (ESC/POS 58/80 mm), `paginaDePrueba`
+  (verificador con validación de 4 dígitos y secciones por tipo) y
+  `VistaPreviaPapel` (preview del documento con el ancho real del papel). Ver
   `docs/IMPRESION.md`.
 - **Estados y avisos:** `Aviso` (error/ok/warn, con contenedor), `Nota`
   (aclaración sin `role`: warn/info/neutra, `compact`), `EmptyState`,

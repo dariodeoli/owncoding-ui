@@ -4,11 +4,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Sin publicar — v0.13.0 propuesta (2026-09-22)
+## v0.13.0 — 2026-09-22
 
 Lote de objetos genéricos portado de LedBox (los seis que su panel resolvía a
-mano). Props y reglas en `docs/REGLAS.md` §8 ter; ejemplos de uso por objeto en
-el README. Sin cambios incompatibles.
+mano) más el preview del papel de MobOS. Props y reglas en `docs/REGLAS.md`
+§8 ter y §8 bis; ejemplos de uso por objeto en el README. Sin cambios
+incompatibles.
 
 - **`TableroKanban` + `useTableroOptimista`:** pipeline por columnas de estado
   con contador, tarjetas con chips/monto/fecha/detalle, arrastre HTML5 y
@@ -49,6 +50,13 @@ el README. Sin cambios incompatibles.
   local (como los `dueAt` del API) y no como medianoche UTC, que en Asunción
   mostraba el día anterior; un día inexistente (31/9) sigue siendo inválido.
 - 30 tests nuevos (86 en total) y `dist/` regenerado.
+
+- **`VistaPreviaPapel` + `ANCHOS_PAPEL` (preview v2, #241):** la vista
+  previa del documento impreso con el ancho real del papel (mm a 96 dpi):
+  `thermal-80` (302 px), `thermal-58` (219 px), `thermal-55` (208 px) y `a4`
+  (794 px). Cierra el combo del informe junto a `FichaCertificado`,
+  `CodigoQr` y `qrDataUrl`; en MobOS reemplaza los mapas `ANCHO_VISTA`
+  duplicados en el preview de comprobantes y el de reportes.
 
 ## v0.12.0 — 2026-09-22
 
