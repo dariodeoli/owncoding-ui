@@ -79,6 +79,11 @@ describe('lógica compartida', () => {
     expect(fechaHoraCorta(fecha)).toContain('15:30')
     expect(fechaCorta(fecha)).toContain('·')
     expect(fechaValida('nada')).toBe(null)
+    // Una fecha pura (`YYYY-MM-DD`, como los `dueAt` del API) es el día local:
+    // no se corre al día anterior por la medianoche UTC.
+    expect(fechaDia('2026-09-30')).toContain('30/9/2026')
+    expect(fechaDia('2026-12-31')).toContain('31/12/2026')
+    expect(fechaValida('2026-09-31')).toBe(null)
   })
 
   test('teléfono y WhatsApp', () => {
