@@ -58,6 +58,16 @@ integrador decide el número final).
   construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
   `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
 
+## v0.14.3 — 2026-09-22
+
+- **`tools/auto-ht.sh` (script genérico):** implementa la política automática
+  para que cada app lo copie: cuenta los commits sin integrar contra
+  `origin/main`, arma la tabla del `pd` (commit → qué cambia con su tipo),
+  respeta el umbral (15), el cooldown (20 min) y el merge en curso, y dispara
+  el ciclo con `--comando`. Parametrizable por repo del integrador, lista de
+  ramas, agente, umbral, cooldown y archivo de estado; `--dry-run` para
+  ensayar. Documentado en `docs/COMANDOS.md`.
+
 ## v0.14.2 — 2026-09-22
 
 - **Documentación (sin cambios de código):** `docs/COMANDOS.md` suma la

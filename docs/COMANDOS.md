@@ -30,6 +30,41 @@ Para que las ramas no se acumulen sin integrar:
   automático se suma a la política, no la reemplaza: sigue vigente que nada se
   mergea, pushea ni despliega fuera de un `hd`/`ht` o una ronda ordenada.
 
+### Script de referencia: `tools/auto-ht.sh`
+
+El script genérico que implementa la política (cada app lo copia y lo
+parametriza: repo del integrador, ramas, agente, umbral y cooldown). Cuenta los
+commits sin integrar, arma la tabla del `pd` (commit → qué cambia, con tipo
+`feature`/`fix`/`test`/`docs`/…) y, si corresponde, dispara el ciclo con el
+comando que le pases.
+
+```bash
+# Revisar sin disparar nada (informa y sale)
+tools/auto-ht.sh --repo ../MobOS \
+  --ramas "slot/componentes slot/diseno slot/impresion" --dry-run
+
+# Cron cada 5 minutos: dispara el hd cuando se juntan 15 commits
+*/5 * * * * /ruta/owncoding-ui/tools/auto-ht.sh \
+  --repo /ruta/al/checkout-del-integrador \
+  --ramas "slot/componentes slot/diseno slot/impresion" \
+  --agente integrador --umbral 15 --cooldown 20 \
+  --comando 'herdr agent run integrador "hd"' >> /tmp/auto-ht.log 2>&1
+```
+
+| Opción | Para qué |
+| --- | --- |
+| `--repo <dir>` | Checkout del integrador (obligatorio) |
+| `--ramas "<a b c>"` | Ramas de los slots a relevar (obligatorio) |
+| `--ref <ref>` | Referencia contra la que se cuenta (default `origin/main`) |
+| `--agente <nombre>` | Agente integrador a invocar (se exporta como `AUTO_HT_AGENTE`) |
+| `--umbral <n>` / `--cooldown <min>` | 15 commits / 20 min por defecto |
+| `--comando "<cmd>"` | Ciclo a ejecutar al disparar (default: solo informa) |
+| `--estado <archivo>` | Marca del último disparo (default `/tmp/auto-ht-<repo>.stamp`) |
+| `--force` / `--dry-run` / `--sin-fetch` | Pruebas y control fino |
+
+Siempre: si hay un merge en curso en el integrador, espera; nunca corre dos
+ciclos a la vez; y sin `--comando` solo informa (el `hd` lo escribe el dueño).
+
 ## Reglas
 
 - **Nada se mergea, pushea ni despliega sin `ht`** (o una ronda explícitamente
