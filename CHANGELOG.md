@@ -58,6 +58,15 @@ integrador decide el número final).
   construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
   `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
 
+## v0.14.6 — 2026-09-22
+
+- **`docs/MIGRACION-V2.md` (nuevo):** la guía para que las otras apps
+  (ScaleOS, LedBox, PagaYa) migren una pantalla al sistema v2 — inventario y
+  capturas previas, instalación y preset, tabla de mapeo de la paleta propia a
+  los tokens, tabla de reemplazos por tipo de pantalla, verificación
+  (densidad/acciones, 360/768/1440, claro-oscuro, capturas, checks), las fases
+  F1–F4 y qué no hacer. Referenciada desde el README y `docs/V2.md`.
+
 ## v0.14.5 — 2026-09-22
 
 - **`VistaPreviaPapel` + `ANCHOS_PAPEL` (preview v2, #241):** la vista previa
