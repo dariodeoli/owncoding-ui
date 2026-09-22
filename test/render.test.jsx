@@ -14,12 +14,14 @@ import {
   Input,
   Label,
   Money,
+  Modal,
   Select,
   Skeleton,
   Stat,
   Switch,
   Textarea,
 } from '../src/index.js'
+import { BotonDentroCampo } from '../src/index.js'
 import { CELDA_DATO, CELDA_ENCABEZADO, CELDA_NUMERO, ROTULO_DATO, ROTULO_SECCION } from '../src/index.js'
 
 // Smoke mínimo: los objetos renderizan en el servidor y el HTML trae el
@@ -79,5 +81,20 @@ describe('render de los objetos base', () => {
     expect(ROTULO_SECCION).toBe('text-xs font-bold uppercase tracking-wider text-mute')
     expect(CELDA_DATO).toBe('truncate text-xs text-mute')
     expect(CELDA_NUMERO).toBe('text-right tabular-nums')
+  })
+
+  test('el modal elige el ancho por tamaño y el botón vive dentro del campo', () => {
+    const amplio = renderToStaticMarkup(<Modal open title="Proveedores" size="amplio">…</Modal>)
+    expect(amplio).toContain('max-w-3xl')
+    expect(renderToStaticMarkup(<Modal open title="Aviso" />)).toContain('max-w-xl')
+    expect(renderToStaticMarkup(<Modal open title="Chico" size="corto" />)).toContain('max-w-md')
+    expect(renderToStaticMarkup(<Modal open title="Grande" size="completo" />)).toContain('max-w-5xl')
+
+    const boton = renderToStaticMarkup(<BotonDentroCampo etiqueta="Extraer los datos del RUC" />)
+    expect(boton).toContain('Extraer los datos del RUC')
+    expect(boton).toContain('absolute inset-y-0 right-0')
+    const ocupado = renderToStaticMarkup(<BotonDentroCampo etiqueta="Extraer" ocupado />)
+    expect(ocupado).toContain('Consultando…')
+    expect(ocupado).toContain('animate-spin')
   })
 })

@@ -26,6 +26,7 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | Catálogo cerrado | `Select` | nunca texto libre para catálogos |
 | Lista/cuadrícula | `ListGridToggle` | solo íconos, `aria-pressed` |
 | Búsqueda instantánea | `SearchField` | lupa + limpiar; el debounce vive en la pantalla |
+| Acción dentro del campo | `BotonDentroCampo` | botón trailing **adentro** del input (`relative` + `pr-11`): ícono con tooltip (`title`/`aria-label`) y estado ocupado «Consultando…» con spinner; vacío → `disabled`. La pantalla decide qué hace `onClick` (la librería no consulta nada) |
 | Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el texto libre sigue permitido |
 
 ### Tamaños recomendados (#148, portable)
@@ -95,6 +96,16 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 
 ## 5. Diálogos y overlays
 
+- **Ancho por tipo, no por uso:** `Modal` expone `size` y el ancho vive en
+  `utils/modal.js` (`TAMANOS_MODAL`): `corto` = `max-w-md` (avisos,
+  confirmaciones y formularios de un campo), `formulario` = `max-w-xl`
+  (predeterminado: formularios de una columna), `amplio` = `max-w-3xl`
+  (formularios de dos columnas, tablas y contenido amplio) y `completo` =
+  `max-w-5xl` (editores y pantallas grandes). No se pasa `max-w-*` en el
+  `className` de un modal. `ConfirmDialog` usa `corto`.
+- **Sin franjas vacías:** el contenido de un modal `amplio`/`completo` se
+  acomoda en grillas (`GRILLA_DOS_COLUMNAS`, filas de tabla), nunca en una
+  columna angosta con la mitad del modal vacía.
 - `Modal`/`ConfirmDialog` con foco atrapado, `Esc`, scroll bloqueado y retorno
   de foco; el pie de guardado va asociado al formulario y bloquea doble clic.
 - Eliminación destructiva: confirmación propia; datos críticos con doble
@@ -107,6 +118,10 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   iniciales, sin imágenes rotas). **TODO:** entra cuando cierre #211 (DSN) en
   MobOS; hasta entonces, la librería no expone avatar.
 - `primerNombre` para contextos compactos (la cronología) — ya en la librería.
+- `normalizarNombre` respeta las **razones sociales** (`esRazonSocial`): un
+  nombre de empresa con tipo societario (S.A., S.R.L., LTDA, cooperativa…)
+  no se reordena ni se capitaliza como un nombre de persona, aunque venga en
+  mayúsculas desde el proveedor de RUC.
 
 ## 7. Dinero, fechas y formatos
 

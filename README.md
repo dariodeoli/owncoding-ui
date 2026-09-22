@@ -58,6 +58,10 @@ la de MobOS.
 
 ### Notas de release
 
+- **v0.8.0** — ancho de modales por tipo (`Modal size` + `TAMANOS_MODAL`:
+  corto/formulario/amplio/completo, sin `max-w-*` suelto), `BotonDentroCampo`
+  (acción trailing dentro del input, con tooltip y «Consultando…») y
+  `esRazonSocial` (`normalizarNombre` ya no reordena razones sociales).
 - **v0.7.0** — piezas de formulario: `GRILLA_DOS_COLUMNAS` (+ `_COMPACTA`),
   `PIE_ACCIONES` y `PIE_ACCIONES_REVERSO` (mismo criterio que las clases de
   tabla).
@@ -114,11 +118,12 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 5. Correr lint + tests + build + e2e smoke de la app.
 6. Si falta un objeto, se crea acá (con test) y después se adopta en la app.
 
-## Qué incluye (v0.7.0)
+## Qué incluye (v0.8.0)
 
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
-  `SearchField`, `PercentField` (+`parsePercent`/`formatPercent`),
+  `SearchField`, `BotonDentroCampo` (acción trailing dentro del input),
+  `PercentField` (+`parsePercent`/`formatPercent`),
   `CurrencySelect`, `EmailField` (sugerencia de dominios), `PhoneField`
   (código de país + validación), `SerialField` (IMEI/serial), `InstagramField`.
 - **Acceso (sin API):** `GoogleButton` (+`GoogleMark`, `OAuthDivider`),
@@ -126,7 +131,8 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `LoadingScreen` y `PegarEnlaceToken` (extrae el token del enlace). No leen
   sesión ni llaman a la API: reciben props y avisan por callback.
 - **Acciones y contenedores:** `Button`, `IconAction`, `Card`, `Stat`,
-  `Modal`, `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`.
+  `Modal` (ancho por `size`: corto/formulario/amplio/completo),
+  `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`.
   El interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   `Toggle`).
 - **Navegación y shell:** `NavLateral` (colapsable, modelo `[{id,label,icono,contador}]`),
@@ -146,6 +152,9 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 - **Tamaños de campo:** `TAMANOS_CAMPO` (`moneda: w-36`, `porcentaje: w-24`,
   `cantidad: w-20`, `fecha: w-40`, …) para que los campos no se estiren de más;
   `MoneyInput` y `PercentField` ya traen su ancho recomendado.
+- **Tamaños de modal:** `TAMANOS_MODAL` (`corto`, `formulario`, `amplio`,
+  `completo`) con el predeterminado `formulario`; se elige con `size` y no se
+  pasa `max-w-*` suelto.
 - **Piezas de formulario:** `GRILLA_DOS_COLUMNAS` (+ `_COMPACTA`) y
   `PIE_ACCIONES`/`PIE_ACCIONES_REVERSO` en `utils/formulario.js`.
 - **Impresión — modelos:** `crearTicket` (ESC/POS 58/80 mm) y `paginaDePrueba`

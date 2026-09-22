@@ -2,6 +2,7 @@ import { createContext, forwardRef, useCallback, useContext, useEffect, useId, u
 import { cn } from '../utils/cn.js'
 import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto } from '../utils/moneda.js'
 import { TAMANOS_CAMPO } from '../utils/tamanos.js'
+import { TAMANO_MODAL_PREDETERMINADO, TAMANOS_MODAL } from '../utils/modal.js'
 import Icon from './Icon.jsx'
 
 // ── Button ──────────────────────────────────────────────────────────
@@ -223,7 +224,8 @@ export function Card({ className, ...props }) {
 }
 
 // Popup estándar: Esc, clic afuera, botón cerrar y cierre opcional al guardar.
-export function Modal({ open, onClose, title, children, className }) {
+// El ancho se elige con `size` (TAMANOS_MODAL): no se pasa `max-w-*` suelto.
+export function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
   const dialog = useRef(null)
   const close = useRef(onClose)
   close.current = onClose
@@ -249,7 +251,7 @@ export function Modal({ open, onClose, title, children, className }) {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className={cn('max-h-[min(90dvh,720px)] w-full max-w-lg overflow-y-auto rounded-2xl border border-ink-600 bg-ink-800 p-4 shadow-2xl sm:p-6', className)}>
+      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className={cn('max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink-800 p-4 shadow-2xl sm:p-6', TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className)}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 id={titleId} className="text-base font-bold text-fore">{title}</h2>
           <button type="button" onClick={onClose} className="rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
@@ -273,7 +275,7 @@ export function ConfirmDialog({
   busy = false,
 }) {
   return (
-    <Modal open={open} onClose={busy ? undefined : onCancel} title={title} className="max-w-md">
+    <Modal open={open} onClose={busy ? undefined : onCancel} title={title} size="corto">
       <div className="space-y-5">
         <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl', variant === 'danger' ? 'bg-bad/10 text-bad' : 'bg-fono/10 text-fono-light')}>
           <Icon name={variant === 'danger' ? 'alert' : 'check'} className="h-5 w-5" />

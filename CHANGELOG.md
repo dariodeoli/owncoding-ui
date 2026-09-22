@@ -4,6 +4,24 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.8.0 — 2026-09-22
+
+- **Ancho de modales por tipo (#237, portado de MobOS):** `Modal` expone
+  `size` y el ancho vive en `utils/modal.js` — `corto` (`max-w-md`),
+  `formulario` (`max-w-xl`, predeterminado), `amplio` (`max-w-3xl`) y
+  `completo` (`max-w-5xl`). `ConfirmDialog` usa `corto`. En MobOS se migraron
+  67 modales con `max-w-*` suelto; acá el ancho ya no se pasa en `className`.
+  Regla nueva: el contenido de un modal `amplio`/`completo` va en grillas
+  (`GRILLA_DOS_COLUMNAS`, filas de tabla) para no dejar franjas vacías.
+- **`BotonDentroCampo` (#234):** acción trailing **dentro** del input, con
+  `title`/`aria-label` (tooltip), estado ocupado «Consultando…» con spinner y
+  `disabled` cuando no hay dato. Portable: la pantalla decide qué hace
+  `onClick`; la librería no consulta nada.
+- **`esRazonSocial` (+ fix de `normalizarNombre`):** una razón social con tipo
+  societario (S.A., S.R.L., LTDA, cooperativa…) no se reordena ni se capitaliza
+  como un nombre de persona, aunque venga en mayúsculas desde el proveedor
+  de RUC.
+
 ## v0.7.0 — 2026-09-22
 
 - **Piezas de formulario:** `GRILLA_DOS_COLUMNAS` (+ `_COMPACTA`),

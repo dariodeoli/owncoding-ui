@@ -16,6 +16,8 @@ import {
   parsePercent,
   parseUsdInput,
   primerNombre,
+  normalizarNombre,
+  esRazonSocial,
   telefonoVisible,
   telefonoValido,
   whatsappUrl,
@@ -75,5 +77,16 @@ describe('lógica compartida', () => {
   test('primer nombre', () => {
     expect(primerNombre('Dario De Oliveira')).toBe('Dario')
     expect(primerNombre('')).toBe('')
+  })
+
+  test('nombres de personas y razones sociales', () => {
+    // El formato SIFEN "apellidos primero" en mayúsculas se reordena…
+    expect(normalizarNombre('PEREZ GOMEZ JUAN CARLOS', { apellidosPrimero: 'sifen' })).toBe('Juan Carlos Perez Gomez')
+    // …pero una razón social se respeta tal cual, sin reordenar ni capitalizar.
+    for (const razon of ['DISTRIBUIDORA DEL SUR S.A.', 'IMPORTADORA GUARANÍ S.R.L.', 'COOPERATIVA LA UNION LTDA.']) {
+      expect(normalizarNombre(razon, { apellidosPrimero: 'sifen' })).toBe(razon)
+      expect(esRazonSocial(razon)).toBe(true)
+    }
+    expect(esRazonSocial('PEREZ GOMEZ JUAN CARLOS')).toBe(false)
   })
 })

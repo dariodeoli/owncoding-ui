@@ -42,6 +42,7 @@ export {
 export { default as Icon } from './components/Icon.jsx'
 export { default as Switch } from './components/Switch.jsx'
 export { default as SearchField } from './components/SearchField.jsx'
+export { default as BotonDentroCampo } from './components/BotonDentroCampo.jsx'
 export { default as SegmentedField } from './components/SegmentedField.jsx'
 export { default as PercentField, parsePercent, formatPercent, limpiarPercent } from './components/PercentField.jsx'
 export { default as CurrencySelect } from './components/CurrencySelect.jsx'
@@ -74,7 +75,7 @@ export { ROTULO_DATO, CELDA_ENCABEZADO, ROTULO_SECCION, CELDA_DATO, CELDA_NUMERO
 
 // Lógica compartida
 export { cn, primerNombre } from './utils/cn.js'
-export { normalizarNombre, nombrePartes, esApellidosPrimero } from './utils/nombre.js'
+export { normalizarNombre, nombrePartes, esApellidosPrimero, esRazonSocial } from './utils/nombre.js'
 export {
   BANCOS_PARAGUAY,
   LOGOS_BANCOS,
@@ -110,6 +111,7 @@ export {
 } from './printing/escpos.js'
 export { paginaDePrueba, paginaDePruebaSimple, TIPOS_PRUEBA, TIPOS_TICKET_PRUEBA } from './printing/prueba.js'
 export { TAMANOS_CAMPO, anchoParaLargo } from './utils/tamanos.js'
+export { TAMANOS_MODAL, TAMANO_MODAL_PREDETERMINADO } from './utils/modal.js'
 export { GRILLA_DOS_COLUMNAS, GRILLA_DOS_COLUMNAS_COMPACTA, PIE_ACCIONES, PIE_ACCIONES_REVERSO } from './utils/formulario.js'
 export { CIUDADES_PARAGUAY, DEPARTAMENTOS_PARAGUAY, departamentoDe, buscarCiudad } from './catalog/ciudades.js'
 export {
