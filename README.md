@@ -85,7 +85,12 @@ la de MobOS.
 - **Campos:** `Input`, `Textarea`, `Select`, `Label`, `FormField`,
   `MoneyInput`, `PinInput`, `PasswordInput`, `Switch`, `SegmentedField`,
   `SearchField`, `PercentField` (+`parsePercent`/`formatPercent`),
-  `CurrencySelect`.
+  `CurrencySelect`, `EmailField` (sugerencia de dominios), `PhoneField`
+  (código de país + validación), `SerialField` (IMEI/serial), `InstagramField`.
+- **Acceso (sin API):** `GoogleButton` (+`GoogleMark`, `OAuthDivider`),
+  `AuthLayout` (slots de logo/copy/acciones/pie), `ProductFooter`,
+  `LoadingScreen` y `PegarEnlaceToken` (extrae el token del enlace). No leen
+  sesión ni llaman a la API: reciben props y avisan por callback.
 - **Acciones y contenedores:** `Button`, `IconAction`, `Card`, `Stat`,
   `Modal`, `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`.
   El interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
@@ -97,7 +102,8 @@ la de MobOS.
   `CELDA_NUMERO`, `CELDA_ENCABEZADO`, `ROTULO_DATO`, `ROTULO_SECCION`.
 - **Lógica:** `cn`, `primerNombre`, moneda (`formatGs`, `montoTexto`, …),
   fechas (`fechaHora`, `fechaCorta`, …), teléfono/WhatsApp (`whatsappUrl`,
-  `telefonoVisible`, …).
+  `telefonoVisible`, …), seriales (`ultimos4`, `serialEnmascarado`) y tokens de
+  acción (`extractTokenFromUrl`).
 
 ## Estructura
 

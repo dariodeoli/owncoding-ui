@@ -933,40 +933,122 @@ function ListGridToggle({ value, onChange, className }) {
   )) });
 }
 
-// src/utils/tabla.js
-var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
-var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
-var ROTULO_SECCION = "text-xs font-bold uppercase tracking-wider text-mute";
-var CELDA_DATO = "truncate text-xs text-mute";
-var CELDA_NUMERO = "text-right tabular-nums";
+// src/components/EmailField.jsx
+import { useRef as useRef2, useState as useState2 } from "react";
+import { jsx as jsx9, jsxs as jsxs5 } from "react/jsx-runtime";
+var DOMINIOS_EMAIL = [
+  "gmail.com",
+  "hotmail.com",
+  "outlook.com",
+  "yahoo.com",
+  "icloud.com",
+  "live.com",
+  "hotmail.es",
+  "outlook.es"
+];
+var MAX_SUGERENCIAS = 4;
+function sugerenciasDe(value, dominios = DOMINIOS_EMAIL, max = MAX_SUGERENCIAS) {
+  const texto = String(value || "").trim();
+  const arroba = texto.indexOf("@");
+  const usuario = arroba === -1 ? texto : texto.slice(0, arroba);
+  const dominio = arroba === -1 ? "" : texto.slice(arroba + 1).toLowerCase();
+  if (!usuario) return [];
+  if (dominio.includes(" ")) return [];
+  const coincidencias = dominio ? dominios.filter((candidato) => candidato.startsWith(dominio) && candidato !== dominio) : dominios;
+  return coincidencias.slice(0, max).map((d) => `${usuario}@${d}`);
+}
+function EmailField({
+  value = "",
+  onChange,
+  disabled = false,
+  placeholder = "vos@tutienda.com",
+  dominios = DOMINIOS_EMAIL,
+  className,
+  inputClassName,
+  onKeyDown,
+  onBlur,
+  ...props
+}) {
+  const [open, setOpen] = useState2(false);
+  const tecleando = useRef2(false);
+  const tipeoReciente = useRef2(false);
+  const inputRef = useRef2(null);
+  const sugerencias = sugerenciasDe(value, dominios);
+  function manejarKeyDown(event) {
+    onKeyDown?.(event);
+    if (event.defaultPrevented) return;
+    if (event.key === "Escape") {
+      tecleando.current = false;
+      setOpen(false);
+      return;
+    }
+    if (event.key === "Enter") {
+      if (open && sugerencias.length > 0) {
+        event.preventDefault();
+        elegir(sugerencias[0]);
+      }
+      return;
+    }
+    tecleando.current = true;
+    tipeoReciente.current = true;
+  }
+  function manejarChange(event) {
+    onChange?.(event.target.value);
+    if (tipeoReciente.current) {
+      tipeoReciente.current = false;
+      setOpen(sugerenciasDe(event.target.value, dominios).length > 0);
+    }
+  }
+  function elegir(sugerencia) {
+    onChange?.(sugerencia);
+    tecleando.current = false;
+    setOpen(false);
+    inputRef.current?.focus();
+  }
+  function perderFoco(event) {
+    onBlur?.(event);
+    tecleando.current = false;
+    setOpen(false);
+  }
+  return /* @__PURE__ */ jsxs5("div", { className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx9(
+      Input,
+      {
+        ...props,
+        ref: inputRef,
+        type: "email",
+        className: cn("w-full", inputClassName),
+        value,
+        disabled,
+        placeholder,
+        onChange: manejarChange,
+        onKeyDown: manejarKeyDown,
+        onBlur: perderFoco
+      }
+    ),
+    open && tecleando.current && sugerencias.length > 0 && /* @__PURE__ */ jsx9(
+      "ul",
+      {
+        role: "listbox",
+        "aria-label": "Sugerencias de correo",
+        className: "absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-ink-500 bg-paper shadow-xl",
+        children: sugerencias.map((sugerencia) => /* @__PURE__ */ jsx9("li", { children: /* @__PURE__ */ jsx9(
+          "button",
+          {
+            type: "button",
+            className: "w-full px-3 py-2 text-left text-sm text-fore transition hover:bg-ink-700",
+            onMouseDown: (event) => event.preventDefault(),
+            onClick: () => elegir(sugerencia),
+            children: sugerencia
+          }
+        ) }, sugerencia))
+      }
+    )
+  ] });
+}
 
-// src/utils/fecha.js
-var ES_PY = "es-PY";
-var OPCIONES_HORA = { hour12: false };
-function fechaValida(value) {
-  if (!value) return null;
-  const fecha = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(fecha.getTime()) ? null : fecha;
-}
-function fechaHora(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleString(ES_PY, { dateStyle: "short", timeStyle: "short", ...OPCIONES_HORA }) : vacio;
-}
-function fechaDia(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleDateString(ES_PY) : vacio;
-}
-function fechaHoraCorta(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  return fecha ? fecha.toLocaleString(ES_PY, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }) : vacio;
-}
-function fechaCorta(value, vacio = "\u2014") {
-  const fecha = fechaValida(value);
-  if (!fecha) return vacio;
-  const dia = fecha.toLocaleDateString(ES_PY, { day: "2-digit", month: "short" });
-  const hora = fecha.toLocaleTimeString(ES_PY, { hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA });
-  return `${dia} \xB7 ${hora}`;
-}
+// src/components/PhoneField.jsx
+import { useState as useState3 } from "react";
 
 // src/utils/telefono.js
 function normalizarTelefono(value) {
@@ -1011,7 +1093,377 @@ function telefonoValido(value, countryCode = "+595") {
   return local.length >= 6 && local.length <= 12;
 }
 var MENSAJE_TELEFONO = "Tel\xE9fono inv\xE1lido. Para Paraguay us\xE1 un m\xF3vil de 9 d\xEDgitos, ej: 981 123 456 o +595 971 234567.";
+
+// src/components/PhoneField.jsx
+import { jsx as jsx10, jsxs as jsxs6 } from "react/jsx-runtime";
+var MAX_CODIGO = 6;
+var MAX_NUMERO = 30;
+var CODIGOS_PAIS = ["+595", "+55", "+54", "+56", "+591", "+598", "+1", "+34", "+44", "+351"];
+function soloDigitos2(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, MAX_CODIGO);
+}
+function soloNumero(value) {
+  return String(value || "").replace(/[^\d\s()-]/g, "").slice(0, MAX_NUMERO);
+}
+function parseTelefono(value, countryCodePorDefecto = "+595") {
+  const texto = String(value || "").trim();
+  const partes = texto.match(/^\+(\d{1,3})\s*(.*)$/);
+  if (partes) return { countryCode: `+${partes[1]}`, phone: partes[2].trim() };
+  return { countryCode: countryCodePorDefecto, phone: texto };
+}
+function componerTelefono({ countryCode = "+595", phone = "" } = {}) {
+  const numero = String(phone || "").trim().replace(/\s+/g, " ");
+  if (!numero) return null;
+  const codigo = String(countryCode || "").replace(/\D/g, "") || "595";
+  return `+${codigo} ${numero}`;
+}
+function PhoneField({
+  countryCode = "+595",
+  phone = "",
+  onChange,
+  onCountryCodeChange,
+  disabled = false,
+  placeholder = "981 123 456",
+  countryAriaLabel = "C\xF3digo de pa\xEDs",
+  phoneAriaLabel = "Tel\xE9fono",
+  codigos = CODIGOS_PAIS,
+  mensajeInvalido = MENSAJE_TELEFONO,
+  id = "telefono-codigos",
+  className
+}) {
+  const [tocado, setTocado] = useState3(false);
+  const invalido = tocado && Boolean(String(phone).trim()) && !telefonoValido(phone, countryCode);
+  return /* @__PURE__ */ jsxs6("div", { className, children: [
+    /* @__PURE__ */ jsxs6("div", { className: "flex gap-2", children: [
+      /* @__PURE__ */ jsx10(
+        Input,
+        {
+          inputMode: "numeric",
+          list: id,
+          disabled,
+          value: `+${soloDigitos2(countryCode)}`,
+          onChange: (event) => onCountryCodeChange?.(`+${soloDigitos2(event.target.value)}`),
+          "aria-label": countryAriaLabel,
+          className: "w-[92px] shrink-0 text-center"
+        }
+      ),
+      /* @__PURE__ */ jsx10("datalist", { id, children: codigos.map((codigo) => /* @__PURE__ */ jsx10("option", { value: codigo }, codigo)) }),
+      /* @__PURE__ */ jsx10(
+        Input,
+        {
+          type: "tel",
+          inputMode: "tel",
+          maxLength: MAX_NUMERO,
+          disabled,
+          value: phone,
+          onChange: (event) => onChange?.(soloNumero(event.target.value)),
+          placeholder,
+          "aria-label": phoneAriaLabel,
+          onBlur: () => setTocado(true),
+          className: "min-w-0 flex-1"
+        }
+      )
+    ] }),
+    invalido && /* @__PURE__ */ jsx10("span", { className: "block pt-1 text-[11px] text-bad", children: mensajeInvalido })
+  ] });
+}
+
+// src/components/SerialField.jsx
+import { jsx as jsx11 } from "react/jsx-runtime";
+function normalizarSerial(value = "") {
+  return String(value ?? "").trim().replace(/[\s-]+/g, "").toUpperCase();
+}
+function SerialField({
+  value = "",
+  onChange,
+  disabled = false,
+  placeholder = "IMEI o serial",
+  normalizar = normalizarSerial,
+  maxLength = 32,
+  ...props
+}) {
+  return /* @__PURE__ */ jsx11(
+    Input,
+    {
+      autoCapitalize: "characters",
+      autoCorrect: "off",
+      spellCheck: false,
+      maxLength,
+      disabled,
+      placeholder,
+      ...props,
+      value: normalizar(value),
+      onChange: (event) => onChange?.(normalizar(event.target.value))
+    }
+  );
+}
+
+// src/components/InstagramField.jsx
+import { jsx as jsx12, jsxs as jsxs7 } from "react/jsx-runtime";
+var MAX_USERNAME = 30;
+function normalizarInstagram(value) {
+  const texto = String(value || "").trim().replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/^instagram\.com\//i, "").replace(/^@+/, "");
+  return texto.split(/[/?#]/)[0].replace(/\s+/g, "").replace(/[^A-Za-z0-9._]/g, "").slice(0, MAX_USERNAME);
+}
+function InstagramField({ value = "", onChange, disabled = false, placeholder = "usuario", className }) {
+  return /* @__PURE__ */ jsxs7("div", { className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx12("span", { "aria-hidden": "true", className: "pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-mute", children: "@" }),
+    /* @__PURE__ */ jsx12(
+      Input,
+      {
+        maxLength: MAX_USERNAME,
+        disabled,
+        value: normalizarInstagram(value),
+        onChange: (event) => onChange?.(normalizarInstagram(event.target.value)),
+        placeholder,
+        className: "pl-8"
+      }
+    )
+  ] });
+}
+
+// src/components/GoogleButton.jsx
+import { jsx as jsx13, jsxs as jsxs8 } from "react/jsx-runtime";
+function GoogleMark({ className }) {
+  return /* @__PURE__ */ jsxs8("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
+    /* @__PURE__ */ jsx13("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
+    /* @__PURE__ */ jsx13("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
+    /* @__PURE__ */ jsx13("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
+    /* @__PURE__ */ jsx13("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
+  ] });
+}
+function OAuthDivider({ texto = "o", className }) {
+  return /* @__PURE__ */ jsxs8("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
+    /* @__PURE__ */ jsx13("span", { className: "h-px flex-1 bg-fore/10" }),
+    texto,
+    /* @__PURE__ */ jsx13("span", { className: "h-px flex-1 bg-fore/10" })
+  ] });
+}
+function GoogleButton({
+  crear = false,
+  busy = false,
+  onClick,
+  etiquetaCrear = "Crear con Google",
+  etiquetaContinuar = "Continuar con Google",
+  etiquetaBusy = "Conectando con Google\u2026",
+  className
+}) {
+  return /* @__PURE__ */ jsxs8(
+    "button",
+    {
+      type: "button",
+      onClick,
+      disabled: busy,
+      "aria-busy": busy,
+      className: cn(
+        "group flex h-14 w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-base font-semibold text-slate-900 shadow-sm transition",
+        "hover:-translate-y-px hover:border-white hover:bg-slate-50 hover:shadow-lg",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fono",
+        "disabled:cursor-wait disabled:opacity-70 sm:rounded-full",
+        className
+      ),
+      children: [
+        busy ? /* @__PURE__ */ jsx13("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx13(GoogleMark, {}),
+        /* @__PURE__ */ jsx13("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
+      ]
+    }
+  );
+}
+
+// src/components/AuthLayout.jsx
+import { jsx as jsx14, jsxs as jsxs9 } from "react/jsx-runtime";
+function AuthLayout({ logo, aside, acciones, pie, children, className }) {
+  return /* @__PURE__ */ jsxs9("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
+    acciones && /* @__PURE__ */ jsx14("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
+    /* @__PURE__ */ jsx14("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
+    /* @__PURE__ */ jsxs9("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
+      /* @__PURE__ */ jsxs9("section", { className: "hidden lg:block", children: [
+        logo,
+        aside
+      ] }),
+      children
+    ] }),
+    pie && /* @__PURE__ */ jsx14("div", { className: "shrink-0", children: pie })
+  ] });
+}
+
+// src/components/ProductFooter.jsx
+import { Fragment, jsx as jsx15, jsxs as jsxs10 } from "react/jsx-runtime";
+function ProductFooter({
+  nombre = "",
+  version = "",
+  credito = "",
+  creditoUrl = "",
+  anio = (/* @__PURE__ */ new Date()).getFullYear(),
+  leading,
+  children,
+  className
+}) {
+  return /* @__PURE__ */ jsxs10("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
+    leading,
+    /* @__PURE__ */ jsxs10("span", { children: [
+      "\xA9 ",
+      anio,
+      " ",
+      nombre,
+      ". Todos los derechos reservados.",
+      version ? ` \xB7 ${version}` : ""
+    ] }),
+    children && /* @__PURE__ */ jsxs10(Fragment, { children: [
+      " \xB7 ",
+      children
+    ] }),
+    credito && /* @__PURE__ */ jsxs10(Fragment, { children: [
+      " \xB7 ",
+      /* @__PURE__ */ jsx15("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
+    ] })
+  ] });
+}
+
+// src/components/LoadingScreen.jsx
+import { jsx as jsx16, jsxs as jsxs11 } from "react/jsx-runtime";
+function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etiqueta = "", className }) {
+  const nombreTienda = tienda?.nombre || "";
+  const imagenTienda = tienda?.logo || "";
+  return /* @__PURE__ */ jsxs11(
+    "div",
+    {
+      className: cn("relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-paper px-6 text-fore", className),
+      role: "status",
+      "aria-busy": "true",
+      "aria-label": mensaje,
+      children: [
+        /* @__PURE__ */ jsx16("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
+        /* @__PURE__ */ jsx16("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
+        /* @__PURE__ */ jsxs11("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
+          /* @__PURE__ */ jsx16("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
+          /* @__PURE__ */ jsx16("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
+          /* @__PURE__ */ jsx16("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx16("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
+        ] }),
+        nombreTienda && /* @__PURE__ */ jsx16("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs11("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
+          imagenTienda ? /* @__PURE__ */ jsx16("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx16("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
+          /* @__PURE__ */ jsx16("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
+          etiqueta && /* @__PURE__ */ jsx16("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
+        ] }) })
+      ]
+    }
+  );
+}
+
+// src/components/PegarEnlaceToken.jsx
+import { useState as useState4 } from "react";
+
+// src/utils/token.js
+var RUTA_CON_TOKEN = /(?:^|\/)([^/?#]+)\/([a-f0-9]{64})(?:[/?#]|$)/i;
+function extractTokenFromUrl(raw = "") {
+  const texto = (() => {
+    try {
+      return decodeURIComponent(String(raw));
+    } catch {
+      return String(raw);
+    }
+  })();
+  const porRuta = texto.match(RUTA_CON_TOKEN);
+  if (porRuta) return porRuta[2];
+  const match = texto.match(/[a-f0-9]{64}/i);
+  return match ? match[0] : "";
+}
+function esToken(value) {
+  return /^[a-f0-9]{64}$/i.test(String(value ?? "").trim());
+}
+
+// src/components/PegarEnlaceToken.jsx
+import { jsx as jsx17, jsxs as jsxs12 } from "react/jsx-runtime";
+function PegarEnlaceToken({
+  onToken,
+  etiqueta = "Peg\xE1 tu enlace completo",
+  textoBoton = "Usar este enlace",
+  errorMensaje = "No encontramos el c\xF3digo en ese enlace. Peg\xE1 el enlace completo de tu correo.",
+  id = "pegar-enlace",
+  className
+}) {
+  const [enlace, setEnlace] = useState4("");
+  const [error, setError] = useState4("");
+  function aplicar(event) {
+    event.preventDefault();
+    setError("");
+    const token = extractTokenFromUrl(enlace);
+    if (!token) return setError(errorMensaje);
+    onToken?.(token);
+  }
+  return /* @__PURE__ */ jsxs12("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
+    /* @__PURE__ */ jsxs12("div", { children: [
+      /* @__PURE__ */ jsx17(Label, { htmlFor: id, children: etiqueta }),
+      /* @__PURE__ */ jsx17(
+        Input,
+        {
+          id,
+          value: enlace,
+          onChange: (event) => {
+            setEnlace(event.target.value);
+            setError("");
+          },
+          placeholder: "https://\u2026",
+          autoComplete: "off",
+          className: "mt-1.5"
+        }
+      )
+    ] }),
+    error && /* @__PURE__ */ jsx17(Aviso, { tono: "error", children: error }),
+    /* @__PURE__ */ jsx17(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
+  ] });
+}
+
+// src/utils/tabla.js
+var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
+var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
+var ROTULO_SECCION = "text-xs font-bold uppercase tracking-wider text-mute";
+var CELDA_DATO = "truncate text-xs text-mute";
+var CELDA_NUMERO = "text-right tabular-nums";
+
+// src/utils/fecha.js
+var ES_PY = "es-PY";
+var OPCIONES_HORA = { hour12: false };
+function fechaValida(value) {
+  if (!value) return null;
+  const fecha = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(fecha.getTime()) ? null : fecha;
+}
+function fechaHora(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleString(ES_PY, { dateStyle: "short", timeStyle: "short", ...OPCIONES_HORA }) : vacio;
+}
+function fechaDia(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleDateString(ES_PY) : vacio;
+}
+function fechaHoraCorta(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  return fecha ? fecha.toLocaleString(ES_PY, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }) : vacio;
+}
+function fechaCorta(value, vacio = "\u2014") {
+  const fecha = fechaValida(value);
+  if (!fecha) return vacio;
+  const dia = fecha.toLocaleDateString(ES_PY, { day: "2-digit", month: "short" });
+  const hora = fecha.toLocaleTimeString(ES_PY, { hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA });
+  return `${dia} \xB7 ${hora}`;
+}
+
+// src/utils/serial.js
+function ultimos4(serial) {
+  return String(serial ?? "").slice(-4);
+}
+function partirSerial(serial) {
+  const texto = String(serial ?? "");
+  if (!texto) return { cabeza: "", cola: "" };
+  return { cabeza: texto.slice(0, -4), cola: texto.slice(-4) };
+}
+function serialEnmascarado(serial) {
+  const cola = ultimos4(serial);
+  return cola ? `\u2022\u2022\u2022\u2022${cola}` : "";
+}
 export {
+  AuthLayout,
   Aviso,
   Badge,
   BarraProgreso,
@@ -1019,38 +1471,50 @@ export {
   CELDA_DATO,
   CELDA_ENCABEZADO,
   CELDA_NUMERO,
+  CODIGOS_PAIS,
   Card,
   CeldaMoneda,
   ConfirmDialog,
   CurrencySelect,
+  DOMINIOS_EMAIL,
   DataTable,
   Dot,
   Drawer,
+  EmailField,
   EmptyState,
   ErrorState,
   Eyebrow,
   FilaDato,
   FormField,
+  GoogleButton,
+  GoogleMark,
   Icon,
   IconAction,
   Input,
+  InstagramField,
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
   Label,
   ListGridToggle,
+  LoadingScreen,
   MENSAJE_TELEFONO,
   Modal,
   Money,
   MoneyInput,
+  OAuthDivider,
   PageHeader,
   PasswordInput,
+  PegarEnlaceToken,
   PercentField,
+  PhoneField,
   PinInput,
+  ProductFooter,
   ROTULO_DATO,
   ROTULO_SECCION,
   SearchField_default as SearchField,
   SegmentedField,
   Select,
+  SerialField,
   Skeleton,
   Stat,
   Subtabs,
@@ -1059,7 +1523,10 @@ export {
   ToastProvider,
   cn,
   codigoPais,
+  componerTelefono,
+  esToken,
   excedeMonto,
+  extractTokenFromUrl,
   fechaCorta,
   fechaDia,
   fechaHora,
@@ -1076,14 +1543,21 @@ export {
   montoGs,
   montoTexto,
   montoUsd,
+  normalizarInstagram,
+  normalizarSerial,
   normalizarTelefono,
   parseGsInput,
   parsePercent,
+  parseTelefono,
   parseUsdInput,
+  partirSerial,
   primerNombre,
+  serialEnmascarado,
   soloDigitos,
+  sugerenciasDe,
   telefonoValido,
   telefonoVisible,
+  ultimos4,
   useToast,
   whatsappUrl
 };

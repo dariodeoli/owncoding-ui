@@ -13,9 +13,9 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | Moneda Gs/USD | `MoneyInput` + `CurrencySelect` | PYG sin decimales, USD/monedas con 2; el símbolo lo dibuja el campo; `max` por tipo de monto |
 | Moneda de solo lectura | `Money` | nunca convertir a mano; no finito → `—` |
 | Porcentaje | `PercentField` | coma decimal, 0–100; guardar con `parsePercent`, mostrar con `formatPercent` |
-| Teléfono | (pendiente de portar `PhoneField`) | mientras tanto, `soloDigitos`/`telefonoValido`/`telefonoVisible` de la librería |
-| Correo | (pendiente) | `type=email`, sin romper pegado/autofill |
-| Serial/IMEI | (pendiente) | mayúsculas, sin espacios ni prefijo interno |
+| Teléfono | `PhoneField` | código de país editable (default +595), valida con `telefonoValido`; guardar con `componerTelefono` |
+| Correo | `EmailField` | sugiere dominios mientras se tipea, sin romper pegado/autofill |
+| Serial/IMEI | `SerialField` | mayúsculas, sin espacios ni prefijo; varios seriales con normalización propia (prop `normalizar`) |
 | Fechas/horas | `Input type="date"`/`datetime-local` | 24 h; para mostrar, `fechaHora`/`fechaDia`/`fechaCorta` |
 | Booleano | `Switch` | interruptor estilo iPhone, guarda `onChange(event.target.checked)` |
 | Selección múltiple | `Input type="checkbox"` | para listas con varias filas |
@@ -38,6 +38,15 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - Botón solo-icono: `IconAction` (trae `aria-label` y `title`).
 - Deshabilitado: opacidad reducida y `cursor: not-allowed`; foco visible.
 - Altura táctil ≥44 px en móvil; radios por contexto.
+
+## 2 bis. Acceso (login/registro)
+
+- `GoogleButton` (+ `GoogleMark`, `OAuthDivider`) para el acceso con Google;
+  `AuthLayout` arma la pantalla (slots de logo, copy de marca, acciones y pie);
+  `ProductFooter` y `LoadingScreen` son institucionales y van por props.
+- `PegarEnlaceToken` resuelve los enlaces de correo que llegan incompletos.
+- Todos son **sin API**: no leen sesión ni llaman al backend; la app maneja el
+  flujo y pasa callbacks.
 
 ## 3. Avisos, estados y vacíos
 

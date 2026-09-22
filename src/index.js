@@ -46,6 +46,17 @@ export { default as SegmentedField } from './components/SegmentedField.jsx'
 export { default as PercentField, parsePercent, formatPercent, limpiarPercent } from './components/PercentField.jsx'
 export { default as CurrencySelect } from './components/CurrencySelect.jsx'
 export { default as ListGridToggle } from './components/ListGridToggle.jsx'
+export { default as EmailField, DOMINIOS_EMAIL, sugerenciasDe } from './components/EmailField.jsx'
+export { default as PhoneField, parseTelefono, componerTelefono, CODIGOS_PAIS } from './components/PhoneField.jsx'
+export { default as SerialField, normalizarSerial } from './components/SerialField.jsx'
+export { default as InstagramField, normalizarInstagram } from './components/InstagramField.jsx'
+
+// Acceso y shell (sin API: todo por props)
+export { default as GoogleButton, GoogleMark, OAuthDivider } from './components/GoogleButton.jsx'
+export { default as AuthLayout } from './components/AuthLayout.jsx'
+export { default as ProductFooter } from './components/ProductFooter.jsx'
+export { default as LoadingScreen } from './components/LoadingScreen.jsx'
+export { default as PegarEnlaceToken } from './components/PegarEnlaceToken.jsx'
 
 // Clases de tabla/listado
 export { ROTULO_DATO, CELDA_ENCABEZADO, ROTULO_SECCION, CELDA_DATO, CELDA_NUMERO } from './utils/tabla.js'
@@ -68,6 +79,8 @@ export {
   LIMITE_MONTO_VENTAS,
 } from './utils/moneda.js'
 export { fechaValida, fechaHora, fechaDia, fechaHoraCorta, fechaCorta } from './utils/fecha.js'
+export { ultimos4, partirSerial, serialEnmascarado } from './utils/serial.js'
+export { extractTokenFromUrl, esToken } from './utils/token.js'
 export {
   normalizarTelefono,
   internationalPhone,

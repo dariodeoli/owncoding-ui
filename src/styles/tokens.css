@@ -97,3 +97,19 @@ input, td, [data-money] {
 input::placeholder, textarea::placeholder {
   color: #8197a5;
 }
+
+/* Animaciones de la pantalla de carga (respetan reduced-motion) */
+@keyframes oc-respira {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+@keyframes oc-carga {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(320%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .motion-safe\:animate-\[oc-respira_2\.6s_ease-in-out_infinite\],
+  .motion-safe\:animate-\[oc-carga_1\.25s_ease-in-out_infinite\] {
+    animation: none;
+  }
+}
