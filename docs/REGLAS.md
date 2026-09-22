@@ -254,6 +254,34 @@ librería; no se agrega un segundo nombre para lo mismo):
 Los colores y el grosor del trazo salen del ícono (heredan `currentColor`); no
 se les pasa `stroke` ni `fill` por pantalla.
 
+### Sistema `--ds-*` y contrato medido (#1)
+
+La geometría, la tipografía y el ritmo salen del sistema `--ds-*` de
+`styles.css` (cosechado de PagaYa, aditivo: ningún token existente cambia):
+
+| Grupo | Tokens |
+| --- | --- |
+| Espaciado | `--ds-space-1..8` (4/8/12/16/24/32/48/64) |
+| Radios | `--ds-radius-xs..2xl` (8/12/16/24/32/40) + `--ds-radius-pill` |
+| Tipografía | `--ds-text-xs..lg` (11/12/13/15), `--ds-title-sm..xl` (22/28/38/48), `--ds-leading-tight/snug/relaxed` (1.04/1.35/1.6), `--ds-tracking-title` |
+| Elevación y halo | `--ds-shadow-1..3`, `--ds-glow`, `--ds-glow-strong` |
+| Superficies | `--ds-gradient-surface`, `--ds-gradient-panel`, `--ds-gradient-immersive`, `--ds-gradient-auth` |
+| Ritmo | `--ds-shell-pad-x/y`, `--ds-section-gap`, `--ds-card-pad` |
+
+Reglas de aplicación:
+
+- El halo y los gradientes se derivan de `--c-fono` y `--c-ink-800`: siguen el
+  tema y el acento de cada app. Prohibidas las sombras de color ad hoc; los
+  halos son solo `--ds-glow` y `--ds-glow-strong`.
+- Los títulos van por `--ds-title-*`; el cuerpo no baja de `--ds-text-sm`.
+- Las superficies elevadas usan los gradientes del sistema, no gradientes
+  inventados por pantalla.
+- Cualquier `--ds-*` se puede pisar desde el CSS de la app (el último gana).
+
+**Contrato de densidad:** `--ds-row: 54px` (alto de fila de lista) y
+`--ds-cell-min: 150px` (ancho mínimo de celda de grilla). La regla es «se miden, no se declaran»: el token fija el objetivo y la verificación es la medición sobre el
+render real (el harness de la app); declarar la variable no alcanza.
+
 ## 8 bis. Operación de equipos (#240/#241)
 
 Base del piloto de DSN: checklist/tile/rack de inspección. Todo es portable
