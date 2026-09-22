@@ -200,3 +200,90 @@ estados no se re-etiquetan por pantalla.
 2. Cada regla nueva se fija con un test de aserción de fuente o de render en
    `test/` (si una app vuelve a copiar el patrón, su test lo marca).
 3. La app adopta el objeto y borra su copia en el mismo cambio.
+
+## 10. Agenda, filtros, shell e identidad (lote 2 — 22-09-2026)
+
+Objetos para las pantallas de trabajo diario: calendario, filtro de fechas,
+buscador global, ayuda del módulo, barra inferior mobile y avatar, más las
+piezas de tablero (importe con signo, conexión, avisos y barras). Todos son
+portables: reciben props y avisan por callbacks; no hacen `fetch`, no leen
+stores ni conocen el router. Textos y datos entran por props.
+
+### 10.1 Días y semanas
+
+- Un día es una **clave pura `YYYY-MM-DD`** (`utils/calendario.js`): no se corre
+  de fecha entre el server y el navegador. `etiquetaMes`, `etiquetaDia` y
+  `etiquetaDiaCorta` rinden es-PY en UTC; la hora de cada ítem la formatea la
+  app con `utils/fecha.js`.
+- La semana va de **lunes a domingo** (`rangoSemana`, `indiceSemana`); el mes se
+  arma con la grilla completa (`rangoMes`, 35 o 42 días con los días vecinos).
+- «Este mes» llega **hasta hoy** (no inventa días futuros), «Mes pasado» es el
+  mes anterior completo y «Últimos 30 días» incluye hoy (`utils/rangoFecha.js`).
+
+### 10.2 Objetos y props
+
+| Objeto | Props | Notas |
+| --- | --- | --- |
+| `Calendario` | `items`, `vistas` (`['mes']`), `vista`/`vistaPorDefecto`, `onCambiarVista`, `ancla`/`anclaPorDefecto`, `onCambiarPeriodo(ancla, rango)`, `diaSeleccionado`/`onSeleccionarDia`, `onElegirItem`, `renderItem(item, { vista, dia })`, `maxPorDia` (2), `cargando`, `mostrarDetalle`, `hoy` | Grilla mensual en escritorio y lista por día en mobile (sin scroll horizontal). Ítem: `{ id, fecha, titulo, hora?, detalle?, tono?, href? }`; `fecha` es clave de día. Sin ítems en el rango dice que no hay movimientos |
+| `RangoFecha` | `desde`/`hasta` + `onCambio(desde, hasta)`, o `desdePorDefecto`/`hastaPorDefecto`/`periodoPorDefecto` (`este-mes`), `atajos`, `hoy`, `mostrarCampos` | Atajos: Hoy · Esta semana · Este mes · Mes pasado · Últimos 30 días · Personalizado. El atajo activo se deriva del par; un rango invertido se avisa, no se corrige solo |
+| `PaletaComandos` | `abierta`/`onAbrir`/`onCerrar`, `buscar` (async), `onElegir`, `etiquetasTipo`, `iconosTipo`, `atajo` (`k`), `atajoTexto` (`⌘K`), `conAtajo`, `minimo` (2), `espera` (220 ms), `boton`/`textoBoton` | Resultados `{ id, tipo, titulo, detalle?, icono? }` agrupados por `tipo`; ↑↓ mueven, Enter elige, Esc cierra y el foco arranca en el buscador. Estados honestos: «seguí escribiendo», cargando, sin resultados y error con reintento |
+| `AyudaModulo` | `titulo`, `resumen`, `puntos` (3–5), `enlaces` `[{ href, etiqueta, onClick? }]`, `abierta`/`onAbrir`/`onCerrar` | Botón «?» + diálogo de la librería (mismo alto y ancho que un formulario de una columna). Sin título ni resumen no monta nada; los enlaces cierran el diálogo al navegar |
+| `BarraInferior` | `items` (máx. 4), `activo`, `onSelect`, `onMas`, `masEtiqueta`, `menuAbierto`, `menuId`, `maxItems` (4) | `fixed` en mobile (`md:hidden`), ítem activo con `aria-current="page"`. **No reserva espacio**: la app corre el contenido con `ESPACIO_BARRA_INFERIOR` |
+| `Avatar` | `nombre`, `src`, `tamano` (`sm`/`md`/`lg`), `forma` (`redondo`/`cuadrado`), `empresa`, `title`, `ariaLabel`, `decorativo` | Iniciales con color estable derivado del nombre; con `src` dibuja la imagen y si falla vuelve a las iniciales (nunca un cuadro roto). La cadena de identidad de #211 (foto local → foto de identidad → iniciales) sigue pendiente |
+| `ImporteDelta` | `valor`, `moneda`, `formato` (`moneda`/`porcentaje`), `invertir`, `vacio` | Importe con signo (`+ Gs …` / `− Gs …`) y color: verde lo que suma, rojo lo que resta, neutro el cero; `tabular-nums` y `nowrap`. El signo y el formato salen de `utils/moneda.js` (`montoConSigno`, `signoDe`) |
+| `IndicadorConexion` | `enLinea`, `pendientes`, `sincronizando`, `onSincronizar` | Estado real de la cola: en línea / sin conexión + «N pendientes de subir»; el botón solo sincroniza cuando hay pendientes |
+| `CampanaAvisos` | `avisos` `[{ id, titulo, detalle?, tono?, fecha?, href?, onClick?, leido? }]`, `onAbrir`, `onElegir`, `pie`, `anclaje` | Contador de no leídos (si ninguno trae `leido`, cuenta todos) hasta `99+`; el panel no marca nada solo: abrir y elegir se avisan por callback |
+| `GraficoBarras` | `datos` `[{ etiqueta, valor, tono? }]`, `max`, `orientacion` (`vertical`/`horizontal`), `altura` (160), `tono`, `formatoValor`, `etiqueta`, `mostrarValores` | Barras CSS sin dependencias, con lista accesible para lectores de pantalla. Los negativos se dibujan en 0 y el valor real queda en el tooltip: no se inventa una escala |
+| `formatoNumero` / `signoDe` / `montoConSigno` | `valor`, `{ decimales, vacio }` / `valor` / `valor`, `moneda`, `vacio` | Cantidades y signos en el formato único (es-PY); un dato ausente devuelve el vacío, nunca 0 |
+
+### 10.3 Ejemplo (la app resuelve datos y navegación)
+
+```jsx
+import { useState } from 'react'
+import {
+  Avatar, BarraInferior, Calendario, ESPACIO_BARRA_INFERIOR, PaletaComandos,
+  RangoFecha,
+} from 'owncoding-ui'
+
+export function Agenda({ items, buscar, ir }) {
+  const [rango, setRango] = useState({ desde: '', hasta: '' })
+  const [abierta, setAbierta] = useState(false)
+
+  return (
+    <div className={ESPACIO_BARRA_INFERIOR}>
+      <RangoFecha
+        desde={rango.desde}
+        hasta={rango.hasta}
+        onCambio={(desde, hasta) => setRango({ desde, hasta })}
+      />
+      <Calendario
+        items={items} // [{ id, fecha: '2026-09-22', titulo, hora, tono, href }]
+        vistas={['mes', 'semana']}
+        onCambiarPeriodo={(ancla, range) => pedir(range.desde, range.hasta)}
+        onElegirItem={(item) => item.href && ir(item.href)}
+      />
+      <PaletaComandos
+        abierta={abierta}
+        onCerrar={() => setAbierta(false)}
+        buscar={buscar} // async (consulta) => [{ id, tipo, titulo, detalle }]
+        onElegir={(resultado) => ir(resultado.datos.href)}
+        boton
+      />
+      <BarraInferior
+        items={NAVEGACION} // [{ id, etiqueta, icono, href }]
+        activo="calendario"
+        onMas={abrirMenu}
+      />
+      <Avatar nombre={usuario.nombre} src={usuario.fotoUrl} tamano="sm" />
+    </div>
+  )
+}
+```
+
+### 10.4 Reglas
+
+Los días no se corren de zona (clave pura); un rango invertido se dice; la
+paleta no busca ni navega por su cuenta; el avatar no inventa fotos; el contador
+de avisos cuenta lo que hay; un gráfico sin datos lo dice.
+
+

@@ -116,6 +116,46 @@ export {
   etiquetaDeCategoria,
 } from './utils/categorias.js'
 
+// ── Lote 2: agenda, filtros, navegación e identidad ─────────────────────────
+// Calendario por mes/semana, filtro de rango, buscador global, ayuda de
+// pantalla, barra inferior mobile, avatar y las piezas de tablero.
+export { default as Calendario } from './components/Calendario.jsx'
+export {
+  DIAS_SEMANA,
+  esClaveDia,
+  claveDia,
+  fechaDeClave,
+  hoyClave,
+  sumarDias,
+  sumarMeses,
+  indiceSemana,
+  rangoSemana,
+  rangoMes,
+  mismoMes,
+  etiquetaMes,
+  etiquetaDia,
+  etiquetaDiaCorta,
+  agruparPorDia,
+} from './utils/calendario.js'
+export { default as RangoFecha } from './components/RangoFecha.jsx'
+export {
+  PERIODOS_FECHA,
+  ETIQUETA_PERIODO,
+  esAtajo,
+  rangoDePeriodo,
+  periodoDeRango,
+  rangoInvertido,
+} from './utils/rangoFecha.js'
+export { default as PaletaComandos, agruparResultados, estadoPaleta } from './components/PaletaComandos.jsx'
+export { default as AyudaModulo } from './components/AyudaModulo.jsx'
+export { default as BarraInferior, ESPACIO_BARRA_INFERIOR } from './components/BarraInferior.jsx'
+export { default as Avatar, TAMANOS_AVATAR } from './components/Avatar.jsx'
+export { COLORES_AVATAR, inicialesDeNombre, claveColorDeNombre, colorDeNombre } from './utils/avatar.js'
+export { default as ImporteDelta, tonoDelta } from './components/ImporteDelta.jsx'
+export { default as IndicadorConexion } from './components/IndicadorConexion.jsx'
+export { default as CampanaAvisos, contarSinLeer, textoContador } from './components/CampanaAvisos.jsx'
+export { default as GraficoBarras, maximoDeBarras, porcentajeBarra } from './components/GraficoBarras.jsx'
+
 // Lógica compartida
 export { cn, primerNombre } from './utils/cn.js'
 export { normalizarNombre, nombrePartes, esApellidosPrimero, esRazonSocial } from './utils/nombre.js'
@@ -178,6 +218,9 @@ export {
   montoUsd,
   montoTexto,
   excedeMonto,
+  formatoNumero,
+  signoDe,
+  montoConSigno,
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
 } from './utils/moneda.js'
