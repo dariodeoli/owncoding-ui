@@ -62,6 +62,11 @@ la de MobOS.
 
 ### Notas de release
 
+- **v0.13.0 (propuesta, sin publicar)** — lote de objetos genéricos portado de
+  LedBox: `TableroKanban`, `Cronologia`, `PlanPagos`, `DocumentoImpresion`,
+  `SubidaImagen` y `ProgresoChecklist`; `qrcode` pasa a import dinámico (la peer
+  opcional ya no rompe el import del paquete). Props y reglas en
+  `docs/REGLAS.md` §8 ter; ejemplos en «Objetos genéricos del lote LedBox».
 - **v0.12.0** — informe público: `FichaCertificado` (tarjeta del informe de
   dispositivo) y `CodigoQr` + `qrDataUrl` (QR unificado, peer opcional
   `qrcode`).
@@ -198,6 +203,202 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   fechas (`fechaHora`, `fechaCorta`, …), teléfono/WhatsApp (`whatsappUrl`,
   `telefonoVisible`, …), seriales (`ultimos4`, `serialEnmascarado`) y tokens de
   acción (`extractTokenFromUrl`).
+- **Lote LedBox (sin publicar, v0.13.0 propuesta):** `TableroKanban`,
+  `Cronologia`, `PlanPagos`, `DocumentoImpresion`, `SubidaImagen` y
+  `ProgresoChecklist`. Detalle y ejemplos en la sección siguiente.
+
+## Objetos genéricos del lote LedBox
+
+Seis objetos que LedBox ya resolvió a mano y ahora viven acá. Todos son
+portables: reciben props, avisan por callbacks, no hacen `fetch`, no leen
+stores ni conocen el router; los montos van enteros y el formato lo dibuja
+`Money`. Las reglas están en `docs/REGLAS.md` §8 ter.
+
+### `TableroKanban` — pipeline por columnas de estado
+
+**Para qué sirve:** un pipeline con columnas por estado (leads, presupuestos,
+trabajos, eventos): contador por columna, tarjetas con subtítulo, chips, monto,
+fecha y detalle, arrastre HTML5 entre columnas y el menú «Mover a…» para
+teclado. El tablero mueve la tarjeta de forma optimista y la revierte si el
+callback falla.
+
+```jsx
+<TableroKanban
+  etiqueta="Presupuestos"
+  puedeMover={puedeEscribir}
+  columnas={[
+    { valor: 'borrador', titulo: 'Borrador', tono: 'mute' },
+    { valor: 'enviado', titulo: 'Enviado', tono: 'info' },
+    { valor: 'aprobado', titulo: 'Aprobado', tono: 'ok' },
+  ]}
+  tarjetas={presupuestos.map((fila) => ({
+    id: fila.id,
+    estado: fila.status,
+    titulo: fila.title,
+    subtitulo: fila.client,
+    monto: fila.total,
+    fecha: fila.validUntil,
+    chips: [{ etiqueta: 'Portal', tono: 'info' }],
+    destinos: ['borrador', 'enviado', 'aprobado'], // máquina de estados real
+  }))}
+  onMover={(id, estado) => mover(id, estado)} // devuelve { ok } | Promise<{ ok }>
+  onError={(mensaje) => toast(mensaje)}
+/>
+```
+
+Props: `etiqueta`, `columnas` (`[{ valor, titulo, tono? }]`), `tarjetas`
+(`[{ id, estado, titulo, subtitulo?, chips?, monto?, montoNota?, fecha?,
+detalle?, acciones?, destinos? }]`), `puedeMover`, `etiquetaMover`,
+`textoVacio`, `onMover`, `onError`, `className`. También exporta
+`useTableroOptimista`, `columnasDelTablero`, `agruparTarjetas` y
+`destinosDeTarjeta`.
+
+**Qué NO hace:** no hace `fetch` ni conoce estados de negocio (los `valor` y
+`destinos` los define la app); sin `onMover`/`puedeMover` es de solo lectura; no
+ordena las tarjetas; los estados que llegan sin columna declarada se dibujan al
+final con su valor crudo (no se ocultan filas).
+
+### `Cronologia` — historial de hitos
+
+**Para qué sirve:** la historia de un pedido, un equipo o un cliente: una fila
+por hito con ícono y tono por tipo, título, detalle, actor y fecha es-PY 24 h,
+con agrupación por día opcional y estado vacío.
+
+```jsx
+<Cronologia
+  agrupar
+  mostrarTipo
+  hitos={hitos.map((h) => ({ id: h.id, fecha: h.at, tipo: h.kind, titulo: h.title, detalle: h.detail, actor: h.actor, tono: h.tone }))}
+  iconos={{ pago: 'money', cancelado: 'close' }} // pisa ICONOS_HITO
+  tonos={{ cancelado: 'bad' }}                  // pisa TONOS_HITO
+/>
+```
+
+Props: `hitos` (`[{ id, fecha, tipo, titulo, detalle?, actor?, tono?, icono? }]`),
+`iconos`, `tonos`, `etiquetas`, `agrupar`, `mostrarTipo`, `etiqueta`,
+`vacioTitulo`, `vacioDetalle`, `className`. Exporta `ICONOS_HITO`, `TONOS_HITO`,
+`ETIQUETAS_HITO`, `etiquetaDeHito` y `agruparHitos`.
+
+**Qué NO hace:** no ordena ni filtra hitos (llegan ordenados por el API y el
+consumidor decide la audiencia); no inventa hitos: si un hecho no está, no se
+muestra; un tipo desconocido cae en el tono `mute` con su texto crudo.
+
+### `PlanPagos` — anticipo, cuotas y total
+
+**Para qué sirve:** el plan de pagos de una venta a plazo: anticipo (si
+existe), cuotas con etiqueta, monto, vencimiento y estado, el bloque «a
+transferir ahora» destacado, el total y el saldo sin cuota.
+
+```jsx
+<PlanPagos
+  anticipo={plan.advanceAmount}
+  cuotas={plan.installments.map((c, i) => ({ id: `c${i}`, etiqueta: c.label, monto: c.amount, vence: c.dueAt, estado: 'pendiente' }))}
+  aTransferir={plan.dueNow ? { id: 'c0', etiqueta: plan.dueNow.label, monto: plan.dueNow.amount } : null}
+  total={presupuesto.total}
+  saldoSinCuota={plan.pending}
+  condiciones={plan.terms}
+/>
+```
+
+Props: `anticipo`, `anticipoEtiqueta`, `anticipoVence`, `cuotas`, `aTransferir`,
+`total`, `totalEtiqueta`, `saldoSinCuota`, `saldoEtiqueta`, `condiciones`,
+`moneda`, `estados`, `vacio`, `className`. Estados de cuota en `ESTADOS_CUOTA`
+(`pendiente`, `revision`, `pagada`, `cancelada`) dibujados con `ChipEstado`.
+
+**Qué NO hace:** no calcula cuotas ni intereses, no consulta la API y no cambia
+estados: recibe el plan resuelto y lo dibuja. Tampoco sube comprobantes (eso es
+de la pantalla).
+
+### `DocumentoImpresion` — hoja A4 imprimible
+
+**Para qué sirve:** presupuestos, facturas y órdenes de trabajo en A4:
+encabezado con emisor y receptor, número y meta, tabla de detalle, liquidación
+(subtotal, descuento, IVA por tasa, otros y total), notas y pie, con botón de
+imprimir opcional.
+
+```jsx
+<DocumentoImpresion
+  titulo="Presupuesto"
+  numero="0001-0000123"
+  emisor={{ nombre: empresa.nombre, documento: empresa.ruc, direccion: empresa.direccion, logo: empresa.logo }}
+  receptor={{ nombre: cliente.nombre, documento: cliente.ruc }}
+  meta={[{ etiqueta: 'Emitido', valor: fechaHora(presupuesto.createdAt) }, { etiqueta: 'Válido hasta', valor: fechaDia(presupuesto.validUntil) }]}
+  estado="Aprobado"
+  estadoTono="ok"
+  detalle={items.map((item) => ({ cantidad: item.quantity, concepto: item.name, unitario: item.unitPrice, subtotal: item.subtotal }))}
+  liquidacion={{ subtotal, descuento, iva: [{ tasa: 10, base, monto }], total }}
+  notas={presupuesto.notes}
+  pie="ledbox.online · Documento generado desde el panel"
+  onImprimir={() => window.print()}
+/>
+```
+
+Props: `titulo`, `numero`, `etiquetaNumero`, `emisor`, `receptor`,
+`meta`, `estado`, `estadoTono`, `detalle`, `liquidacion`, `notas`,
+`notasEtiqueta`, `pie`, `onImprimir`, `etiquetaImprimir`, `moneda`,
+`etiquetaDetalle`, `etiquetaEmisor`, `etiquetaReceptor`, `etiquetaLiquidacion`,
+`etiquetaMeta`, `vacioDetalle`, `className`.
+
+**Qué NO hace:** no llama a `window.print()` (lo dispara `onImprimir`), no
+resuelve la marca ni los datos de la empresa y no muestra nada que no reciba.
+Las reglas `@media print` viven en `styles.css` (`.oc-print`,
+`oc-print-oculto`): la pantalla marca con `oc-print-oculto` su toolbar o
+navegación.
+
+### `SubidaImagen` — imagen sin dependencias
+
+**Para qué sirve:** elegir una imagen con validación real (JPG/PNG/WebP por
+firma, no por extensión), tamaño máximo, vista previa, arrastrar y soltar,
+limpiar y compresión opcional en el navegador con canvas (avatar cuadrado o
+logo con su relación de aspecto).
+
+```jsx
+<SubidaImagen
+  etiqueta="Logo de la empresa"
+  descripcion="Se ve en el portal y en los impresos."
+  valor={empresa.logoUrl}
+  cuadrado={false}
+  error={errorDelApi}
+  onImagen={(imagen) => guardar({ base64: imagen.base64, tipo: imagen.tipo })}
+  onLimpiar={() => guardar(null)}
+/>
+```
+
+Props: `etiqueta`, `descripcion`, `valor`, `error`, `tipos`, `tamanoMaximo`,
+`comprimir`, `cuadrado`, `ladoMaximo`, `tamanoObjetivo`, `onImagen`,
+`onLimpiar`, `limpiarEtiqueta`, `subirEtiqueta`, `cambiarEtiqueta`, `disabled`,
+`ocupado`, `className`. Exporta `MIMES_IMAGEN`, `TAMANO_MAXIMO_IMAGEN`,
+`mimeDeImagen`, `validarImagen` y `prepararImagen`.
+
+**Qué NO hace:** no sube nada (entrega la imagen preparada por `onImagen`), no
+recorta con otra lógica que la acordada (`cuadrado` o relación original), no
+acepta PDF/GIF y no comprime fuera del navegador (`prepararImagen` devuelve un
+error claro en el servidor).
+
+### `ProgresoChecklist` — avance con umbrales
+
+**Para qué sirve:** el avance de un checklist o de una lista de tareas: barra
+accesible + «x de y» + porcentaje, con tono verde al completar, ámbar si hay
+vencidas y rojo si el trabajo está en riesgo (próximo y sin ningún avance).
+
+```jsx
+<ProgresoChecklist
+  hechas={avance.done}
+  total={avance.total}
+  vencidas={avance.overdue}
+  riesgo={eventoProximo && avance.done === 0}
+  sustantivo="tareas"
+/>
+```
+
+Props: `hechas`, `total`, `vencidas`, `riesgo`, `sustantivo`, `porcentaje`,
+`mostrarDetalle`, `alto`, `textoVacio`, `className`. La lógica pura está en
+`progresoChecklist(...)`, que devuelve `hechas`, `total`, `pendientes`,
+`vencidas`, `riesgo`, `completo`, `tono`, `porcentaje`, `etiqueta` y `detalle`.
+
+**Qué NO hace:** no cuenta tareas ni conoce fechas; los números llegan
+calculados por la pantalla. Sin tareas no dibuja una barra en 0 %: dice «Sin
+datos».
 
 ## Estructura
 
