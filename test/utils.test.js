@@ -38,6 +38,8 @@ import {
   telefonoVisible,
   telefonoValido,
   whatsappUrl,
+  extraerRuc,
+  esRuc,
   cn,
 } from '../src/index.js'
 
@@ -208,5 +210,22 @@ describe('lógica compartida', () => {
     expect(categoriaDe('ZZZ')).toBe('otro')
     expect(iconoDeCategoria('iPad Air')).toBe('tablet')
     expect(etiquetaDeCategoria('auriculares')).toBe('AirPods')
+  })
+})
+
+// Lote 20: el RUC sale del mismo módulo que lo valida y lo extrae.
+describe('utils/ruc', () => {
+  test('extrae el RUC de un texto importado', () => {
+    expect(extraerRuc('ACME S.A. RUC 80012345-6 Ciudad del Este')).toBe('80012345-6')
+    expect(extraerRuc('80012345-6')).toBe('80012345-6')
+    expect(extraerRuc('sin documento')).toBe('')
+    expect(extraerRuc(null)).toBe('')
+  })
+
+  test('valida el patrón completo', () => {
+    expect(esRuc('80012345-6')).toBe(true)
+    expect(esRuc(' 800.123.45-6 ')).toBe(true)
+    expect(esRuc('80012345')).toBe(false)
+    expect(esRuc('')).toBe(false)
   })
 })

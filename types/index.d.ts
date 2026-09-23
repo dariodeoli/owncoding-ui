@@ -174,6 +174,37 @@ export function SerialField(props: Omit<InputProps, 'onChange'> & { value?: stri
 export function normalizarSerial(valor: string): string
 export function InstagramField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void }): ReactElement
 export function normalizarInstagram(valor: string): string
+export function ProductCombobox(props: Record<string, any> & {
+  products?: Array<{ id: string; nombre?: string; name?: string; sku?: string; model?: string; capacity?: string; color?: string; category?: string; [clave: string]: any }>
+  selectedId?: string
+  onSelect?: (product: any) => void
+  onCreate?: (nombre: string) => Promise<any>
+  onQueryChange?: (consulta: string) => void
+  placeholder?: string
+  disabled?: boolean
+  className?: string
+}): ReactElement
+export function RucField(props: Record<string, any> & {
+  id?: string
+  value?: string
+  onChange: (valor: string) => void
+  onAplicar?: (resultado: { name: string; fullRuc?: string; simulado?: boolean }) => void
+  consultar?: (ruc: string) => Promise<{ name: string; fullRuc?: string; simulado?: boolean }>
+  disabled?: boolean
+  consultarDisabled?: boolean
+  mostrarExtractor?: boolean
+  maxLength?: number
+  placeholder?: string
+  autoComplete?: string
+  ariaLabel?: string
+  textoAyuda?: string
+}): ReactElement
+export function extraerRuc(texto: string): string
+export function esRuc(valor: string): boolean
+export const RUC_RE: RegExp
+export function SerialTexto(props: { serial?: string; className?: string; tonoCola?: string; vacio?: string }): ReactElement
+export function EstadoBadge(props: { mapa?: Record<string, { label: ReactNode; color?: string }>; valor?: string; vacio?: string }): ReactElement
+export function SeccionColapsable(props: { titulo: ReactNode; resumen?: ReactNode; icono?: string; abierta?: boolean; clave?: string; className?: string; children?: ReactNode }): ReactElement
 
 // ── Acceso y shell ─────────────────────────────────────────────────────────
 

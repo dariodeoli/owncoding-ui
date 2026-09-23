@@ -1,0 +1,87 @@
+import { useState } from 'react'
+import { Badge, Input } from './ui.jsx'
+import BotonDentroCampo from './BotonDentroCampo.jsx'
+
+// Campo RUC único del grupo: input con el botón **Extraer** adentro (trailing,
+// con tooltip y estado «Consultando…») contra la consulta que pasa la app
+// (`consultar` async → `{ name, fullRuc, simulado? }`). El resultado se ofrece
+// con «Usar estos datos»: nunca pisa lo cargado sin confirmación y, si el
+// proveedor no responde, el dato se completa a mano. La librería no consulta
+// nada por su cuenta: sin `consultar` el botón no se muestra.
+export default function RucField({
+  id,
+  value,
+  onChange,
+  onAplicar,
+  consultar,
+  disabled = false,
+  consultarDisabled = false,
+  mostrarExtractor = true,
+  maxLength = 100,
+  placeholder = '80012345-6',
+  autoComplete = 'off',
+  ariaLabel,
+  textoAyuda = 'La razón social se aplica solo si la confirmás.',
+}) {
+  const [resultado, setResultado] = useState(null)
+  const [consultando, setConsultando] = useState(false)
+  const [error, setError] = useState('')
+  const hayRuc = Boolean(String(value || '').trim())
+  const puedeExtraer = mostrarExtractor && typeof consultar === 'function'
+
+  async function extraer() {
+    const ruc = String(value || '').trim()
+    if (!ruc || consultando || !puedeExtraer) return
+    setConsultando(true); setError(''); setResultado(null)
+    try {
+      const datos = await consultar(ruc)
+      if (!datos?.name) throw new Error('No encontramos datos para ese RUC.')
+      setResultado(datos)
+    } catch (causa) {
+      setError(causa?.message || 'No se pudo consultar el RUC. Podés completar los datos manualmente.')
+    } finally { setConsultando(false) }
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="relative">
+        <Input
+          id={id}
+          aria-label={ariaLabel}
+          className={puedeExtraer ? (consultando ? 'pr-32' : 'pr-11') : undefined}
+          maxLength={maxLength}
+          autoComplete={autoComplete}
+          disabled={disabled}
+          value={value}
+          onChange={(event) => { onChange(event.target.value); setResultado(null); setError('') }}
+          placeholder={placeholder}
+        />
+        {puedeExtraer && (
+          <BotonDentroCampo
+            etiqueta="Extraer los datos del RUC"
+            titulo={hayRuc ? 'Extraer los datos del RUC' : 'Ingresá el RUC para extraer los datos'}
+            etiquetaOcupada="Consultando…"
+            disabled={disabled || consultarDisabled || !hayRuc}
+            ocupado={consultando}
+            onClick={extraer}
+          />
+        )}
+      </div>
+      {puedeExtraer && textoAyuda && <span className="block text-xs text-mute">{textoAyuda}</span>}
+      {resultado && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fono/25 bg-fono/5 p-3 text-sm">
+          <span className="min-w-0">
+            <span className="flex flex-wrap items-center gap-2">
+              <b className="truncate">{resultado.name}</b>
+              {resultado.simulado && <Badge color="blue">Simulada en demo</Badge>}
+            </span>
+            <span className="block text-mute">RUC {resultado.fullRuc}</span>
+            {resultado.simulado && <span className="block text-xs text-mute">Resultado ficticio: la demo no consulta registros reales.</span>}
+          </span>
+          <button type="button" className="font-semibold text-fono-light" onClick={() => { onAplicar?.(resultado); setResultado(null) }}>Usar estos datos</button>
+        </div>
+      )}
+      {error && <p role="alert" className="text-sm text-bad">{error}</p>}
+    </div>
+  )
+}

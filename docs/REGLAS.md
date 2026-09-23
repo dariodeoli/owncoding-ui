@@ -27,6 +27,9 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | Lista/cuadrícula | `ListGridToggle` | solo íconos, `aria-pressed` |
 | Búsqueda instantánea | `SearchField` | lupa + limpiar; el debounce vive en la pantalla |
 | Acción dentro del campo | `BotonDentroCampo` | botón trailing **adentro** del input (`relative` + `pr-11`): ícono con tooltip (`title`/`aria-label`) y estado ocupado «Consultando…» con spinner; vacío → `disabled`. La pantalla decide qué hace `onClick` (la librería no consulta nada) |
+| Producto | `ProductCombobox` | buscar/elegir y **crear** desde el campo: sugerencias en flujo (no superpuestas) con `role="combobox"`/`listbox`, teclado ↑↓/Enter/Esc y «Agregar … como producto nuevo»; la pantalla filtra en memoria o consulta al servidor (`onQueryChange`) |
+| RUC / CI | `RucField` (+`extraerRuc`/`esRuc`) | input con el botón **Extraer** adentro (trailing, `BotonDentroCampo`): la consulta entra por `consultar` (async) y el resultado se aplica solo al confirmar («Usar estos datos»); sin `consultar` el botón no se muestra |
+| Serial (lectura) | `SerialTexto` | el serial completo si entra y, si la columna queda corta, se recorta la cabeza y los **últimos 4** siguen visibles; vacío → `—` |
 | Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el texto libre sigue permitido |
 
 ### Tamaños recomendados (#148, portable)
@@ -93,6 +96,9 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   género («Pagada», «EN REVISIÓN»). La app no copia el `<span>` con borde y
   fondo: usa el chip, pisa `etiqueta`/`tono` si su módulo lo necesita y nunca
   inventa un estado (uno desconocido cae en «Pendiente»).
+- **Estados con badge:** `EstadoBadge` toma el mapa de cada dominio
+  (`{ ESTADO: { label, color } }`) y dibuja el `Badge`; un valor fuera del mapa
+  se muestra crudo y el vacío es explícito (`vacio`), nunca un badge en blanco.
 
 ## 4. Datos y tablas
 
@@ -101,6 +107,7 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - Dato secundario: `CELDA_DATO`; número/cantidad: `CELDA_NUMERO`
   (`text-right tabular-nums`); **dinero: `CeldaMoneda`** (renderiza `Money`).
 - `FilaDato`: fila etiqueta/valor de paneles de detalle (mantiene `dt`/`dd`).
+- `SeccionColapsable`: sección de detalle plegable (arranca cerrada, `aria-expanded` + `aria-controls`); con `clave` recuerda el estado en la sesión y el contenido queda en el DOM con `hidden` (los apoyos de lectura y las pruebas lo encuentran).
 - Barras de avance: `BarraProgreso` (accesible, con tono y altura).
 - Reglas: misma altura de fila, sin cortes de texto, acciones en una línea,
   montos/fechas/códigos con `nowrap` + dígitos tabulares.

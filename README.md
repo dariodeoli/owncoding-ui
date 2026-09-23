@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.14.11
+npm install github:dariodeoli/owncoding-ui#v0.15.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.14.11
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.15.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -200,7 +200,10 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `SearchField`, `BotonDentroCampo` (acción trailing dentro del input),
   `PercentField` (+`parsePercent`/`formatPercent`),
   `CurrencySelect`, `EmailField` (sugerencia de dominios), `PhoneField`
-  (código de país + validación), `SerialField` (IMEI/serial), `InstagramField`.
+  (código de país + validación), `SerialField` (IMEI/serial), `InstagramField`,
+  `ProductCombobox` (buscar/elegir/crear producto), `RucField` (+`extraerRuc`/
+  `esRuc`: la consulta entra por prop) y `SerialTexto` (serial con los últimos
+  4 siempre visibles).
 - **Acceso (sin API):** `GoogleButton` (+`GoogleMark`, `OAuthDivider`),
   `AuthLayout` (slots de logo/copy/acciones/pie), `ProductFooter`,
   `LoadingScreen` y `PegarEnlaceToken` (extrae el token del enlace). No leen
@@ -253,7 +256,9 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 - **Datos:** `Money`, `FilaDato`, `CeldaMoneda`, `BarraProgreso`
   (`pista`/`relleno` para las barras de gráfico),
   `DataTable`, `PageHeader`, `Eyebrow`, clases de tabla `CELDA_DATO`,
-  `CELDA_NUMERO`, `CELDA_ENCABEZADO`, `ROTULO_DATO`, `ROTULO_SECCION`.
+  `CELDA_NUMERO`, `CELDA_ENCABEZADO`, `ROTULO_DATO`, `ROTULO_SECCION`,
+  `EstadoBadge` (badge desde un mapa `{ label, color }`) y `SeccionColapsable`
+  (detalle plegable que recuerda el estado con `clave`).
 - **Lógica:** `cn`, `primerNombre`, moneda (`formatGs` con símbolo configurable,
   `montoTexto`, …), fechas (`fechaHora`, `fechaCorta`, … con `timeZone`),
   teléfono/WhatsApp (`whatsappUrl`, `telefonoVisible`, …), seriales (`ultimos4`,
@@ -628,6 +633,8 @@ traerlo).
   generen desde el código (hoy se escriben a mano en `types/index.d.ts`).
 - **Adopción por app:** migrar MobOS (y luego ScaleOS, LedBox, PagaYa) a
   consumir el paquete sin romper nada. Ver `docs/MODOS-DE-TRABAJO.md`.
-- Objetos de MobOS que aún no se portaron: `ComprobantePreview`,
-  `SeccionColapsable`, combos con datos (`BancoCombobox`, `ProductCombobox`,
-  `CityAutocomplete`) y el agente de impresión (no es UI).
+- Objetos de MobOS que aún no se portaron: `ComprobantePreview` (compone la
+  impresión de cada app: agente, cola y plantillas — las piezas portables,
+  `VistaPreviaPapel` y `DocumentoImpresion`, ya viven acá) y el agente de
+  impresión (no es UI). `SeccionColapsable`, `ProductCombobox` y los combos
+  con datos (`BancoCombobox`, `CityAutocomplete`) se portaron en **v0.15.0**.

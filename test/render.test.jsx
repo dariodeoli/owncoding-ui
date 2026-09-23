@@ -19,6 +19,11 @@ import {
   GradoBadge,
   IconAction,
   IconoCategoria,
+  EstadoBadge,
+  ProductCombobox,
+  RucField,
+  SeccionColapsable,
+  SerialTexto,
   Input,
   Label,
   MedidorBateria,
@@ -259,5 +264,39 @@ describe('render de los objetos base', () => {
     expect(renderToStaticMarkup(<VistaPreviaPapel formato="a4" contenido="<p>A4</p>" />)).toContain('max-w-[794px]')
     expect(renderToStaticMarkup(<VistaPreviaPapel formato="thermal-58" contenido="x" />)).toContain('max-w-[219px]')
     expect(renderToStaticMarkup(<VistaPreviaPapel formato="desconocido" contenido="x" />)).not.toContain('mx-auto')
+  })
+
+  test('los objetos de dato y detalle del lote 20 renderizan con su contrato', () => {
+    // EstadoBadge: etiqueta y color del mapa; crudo y vacío explícito si falta.
+    const estados = { PENDIENTE: { label: 'Pendiente', color: 'orange' }, PAGADO: { label: 'Pagado', color: 'green' } }
+    expect(renderToStaticMarkup(<EstadoBadge mapa={estados} valor="PAGADO" />)).toContain('Pagado')
+    expect(renderToStaticMarkup(<EstadoBadge mapa={estados} valor="RARO" />)).toContain('RARO')
+    expect(renderToStaticMarkup(<EstadoBadge mapa={estados} valor="" />)).toContain('Sin estado')
+
+    // SerialTexto: el final siempre visible y el vacío explícito.
+    const serial = renderToStaticMarkup(<SerialTexto serial="356789104523178" />)
+    expect(serial).toContain('3178')
+    expect(serial).toContain('title="356789104523178"')
+    expect(renderToStaticMarkup(<SerialTexto serial="" />)).toContain('—')
+
+    // SeccionColapsable: cerrada por defecto, con el panel oculto pero en el DOM.
+    const seccion = renderToStaticMarkup(<SeccionColapsable titulo="Detalle" resumen="3 ítems"><p>contenido</p></SeccionColapsable>)
+    expect(seccion).toContain('aria-expanded="false"')
+    expect(seccion).toContain('hidden=""')
+    expect(seccion).toContain('contenido')
+    expect(renderToStaticMarkup(<SeccionColapsable titulo="Detalle" abierta><p>contenido</p></SeccionColapsable>)).toContain('aria-expanded="true"')
+
+    // ProductCombobox: contrato de combobox (la lista se abre recién al tipear).
+    const combo = renderToStaticMarkup(<ProductCombobox products={[{ id: 'p1', nombre: 'iPhone 15' }]} />)
+    expect(combo).toContain('role="combobox"')
+    expect(combo).toContain('aria-expanded="false"')
+    expect(combo).toContain('aria-autocomplete="list"')
+
+    // RucField: el extractor solo aparece si la app pasa `consultar`.
+    const ruc = renderToStaticMarkup(<RucField value="80012345-6" onChange={() => {}} consultar={async () => ({ name: 'ACME' })} />)
+    expect(ruc).toContain('Extraer los datos del RUC')
+    expect(ruc).toContain('La razón social se aplica solo si la confirmás.')
+    const sinConsultar = renderToStaticMarkup(<RucField value="80012345-6" onChange={() => {}} />)
+    expect(sinConsultar).not.toContain('Extraer los datos del RUC')
   })
 })

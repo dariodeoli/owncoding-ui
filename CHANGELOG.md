@@ -4,6 +4,32 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.15.0 — 2026-09-23
+
+- **Objetos que faltaban (cierre de los pendientes de la fase 2):**
+  - `ProductCombobox` — buscar/elegir y **crear producto desde el campo**:
+    sugerencias en flujo (no superpuestas) con `role="combobox"`/`listbox`,
+    teclado ↑↓/Enter/Esc y «Agregar … como producto nuevo»; la pantalla filtra
+    en memoria o consulta al servidor (`onQueryChange`).
+  - `RucField` (+`utils/ruc.js`: `extraerRuc`/`esRuc`) — input con el botón
+    **Extraer** adentro; la consulta entra por `consultar` (async) y el
+    resultado se aplica solo al confirmar («Usar estos datos»). Sin `consultar`
+    el botón no se muestra: la librería no llama APIs.
+  - `SerialTexto` — el serial completo si entra y, si la columna queda corta,
+    los **últimos 4** siempre visibles; vacío explícito.
+  - `EstadoBadge` — estado con badge desde un mapa `{ label, color }`; un valor
+    fuera del mapa se muestra crudo y el vacío es explícito (nunca un badge en
+    blanco).
+  - `SeccionColapsable` — detalle plegable con `aria-expanded`/`aria-controls`;
+    con `clave` recuerda el estado en la sesión y el contenido queda en el DOM
+    con `hidden`.
+- **Tipos y docs:** `types/index.d.ts` declara los cinco objetos y el RUC;
+  `docs/REGLAS.md` §1/§3/§4 documenta props y reglas; el README actualiza la
+  lista y los pendientes (queda `ComprobantePreview`, explicado como
+  composición de impresión de cada app).
+- Tests: render de los cinco objetos + extracción/validación de RUC (165 en
+  total).
+
 ## v0.14.11 — 2026-09-23
 
 - **Dos modos de deploy (`docs/COMANDOS.md`):** **`hd`** es el modo **rápido**

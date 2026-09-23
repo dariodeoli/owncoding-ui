@@ -1448,21 +1448,444 @@ function InstagramField({ value = "", onChange, disabled = false, placeholder = 
   ] });
 }
 
+// src/components/ProductCombobox.jsx
+import { useCallback as useCallback2, useEffect as useEffect2, useId as useId2, useMemo as useMemo2, useRef as useRef3, useState as useState4 } from "react";
+
+// src/utils/categorias.js
+var CATEGORIAS_PRODUCTO = [
+  { clave: "iphone", etiqueta: "iPhone", icono: "mobile", alias: ["iphone", "mobile", "celular", "telefono", "smartphone"] },
+  { clave: "macbook", etiqueta: "MacBook", icono: "laptop", alias: ["macbook", "mac", "laptop", "notebook", "computadora"] },
+  { clave: "ipad", etiqueta: "iPad", icono: "tablet", alias: ["ipad", "tablet", "tableta"] },
+  { clave: "watch", etiqueta: "Watch", icono: "watch", alias: ["watch", "reloj", "apple watch"] },
+  { clave: "airpods", etiqueta: "AirPods", icono: "buds", alias: ["airpods", "auriculares", "audifonos", "buds", "earbuds"] },
+  { clave: "accesorios", etiqueta: "Accesorios", icono: "cable", alias: ["accesorios", "cable", "cables", "cargador", "cargadores", "funda", "fundas", "vidrio", "lamina", "templado", "adaptador"] },
+  { clave: "servicio", etiqueta: "Servicio", icono: "wrench", alias: ["servicio", "servicios", "reparacion"] },
+  { clave: "otro", etiqueta: "Otro", icono: "box", alias: [] }
+];
+var ICONO_CATEGORIA = Object.fromEntries(CATEGORIAS_PRODUCTO.map(({ clave, icono }) => [clave, icono]));
+var PALABRAS_ACCESORIO = ["funda", "cable", "cargador", "vidrio", "lamina", "templado", "adaptador", "protector", "soporte"];
+var sinAcentos = (texto) => String(texto ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
+function normalizarCategoria(texto) {
+  const limpio = sinAcentos(texto);
+  const buscar = (clave) => CATEGORIAS_PRODUCTO.find((categoria) => categoria.clave === clave);
+  if (!limpio) return buscar("otro");
+  if (PALABRAS_ACCESORIO.some((palabra) => limpio.includes(palabra))) return buscar("accesorios");
+  const exacta = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.includes(limpio));
+  if (exacta) return exacta;
+  const contiene = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.some((alias) => alias.length > 3 && limpio.includes(alias)));
+  return contiene || buscar("otro");
+}
+var categoriaDe = (texto) => normalizarCategoria(texto).clave;
+var iconoDeCategoria = (texto) => normalizarCategoria(texto).icono;
+var etiquetaDeCategoria = (texto) => normalizarCategoria(texto).etiqueta;
+
+// src/components/IconoCategoria.jsx
+import { jsx as jsx14 } from "react/jsx-runtime";
+var GLIFOS_CATEGORIA = {
+  // Celular: marco redondeado con parlante y botón.
+  mobile: "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM10 5h4M11 18.5h2",
+  // Laptop: pantalla arriba, base ancha.
+  laptop: "M5 5h14v10H5zM2.5 19h19M9 15l-.5 4M15 15l.5 4",
+  // Tablet: marco redondeado más ancho que el celular.
+  tablet: "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM11 18.5h2",
+  // Reloj: caja central con correas.
+  watch: "M9 2h6l.8 4H8.2L9 2ZM8.2 18h7.6l-.8 4H9l-.8-4ZM6 8h12v8H6zM12 10.5v3l2 1",
+  // Auriculares: dos buds con su tallo.
+  buds: "M7 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM7 16.5V21M17 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM17 16.5V21",
+  // Cable: curva con conectores en los extremos.
+  cable: "M4 3v5a4 4 0 0 0 4 4h4a4 4 0 0 1 4 4v5M2 3h4M18 21h4"
+};
+function IconoCategoria({ categoria, icono, className, ...props }) {
+  const glifo = icono || iconoDeCategoria(categoria);
+  const clases = cn("shrink-0", className || "h-5 w-5");
+  if (!GLIFOS_CATEGORIA[glifo]) return /* @__PURE__ */ jsx14(Icon, { name: glifo, className: clases, ...props });
+  return /* @__PURE__ */ jsx14(
+    "svg",
+    {
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: "currentColor",
+      strokeWidth: "1.7",
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      "aria-hidden": "true",
+      className: clases,
+      ...props,
+      children: /* @__PURE__ */ jsx14("path", { d: GLIFOS_CATEGORIA[glifo] })
+    }
+  );
+}
+
+// src/components/ProductCombobox.jsx
+import { jsx as jsx15, jsxs as jsxs9 } from "react/jsx-runtime";
+var MAX_SUGGESTIONS = 8;
+function productName(product) {
+  return product?.nombre || product?.name || "";
+}
+function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, onQueryChange, placeholder = "Buscar producto\u2026", disabled = false, className }) {
+  const [query, setQuery] = useState4("");
+  const [open, setOpen] = useState4(false);
+  const [highlight, setHighlight] = useState4(0);
+  const [creating, setCreating] = useState4(false);
+  const listId = useId2();
+  const rootRef = useRef3(null);
+  useEffect2(() => {
+    const cerrarFuera = (event) => {
+      if (event.target instanceof Node && rootRef.current?.contains(event.target)) return;
+      close();
+    };
+    document.addEventListener("click", cerrarFuera);
+    return () => document.removeEventListener("click", cerrarFuera);
+  }, []);
+  const setearQuery = useCallback2((next) => {
+    setQuery(next);
+    onQueryChange?.(next);
+  }, [onQueryChange]);
+  useEffect2(() => {
+    if (!selectedId) return;
+    const selected = products.find((product) => product.id === selectedId);
+    if (selected) setearQuery(productName(selected));
+  }, [selectedId, products, setearQuery]);
+  const term = query.trim().toLowerCase();
+  const suggestions = useMemo2(() => {
+    if (!term) return [];
+    const coincide = (product) => [productName(product), product.sku, product.model, product.capacity, product.color].some((valor) => String(valor || "").toLowerCase().includes(term));
+    return products.filter(coincide).slice(0, MAX_SUGGESTIONS);
+  }, [products, term]);
+  const canCreate = Boolean(term && onCreate && suggestions.length === 0);
+  const optionCount = suggestions.length + (canCreate ? 1 : 0);
+  function close() {
+    setOpen(false);
+    setHighlight(0);
+  }
+  function choose(product) {
+    setearQuery(productName(product));
+    setOpen(false);
+    setHighlight(0);
+    onSelect?.(product);
+  }
+  async function createNew() {
+    if (!onCreate || creating) return;
+    setCreating(true);
+    try {
+      const created = await onCreate(query.trim());
+      if (created?.id) {
+        setearQuery(productName(created));
+        onSelect?.(created);
+      }
+      setOpen(false);
+    } catch {
+      setOpen(false);
+    } finally {
+      setCreating(false);
+    }
+  }
+  function onKeyDown(event) {
+    if (event.key === "Escape") {
+      close();
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!open) {
+        setOpen(true);
+        return;
+      }
+      if (!optionCount) return;
+      const delta = event.key === "ArrowDown" ? 1 : -1;
+      setHighlight((current) => (current + delta + optionCount) % optionCount);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      if (!open || !term) return;
+      if (canCreate && highlight >= suggestions.length) {
+        createNew();
+        return;
+      }
+      const product = suggestions[highlight];
+      if (product) choose(product);
+    }
+  }
+  return /* @__PURE__ */ jsxs9("div", { ref: rootRef, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx15(
+      Input,
+      {
+        type: "text",
+        role: "combobox",
+        "aria-expanded": open,
+        "aria-controls": listId,
+        "aria-autocomplete": "list",
+        autoComplete: "off",
+        disabled,
+        value: query,
+        placeholder,
+        onChange: (event) => {
+          setearQuery(event.target.value);
+          setOpen(true);
+          setHighlight(0);
+        },
+        onFocus: () => setOpen(true),
+        onBlur: () => setTimeout(close, 120),
+        onKeyDown
+      }
+    ),
+    open && term && /* @__PURE__ */ jsxs9("ul", { id: listId, role: "listbox", className: "mt-1 max-h-48 w-full overflow-auto rounded-lg border border-ink-500 bg-ink-800 py-1 shadow-lg", children: [
+      suggestions.map((product, index) => /* @__PURE__ */ jsx15("li", { children: /* @__PURE__ */ jsxs9(
+        "button",
+        {
+          type: "button",
+          role: "option",
+          "aria-selected": index === highlight,
+          tabIndex: -1,
+          className: cn("flex w-full items-baseline justify-between gap-2 px-3 py-2 text-left text-sm transition", index === highlight ? "bg-ink-700" : ""),
+          onMouseDown: (event) => {
+            event.preventDefault();
+            choose(product);
+          },
+          onMouseEnter: () => setHighlight(index),
+          children: [
+            /* @__PURE__ */ jsxs9("span", { className: "flex min-w-0 items-center gap-2", children: [
+              /* @__PURE__ */ jsx15(IconoCategoria, { categoria: product.category || productName(product), className: "h-4 w-4 text-mute" }),
+              /* @__PURE__ */ jsx15("span", { className: "truncate text-fore", children: productName(product) })
+            ] }),
+            product.sku ? /* @__PURE__ */ jsx15("span", { className: "shrink-0 text-xs text-mute", children: product.sku }) : null
+          ]
+        }
+      ) }, product.id)),
+      canCreate && /* @__PURE__ */ jsx15("li", { children: /* @__PURE__ */ jsx15(
+        "button",
+        {
+          type: "button",
+          role: "option",
+          "aria-selected": highlight >= suggestions.length,
+          tabIndex: -1,
+          disabled: creating,
+          className: cn("flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-semibold text-fono-light transition disabled:opacity-50", highlight >= suggestions.length ? "bg-ink-700" : ""),
+          onMouseDown: (event) => {
+            event.preventDefault();
+            createNew();
+          },
+          onMouseEnter: () => setHighlight(suggestions.length),
+          children: creating ? "Creando\u2026" : `\uFF0B Agregar \xAB${query.trim()}\xBB como producto nuevo`
+        }
+      ) })
+    ] })
+  ] });
+}
+
+// src/components/RucField.jsx
+import { useState as useState5 } from "react";
+import { jsx as jsx16, jsxs as jsxs10 } from "react/jsx-runtime";
+function RucField({
+  id,
+  value,
+  onChange,
+  onAplicar,
+  consultar,
+  disabled = false,
+  consultarDisabled = false,
+  mostrarExtractor = true,
+  maxLength = 100,
+  placeholder = "80012345-6",
+  autoComplete = "off",
+  ariaLabel,
+  textoAyuda = "La raz\xF3n social se aplica solo si la confirm\xE1s."
+}) {
+  const [resultado, setResultado] = useState5(null);
+  const [consultando, setConsultando] = useState5(false);
+  const [error, setError] = useState5("");
+  const hayRuc = Boolean(String(value || "").trim());
+  const puedeExtraer = mostrarExtractor && typeof consultar === "function";
+  async function extraer() {
+    const ruc = String(value || "").trim();
+    if (!ruc || consultando || !puedeExtraer) return;
+    setConsultando(true);
+    setError("");
+    setResultado(null);
+    try {
+      const datos = await consultar(ruc);
+      if (!datos?.name) throw new Error("No encontramos datos para ese RUC.");
+      setResultado(datos);
+    } catch (causa) {
+      setError(causa?.message || "No se pudo consultar el RUC. Pod\xE9s completar los datos manualmente.");
+    } finally {
+      setConsultando(false);
+    }
+  }
+  return /* @__PURE__ */ jsxs10("div", { className: "space-y-2", children: [
+    /* @__PURE__ */ jsxs10("div", { className: "relative", children: [
+      /* @__PURE__ */ jsx16(
+        Input,
+        {
+          id,
+          "aria-label": ariaLabel,
+          className: puedeExtraer ? consultando ? "pr-32" : "pr-11" : void 0,
+          maxLength,
+          autoComplete,
+          disabled,
+          value,
+          onChange: (event) => {
+            onChange(event.target.value);
+            setResultado(null);
+            setError("");
+          },
+          placeholder
+        }
+      ),
+      puedeExtraer && /* @__PURE__ */ jsx16(
+        BotonDentroCampo,
+        {
+          etiqueta: "Extraer los datos del RUC",
+          titulo: hayRuc ? "Extraer los datos del RUC" : "Ingres\xE1 el RUC para extraer los datos",
+          etiquetaOcupada: "Consultando\u2026",
+          disabled: disabled || consultarDisabled || !hayRuc,
+          ocupado: consultando,
+          onClick: extraer
+        }
+      )
+    ] }),
+    puedeExtraer && textoAyuda && /* @__PURE__ */ jsx16("span", { className: "block text-xs text-mute", children: textoAyuda }),
+    resultado && /* @__PURE__ */ jsxs10("div", { className: "flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fono/25 bg-fono/5 p-3 text-sm", children: [
+      /* @__PURE__ */ jsxs10("span", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs10("span", { className: "flex flex-wrap items-center gap-2", children: [
+          /* @__PURE__ */ jsx16("b", { className: "truncate", children: resultado.name }),
+          resultado.simulado && /* @__PURE__ */ jsx16(Badge, { color: "blue", children: "Simulada en demo" })
+        ] }),
+        /* @__PURE__ */ jsxs10("span", { className: "block text-mute", children: [
+          "RUC ",
+          resultado.fullRuc
+        ] }),
+        resultado.simulado && /* @__PURE__ */ jsx16("span", { className: "block text-xs text-mute", children: "Resultado ficticio: la demo no consulta registros reales." })
+      ] }),
+      /* @__PURE__ */ jsx16("button", { type: "button", className: "font-semibold text-fono-light", onClick: () => {
+        onAplicar?.(resultado);
+        setResultado(null);
+      }, children: "Usar estos datos" })
+    ] }),
+    error && /* @__PURE__ */ jsx16("p", { role: "alert", className: "text-sm text-bad", children: error })
+  ] });
+}
+
+// src/utils/ruc.js
+var RUC_RE = /\d[\d.\s]{2,}-\d+/;
+function extraerRuc(texto) {
+  const encontrado = String(texto || "").match(RUC_RE);
+  return encontrado ? encontrado[0].trim() : "";
+}
+function esRuc(valor) {
+  return RUC_RE.test(String(valor || "").trim());
+}
+
+// src/utils/serial.js
+function ultimos4(serial) {
+  return String(serial ?? "").slice(-4);
+}
+function partirSerial(serial) {
+  const texto = String(serial ?? "");
+  if (!texto) return { cabeza: "", cola: "" };
+  return { cabeza: texto.slice(0, -4), cola: texto.slice(-4) };
+}
+function serialEnmascarado(serial) {
+  const cola = ultimos4(serial);
+  return cola ? `\u2022\u2022\u2022\u2022${cola}` : "";
+}
+
+// src/components/SerialTexto.jsx
+import { jsx as jsx17, jsxs as jsxs11 } from "react/jsx-runtime";
+function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u2014" }) {
+  const { cabeza, cola } = partirSerial(serial);
+  if (!cola) return /* @__PURE__ */ jsx17("span", { className: cn("font-mono", className), children: vacio });
+  return /* @__PURE__ */ jsxs11("span", { className: cn("flex min-w-0 font-mono", className), title: String(serial), children: [
+    /* @__PURE__ */ jsx17("span", { className: "min-w-0 truncate", children: cabeza }),
+    /* @__PURE__ */ jsx17("b", { className: cn("shrink-0", tonoCola), children: cola })
+  ] });
+}
+
+// src/components/EstadoBadge.jsx
+import { jsx as jsx18 } from "react/jsx-runtime";
+function EstadoBadge({ mapa, valor, vacio = "Sin estado" }) {
+  const item = mapa?.[valor];
+  if (item) return /* @__PURE__ */ jsx18(Badge, { color: item.color, children: item.label });
+  return /* @__PURE__ */ jsx18(Badge, { children: valor || vacio });
+}
+
+// src/components/SeccionColapsable.jsx
+import { useId as useId3, useState as useState6 } from "react";
+
+// src/utils/tabla.js
+var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
+var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
+var ROTULO_SECCION = "text-xs font-bold uppercase tracking-wider text-mute";
+var CELDA_DATO = "truncate text-xs text-mute";
+var CELDA_NUMERO = "text-right tabular-nums";
+var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
+var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
+
+// src/components/SeccionColapsable.jsx
+import { jsx as jsx19, jsxs as jsxs12 } from "react/jsx-runtime";
+function SeccionColapsable({ titulo: titulo2, resumen, icono, abierta = false, clave, className = "", children }) {
+  const autoId = useId3();
+  const panelId = `seccion-panel-${autoId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
+  const [expandida, setExpandida] = useState6(() => {
+    if (!clave) return abierta;
+    try {
+      const guardado = window.sessionStorage.getItem(clave);
+      return guardado == null ? abierta : guardado === "1";
+    } catch {
+      return abierta;
+    }
+  });
+  function alternar() {
+    setExpandida((actual) => {
+      const siguiente = !actual;
+      if (clave) {
+        try {
+          window.sessionStorage.setItem(clave, siguiente ? "1" : "0");
+        } catch {
+        }
+      }
+      return siguiente;
+    });
+  }
+  return /* @__PURE__ */ jsxs12("section", { className: cn("rounded-2xl border border-ink-600 bg-ink-900", className), children: [
+    /* @__PURE__ */ jsxs12(
+      "button",
+      {
+        type: "button",
+        "aria-expanded": expandida,
+        "aria-controls": panelId,
+        onClick: alternar,
+        className: "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-ink-800/60",
+        children: [
+          icono ? /* @__PURE__ */ jsx19(Icon, { name: icono, className: "h-4 w-4 shrink-0 text-mute" }) : null,
+          /* @__PURE__ */ jsxs12("span", { className: "min-w-0 flex-1", children: [
+            /* @__PURE__ */ jsx19("span", { className: cn("block", ROTULO_SECCION), children: titulo2 }),
+            resumen ? /* @__PURE__ */ jsx19("span", { className: "mt-0.5 block truncate text-sm", children: resumen }) : null
+          ] }),
+          /* @__PURE__ */ jsx19(Icon, { name: "chevron", className: cn("h-4 w-4 shrink-0 text-mute transition-transform", expandida && "rotate-180") })
+        ]
+      }
+    ),
+    /* @__PURE__ */ jsx19("div", { id: panelId, hidden: !expandida, className: "border-t border-ink-600/70 px-4 pb-4 pt-3", children })
+  ] });
+}
+
 // src/components/GoogleButton.jsx
-import { jsx as jsx14, jsxs as jsxs9 } from "react/jsx-runtime";
+import { jsx as jsx20, jsxs as jsxs13 } from "react/jsx-runtime";
 function GoogleMark({ className }) {
-  return /* @__PURE__ */ jsxs9("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
-    /* @__PURE__ */ jsx14("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
-    /* @__PURE__ */ jsx14("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
-    /* @__PURE__ */ jsx14("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
-    /* @__PURE__ */ jsx14("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
+  return /* @__PURE__ */ jsxs13("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
+    /* @__PURE__ */ jsx20("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
+    /* @__PURE__ */ jsx20("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
+    /* @__PURE__ */ jsx20("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
+    /* @__PURE__ */ jsx20("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
   ] });
 }
 function OAuthDivider({ texto = "o", className }) {
-  return /* @__PURE__ */ jsxs9("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
-    /* @__PURE__ */ jsx14("span", { className: "h-px flex-1 bg-fore/10" }),
+  return /* @__PURE__ */ jsxs13("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
+    /* @__PURE__ */ jsx20("span", { className: "h-px flex-1 bg-fore/10" }),
     texto,
-    /* @__PURE__ */ jsx14("span", { className: "h-px flex-1 bg-fore/10" })
+    /* @__PURE__ */ jsx20("span", { className: "h-px flex-1 bg-fore/10" })
   ] });
 }
 function GoogleButton({
@@ -1474,7 +1897,7 @@ function GoogleButton({
   etiquetaBusy = "Conectando con Google\u2026",
   className
 }) {
-  return /* @__PURE__ */ jsxs9(
+  return /* @__PURE__ */ jsxs13(
     "button",
     {
       type: "button",
@@ -1489,32 +1912,32 @@ function GoogleButton({
         className
       ),
       children: [
-        busy ? /* @__PURE__ */ jsx14("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx14(GoogleMark, {}),
-        /* @__PURE__ */ jsx14("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
+        busy ? /* @__PURE__ */ jsx20("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx20(GoogleMark, {}),
+        /* @__PURE__ */ jsx20("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
       ]
     }
   );
 }
 
 // src/components/AuthLayout.jsx
-import { jsx as jsx15, jsxs as jsxs10 } from "react/jsx-runtime";
+import { jsx as jsx21, jsxs as jsxs14 } from "react/jsx-runtime";
 function AuthLayout({ logo, aside, acciones, pie, children, className }) {
-  return /* @__PURE__ */ jsxs10("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
-    acciones && /* @__PURE__ */ jsx15("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
-    /* @__PURE__ */ jsx15("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
-    /* @__PURE__ */ jsxs10("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
-      /* @__PURE__ */ jsxs10("section", { className: "hidden lg:block", children: [
+  return /* @__PURE__ */ jsxs14("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
+    acciones && /* @__PURE__ */ jsx21("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
+    /* @__PURE__ */ jsx21("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
+    /* @__PURE__ */ jsxs14("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
+      /* @__PURE__ */ jsxs14("section", { className: "hidden lg:block", children: [
         logo,
         aside
       ] }),
       children
     ] }),
-    pie && /* @__PURE__ */ jsx15("div", { className: "shrink-0", children: pie })
+    pie && /* @__PURE__ */ jsx21("div", { className: "shrink-0", children: pie })
   ] });
 }
 
 // src/components/ProductFooter.jsx
-import { Fragment as Fragment2, jsx as jsx16, jsxs as jsxs11 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx22, jsxs as jsxs15 } from "react/jsx-runtime";
 function ProductFooter({
   nombre = "",
   version = "",
@@ -1525,9 +1948,9 @@ function ProductFooter({
   children,
   className
 }) {
-  return /* @__PURE__ */ jsxs11("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
+  return /* @__PURE__ */ jsxs15("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
     leading,
-    /* @__PURE__ */ jsxs11("span", { children: [
+    /* @__PURE__ */ jsxs15("span", { children: [
       "\xA9 ",
       anio,
       " ",
@@ -1535,23 +1958,23 @@ function ProductFooter({
       ". Todos los derechos reservados.",
       version ? ` \xB7 ${version}` : ""
     ] }),
-    children && /* @__PURE__ */ jsxs11(Fragment2, { children: [
+    children && /* @__PURE__ */ jsxs15(Fragment2, { children: [
       " \xB7 ",
       children
     ] }),
-    credito && /* @__PURE__ */ jsxs11(Fragment2, { children: [
+    credito && /* @__PURE__ */ jsxs15(Fragment2, { children: [
       " \xB7 ",
-      /* @__PURE__ */ jsx16("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
+      /* @__PURE__ */ jsx22("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
     ] })
   ] });
 }
 
 // src/components/LoadingScreen.jsx
-import { jsx as jsx17, jsxs as jsxs12 } from "react/jsx-runtime";
+import { jsx as jsx23, jsxs as jsxs16 } from "react/jsx-runtime";
 function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etiqueta = "", className }) {
   const nombreTienda = tienda?.nombre || "";
   const imagenTienda = tienda?.logo || "";
-  return /* @__PURE__ */ jsxs12(
+  return /* @__PURE__ */ jsxs16(
     "div",
     {
       className: cn("relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-paper px-6 text-fore", className),
@@ -1559,17 +1982,17 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
       "aria-busy": "true",
       "aria-label": mensaje,
       children: [
-        /* @__PURE__ */ jsx17("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
-        /* @__PURE__ */ jsx17("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
-        /* @__PURE__ */ jsxs12("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
-          /* @__PURE__ */ jsx17("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
-          /* @__PURE__ */ jsx17("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
-          /* @__PURE__ */ jsx17("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx17("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
+        /* @__PURE__ */ jsx23("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
+        /* @__PURE__ */ jsx23("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
+        /* @__PURE__ */ jsxs16("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
+          /* @__PURE__ */ jsx23("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
+          /* @__PURE__ */ jsx23("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
+          /* @__PURE__ */ jsx23("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx23("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
         ] }),
-        nombreTienda && /* @__PURE__ */ jsx17("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs12("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
-          imagenTienda ? /* @__PURE__ */ jsx17("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx17("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
-          /* @__PURE__ */ jsx17("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
-          etiqueta && /* @__PURE__ */ jsx17("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
+        nombreTienda && /* @__PURE__ */ jsx23("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs16("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
+          imagenTienda ? /* @__PURE__ */ jsx23("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx23("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
+          /* @__PURE__ */ jsx23("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
+          etiqueta && /* @__PURE__ */ jsx23("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
         ] }) })
       ]
     }
@@ -1577,7 +2000,7 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { useState as useState4 } from "react";
+import { useState as useState7 } from "react";
 
 // src/utils/token.js
 var RUTA_CON_TOKEN = /(?:^|\/)([^/?#]+)\/([a-f0-9]{64})(?:[/?#]|$)/i;
@@ -1599,7 +2022,7 @@ function esToken(value) {
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { jsx as jsx18, jsxs as jsxs13 } from "react/jsx-runtime";
+import { jsx as jsx24, jsxs as jsxs17 } from "react/jsx-runtime";
 function PegarEnlaceToken({
   onToken,
   etiqueta = "Peg\xE1 tu enlace completo",
@@ -1608,8 +2031,8 @@ function PegarEnlaceToken({
   id = "pegar-enlace",
   className
 }) {
-  const [enlace, setEnlace] = useState4("");
-  const [error, setError] = useState4("");
+  const [enlace, setEnlace] = useState7("");
+  const [error, setError] = useState7("");
   function aplicar(event) {
     event.preventDefault();
     setError("");
@@ -1617,10 +2040,10 @@ function PegarEnlaceToken({
     if (!token) return setError(errorMensaje);
     onToken?.(token);
   }
-  return /* @__PURE__ */ jsxs13("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
-    /* @__PURE__ */ jsxs13("div", { children: [
-      /* @__PURE__ */ jsx18(Label, { htmlFor: id, children: etiqueta }),
-      /* @__PURE__ */ jsx18(
+  return /* @__PURE__ */ jsxs17("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
+    /* @__PURE__ */ jsxs17("div", { children: [
+      /* @__PURE__ */ jsx24(Label, { htmlFor: id, children: etiqueta }),
+      /* @__PURE__ */ jsx24(
         Input,
         {
           id,
@@ -1635,16 +2058,16 @@ function PegarEnlaceToken({
         }
       )
     ] }),
-    error && /* @__PURE__ */ jsx18(Aviso, { tono: "error", children: error }),
-    /* @__PURE__ */ jsx18(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
+    error && /* @__PURE__ */ jsx24(Aviso, { tono: "error", children: error }),
+    /* @__PURE__ */ jsx24(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
   ] });
 }
 
 // src/components/NavLateral.jsx
-import { useState as useState5 } from "react";
-import { jsx as jsx19, jsxs as jsxs14 } from "react/jsx-runtime";
+import { useState as useState8 } from "react";
+import { jsx as jsx25, jsxs as jsxs18 } from "react/jsx-runtime";
 function ItemNav({ item, activo, colapsado, onSelect }) {
-  return /* @__PURE__ */ jsx19("li", { children: /* @__PURE__ */ jsxs14(
+  return /* @__PURE__ */ jsx25("li", { children: /* @__PURE__ */ jsxs18(
     "button",
     {
       type: "button",
@@ -1657,10 +2080,10 @@ function ItemNav({ item, activo, colapsado, onSelect }) {
         colapsado && "justify-center px-2"
       ),
       children: [
-        item.icono && /* @__PURE__ */ jsx19(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-        !colapsado && /* @__PURE__ */ jsx19("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
-        !colapsado && item.contador != null && /* @__PURE__ */ jsx19("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
-        colapsado && item.contador != null && /* @__PURE__ */ jsx19("span", { className: "sr-only", children: item.contador })
+        item.icono && /* @__PURE__ */ jsx25(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+        !colapsado && /* @__PURE__ */ jsx25("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
+        !colapsado && item.contador != null && /* @__PURE__ */ jsx25("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
+        colapsado && item.contador != null && /* @__PURE__ */ jsx25("span", { className: "sr-only", children: item.contador })
       ]
     }
   ) });
@@ -1680,22 +2103,22 @@ function NavLateral({
   ariaLabel = "Navegaci\xF3n principal",
   className
 }) {
-  const [plegadosInterno, setPlegadosInterno] = useState5({});
+  const [plegadosInterno, setPlegadosInterno] = useState8({});
   const plegados = gruposPlegados ?? plegadosInterno;
   const alternarGrupo = (titulo2) => {
     if (onToggleGrupo) onToggleGrupo(titulo2);
     else setPlegadosInterno((previos) => ({ ...previos, [titulo2]: !previos[titulo2] }));
   };
-  const lista = (listaItems) => /* @__PURE__ */ jsx19("ul", { className: "space-y-1", children: listaItems.map((item) => /* @__PURE__ */ jsx19(ItemNav, { item, activo: item.id === activeId, colapsado, onSelect }, item.id)) });
-  return /* @__PURE__ */ jsxs14(
+  const lista = (listaItems) => /* @__PURE__ */ jsx25("ul", { className: "space-y-1", children: listaItems.map((item) => /* @__PURE__ */ jsx25(ItemNav, { item, activo: item.id === activeId, colapsado, onSelect }, item.id)) });
+  return /* @__PURE__ */ jsxs18(
     "nav",
     {
       "aria-label": ariaLabel,
       className: cn("flex h-dvh flex-col border-r border-ink-600 bg-ink-900 transition-[width] duration-200", colapsado ? "w-[4.5rem]" : ancho, className),
       children: [
-        /* @__PURE__ */ jsxs14("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
-          cabecera && /* @__PURE__ */ jsx19("div", { className: "min-w-0 flex-1", children: cabecera }),
-          onToggle && /* @__PURE__ */ jsx19(
+        /* @__PURE__ */ jsxs18("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
+          cabecera && /* @__PURE__ */ jsx25("div", { className: "min-w-0 flex-1", children: cabecera }),
+          onToggle && /* @__PURE__ */ jsx25(
             "button",
             {
               type: "button",
@@ -1703,15 +2126,15 @@ function NavLateral({
               "aria-label": colapsado ? "Expandir men\xFA" : "Contraer men\xFA",
               "aria-expanded": !colapsado,
               className: cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg text-mute transition hover:bg-ink-700 hover:text-fore", colapsado && "w-full"),
-              children: /* @__PURE__ */ jsx19(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
+              children: /* @__PURE__ */ jsx25(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
             }
           )
         ] }),
-        /* @__PURE__ */ jsx19("div", { className: "min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2", children: grupos ? grupos.map(({ titulo: titulo2, items: itemsGrupo = [] }) => {
+        /* @__PURE__ */ jsx25("div", { className: "min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2", children: grupos ? grupos.map(({ titulo: titulo2, items: itemsGrupo = [] }) => {
           const plegado = Boolean(plegados[titulo2]);
           const tieneActivo = itemsGrupo.some((item) => item.id === activeId);
-          return /* @__PURE__ */ jsxs14("div", { className: "flex flex-col", children: [
-            !colapsado && /* @__PURE__ */ jsxs14(
+          return /* @__PURE__ */ jsxs18("div", { className: "flex flex-col", children: [
+            !colapsado && /* @__PURE__ */ jsxs18(
               "button",
               {
                 type: "button",
@@ -1720,11 +2143,11 @@ function NavLateral({
                 title: plegado ? `Mostrar ${titulo2}` : `Ocultar ${titulo2}`,
                 className: "mb-0.5 flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-0.5 text-left transition hover:bg-fore/5",
                 children: [
-                  /* @__PURE__ */ jsxs14("span", { className: "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute", children: [
+                  /* @__PURE__ */ jsxs18("span", { className: "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute", children: [
                     titulo2,
-                    plegado && tieneActivo && /* @__PURE__ */ jsx19("span", { className: "h-1.5 w-1.5 rounded-full bg-fono", "aria-hidden": true })
+                    plegado && tieneActivo && /* @__PURE__ */ jsx25("span", { className: "h-1.5 w-1.5 rounded-full bg-fono", "aria-hidden": true })
                   ] }),
-                  /* @__PURE__ */ jsx19(
+                  /* @__PURE__ */ jsx25(
                     Icon,
                     {
                       name: "chevron",
@@ -1737,19 +2160,19 @@ function NavLateral({
             (!plegado || colapsado) && lista(itemsGrupo)
           ] }, titulo2);
         }) : lista(items) }),
-        pie && /* @__PURE__ */ jsx19("div", { className: "border-t border-ink-600 p-2", children: pie })
+        pie && /* @__PURE__ */ jsx25("div", { className: "border-t border-ink-600 p-2", children: pie })
       ]
     }
   );
 }
 
 // src/components/MenuDesplegable.jsx
-import { useEffect as useEffect2, useRef as useRef3, useState as useState6 } from "react";
-import { jsx as jsx20, jsxs as jsxs15 } from "react/jsx-runtime";
+import { useEffect as useEffect3, useRef as useRef4, useState as useState9 } from "react";
+import { jsx as jsx26, jsxs as jsxs19 } from "react/jsx-runtime";
 function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel = "Men\xFA", className }) {
-  const [abierto, setAbierto] = useState6(false);
-  const raiz = useRef3(null);
-  useEffect2(() => {
+  const [abierto, setAbierto] = useState9(false);
+  const raiz = useRef4(null);
+  useEffect3(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -1765,8 +2188,8 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
       document.removeEventListener("keydown", cerrarEsc);
     };
   }, [abierto]);
-  return /* @__PURE__ */ jsxs15("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx20(
+  return /* @__PURE__ */ jsxs19("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx26(
       "button",
       {
         type: "button",
@@ -1777,15 +2200,15 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
         children: trigger
       }
     ),
-    abierto && /* @__PURE__ */ jsx20(
+    abierto && /* @__PURE__ */ jsx26(
       "div",
       {
         role: "menu",
         "aria-label": ariaLabel,
         className: cn("absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-paper p-1 shadow-xl", alineacion === "right" ? "right-0" : "left-0"),
         children: items.map((item, indice) => {
-          if (item.separador) return /* @__PURE__ */ jsx20("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
-          return /* @__PURE__ */ jsxs15(
+          if (item.separador) return /* @__PURE__ */ jsx26("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
+          return /* @__PURE__ */ jsxs19(
             "button",
             {
               type: "button",
@@ -1801,8 +2224,8 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
                 item.disabled && "cursor-not-allowed opacity-40"
               ),
               children: [
-                item.icono && /* @__PURE__ */ jsx20(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-                /* @__PURE__ */ jsx20("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
+                item.icono && /* @__PURE__ */ jsx26(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+                /* @__PURE__ */ jsx26("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
                 item.extra
               ]
             },
@@ -1815,34 +2238,34 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
 }
 
 // src/components/PanelDerecho.jsx
-import { jsx as jsx21, jsxs as jsxs16 } from "react/jsx-runtime";
+import { jsx as jsx27, jsxs as jsxs20 } from "react/jsx-runtime";
 function PanelDerecho({ children, panel, id, className, classNamePanel }) {
-  return /* @__PURE__ */ jsxs16("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
-    /* @__PURE__ */ jsx21("div", { className: "min-w-0 space-y-4", children }),
-    /* @__PURE__ */ jsx21("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
+  return /* @__PURE__ */ jsxs20("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
+    /* @__PURE__ */ jsx27("div", { className: "min-w-0 space-y-4", children }),
+    /* @__PURE__ */ jsx27("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
   ] });
 }
 
 // src/components/TarjetaAjuste.jsx
-import { jsx as jsx22, jsxs as jsxs17 } from "react/jsx-runtime";
+import { jsx as jsx28, jsxs as jsxs21 } from "react/jsx-runtime";
 function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, children, className, id }) {
-  return /* @__PURE__ */ jsxs17(Card, { id, className: cn("space-y-3", className), children: [
-    /* @__PURE__ */ jsxs17("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs17("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs17("h2", { className: "flex items-center gap-2 font-semibold", children: [
-          icono && /* @__PURE__ */ jsx22(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
+  return /* @__PURE__ */ jsxs21(Card, { id, className: cn("space-y-3", className), children: [
+    /* @__PURE__ */ jsxs21("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs21("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs21("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          icono && /* @__PURE__ */ jsx28(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
           titulo2
         ] }),
-        descripcion && /* @__PURE__ */ jsx22("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        descripcion && /* @__PURE__ */ jsx28("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      accion && /* @__PURE__ */ jsx22("div", { className: "shrink-0", children: accion })
+      accion && /* @__PURE__ */ jsx28("div", { className: "shrink-0", children: accion })
     ] }),
     children
   ] });
 }
 
 // src/components/AjustesImpresion.jsx
-import { useState as useState7 } from "react";
+import { useState as useState10 } from "react";
 
 // src/printing/estadoImpresoras.js
 var ESTADO_IMPRESORA = Object.freeze({
@@ -1939,7 +2362,7 @@ function agregarEstado(impresoras = [], estados = {}) {
 }
 
 // src/components/AjustesImpresion.jsx
-import { jsx as jsx23, jsxs as jsxs18 } from "react/jsx-runtime";
+import { jsx as jsx29, jsxs as jsxs22 } from "react/jsx-runtime";
 var VACIO = () => ({
   id: null,
   nombre: "",
@@ -1987,7 +2410,7 @@ function AjustesImpresion({
   descripcion = "Eleg\xED c\xF3mo sale el papel: por red (LAN) o por una cola local (USB). La app verifica cada impresora antes de usarla.",
   className
 }) {
-  const [form, setForm] = useState7(null);
+  const [form, setForm] = useState10(null);
   const resumen = agregarEstado(impresoras, estado);
   function cambiar(campo, valor) {
     setForm((actual) => ({ ...actual, [campo]: valor }));
@@ -2000,40 +2423,40 @@ function AjustesImpresion({
     onGuardar?.({ ...form, destino, copias: Number(form.copias) || 1 });
     setForm(null);
   }
-  return /* @__PURE__ */ jsxs18(Card, { className: cn("space-y-4", className), children: [
-    /* @__PURE__ */ jsxs18("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs18("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs18("h2", { className: "flex items-center gap-2 font-semibold", children: [
-          /* @__PURE__ */ jsx23(Icon, { name: "printer", className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs22(Card, { className: cn("space-y-4", className), children: [
+    /* @__PURE__ */ jsxs22("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs22("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs22("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          /* @__PURE__ */ jsx29(Icon, { name: "printer", className: "h-4 w-4" }),
           titulo2
         ] }),
-        /* @__PURE__ */ jsx23("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        /* @__PURE__ */ jsx29("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      /* @__PURE__ */ jsxs18("div", { className: "flex flex-wrap items-center gap-2", children: [
-        /* @__PURE__ */ jsx23(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
-        onVerificar && /* @__PURE__ */ jsxs18(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
-          /* @__PURE__ */ jsx23(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
+      /* @__PURE__ */ jsxs22("div", { className: "flex flex-wrap items-center gap-2", children: [
+        /* @__PURE__ */ jsx29(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
+        onVerificar && /* @__PURE__ */ jsxs22(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
+          /* @__PURE__ */ jsx29(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
           "Verificar"
         ] }),
-        /* @__PURE__ */ jsxs18(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
-          /* @__PURE__ */ jsx23(Icon, { name: "plus", className: "h-4 w-4" }),
+        /* @__PURE__ */ jsxs22(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
+          /* @__PURE__ */ jsx29(Icon, { name: "plus", className: "h-4 w-4" }),
           "Agregar impresora"
         ] })
       ] })
     ] }),
-    impresoras.length === 0 && /* @__PURE__ */ jsx23("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
-    /* @__PURE__ */ jsx23("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
+    impresoras.length === 0 && /* @__PURE__ */ jsx29("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
+    /* @__PURE__ */ jsx29("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
       const registro = estado?.[impresora.id];
       const tono = TONO_ESTADO[registro?.estado] || "slate";
-      return /* @__PURE__ */ jsxs18("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
-        /* @__PURE__ */ jsxs18("div", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsxs18("p", { className: "flex items-center gap-2 font-medium", children: [
-            /* @__PURE__ */ jsx23(Dot, { color: tono }),
+      return /* @__PURE__ */ jsxs22("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
+        /* @__PURE__ */ jsxs22("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsxs22("p", { className: "flex items-center gap-2 font-medium", children: [
+            /* @__PURE__ */ jsx29(Dot, { color: tono }),
             impresora.nombre || "Impresora",
-            impresora.predeterminada && /* @__PURE__ */ jsx23(Badge, { color: "fono", children: "Predeterminada" }),
-            impresora.activa === false && /* @__PURE__ */ jsx23(Badge, { color: "slate", children: "Inactiva" })
+            impresora.predeterminada && /* @__PURE__ */ jsx29(Badge, { color: "fono", children: "Predeterminada" }),
+            impresora.activa === false && /* @__PURE__ */ jsx29(Badge, { color: "slate", children: "Inactiva" })
           ] }),
-          /* @__PURE__ */ jsxs18("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
+          /* @__PURE__ */ jsxs22("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
             conexionDeDestino(impresora.destino) === "cups" ? "USB / cola local" : "LAN",
             " \xB7 ",
             impresora.destino || "sin destino",
@@ -2043,79 +2466,79 @@ function AjustesImpresion({
             registro ? ` \xB7 ${textoVerificacion(registro)}` : ""
           ] })
         ] }),
-        /* @__PURE__ */ jsxs18("div", { className: "flex flex-wrap items-center gap-1", children: [
-          onProbar && /* @__PURE__ */ jsx23(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
-          /* @__PURE__ */ jsx23(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
-          onEliminar && /* @__PURE__ */ jsx23(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
+        /* @__PURE__ */ jsxs22("div", { className: "flex flex-wrap items-center gap-1", children: [
+          onProbar && /* @__PURE__ */ jsx29(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
+          /* @__PURE__ */ jsx29(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
+          onEliminar && /* @__PURE__ */ jsx29(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
         ] })
       ] }, impresora.id);
     }) }),
-    form && /* @__PURE__ */ jsxs18("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
-      /* @__PURE__ */ jsxs18("div", { className: "grid gap-3 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsxs18("div", { children: [
-          /* @__PURE__ */ jsx23(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
-          /* @__PURE__ */ jsx23(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
+    form && /* @__PURE__ */ jsxs22("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
+      /* @__PURE__ */ jsxs22("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs22("div", { children: [
+          /* @__PURE__ */ jsx29(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
+          /* @__PURE__ */ jsx29(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
         ] }),
-        /* @__PURE__ */ jsxs18("div", { children: [
-          /* @__PURE__ */ jsx23(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
-          /* @__PURE__ */ jsx23(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
+        /* @__PURE__ */ jsxs22("div", { children: [
+          /* @__PURE__ */ jsx29(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
+          /* @__PURE__ */ jsx29(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs18("div", { className: "grid gap-3 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsxs18("div", { children: [
-          /* @__PURE__ */ jsx23(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
-          /* @__PURE__ */ jsxs18(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
-            /* @__PURE__ */ jsx23("option", { value: "lan", children: "LAN (impresora de red)" }),
-            /* @__PURE__ */ jsx23("option", { value: "cups", children: "USB / cola local (CUPS)" })
+      /* @__PURE__ */ jsxs22("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs22("div", { children: [
+          /* @__PURE__ */ jsx29(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
+          /* @__PURE__ */ jsxs22(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
+            /* @__PURE__ */ jsx29("option", { value: "lan", children: "LAN (impresora de red)" }),
+            /* @__PURE__ */ jsx29("option", { value: "cups", children: "USB / cola local (CUPS)" })
           ] })
         ] }),
-        form.conexion === "lan" ? /* @__PURE__ */ jsxs18("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
-          /* @__PURE__ */ jsxs18("div", { children: [
-            /* @__PURE__ */ jsx23(Label, { htmlFor: "imp-ip", children: "IP" }),
-            /* @__PURE__ */ jsx23(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
+        form.conexion === "lan" ? /* @__PURE__ */ jsxs22("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
+          /* @__PURE__ */ jsxs22("div", { children: [
+            /* @__PURE__ */ jsx29(Label, { htmlFor: "imp-ip", children: "IP" }),
+            /* @__PURE__ */ jsx29(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
           ] }),
-          /* @__PURE__ */ jsxs18("div", { children: [
-            /* @__PURE__ */ jsx23(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
-            /* @__PURE__ */ jsx23(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
+          /* @__PURE__ */ jsxs22("div", { children: [
+            /* @__PURE__ */ jsx29(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
+            /* @__PURE__ */ jsx29(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
           ] })
-        ] }) : /* @__PURE__ */ jsxs18("div", { children: [
-          /* @__PURE__ */ jsx23(Label, { htmlFor: "imp-cola", children: "Cola local" }),
-          /* @__PURE__ */ jsx23(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
-          /* @__PURE__ */ jsx23("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
+        ] }) : /* @__PURE__ */ jsxs22("div", { children: [
+          /* @__PURE__ */ jsx29(Label, { htmlFor: "imp-cola", children: "Cola local" }),
+          /* @__PURE__ */ jsx29(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
+          /* @__PURE__ */ jsx29("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs18("div", { className: "grid gap-3 sm:grid-cols-3", children: [
-        /* @__PURE__ */ jsxs18("div", { children: [
-          /* @__PURE__ */ jsx23(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
-          /* @__PURE__ */ jsx23(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx23("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
+      /* @__PURE__ */ jsxs22("div", { className: "grid gap-3 sm:grid-cols-3", children: [
+        /* @__PURE__ */ jsxs22("div", { children: [
+          /* @__PURE__ */ jsx29(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
+          /* @__PURE__ */ jsx29(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx29("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
         ] }),
-        /* @__PURE__ */ jsxs18("div", { children: [
-          /* @__PURE__ */ jsx23(Label, { htmlFor: "imp-copias", children: "Copias" }),
-          /* @__PURE__ */ jsx23(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
+        /* @__PURE__ */ jsxs22("div", { children: [
+          /* @__PURE__ */ jsx29(Label, { htmlFor: "imp-copias", children: "Copias" }),
+          /* @__PURE__ */ jsx29(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
         ] }),
-        /* @__PURE__ */ jsxs18("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
-          /* @__PURE__ */ jsx23("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
+        /* @__PURE__ */ jsxs22("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
+          /* @__PURE__ */ jsx29("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
           "Predeterminada"
         ] })
       ] }),
-      /* @__PURE__ */ jsx23("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
-      /* @__PURE__ */ jsxs18("div", { className: "flex flex-wrap justify-end gap-2", children: [
-        /* @__PURE__ */ jsx23(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
-        /* @__PURE__ */ jsx23(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
+      /* @__PURE__ */ jsx29("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
+      /* @__PURE__ */ jsxs22("div", { className: "flex flex-wrap justify-end gap-2", children: [
+        /* @__PURE__ */ jsx29(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
+        /* @__PURE__ */ jsx29(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs18("p", { className: "text-xs text-mute", children: [
+    /* @__PURE__ */ jsxs22("p", { className: "text-xs text-mute", children: [
       "La impresi\xF3n sale por el ",
-      /* @__PURE__ */ jsx23("b", { className: "text-fore", children: "agente local" }),
+      /* @__PURE__ */ jsx29("b", { className: "text-fore", children: "agente local" }),
       ": instalalo en la computadora que tiene la impresora (LAN o USB conectada) y vinculala con el c\xF3digo. Con el agente ca\xEDdo, los trabajos quedan en cola; nunca se pierden. Ver ",
-      /* @__PURE__ */ jsx23("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
+      /* @__PURE__ */ jsx29("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
       "."
     ] })
   ] });
 }
 
 // src/components/BotonImprimir.jsx
-import { jsx as jsx24, jsxs as jsxs19 } from "react/jsx-runtime";
+import { jsx as jsx30, jsxs as jsxs23 } from "react/jsx-runtime";
 function BotonImprimir({
   onImprimir,
   estado = null,
@@ -2127,17 +2550,17 @@ function BotonImprimir({
 }) {
   const enCurso = estado === "pendiente" || estado === "reclamado";
   const texto = enCurso ? etiquetaTrabajo(estado) : etiqueta;
-  return /* @__PURE__ */ jsxs19("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsxs19(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
-      /* @__PURE__ */ jsx24(Icon, { name: icono, className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs23("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsxs23(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
+      /* @__PURE__ */ jsx30(Icon, { name: icono, className: "h-4 w-4" }),
       texto
     ] }),
-    estado && !enCurso && /* @__PURE__ */ jsx24(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
+    estado && !enCurso && /* @__PURE__ */ jsx30(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
   ] });
 }
 
 // src/components/BancoCombobox.jsx
-import { useEffect as useEffect3, useId as useId2, useMemo as useMemo2, useRef as useRef4, useState as useState9 } from "react";
+import { useEffect as useEffect4, useId as useId4, useMemo as useMemo3, useRef as useRef5, useState as useState12 } from "react";
 
 // src/utils/bancos.js
 var BANCOS_PARAGUAY = [
@@ -2227,21 +2650,21 @@ function sugerenciasDeBanco(texto, catalogo = BANCOS_PARAGUAY) {
 }
 
 // src/components/BancoLogo.jsx
-import { useState as useState8 } from "react";
-import { jsx as jsx25 } from "react/jsx-runtime";
+import { useState as useState11 } from "react";
+import { jsx as jsx31 } from "react/jsx-runtime";
 function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseAssets = "/bancos", marcas = {} }) {
-  const [fallo, setFallo] = useState8(false);
+  const [fallo, setFallo] = useState11(false);
   const texto = String(banco || "").trim();
   const registro = logoDeBanco(texto);
   if (!registro) return null;
   const marca = registro.tipo === "marca" ? registro.marca : null;
   if (marca && marcas[marca]) {
     const Logo = marcas[marca];
-    return /* @__PURE__ */ jsx25("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx25(Logo, {}) });
+    return /* @__PURE__ */ jsx31("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx31(Logo, {}) });
   }
   if (soloCatalogo && registro.generico) return null;
   if (registro.tipo === "archivo" && !fallo) {
-    return /* @__PURE__ */ jsx25("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx25(
+    return /* @__PURE__ */ jsx31("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx31(
       "img",
       {
         src: baseAssets ? `${baseAssets.replace(/\/$/, "")}/${registro.archivo}` : registro.archivo,
@@ -2254,7 +2677,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
   }
   const iniciales = registro.iniciales || inicialesDeBanco(texto);
   const color = registro.color || colorDeBanco(texto);
-  return /* @__PURE__ */ jsx25("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx25(
+  return /* @__PURE__ */ jsx31("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx31(
     "span",
     {
       "aria-hidden": "true",
@@ -2266,7 +2689,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
 }
 
 // src/components/BancoCombobox.jsx
-import { jsx as jsx26, jsxs as jsxs20 } from "react/jsx-runtime";
+import { jsx as jsx32, jsxs as jsxs24 } from "react/jsx-runtime";
 function BancoCombobox({
   id,
   value = "",
@@ -2278,12 +2701,12 @@ function BancoCombobox({
   catalogo = BANCOS_PARAGUAY,
   logoProps
 }) {
-  const [abierto, setAbierto] = useState9(false);
-  const [resaltado, setResaltado] = useState9(0);
-  const listaId = useId2();
-  const raiz = useRef4(null);
-  const lista = useRef4(null);
-  useEffect3(() => {
+  const [abierto, setAbierto] = useState12(false);
+  const [resaltado, setResaltado] = useState12(0);
+  const listaId = useId4();
+  const raiz = useRef5(null);
+  const lista = useRef5(null);
+  useEffect4(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -2291,8 +2714,8 @@ function BancoCombobox({
     document.addEventListener("click", cerrarFuera);
     return () => document.removeEventListener("click", cerrarFuera);
   }, []);
-  const sugerencias = useMemo2(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
-  useEffect3(() => {
+  const sugerencias = useMemo3(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
+  useEffect4(() => {
     if (!abierto) return;
     lista.current?.querySelector(`#${CSS.escape(`${listaId}-${resaltado}`)}`)?.scrollIntoView({ block: "nearest" });
   }, [abierto, resaltado, listaId]);
@@ -2323,8 +2746,8 @@ function BancoCombobox({
     }
   }
   const listaVisible = abierto && sugerencias.length > 0;
-  return /* @__PURE__ */ jsxs20("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx26(
+  return /* @__PURE__ */ jsxs24("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx32(
       Input,
       {
         id,
@@ -2347,7 +2770,7 @@ function BancoCombobox({
         onKeyDown: alTeclear
       }
     ),
-    listaVisible && /* @__PURE__ */ jsx26(
+    listaVisible && /* @__PURE__ */ jsx32(
       "ul",
       {
         id: listaId,
@@ -2355,7 +2778,7 @@ function BancoCombobox({
         role: "listbox",
         "aria-label": "Bancos",
         className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-paper p-1 shadow-xl",
-        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx26("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs20(
+        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx32("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs24(
           "button",
           {
             type: "button",
@@ -2364,8 +2787,8 @@ function BancoCombobox({
             onMouseDown: (event) => event.preventDefault(),
             onClick: () => elegir(banco),
             children: [
-              /* @__PURE__ */ jsx26(BancoLogo, { banco, alto: "h-4", ...logoProps }),
-              /* @__PURE__ */ jsx26("span", { className: "min-w-0 flex-1 truncate", children: banco })
+              /* @__PURE__ */ jsx32(BancoLogo, { banco, alto: "h-4", ...logoProps }),
+              /* @__PURE__ */ jsx32("span", { className: "min-w-0 flex-1 truncate", children: banco })
             ]
           }
         ) }, banco))
@@ -2375,7 +2798,7 @@ function BancoCombobox({
 }
 
 // src/components/CityAutocomplete.jsx
-import { useEffect as useEffect4, useRef as useRef5, useState as useState10 } from "react";
+import { useEffect as useEffect5, useRef as useRef6, useState as useState13 } from "react";
 
 // src/catalog/ciudades.js
 var CIUDADES_PARAGUAY = [
@@ -2681,7 +3104,7 @@ function buscarCiudad(texto, limite = 8) {
 }
 
 // src/components/CityAutocomplete.jsx
-import { jsx as jsx27, jsxs as jsxs21 } from "react/jsx-runtime";
+import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
 function CityAutocomplete({
   value = "",
   onSelect,
@@ -2693,11 +3116,11 @@ function CityAutocomplete({
   maxLength = 100,
   inputProps
 }) {
-  const [sugerencias, setSugerencias] = useState10([]);
-  const [abierto, setAbierto] = useState10(false);
-  const timer = useRef5(null);
-  const raiz = useRef5(null);
-  useEffect4(() => {
+  const [sugerencias, setSugerencias] = useState13([]);
+  const [abierto, setAbierto] = useState13(false);
+  const timer = useRef6(null);
+  const raiz = useRef6(null);
+  useEffect5(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -2705,7 +3128,7 @@ function CityAutocomplete({
     document.addEventListener("mousedown", cerrarFuera);
     return () => document.removeEventListener("mousedown", cerrarFuera);
   }, []);
-  useEffect4(() => () => {
+  useEffect5(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
   function resolver(texto) {
@@ -2746,8 +3169,8 @@ function CityAutocomplete({
     const departamento = departamentoDe(value);
     if (departamento) onSelect?.(value, departamento);
   }
-  return /* @__PURE__ */ jsxs21("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx27(
+  return /* @__PURE__ */ jsxs25("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx33(
       Input,
       {
         maxLength,
@@ -2766,7 +3189,7 @@ function CityAutocomplete({
         ...inputProps
       }
     ),
-    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx27("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx27("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs21(
+    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx33("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx33("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs25(
       "button",
       {
         type: "button",
@@ -2774,22 +3197,13 @@ function CityAutocomplete({
         onMouseDown: (event) => event.preventDefault(),
         onClick: () => elegir(fila),
         children: [
-          /* @__PURE__ */ jsx27("span", { className: "truncate font-medium text-fore", children: fila.city }),
-          /* @__PURE__ */ jsx27("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
+          /* @__PURE__ */ jsx33("span", { className: "truncate font-medium text-fore", children: fila.city }),
+          /* @__PURE__ */ jsx33("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
         ]
       }
     ) }, `${fila.city}-${fila.department}`)) })
   ] });
 }
-
-// src/utils/tabla.js
-var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
-var CELDA_ENCABEZADO = `truncate ${ROTULO_DATO}`;
-var ROTULO_SECCION = "text-xs font-bold uppercase tracking-wider text-mute";
-var CELDA_DATO = "truncate text-xs text-mute";
-var CELDA_NUMERO = "text-right tabular-nums";
-var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
-var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
 
 // src/utils/estadoEquipo.js
 var ESTADOS_ITEM = {
@@ -2868,21 +3282,21 @@ var COLOR_BADGE = { ok: "green", warn: "orange", bad: "red", mute: "slate", info
 var colorBadge = (tono) => COLOR_BADGE[tono] || "slate";
 
 // src/components/SemaforoItem.jsx
-import { jsx as jsx28, jsxs as jsxs22 } from "react/jsx-runtime";
+import { jsx as jsx34, jsxs as jsxs26 } from "react/jsx-runtime";
 function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li", className, ...props }) {
   const config = estadoItem(estado);
   const Etiqueta = como === "div" ? "div" : "li";
-  return /* @__PURE__ */ jsxs22(
+  return /* @__PURE__ */ jsxs26(
     Etiqueta,
     {
       className: cn("flex items-center gap-2.5", className),
       "aria-label": etiqueta ? `${etiqueta}: ${config.etiqueta}` : config.etiqueta,
       ...props,
       children: [
-        /* @__PURE__ */ jsx28("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx28(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
-        /* @__PURE__ */ jsxs22("span", { className: "min-w-0 flex-1", children: [
-          /* @__PURE__ */ jsx28("span", { className: "block truncate text-sm", children: etiqueta }),
-          detalle && /* @__PURE__ */ jsx28("span", { className: "block truncate text-xs text-mute", children: detalle })
+        /* @__PURE__ */ jsx34("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx34(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+        /* @__PURE__ */ jsxs26("span", { className: "min-w-0 flex-1", children: [
+          /* @__PURE__ */ jsx34("span", { className: "block truncate text-sm", children: etiqueta }),
+          detalle && /* @__PURE__ */ jsx34("span", { className: "block truncate text-xs text-mute", children: detalle })
         ] })
       ]
     }
@@ -2890,30 +3304,30 @@ function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li",
 }
 
 // src/components/FilaChecklist.jsx
-import { jsx as jsx29, jsxs as jsxs23 } from "react/jsx-runtime";
+import { jsx as jsx35, jsxs as jsxs27 } from "react/jsx-runtime";
 function FilaChecklist({ etiqueta, estado = "sinVerificar", nota, accion, className }) {
   const config = estadoItem(estado);
-  return /* @__PURE__ */ jsxs23("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
-    /* @__PURE__ */ jsx29("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx29(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs23("div", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx29("p", { className: "truncate text-sm", children: etiqueta }),
-      nota && /* @__PURE__ */ jsx29("p", { className: "mt-0.5 text-xs text-mute", children: nota })
+  return /* @__PURE__ */ jsxs27("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
+    /* @__PURE__ */ jsx35("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx35(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs27("div", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx35("p", { className: "truncate text-sm", children: etiqueta }),
+      nota && /* @__PURE__ */ jsx35("p", { className: "mt-0.5 text-xs text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx29("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
+    /* @__PURE__ */ jsx35("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
     accion
   ] });
 }
 function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass", className }) {
   const completo = total > 0 && pasan === total;
-  return /* @__PURE__ */ jsxs23("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
-    /* @__PURE__ */ jsxs23("span", { className: completo ? "text-pass" : "text-mute", children: [
+  return /* @__PURE__ */ jsxs27("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
+    /* @__PURE__ */ jsxs27("span", { className: completo ? "text-pass" : "text-mute", children: [
       pasan,
       " de ",
       total,
       " ",
       sustantivo
     ] }),
-    fallas > 0 && /* @__PURE__ */ jsxs23("span", { className: "text-bad", children: [
+    fallas > 0 && /* @__PURE__ */ jsxs27("span", { className: "text-bad", children: [
       fallas,
       " ",
       fallas === 1 ? "falla" : "fallas"
@@ -2922,18 +3336,18 @@ function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass"
 }
 
 // src/components/ChipEstado.jsx
-import { jsx as jsx30, jsxs as jsxs24 } from "react/jsx-runtime";
+import { jsx as jsx36, jsxs as jsxs28 } from "react/jsx-runtime";
 function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, title, className }) {
   const config = estadoChip(estado);
   const texto = etiqueta || config.etiqueta;
-  return /* @__PURE__ */ jsxs24(
+  return /* @__PURE__ */ jsxs28(
     "span",
     {
       "data-estado": estado,
       title: title ?? texto,
       className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[tonoCanonico(tono || config.tono)], className),
       children: [
-        /* @__PURE__ */ jsx30(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsx36(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
         texto
       ]
     }
@@ -2941,19 +3355,19 @@ function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, title, classN
 }
 
 // src/components/ChipsLocks.jsx
-import { jsx as jsx31, jsxs as jsxs25 } from "react/jsx-runtime";
+import { jsx as jsx37, jsxs as jsxs29 } from "react/jsx-runtime";
 function ChipsLocks({ locks = [], conEstado = false, className }) {
   if (!locks.length) return null;
-  return /* @__PURE__ */ jsx31("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
+  return /* @__PURE__ */ jsx37("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
     const config = estadoLock(lock.estado);
     const etiqueta = lock.etiqueta || LOCKS_DISPOSITIVO[lock.clave] || lock.clave;
-    return /* @__PURE__ */ jsxs25(
+    return /* @__PURE__ */ jsxs29(
       "li",
       {
         className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono]),
         title: lock.detalle || `${etiqueta}: ${config.etiqueta}`,
         children: [
-          /* @__PURE__ */ jsx31(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx37(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
           etiqueta,
           conEstado ? ` \xB7 ${config.etiqueta}` : ""
         ]
@@ -2964,7 +3378,7 @@ function ChipsLocks({ locks = [], conEstado = false, className }) {
 }
 
 // src/components/MedidorBateria.jsx
-import { jsx as jsx32, jsxs as jsxs26 } from "react/jsx-runtime";
+import { jsx as jsx38, jsxs as jsxs30 } from "react/jsx-runtime";
 function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, mostrarEtiqueta = false, className }) {
   const hay = porcentaje !== null && porcentaje !== void 0 && porcentaje !== "" && Number.isFinite(Number(porcentaje));
   const valor = hay ? Number(porcentaje) : null;
@@ -2972,98 +3386,33 @@ function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante 
   const texto = hay ? `${valor}%` : "\u2014";
   const title = hay ? `${etiqueta}: ${valor}%${ciclos ? ` \xB7 ${ciclos} ciclos` : ""}` : `${etiqueta}: sin dato`;
   if (variante === "chip") {
-    return /* @__PURE__ */ jsxs26("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: [
+    return /* @__PURE__ */ jsxs30("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: [
       texto,
       mostrarEtiqueta ? ` ${etiqueta.toLowerCase()}` : ""
     ] });
   }
-  return /* @__PURE__ */ jsxs26("div", { className: cn("space-y-1", className), title, children: [
-    /* @__PURE__ */ jsxs26("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx32("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
-      /* @__PURE__ */ jsx32("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
+  return /* @__PURE__ */ jsxs30("div", { className: cn("space-y-1", className), title, children: [
+    /* @__PURE__ */ jsxs30("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx38("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
+      /* @__PURE__ */ jsx38("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
     ] }),
-    hay ? /* @__PURE__ */ jsx32(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx32(Badge, { color: "slate", children: "Sin dato" })
+    hay ? /* @__PURE__ */ jsx38(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx38(Badge, { color: "slate", children: "Sin dato" })
   ] });
 }
 
 // src/components/GradoBadge.jsx
-import { jsx as jsx33, jsxs as jsxs27 } from "react/jsx-runtime";
+import { jsx as jsx39, jsxs as jsxs31 } from "react/jsx-runtime";
 function GradoBadge({ grado, conDescripcion = false, className }) {
   const config = gradoCondicion(grado);
-  if (!config) return /* @__PURE__ */ jsx33(Badge, { className, children: grado || "Sin grado" });
-  return /* @__PURE__ */ jsxs27("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsx33(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
-    conDescripcion && /* @__PURE__ */ jsx33("span", { className: "text-xs text-mute", children: config.descripcion })
+  if (!config) return /* @__PURE__ */ jsx39(Badge, { className, children: grado || "Sin grado" });
+  return /* @__PURE__ */ jsxs31("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsx39(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
+    conDescripcion && /* @__PURE__ */ jsx39("span", { className: "text-xs text-mute", children: config.descripcion })
   ] });
 }
 
-// src/utils/categorias.js
-var CATEGORIAS_PRODUCTO = [
-  { clave: "iphone", etiqueta: "iPhone", icono: "mobile", alias: ["iphone", "mobile", "celular", "telefono", "smartphone"] },
-  { clave: "macbook", etiqueta: "MacBook", icono: "laptop", alias: ["macbook", "mac", "laptop", "notebook", "computadora"] },
-  { clave: "ipad", etiqueta: "iPad", icono: "tablet", alias: ["ipad", "tablet", "tableta"] },
-  { clave: "watch", etiqueta: "Watch", icono: "watch", alias: ["watch", "reloj", "apple watch"] },
-  { clave: "airpods", etiqueta: "AirPods", icono: "buds", alias: ["airpods", "auriculares", "audifonos", "buds", "earbuds"] },
-  { clave: "accesorios", etiqueta: "Accesorios", icono: "cable", alias: ["accesorios", "cable", "cables", "cargador", "cargadores", "funda", "fundas", "vidrio", "lamina", "templado", "adaptador"] },
-  { clave: "servicio", etiqueta: "Servicio", icono: "wrench", alias: ["servicio", "servicios", "reparacion"] },
-  { clave: "otro", etiqueta: "Otro", icono: "box", alias: [] }
-];
-var ICONO_CATEGORIA = Object.fromEntries(CATEGORIAS_PRODUCTO.map(({ clave, icono }) => [clave, icono]));
-var PALABRAS_ACCESORIO = ["funda", "cable", "cargador", "vidrio", "lamina", "templado", "adaptador", "protector", "soporte"];
-var sinAcentos = (texto) => String(texto ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
-function normalizarCategoria(texto) {
-  const limpio = sinAcentos(texto);
-  const buscar = (clave) => CATEGORIAS_PRODUCTO.find((categoria) => categoria.clave === clave);
-  if (!limpio) return buscar("otro");
-  if (PALABRAS_ACCESORIO.some((palabra) => limpio.includes(palabra))) return buscar("accesorios");
-  const exacta = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.includes(limpio));
-  if (exacta) return exacta;
-  const contiene = CATEGORIAS_PRODUCTO.find((categoria) => categoria.alias.some((alias) => alias.length > 3 && limpio.includes(alias)));
-  return contiene || buscar("otro");
-}
-var categoriaDe = (texto) => normalizarCategoria(texto).clave;
-var iconoDeCategoria = (texto) => normalizarCategoria(texto).icono;
-var etiquetaDeCategoria = (texto) => normalizarCategoria(texto).etiqueta;
-
-// src/components/IconoCategoria.jsx
-import { jsx as jsx34 } from "react/jsx-runtime";
-var GLIFOS_CATEGORIA = {
-  // Celular: marco redondeado con parlante y botón.
-  mobile: "M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM10 5h4M11 18.5h2",
-  // Laptop: pantalla arriba, base ancha.
-  laptop: "M5 5h14v10H5zM2.5 19h19M9 15l-.5 4M15 15l.5 4",
-  // Tablet: marco redondeado más ancho que el celular.
-  tablet: "M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2ZM11 18.5h2",
-  // Reloj: caja central con correas.
-  watch: "M9 2h6l.8 4H8.2L9 2ZM8.2 18h7.6l-.8 4H9l-.8-4ZM6 8h12v8H6zM12 10.5v3l2 1",
-  // Auriculares: dos buds con su tallo.
-  buds: "M7 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM7 16.5V21M17 3.5a3 3 0 0 1 3 3v7a3 3 0 1 1-6 0v-7a3 3 0 0 1 3-3ZM17 16.5V21",
-  // Cable: curva con conectores en los extremos.
-  cable: "M4 3v5a4 4 0 0 0 4 4h4a4 4 0 0 1 4 4v5M2 3h4M18 21h4"
-};
-function IconoCategoria({ categoria, icono, className, ...props }) {
-  const glifo = icono || iconoDeCategoria(categoria);
-  const clases = cn("shrink-0", className || "h-5 w-5");
-  if (!GLIFOS_CATEGORIA[glifo]) return /* @__PURE__ */ jsx34(Icon, { name: glifo, className: clases, ...props });
-  return /* @__PURE__ */ jsx34(
-    "svg",
-    {
-      viewBox: "0 0 24 24",
-      fill: "none",
-      stroke: "currentColor",
-      strokeWidth: "1.7",
-      strokeLinecap: "round",
-      strokeLinejoin: "round",
-      "aria-hidden": "true",
-      className: clases,
-      ...props,
-      children: /* @__PURE__ */ jsx34("path", { d: GLIFOS_CATEGORIA[glifo] })
-    }
-  );
-}
-
 // src/components/TileEquipo.jsx
-import { Fragment as Fragment3, jsx as jsx35, jsxs as jsxs28 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx40, jsxs as jsxs32 } from "react/jsx-runtime";
 function TileEquipo({
   modelo,
   imei,
@@ -3079,40 +3428,40 @@ function TileEquipo({
   className
 }) {
   const raiz = cn("w-full space-y-2.5 rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left", onOpen && "transition hover:border-fono active:scale-[.995]", className);
-  const contenido = /* @__PURE__ */ jsxs28(Fragment3, { children: [
-    /* @__PURE__ */ jsxs28("div", { className: "flex items-start gap-3", children: [
-      foto ? /* @__PURE__ */ jsx35("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx35("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx35(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
-      /* @__PURE__ */ jsxs28("div", { className: "min-w-0 flex-1", children: [
-        /* @__PURE__ */ jsx35("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
-        imei && /* @__PURE__ */ jsx35("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
-        detalle && /* @__PURE__ */ jsx35("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
+  const contenido = /* @__PURE__ */ jsxs32(Fragment3, { children: [
+    /* @__PURE__ */ jsxs32("div", { className: "flex items-start gap-3", children: [
+      foto ? /* @__PURE__ */ jsx40("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx40("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx40(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
+      /* @__PURE__ */ jsxs32("div", { className: "min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsx40("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
+        imei && /* @__PURE__ */ jsx40("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
+        detalle && /* @__PURE__ */ jsx40("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
       ] }),
-      estado && /* @__PURE__ */ jsx35(ChipEstado, { estado })
+      estado && /* @__PURE__ */ jsx40(ChipEstado, { estado })
     ] }),
-    /* @__PURE__ */ jsxs28("div", { className: "flex flex-wrap items-center gap-2", children: [
-      grado && /* @__PURE__ */ jsx35(GradoBadge, { grado }),
-      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx35(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
-      locks?.length ? /* @__PURE__ */ jsx35(ChipsLocks, { locks }) : null
+    /* @__PURE__ */ jsxs32("div", { className: "flex flex-wrap items-center gap-2", children: [
+      grado && /* @__PURE__ */ jsx40(GradoBadge, { grado }),
+      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx40(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
+      locks?.length ? /* @__PURE__ */ jsx40(ChipsLocks, { locks }) : null
     ] }),
-    acciones && /* @__PURE__ */ jsx35("div", { className: "flex flex-wrap gap-2", children: acciones })
+    acciones && /* @__PURE__ */ jsx40("div", { className: "flex flex-wrap gap-2", children: acciones })
   ] });
   if (onOpen) {
-    return /* @__PURE__ */ jsx35("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
+    return /* @__PURE__ */ jsx40("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
   }
-  return /* @__PURE__ */ jsx35("article", { className: raiz, children: contenido });
+  return /* @__PURE__ */ jsx40("article", { className: raiz, children: contenido });
 }
 
 // src/components/Stepper.jsx
-import { jsx as jsx36, jsxs as jsxs29 } from "react/jsx-runtime";
+import { jsx as jsx41, jsxs as jsxs33 } from "react/jsx-runtime";
 function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
   if (!pasos.length) return null;
   const esHecho = (paso, indice) => hechos.includes(paso.id ?? indice) || typeof actual === "number" && indice < actual;
   const esActual = (paso, indice) => paso.id !== void 0 ? paso.id === actual : indice === actual;
-  return /* @__PURE__ */ jsx36("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), children: pasos.map((paso, indice) => {
+  return /* @__PURE__ */ jsx41("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), children: pasos.map((paso, indice) => {
     const hecho = esHecho(paso, indice);
     const enCurso = esActual(paso, indice);
-    return /* @__PURE__ */ jsxs29("li", { className: "flex items-center gap-2", children: [
-      /* @__PURE__ */ jsx36(
+    return /* @__PURE__ */ jsxs33("li", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsx41(
         "span",
         {
           className: cn(
@@ -3122,23 +3471,23 @@ function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
             !hecho && !enCurso && "border-ink-600 bg-ink-800 text-mute"
           ),
           "aria-hidden": "true",
-          children: hecho ? /* @__PURE__ */ jsx36(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+          children: hecho ? /* @__PURE__ */ jsx41(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
         }
       ),
-      /* @__PURE__ */ jsxs29("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
+      /* @__PURE__ */ jsxs33("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
         paso.etiqueta,
-        paso.detalle && /* @__PURE__ */ jsxs29("span", { className: "ml-1 font-normal text-mute", children: [
+        paso.detalle && /* @__PURE__ */ jsxs33("span", { className: "ml-1 font-normal text-mute", children: [
           "\xB7 ",
           paso.detalle
         ] })
       ] }),
-      indice < pasos.length - 1 && /* @__PURE__ */ jsx36("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
+      indice < pasos.length - 1 && /* @__PURE__ */ jsx41("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
     ] }, paso.id ?? indice);
   }) });
 }
 
 // src/components/CodigoQr.jsx
-import { useEffect as useEffect5, useState as useState11 } from "react";
+import { useEffect as useEffect6, useState as useState14 } from "react";
 
 // src/utils/qr.js
 var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
@@ -3154,10 +3503,10 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 }
 
 // src/components/CodigoQr.jsx
-import { jsx as jsx37 } from "react/jsx-runtime";
+import { jsx as jsx42 } from "react/jsx-runtime";
 function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
-  const [imagen, setImagen] = useState11("");
-  useEffect5(() => {
+  const [imagen, setImagen] = useState14("");
+  useEffect6(() => {
     let activo = true;
     qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
       if (activo) setImagen(data);
@@ -3167,11 +3516,11 @@ function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3dig
     };
   }, [valor, ancho, nivel, margen]);
   if (!imagen) return null;
-  return /* @__PURE__ */ jsx37("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
+  return /* @__PURE__ */ jsx42("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
 }
 
 // src/components/FichaCertificado.jsx
-import { jsx as jsx38, jsxs as jsxs30 } from "react/jsx-runtime";
+import { jsx as jsx43, jsxs as jsxs34 } from "react/jsx-runtime";
 function FichaCertificado({
   empresa,
   modelo,
@@ -3191,25 +3540,25 @@ function FichaCertificado({
 }) {
   const hayChecklist = Number(total) > 0;
   const completo = hayChecklist && Number(aprobados) === Number(total);
-  return /* @__PURE__ */ jsxs30("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
-    /* @__PURE__ */ jsxs30("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
-      /* @__PURE__ */ jsxs30("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx38("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
-        /* @__PURE__ */ jsx38("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
+  return /* @__PURE__ */ jsxs34("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
+    /* @__PURE__ */ jsxs34("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
+      /* @__PURE__ */ jsxs34("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsx43("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
+        /* @__PURE__ */ jsx43("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
       ] }),
-      /* @__PURE__ */ jsx38(ChipEstado, { estado: "pass" })
+      /* @__PURE__ */ jsx43(ChipEstado, { estado: "pass" })
     ] }),
-    /* @__PURE__ */ jsxs30("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
-      /* @__PURE__ */ jsxs30("div", { className: "min-w-0 space-y-3", children: [
-        /* @__PURE__ */ jsxs30("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
-          /* @__PURE__ */ jsx38(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
-          /* @__PURE__ */ jsx38(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx38(GradoBadge, { grado }) : "Sin grado asignado" }),
-          /* @__PURE__ */ jsx38(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx38(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
-          /* @__PURE__ */ jsx38(
+    /* @__PURE__ */ jsxs34("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
+      /* @__PURE__ */ jsxs34("div", { className: "min-w-0 space-y-3", children: [
+        /* @__PURE__ */ jsxs34("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
+          /* @__PURE__ */ jsx43(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
+          /* @__PURE__ */ jsx43(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx43(GradoBadge, { grado }) : "Sin grado asignado" }),
+          /* @__PURE__ */ jsx43(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx43(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
+          /* @__PURE__ */ jsx43(
             FilaDato,
             {
               etiqueta: "Checklist",
-              valor: hayChecklist ? /* @__PURE__ */ jsxs30("span", { className: completo ? "text-pass" : "text-mute", children: [
+              valor: hayChecklist ? /* @__PURE__ */ jsxs34("span", { className: completo ? "text-pass" : "text-mute", children: [
                 aprobados,
                 " de ",
                 total,
@@ -3218,23 +3567,23 @@ function FichaCertificado({
             }
           )
         ] }),
-        locks.length ? /* @__PURE__ */ jsx38(ChipsLocks, { locks, conEstado: true }) : null,
-        /* @__PURE__ */ jsxs30("p", { className: "text-xs text-mute", children: [
+        locks.length ? /* @__PURE__ */ jsx43(ChipsLocks, { locks, conEstado: true }) : null,
+        /* @__PURE__ */ jsxs34("p", { className: "text-xs text-mute", children: [
           verificadoPor ? `Verificado por ${verificadoPor}` : "Verificaci\xF3n pendiente",
           verificadoAt ? ` \xB7 ${verificadoAt}` : ""
         ] })
       ] }),
-      enlace ? /* @__PURE__ */ jsxs30("div", { className: "flex flex-col items-center gap-2", children: [
-        /* @__PURE__ */ jsx38(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
-        /* @__PURE__ */ jsx38("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
+      enlace ? /* @__PURE__ */ jsxs34("div", { className: "flex flex-col items-center gap-2", children: [
+        /* @__PURE__ */ jsx43(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
+        /* @__PURE__ */ jsx43("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
       ] }) : null
     ] }),
-    acciones ? /* @__PURE__ */ jsx38("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
+    acciones ? /* @__PURE__ */ jsx43("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
   ] });
 }
 
 // src/components/VistaPreviaPapel.jsx
-import { jsx as jsx39 } from "react/jsx-runtime";
+import { jsx as jsx44 } from "react/jsx-runtime";
 var ANCHOS_PAPEL = {
   "thermal-80": "max-w-[302px]",
   "thermal-58": "max-w-[219px]",
@@ -3244,7 +3593,7 @@ var ANCHOS_PAPEL = {
 };
 function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 = "Vista previa del documento", alto = "h-[60vh]", className, ...props }) {
   const ancho = ANCHOS_PAPEL[formato];
-  return /* @__PURE__ */ jsx39(
+  return /* @__PURE__ */ jsx44(
     "iframe",
     {
       title: titulo2,
@@ -3256,7 +3605,7 @@ function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 =
 }
 
 // src/components/Calendario.jsx
-import { useMemo as useMemo3, useState as useState12 } from "react";
+import { useMemo as useMemo4, useState as useState15 } from "react";
 
 // src/utils/calendario.js
 var ES_PY = "es-PY";
@@ -3363,7 +3712,7 @@ function claveUTC(fecha) {
 }
 
 // src/components/Calendario.jsx
-import { Fragment as Fragment4, jsx as jsx40, jsxs as jsxs31 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx45, jsxs as jsxs35 } from "react/jsx-runtime";
 var TONO_ITEM = { info: TONOS.chip.info, ok: TONOS.chip.ok, warn: TONOS.chip.warn, bad: TONOS.chip.bad };
 function ItemCalendario({ item, contexto, onElegir }) {
   const tono = TONO_ITEM[item.tono] || TONOS.chip.mute;
@@ -3373,28 +3722,28 @@ function ItemCalendario({ item, contexto, onElegir }) {
     contexto.vista === "lista" ? "px-2.5 py-1.5 text-xs" : "px-1.5 py-0.5 text-[11px]",
     tono
   );
-  const contenido = /* @__PURE__ */ jsxs31(Fragment4, { children: [
-    item.hora && /* @__PURE__ */ jsx40("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
-    /* @__PURE__ */ jsxs31("span", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx40("span", { className: "block truncate font-medium", children: item.titulo }),
-      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx40("span", { className: "block truncate opacity-80", children: item.detalle })
+  const contenido = /* @__PURE__ */ jsxs35(Fragment4, { children: [
+    item.hora && /* @__PURE__ */ jsx45("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
+    /* @__PURE__ */ jsxs35("span", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx45("span", { className: "block truncate font-medium", children: item.titulo }),
+      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx45("span", { className: "block truncate opacity-80", children: item.detalle })
     ] })
   ] });
   const etiqueta = [titulo2, item.detalle].filter(Boolean).join(" \u2014 ");
-  return item.href ? /* @__PURE__ */ jsx40("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx40("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
+  return item.href ? /* @__PURE__ */ jsx45("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx45("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
 }
 function ListaDias({ dias, porDia, hoy, onElegir, renderItem, soloConItems }) {
   const visibles = soloConItems ? dias.filter((dia) => (porDia.get(dia)?.length ?? 0) > 0 || dia === hoy) : dias;
-  if (!visibles.length) return /* @__PURE__ */ jsx40(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
-  return /* @__PURE__ */ jsx40("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
+  if (!visibles.length) return /* @__PURE__ */ jsx45(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
+  return /* @__PURE__ */ jsx45("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
     const delDia = porDia.get(dia) || [];
-    return /* @__PURE__ */ jsxs31("section", { className: "py-2", children: [
-      /* @__PURE__ */ jsxs31("header", { className: "flex items-center justify-between gap-2 px-1", children: [
-        /* @__PURE__ */ jsx40("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
-        dia === hoy && /* @__PURE__ */ jsx40("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
+    return /* @__PURE__ */ jsxs35("section", { className: "py-2", children: [
+      /* @__PURE__ */ jsxs35("header", { className: "flex items-center justify-between gap-2 px-1", children: [
+        /* @__PURE__ */ jsx45("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
+        dia === hoy && /* @__PURE__ */ jsx45("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
       ] }),
-      /* @__PURE__ */ jsx40("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx40("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx40("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx40(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
+      /* @__PURE__ */ jsx45("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx45("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
+        (item, indice) => renderItem ? /* @__PURE__ */ jsx45("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx45(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
       ) })
     ] }, dia);
   }) });
@@ -3420,19 +3769,19 @@ function Calendario({
   ariaLabel = "Calendario",
   className
 }) {
-  const claveHoy = useMemo3(() => hoyClave(hoy), [hoy]);
-  const [vistaInterna, setVistaInterna] = useState12(vistaPorDefecto);
-  const [anclaInterna, setAnclaInterna] = useState12(() => anclaPorDefecto || ancla || claveHoy);
-  const [seleccionInterna, setSeleccionInterna] = useState12(null);
+  const claveHoy = useMemo4(() => hoyClave(hoy), [hoy]);
+  const [vistaInterna, setVistaInterna] = useState15(vistaPorDefecto);
+  const [anclaInterna, setAnclaInterna] = useState15(() => anclaPorDefecto || ancla || claveHoy);
+  const [seleccionInterna, setSeleccionInterna] = useState15(null);
   const vistaActual = vistas.includes(vista) ? vista : vistas.includes(vistaInterna) ? vistaInterna : vistas[0] || "mes";
   const anclaActual = String(ancla || anclaInterna || claveHoy).slice(0, 10);
   const seleccion = diaSeleccionado !== void 0 ? diaSeleccionado : seleccionInterna;
-  const rango = useMemo3(
+  const rango = useMemo4(
     () => vistaActual === "semana" ? rangoSemana(anclaActual) : rangoMes(anclaActual),
     [vistaActual, anclaActual]
   );
-  const porDia = useMemo3(() => agruparPorDia(items), [items]);
-  const totalEnRango = useMemo3(
+  const porDia = useMemo4(() => agruparPorDia(items), [items]);
+  const totalEnRango = useMemo4(
     () => rango.dias.reduce((suma, dia) => suma + (porDia.get(dia)?.length ?? 0), 0),
     [rango, porDia]
   );
@@ -3458,10 +3807,10 @@ function Calendario({
     if (diaSeleccionado === void 0) setSeleccionInterna(dia);
     onSeleccionarDia?.(dia);
   }
-  return /* @__PURE__ */ jsxs31("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
-    /* @__PURE__ */ jsxs31("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs31("div", { className: "flex items-center gap-1.5", children: [
-        /* @__PURE__ */ jsx40(
+  return /* @__PURE__ */ jsxs35("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
+    /* @__PURE__ */ jsxs35("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs35("div", { className: "flex items-center gap-1.5", children: [
+        /* @__PURE__ */ jsx45(
           "button",
           {
             type: "button",
@@ -3469,11 +3818,11 @@ function Calendario({
             "aria-label": vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
             title: vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
             className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx40(Icon, { name: "back", className: "h-4 w-4" })
+            children: /* @__PURE__ */ jsx45(Icon, { name: "back", className: "h-4 w-4" })
           }
         ),
-        /* @__PURE__ */ jsx40(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
-        /* @__PURE__ */ jsx40(
+        /* @__PURE__ */ jsx45(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
+        /* @__PURE__ */ jsx45(
           "button",
           {
             type: "button",
@@ -3481,12 +3830,12 @@ function Calendario({
             "aria-label": vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
             title: vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
             className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx40(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
+            children: /* @__PURE__ */ jsx45(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
           }
         )
       ] }),
-      /* @__PURE__ */ jsx40("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
-      vistas.length > 1 && /* @__PURE__ */ jsx40(
+      /* @__PURE__ */ jsx45("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
+      vistas.length > 1 && /* @__PURE__ */ jsx45(
         SegmentedField,
         {
           value: vistaActual,
@@ -3499,15 +3848,15 @@ function Calendario({
         }
       )
     ] }),
-    cargando ? /* @__PURE__ */ jsx40("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx40(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs31(Fragment4, { children: [
-      /* @__PURE__ */ jsxs31("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
-        /* @__PURE__ */ jsx40("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx40("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
-        /* @__PURE__ */ jsx40("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
+    cargando ? /* @__PURE__ */ jsx45("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx45(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs35(Fragment4, { children: [
+      /* @__PURE__ */ jsxs35("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
+        /* @__PURE__ */ jsx45("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx45("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
+        /* @__PURE__ */ jsx45("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
           const delDia = porDia.get(dia) || [];
           const ocultos = delDia.length - maxPorDia;
           const esHoy = dia === claveHoy;
           const esSeleccionado = dia === seleccion;
-          return /* @__PURE__ */ jsxs31(
+          return /* @__PURE__ */ jsxs35(
             "div",
             {
               "data-fuera": mismoMes(dia, anclaActual) ? void 0 : "true",
@@ -3519,7 +3868,7 @@ function Calendario({
                 esSeleccionado && "bg-fono/5"
               ),
               children: [
-                /* @__PURE__ */ jsxs31(
+                /* @__PURE__ */ jsxs35(
                   "button",
                   {
                     type: "button",
@@ -3532,15 +3881,15 @@ function Calendario({
                       esHoy ? "bg-fono/15 font-bold text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore"
                     ),
                     children: [
-                      /* @__PURE__ */ jsx40("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
-                      delDia.length > 0 && /* @__PURE__ */ jsx40("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
+                      /* @__PURE__ */ jsx45("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
+                      delDia.length > 0 && /* @__PURE__ */ jsx45("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
                     ]
                   }
                 ),
-                /* @__PURE__ */ jsx40("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
-                  (item, indice) => renderItem ? /* @__PURE__ */ jsx40("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx40(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
+                /* @__PURE__ */ jsx45("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
+                  (item, indice) => renderItem ? /* @__PURE__ */ jsx45("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx45(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
                 ) }),
-                ocultos > 0 && /* @__PURE__ */ jsxs31(
+                ocultos > 0 && /* @__PURE__ */ jsxs35(
                   "button",
                   {
                     type: "button",
@@ -3560,7 +3909,7 @@ function Calendario({
           );
         }) })
       ] }),
-      /* @__PURE__ */ jsx40("div", { className: "md:hidden", children: /* @__PURE__ */ jsx40(
+      /* @__PURE__ */ jsx45("div", { className: "md:hidden", children: /* @__PURE__ */ jsx45(
         ListaDias,
         {
           dias: rango.dias,
@@ -3572,28 +3921,28 @@ function Calendario({
         }
       ) })
     ] }),
-    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx40(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
-    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs31("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
-      /* @__PURE__ */ jsxs31("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-        /* @__PURE__ */ jsx40("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
-        /* @__PURE__ */ jsxs31("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxs31("span", { className: "text-xs tabular-nums text-mute", children: [
+    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx45(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
+    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs35("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
+      /* @__PURE__ */ jsxs35("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+        /* @__PURE__ */ jsx45("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
+        /* @__PURE__ */ jsxs35("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxs35("span", { className: "text-xs tabular-nums text-mute", children: [
             delSeleccionado.length,
             " ",
             delSeleccionado.length === 1 ? "movimiento" : "movimientos"
           ] }),
-          /* @__PURE__ */ jsx40(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
+          /* @__PURE__ */ jsx45(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
         ] })
       ] }),
-      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx40(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx40("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx40("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx40(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
+      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx45(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx45("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
+        (item, indice) => renderItem ? /* @__PURE__ */ jsx45("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx45(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
       ) })
     ] })
   ] });
 }
 
 // src/components/RangoFecha.jsx
-import { useId as useId3, useRef as useRef6, useState as useState13 } from "react";
+import { useId as useId5, useRef as useRef7, useState as useState16 } from "react";
 
 // src/utils/rangoFecha.js
 var PERIODOS_FECHA = ["hoy", "esta-semana", "este-mes", "mes-pasado", "ultimos-30", "personalizado"];
@@ -3644,7 +3993,7 @@ function rangoInvertido(desde, hasta) {
 }
 
 // src/components/RangoFecha.jsx
-import { jsx as jsx41, jsxs as jsxs32 } from "react/jsx-runtime";
+import { jsx as jsx46, jsxs as jsxs36 } from "react/jsx-runtime";
 function RangoFecha({
   desde,
   hasta,
@@ -3659,15 +4008,15 @@ function RangoFecha({
   className
 }) {
   const controlado = desde !== void 0 || hasta !== void 0;
-  const [interno, setInterno] = useState13(() => {
+  const [interno, setInterno] = useState16(() => {
     if (desdePorDefecto !== void 0 || hastaPorDefecto !== void 0) {
       return { desde: desdePorDefecto || "", hasta: hastaPorDefecto || "" };
     }
     return rangoDePeriodo(periodoPorDefecto, { hoy }) || { desde: "", hasta: "" };
   });
-  const idDesde = useId3();
-  const idHasta = useId3();
-  const refDesde = useRef6(null);
+  const idDesde = useId5();
+  const idHasta = useId5();
+  const refDesde = useRef7(null);
   const actual = controlado ? { desde: desde ?? "", hasta: hasta ?? "" } : interno;
   const activo = periodoDeRango(actual.desde, actual.hasta, { hoy });
   const invertido = rangoInvertido(actual.desde, actual.hasta);
@@ -3676,10 +4025,10 @@ function RangoFecha({
     if (!controlado) setInterno(par);
     onCambio?.(par.desde, par.hasta);
   }
-  return /* @__PURE__ */ jsxs32("div", { className: cn("space-y-2", className), children: [
-    /* @__PURE__ */ jsx41("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
+  return /* @__PURE__ */ jsxs36("div", { className: cn("space-y-2", className), children: [
+    /* @__PURE__ */ jsx46("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
       const esActivo = activo === periodo;
-      return /* @__PURE__ */ jsx41(
+      return /* @__PURE__ */ jsx46(
         "button",
         {
           type: "button",
@@ -3698,10 +4047,10 @@ function RangoFecha({
         periodo
       );
     }) }),
-    mostrarCampos && /* @__PURE__ */ jsxs32("div", { className: "flex flex-wrap items-end gap-2", children: [
-      /* @__PURE__ */ jsxs32("div", { children: [
-        /* @__PURE__ */ jsx41(Label, { htmlFor: idDesde, children: "Desde" }),
-        /* @__PURE__ */ jsx41(
+    mostrarCampos && /* @__PURE__ */ jsxs36("div", { className: "flex flex-wrap items-end gap-2", children: [
+      /* @__PURE__ */ jsxs36("div", { children: [
+        /* @__PURE__ */ jsx46(Label, { htmlFor: idDesde, children: "Desde" }),
+        /* @__PURE__ */ jsx46(
           Input,
           {
             id: idDesde,
@@ -3714,9 +4063,9 @@ function RangoFecha({
           }
         )
       ] }),
-      /* @__PURE__ */ jsxs32("div", { children: [
-        /* @__PURE__ */ jsx41(Label, { htmlFor: idHasta, children: "Hasta" }),
-        /* @__PURE__ */ jsx41(
+      /* @__PURE__ */ jsxs36("div", { children: [
+        /* @__PURE__ */ jsx46(Label, { htmlFor: idHasta, children: "Hasta" }),
+        /* @__PURE__ */ jsx46(
           Input,
           {
             id: idHasta,
@@ -3729,13 +4078,13 @@ function RangoFecha({
         )
       ] })
     ] }),
-    invertido && /* @__PURE__ */ jsx41(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
+    invertido && /* @__PURE__ */ jsx46(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
   ] });
 }
 
 // src/components/PaletaComandos.jsx
-import { useEffect as useEffect6, useId as useId4, useMemo as useMemo4, useRef as useRef7, useState as useState14 } from "react";
-import { Fragment as Fragment5, jsx as jsx42, jsxs as jsxs33 } from "react/jsx-runtime";
+import { useEffect as useEffect7, useId as useId6, useMemo as useMemo5, useRef as useRef8, useState as useState17 } from "react";
+import { Fragment as Fragment5, jsx as jsx47, jsxs as jsxs37 } from "react/jsx-runtime";
 var CAPITALIZAR = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
 function agruparResultados(resultados = [], { etiquetasTipo = {}, iconosTipo = {} } = {}) {
   const grupos = [];
@@ -3788,20 +4137,20 @@ function PaletaComandos({
   mostrarAtajoEnBoton = true,
   className
 }) {
-  const [interna, setInterna] = useState14(false);
-  const [consulta, setConsulta] = useState14("");
-  const [resultados, setResultados] = useState14(null);
-  const [cargando, setCargando] = useState14(false);
-  const [error, setError] = useState14("");
-  const [activo, setActivo] = useState14(0);
-  const [intento, setIntento] = useState14(0);
-  const raiz = useRef7(null);
-  const entrada = useRef7(null);
-  const buscarRef = useRef7(buscar);
+  const [interna, setInterna] = useState17(false);
+  const [consulta, setConsulta] = useState17("");
+  const [resultados, setResultados] = useState17(null);
+  const [cargando, setCargando] = useState17(false);
+  const [error, setError] = useState17("");
+  const [activo, setActivo] = useState17(0);
+  const [intento, setIntento] = useState17(0);
+  const raiz = useRef8(null);
+  const entrada = useRef8(null);
+  const buscarRef = useRef8(buscar);
   buscarRef.current = buscar;
-  const onAbrirRef = useRef7(onAbrir);
+  const onAbrirRef = useRef8(onAbrir);
   onAbrirRef.current = onAbrir;
-  const idLista = useId4();
+  const idLista = useId6();
   const controlada = abierta !== void 0;
   const visible = controlada ? Boolean(abierta) : interna;
   function abrir() {
@@ -3812,7 +4161,7 @@ function PaletaComandos({
     if (!controlada) setInterna(false);
     onCerrar?.();
   }
-  useEffect6(() => {
+  useEffect7(() => {
     if (!conAtajo) return void 0;
     const onKeyDown2 = (event) => {
       if (event.defaultPrevented || event.altKey || event.shiftKey) return;
@@ -3825,7 +4174,7 @@ function PaletaComandos({
     document.addEventListener("keydown", onKeyDown2);
     return () => document.removeEventListener("keydown", onKeyDown2);
   }, [conAtajo, atajo, controlada]);
-  useEffect6(() => {
+  useEffect7(() => {
     if (!visible) return void 0;
     setConsulta("");
     setResultados(null);
@@ -3836,7 +4185,7 @@ function PaletaComandos({
     const frame = requestAnimationFrame(() => entrada.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [visible]);
-  useEffect6(() => {
+  useEffect7(() => {
     if (!visible) return void 0;
     const termino2 = consulta.trim();
     if (termino2.length < minimo) {
@@ -3867,17 +4216,17 @@ function PaletaComandos({
   }, [visible, consulta, intento, minimo, espera, mensajeError]);
   const termino = consulta.trim();
   const listo = termino.length >= minimo;
-  const grupos = useMemo4(
+  const grupos = useMemo5(
     () => agruparResultados(resultados || [], { etiquetasTipo, iconosTipo }),
     [resultados, etiquetasTipo, iconosTipo]
   );
-  const planos = useMemo4(() => grupos.flatMap((grupo) => grupo.items), [grupos]);
+  const planos = useMemo5(() => grupos.flatMap((grupo) => grupo.items), [grupos]);
   const estado = estadoPaleta({ listo, cargando, error, total: planos.length });
-  const indice = useMemo4(() => new Map(planos.map((item, posicion) => [item, posicion])), [planos]);
-  useEffect6(() => {
+  const indice = useMemo5(() => new Map(planos.map((item, posicion) => [item, posicion])), [planos]);
+  useEffect7(() => {
     setActivo(0);
   }, [resultados]);
-  useEffect6(() => {
+  useEffect7(() => {
     if (!visible) return;
     raiz.current?.querySelector(`[data-paleta-index="${activo}"]`)?.scrollIntoView?.({ block: "nearest" });
   }, [activo, visible, planos.length]);
@@ -3916,8 +4265,8 @@ function PaletaComandos({
     }
   }
   const textoContinuar = textoSeguir || `Segu\xED escribiendo: buscamos desde ${minimo} caracteres.`;
-  return /* @__PURE__ */ jsxs33(Fragment5, { children: [
-    boton && /* @__PURE__ */ jsxs33(
+  return /* @__PURE__ */ jsxs37(Fragment5, { children: [
+    boton && /* @__PURE__ */ jsxs37(
       "button",
       {
         type: "button",
@@ -3927,19 +4276,19 @@ function PaletaComandos({
         title: `${titulo2} \xB7 ${atajoTexto}`,
         className: "inline-flex h-9 items-center gap-2 rounded-lg border border-ink-500 px-3 text-sm text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx42(Icon, { name: "search", className: "h-4 w-4" }),
-          /* @__PURE__ */ jsx42("span", { className: "hidden sm:inline", children: textoBoton }),
-          mostrarAtajoEnBoton && /* @__PURE__ */ jsx42("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
+          /* @__PURE__ */ jsx47(Icon, { name: "search", className: "h-4 w-4" }),
+          /* @__PURE__ */ jsx47("span", { className: "hidden sm:inline", children: textoBoton }),
+          mostrarAtajoEnBoton && /* @__PURE__ */ jsx47("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
         ]
       }
     ),
-    visible && /* @__PURE__ */ jsx42(
+    visible && /* @__PURE__ */ jsx47(
       "div",
       {
         className: "fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-3 sm:p-6",
         onMouseDown: (event) => event.target === event.currentTarget && cerrar(),
         onKeyDown,
-        children: /* @__PURE__ */ jsxs33(
+        children: /* @__PURE__ */ jsxs37(
           "div",
           {
             ref: raiz,
@@ -3948,7 +4297,7 @@ function PaletaComandos({
             "aria-label": titulo2,
             className: cn("mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink-800 shadow-2xl", className),
             children: [
-              /* @__PURE__ */ jsx42("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx42(
+              /* @__PURE__ */ jsx47("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx47(
                 SearchField_default,
                 {
                   ref: entrada,
@@ -3963,18 +4312,18 @@ function PaletaComandos({
                   autoComplete: "off"
                 }
               ) }),
-              /* @__PURE__ */ jsxs33("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
-                estado === "seguir" && /* @__PURE__ */ jsx42("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
-                estado === "error" && /* @__PURE__ */ jsxs33("div", { className: "space-y-2 p-2", children: [
-                  /* @__PURE__ */ jsx42(Aviso, { tono: "error", compact: true, children: error }),
-                  /* @__PURE__ */ jsx42(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
+              /* @__PURE__ */ jsxs37("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
+                estado === "seguir" && /* @__PURE__ */ jsx47("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
+                estado === "error" && /* @__PURE__ */ jsxs37("div", { className: "space-y-2 p-2", children: [
+                  /* @__PURE__ */ jsx47(Aviso, { tono: "error", compact: true, children: error }),
+                  /* @__PURE__ */ jsx47(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
                 ] }),
-                estado === "cargando" && /* @__PURE__ */ jsxs33("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
-                  /* @__PURE__ */ jsx42(Skeleton, { className: "h-4 w-1/3" }),
-                  /* @__PURE__ */ jsx42(Skeleton, { className: "h-9 w-full" }),
-                  /* @__PURE__ */ jsx42(Skeleton, { className: "h-9 w-full" })
+                estado === "cargando" && /* @__PURE__ */ jsxs37("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
+                  /* @__PURE__ */ jsx47(Skeleton, { className: "h-4 w-1/3" }),
+                  /* @__PURE__ */ jsx47(Skeleton, { className: "h-9 w-full" }),
+                  /* @__PURE__ */ jsx47(Skeleton, { className: "h-9 w-full" })
                 ] }),
-                estado === "vacio" && /* @__PURE__ */ jsx42(
+                estado === "vacio" && /* @__PURE__ */ jsx47(
                   EmptyState,
                   {
                     compact: true,
@@ -3983,12 +4332,12 @@ function PaletaComandos({
                     description: `No encontramos nada para \xAB${termino}\xBB. Prob\xE1 con otro nombre o n\xFAmero.`
                   }
                 ),
-                estado === "listo" && /* @__PURE__ */ jsx42("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs33("section", { role: "group", "aria-label": grupo.etiqueta, children: [
-                  /* @__PURE__ */ jsx42("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+                estado === "listo" && /* @__PURE__ */ jsx47("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs37("section", { role: "group", "aria-label": grupo.etiqueta, children: [
+                  /* @__PURE__ */ jsx47("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
                   grupo.items.map((item) => {
                     const posicion = indice.get(item) ?? 0;
                     const esActivo = posicion === activo;
-                    return /* @__PURE__ */ jsxs33(
+                    return /* @__PURE__ */ jsxs37(
                       "button",
                       {
                         type: "button",
@@ -4003,12 +4352,12 @@ function PaletaComandos({
                           esActivo ? "bg-fono/10 text-fore" : "text-mute hover:bg-ink-700/60 hover:text-fore"
                         ),
                         children: [
-                          /* @__PURE__ */ jsx42(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
-                          /* @__PURE__ */ jsxs33("span", { className: "min-w-0 flex-1", children: [
-                            /* @__PURE__ */ jsx42("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
-                            item.detalle && /* @__PURE__ */ jsx42("span", { className: "block truncate text-xs text-mute", children: item.detalle })
+                          /* @__PURE__ */ jsx47(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
+                          /* @__PURE__ */ jsxs37("span", { className: "min-w-0 flex-1", children: [
+                            /* @__PURE__ */ jsx47("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
+                            item.detalle && /* @__PURE__ */ jsx47("span", { className: "block truncate text-xs text-mute", children: item.detalle })
                           ] }),
-                          /* @__PURE__ */ jsx42(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
+                          /* @__PURE__ */ jsx47(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
                         ]
                       },
                       item.id ?? `${grupo.tipo}-${posicion}`
@@ -4016,19 +4365,19 @@ function PaletaComandos({
                   })
                 ] }, grupo.tipo)) })
               ] }),
-              /* @__PURE__ */ jsxs33("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
-                /* @__PURE__ */ jsxs33("span", { children: [
-                  /* @__PURE__ */ jsx42("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
+              /* @__PURE__ */ jsxs37("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
+                /* @__PURE__ */ jsxs37("span", { children: [
+                  /* @__PURE__ */ jsx47("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
                   " ",
-                  /* @__PURE__ */ jsx42("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
+                  /* @__PURE__ */ jsx47("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
                   " moverse"
                 ] }),
-                /* @__PURE__ */ jsxs33("span", { children: [
-                  /* @__PURE__ */ jsx42("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
+                /* @__PURE__ */ jsxs37("span", { children: [
+                  /* @__PURE__ */ jsx47("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
                   " abrir"
                 ] }),
-                /* @__PURE__ */ jsxs33("span", { children: [
-                  /* @__PURE__ */ jsx42("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
+                /* @__PURE__ */ jsxs37("span", { children: [
+                  /* @__PURE__ */ jsx47("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
                   " cerrar"
                 ] })
               ] })
@@ -4041,8 +4390,8 @@ function PaletaComandos({
 }
 
 // src/components/AyudaModulo.jsx
-import { useState as useState15 } from "react";
-import { jsx as jsx43, jsxs as jsxs34 } from "react/jsx-runtime";
+import { useState as useState18 } from "react";
+import { jsx as jsx48, jsxs as jsxs38 } from "react/jsx-runtime";
 function AyudaModulo({
   titulo: titulo2,
   resumen,
@@ -4055,7 +4404,7 @@ function AyudaModulo({
   onCerrar,
   className
 }) {
-  const [interna, setInterna] = useState15(false);
+  const [interna, setInterna] = useState18(false);
   if (!titulo2 && !resumen) return null;
   const controlada = abierta !== void 0;
   const visible = controlada ? Boolean(abierta) : interna;
@@ -4068,8 +4417,8 @@ function AyudaModulo({
     onCerrar?.();
   };
   const encabezado = tituloDialogo || `${etiquetaBoton} \xB7 ${titulo2 || "Ayuda"}`;
-  return /* @__PURE__ */ jsxs34("div", { className: cn("inline-flex", className), children: [
-    /* @__PURE__ */ jsx43(
+  return /* @__PURE__ */ jsxs38("div", { className: cn("inline-flex", className), children: [
+    /* @__PURE__ */ jsx48(
       "button",
       {
         type: "button",
@@ -4078,16 +4427,16 @@ function AyudaModulo({
         "aria-haspopup": "dialog",
         title: encabezado,
         className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-sm font-bold text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-        children: /* @__PURE__ */ jsx43("span", { "aria-hidden": "true", children: "?" })
+        children: /* @__PURE__ */ jsx48("span", { "aria-hidden": "true", children: "?" })
       }
     ),
-    /* @__PURE__ */ jsx43(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs34("div", { className: "space-y-4", children: [
-      resumen && /* @__PURE__ */ jsx43("p", { className: "text-sm leading-6 text-mute", children: resumen }),
-      puntos.length > 0 && /* @__PURE__ */ jsx43("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs34("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
-        /* @__PURE__ */ jsx43(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
-        /* @__PURE__ */ jsx43("span", { className: "min-w-0", children: punto })
+    /* @__PURE__ */ jsx48(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs38("div", { className: "space-y-4", children: [
+      resumen && /* @__PURE__ */ jsx48("p", { className: "text-sm leading-6 text-mute", children: resumen }),
+      puntos.length > 0 && /* @__PURE__ */ jsx48("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs38("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
+        /* @__PURE__ */ jsx48(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
+        /* @__PURE__ */ jsx48("span", { className: "min-w-0", children: punto })
       ] }, punto)) }),
-      enlaces.length > 0 && /* @__PURE__ */ jsx43("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs34(
+      enlaces.length > 0 && /* @__PURE__ */ jsx48("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs38(
         "a",
         {
           href: enlace.href,
@@ -4097,19 +4446,19 @@ function AyudaModulo({
           },
           className: "flex items-center justify-between gap-2 rounded-lg border border-ink-600 px-3 py-2 text-sm font-medium text-fore transition hover:border-fono hover:bg-fono/10",
           children: [
-            /* @__PURE__ */ jsx43("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
-            /* @__PURE__ */ jsx43(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
+            /* @__PURE__ */ jsx48("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
+            /* @__PURE__ */ jsx48(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
           ]
         },
         enlace.href || enlace.etiqueta
       )) }),
-      /* @__PURE__ */ jsx43("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx43(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
+      /* @__PURE__ */ jsx48("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx48(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
     ] }) })
   ] });
 }
 
 // src/components/BarraInferior.jsx
-import { Fragment as Fragment6, jsx as jsx44, jsxs as jsxs35 } from "react/jsx-runtime";
+import { Fragment as Fragment6, jsx as jsx49, jsxs as jsxs39 } from "react/jsx-runtime";
 var ESPACIO_BARRA_INFERIOR = "pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0";
 function BarraInferior({
   items = [],
@@ -4130,7 +4479,7 @@ function BarraInferior({
     "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition",
     esActivo ? "text-fono-light" : "text-mute hover:text-fore"
   );
-  return /* @__PURE__ */ jsxs35(
+  return /* @__PURE__ */ jsxs39(
     "nav",
     {
       "aria-label": ariaLabel,
@@ -4141,16 +4490,16 @@ function BarraInferior({
       children: [
         visibles.map((item) => {
           const esActivo = item.id === activo;
-          const contenido = /* @__PURE__ */ jsxs35(Fragment6, { children: [
-            /* @__PURE__ */ jsxs35("span", { className: "relative", children: [
-              item.icono && /* @__PURE__ */ jsx44(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
-              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx44("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
+          const contenido = /* @__PURE__ */ jsxs39(Fragment6, { children: [
+            /* @__PURE__ */ jsxs39("span", { className: "relative", children: [
+              item.icono && /* @__PURE__ */ jsx49(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
+              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx49("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
             ] }),
-            /* @__PURE__ */ jsx44("span", { className: "max-w-full truncate", children: item.etiqueta })
+            /* @__PURE__ */ jsx49("span", { className: "max-w-full truncate", children: item.etiqueta })
           ] });
           const titulo2 = item.title || item.etiqueta;
           const clase = cn(claseItem(esActivo), "h-14");
-          return item.href ? /* @__PURE__ */ jsx44(
+          return item.href ? /* @__PURE__ */ jsx49(
             "a",
             {
               href: item.href,
@@ -4162,7 +4511,7 @@ function BarraInferior({
               children: contenido
             },
             item.id ?? item.href
-          ) : /* @__PURE__ */ jsx44(
+          ) : /* @__PURE__ */ jsx49(
             "button",
             {
               type: "button",
@@ -4179,7 +4528,7 @@ function BarraInferior({
             item.id ?? item.etiqueta
           );
         }),
-        onMas && /* @__PURE__ */ jsxs35(
+        onMas && /* @__PURE__ */ jsxs39(
           "button",
           {
             type: "button",
@@ -4190,8 +4539,8 @@ function BarraInferior({
             title: masEtiqueta,
             className: cn(claseItem(menuAbierto), "h-14"),
             children: [
-              /* @__PURE__ */ jsx44(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
-              /* @__PURE__ */ jsx44("span", { className: "max-w-full truncate", children: masEtiqueta })
+              /* @__PURE__ */ jsx49(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
+              /* @__PURE__ */ jsx49("span", { className: "max-w-full truncate", children: masEtiqueta })
             ]
           }
         )
@@ -4201,7 +4550,7 @@ function BarraInferior({
 }
 
 // src/components/Avatar.jsx
-import { useEffect as useEffect7, useState as useState16 } from "react";
+import { useEffect as useEffect8, useState as useState19 } from "react";
 
 // src/utils/avatar.js
 var COLORES_AVATAR = {
@@ -4241,7 +4590,7 @@ function colorDeNombre(nombre) {
 }
 
 // src/components/Avatar.jsx
-import { jsx as jsx45 } from "react/jsx-runtime";
+import { jsx as jsx50 } from "react/jsx-runtime";
 var TAMANOS_AVATAR = {
   sm: "h-7 w-7 text-[10px]",
   md: "h-9 w-9 text-xs",
@@ -4258,15 +4607,15 @@ function Avatar({
   decorativo = false,
   className
 }) {
-  const [fallo, setFallo] = useState16(false);
-  useEffect7(() => {
+  const [fallo, setFallo] = useState19(false);
+  useEffect8(() => {
     setFallo(false);
   }, [src]);
   const cuadro = empresa ? "cuadrado" : forma || "redondo";
   const redondo = cuadro !== "cuadrado";
   const etiqueta = ariaLabel || title || String(nombre ?? "").trim() || "Identidad";
   const conImagen = Boolean(src) && !fallo;
-  return /* @__PURE__ */ jsx45(
+  return /* @__PURE__ */ jsx50(
     "span",
     {
       role: decorativo ? void 0 : "img",
@@ -4280,7 +4629,7 @@ function Avatar({
         TAMANOS_AVATAR[tamano] || TAMANOS_AVATAR.md,
         className
       ),
-      children: conImagen ? /* @__PURE__ */ jsx45(
+      children: conImagen ? /* @__PURE__ */ jsx50(
         "img",
         {
           src,
@@ -4290,13 +4639,13 @@ function Avatar({
           onError: () => setFallo(true),
           className: cn("h-full w-full", redondo ? "object-cover" : "object-contain")
         }
-      ) : /* @__PURE__ */ jsx45("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
+      ) : /* @__PURE__ */ jsx50("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
     }
   );
 }
 
 // src/components/ImporteDelta.jsx
-import { jsx as jsx46 } from "react/jsx-runtime";
+import { jsx as jsx51 } from "react/jsx-runtime";
 function tonoDelta(valor, { invertir = false } = {}) {
   const numero = Number(valor);
   if (!Number.isFinite(numero) || numero === 0) return "mute";
@@ -4316,9 +4665,9 @@ function ImporteDelta({
 }) {
   const numero = Number(valor);
   const ausente = valor === null || valor === void 0 || valor === "" || !Number.isFinite(numero);
-  if (ausente) return /* @__PURE__ */ jsx46("span", { className: cn("tabular-nums text-mute", className), children: vacio });
+  if (ausente) return /* @__PURE__ */ jsx51("span", { className: cn("tabular-nums text-mute", className), children: vacio });
   const texto = formato === "porcentaje" ? `${signoDe(numero) ? `${signoDe(numero)} ` : ""}${formatPercent(Math.abs(numero))} %` : montoConSigno(numero, moneda, vacio, { simbolo });
-  return /* @__PURE__ */ jsx46(
+  return /* @__PURE__ */ jsx51(
     "span",
     {
       className: cn(
@@ -4332,7 +4681,7 @@ function ImporteDelta({
 }
 
 // src/components/IndicadorConexion.jsx
-import { jsx as jsx47, jsxs as jsxs36 } from "react/jsx-runtime";
+import { jsx as jsx52, jsxs as jsxs40 } from "react/jsx-runtime";
 function IndicadorConexion({
   enLinea = true,
   pendientes = 0,
@@ -4347,7 +4696,7 @@ function IndicadorConexion({
   const texto = sincronizando ? etiquetaSincronizando : enLinea ? etiquetaEnLinea : etiquetaSinConexion;
   const detalle = cuenta > 0 ? `${formatoNumero(cuenta)} ${cuenta === 1 ? "pendiente" : "pendientes"} de subir` : "";
   const titulo2 = [texto, detalle].filter(Boolean).join(" \xB7 ");
-  return /* @__PURE__ */ jsxs36(
+  return /* @__PURE__ */ jsxs40(
     "div",
     {
       role: "status",
@@ -4359,15 +4708,15 @@ function IndicadorConexion({
         className
       ),
       children: [
-        /* @__PURE__ */ jsx47(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
-        /* @__PURE__ */ jsxs36("span", { className: "min-w-0 truncate font-medium", children: [
+        /* @__PURE__ */ jsx52(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
+        /* @__PURE__ */ jsxs40("span", { className: "min-w-0 truncate font-medium", children: [
           texto,
-          detalle && /* @__PURE__ */ jsxs36("span", { className: "text-mute", children: [
+          detalle && /* @__PURE__ */ jsxs40("span", { className: "text-mute", children: [
             " \xB7 ",
             detalle
           ] })
         ] }),
-        onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs36(
+        onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs40(
           "button",
           {
             type: "button",
@@ -4377,7 +4726,7 @@ function IndicadorConexion({
             title: sincronizando ? etiquetaSincronizando : "Sincronizar ahora",
             className: "inline-flex h-6 items-center gap-1 rounded-md border border-ink-500 px-1.5 font-medium text-mute transition hover:border-fono hover:text-fore disabled:cursor-not-allowed disabled:opacity-50",
             children: [
-              /* @__PURE__ */ jsx47(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
+              /* @__PURE__ */ jsx52(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
               "Sincronizar"
             ]
           }
@@ -4388,8 +4737,8 @@ function IndicadorConexion({
 }
 
 // src/components/CampanaAvisos.jsx
-import { useEffect as useEffect8, useRef as useRef8, useState as useState17 } from "react";
-import { Fragment as Fragment7, jsx as jsx48, jsxs as jsxs37 } from "react/jsx-runtime";
+import { useEffect as useEffect9, useRef as useRef9, useState as useState20 } from "react";
+import { Fragment as Fragment7, jsx as jsx53, jsxs as jsxs41 } from "react/jsx-runtime";
 function contarSinLeer(avisos = []) {
   const conEstado = avisos.filter((aviso) => aviso && typeof aviso.leido === "boolean");
   if (conEstado.length) return conEstado.filter((aviso) => !aviso.leido).length;
@@ -4411,10 +4760,10 @@ function CampanaAvisos({
   pie,
   className
 }) {
-  const [abierto, setAbierto] = useState17(false);
-  const raiz = useRef8(null);
+  const [abierto, setAbierto] = useState20(false);
+  const raiz = useRef9(null);
   const sinLeer = contarSinLeer(avisos);
-  useEffect8(() => {
+  useEffect9(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -4436,8 +4785,8 @@ function CampanaAvisos({
       return !actual;
     });
   }
-  return /* @__PURE__ */ jsxs37("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsxs37(
+  return /* @__PURE__ */ jsxs41("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsxs41(
       "button",
       {
         type: "button",
@@ -4448,12 +4797,12 @@ function CampanaAvisos({
         title: sinLeer > 0 ? `${ariaLabel} \xB7 ${sinLeer} sin leer` : ariaLabel,
         className: "relative grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx48(Icon, { name: "bell", className: "h-4 w-4" }),
-          sinLeer > 0 && /* @__PURE__ */ jsx48("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
+          /* @__PURE__ */ jsx53(Icon, { name: "bell", className: "h-4 w-4" }),
+          sinLeer > 0 && /* @__PURE__ */ jsx53("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
         ]
       }
     ),
-    abierto && /* @__PURE__ */ jsxs37(
+    abierto && /* @__PURE__ */ jsxs41(
       "div",
       {
         role: "menu",
@@ -4463,25 +4812,25 @@ function CampanaAvisos({
           anclaje === "left" ? "left-0" : "right-0"
         ),
         children: [
-          /* @__PURE__ */ jsxs37("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx48("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
-            sinLeer > 0 && /* @__PURE__ */ jsxs37("span", { className: "text-xs tabular-nums text-mute", children: [
+          /* @__PURE__ */ jsxs41("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx53("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
+            sinLeer > 0 && /* @__PURE__ */ jsxs41("span", { className: "text-xs tabular-nums text-mute", children: [
               textoContador(sinLeer),
               " sin leer"
             ] })
           ] }),
-          /* @__PURE__ */ jsx48("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx48(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
+          /* @__PURE__ */ jsx53("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx53(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
             const tono = TONOS.punto[aviso.tono] || TONOS.punto.mute;
-            const contenido = /* @__PURE__ */ jsxs37(Fragment7, { children: [
-              /* @__PURE__ */ jsx48("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx48(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
-              /* @__PURE__ */ jsxs37("span", { className: "min-w-0 flex-1", children: [
-                /* @__PURE__ */ jsx48("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
-                aviso.detalle && /* @__PURE__ */ jsx48("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
-                aviso.fecha && /* @__PURE__ */ jsx48("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
+            const contenido = /* @__PURE__ */ jsxs41(Fragment7, { children: [
+              /* @__PURE__ */ jsx53("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx53(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
+              /* @__PURE__ */ jsxs41("span", { className: "min-w-0 flex-1", children: [
+                /* @__PURE__ */ jsx53("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
+                aviso.detalle && /* @__PURE__ */ jsx53("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
+                aviso.fecha && /* @__PURE__ */ jsx53("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
               ] })
             ] });
             const clases = "flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-ink-700/60";
-            return aviso.href ? /* @__PURE__ */ jsx48(
+            return aviso.href ? /* @__PURE__ */ jsx53(
               "a",
               {
                 role: "menuitem",
@@ -4495,7 +4844,7 @@ function CampanaAvisos({
                 children: contenido
               },
               aviso.id ?? aviso.titulo
-            ) : /* @__PURE__ */ jsx48(
+            ) : /* @__PURE__ */ jsx53(
               "button",
               {
                 type: "button",
@@ -4511,7 +4860,7 @@ function CampanaAvisos({
               aviso.id ?? aviso.titulo
             );
           }) }),
-          pie && /* @__PURE__ */ jsx48("div", { className: "border-t border-ink-600 p-2", children: pie })
+          pie && /* @__PURE__ */ jsx53("div", { className: "border-t border-ink-600 p-2", children: pie })
         ]
       }
     )
@@ -4519,7 +4868,7 @@ function CampanaAvisos({
 }
 
 // src/components/GraficoBarras.jsx
-import { jsx as jsx49, jsxs as jsxs38 } from "react/jsx-runtime";
+import { jsx as jsx54, jsxs as jsxs42 } from "react/jsx-runtime";
 var COLORES = {
   fono: "bg-fono",
   ok: "bg-ok",
@@ -4553,46 +4902,46 @@ function GraficoBarras({
   className
 }) {
   const formatear = formatoValor || ((valor) => formatoNumero(valor));
-  if (!datos.length) return /* @__PURE__ */ jsx49(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
+  if (!datos.length) return /* @__PURE__ */ jsx54(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
   const tope = maximoDeBarras(datos, max);
   const colorDe = (dato) => COLORES[dato.tono] || COLORES[tono] || COLORES.fono;
-  const listaAccesible = /* @__PURE__ */ jsx49("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx49("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
+  const listaAccesible = /* @__PURE__ */ jsx54("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx54("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
   if (orientacion === "horizontal") {
-    return /* @__PURE__ */ jsxs38("div", { className: cn("space-y-1.5", className), children: [
-      datos.map((dato, indice) => /* @__PURE__ */ jsxs38("div", { className: "flex items-center gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx49("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
-        /* @__PURE__ */ jsx49(
+    return /* @__PURE__ */ jsxs42("div", { className: cn("space-y-1.5", className), children: [
+      datos.map((dato, indice) => /* @__PURE__ */ jsxs42("div", { className: "flex items-center gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx54("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
+        /* @__PURE__ */ jsx54(
           "span",
           {
             className: "h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-fore/10",
             role: "img",
             "aria-label": `${dato.etiqueta}: ${formatear(dato.valor)}`,
             title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-            children: /* @__PURE__ */ jsx49("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
+            children: /* @__PURE__ */ jsx54("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
           }
         ),
-        mostrarValores && /* @__PURE__ */ jsx49("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
+        mostrarValores && /* @__PURE__ */ jsx54("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
       ] }, dato.id ?? indice)),
       listaAccesible
     ] });
   }
-  return /* @__PURE__ */ jsxs38("div", { className: cn("space-y-1", className), children: [
-    /* @__PURE__ */ jsx49("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx49("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx49(
+  return /* @__PURE__ */ jsxs42("div", { className: cn("space-y-1", className), children: [
+    /* @__PURE__ */ jsx54("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx54("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx54(
       "span",
       {
         className: cn("absolute inset-x-0 bottom-0 rounded-t-md transition-[height] duration-500", colorDe(dato)),
         style: { height: `${porcentajeBarra(dato.valor, tope)}%` },
         title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-        children: mostrarValores && /* @__PURE__ */ jsx49("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
+        children: mostrarValores && /* @__PURE__ */ jsx54("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
       }
     ) }, dato.id ?? indice)) }),
-    /* @__PURE__ */ jsx49("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx49("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
+    /* @__PURE__ */ jsx54("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx54("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
     listaAccesible
   ] });
 }
 
 // src/components/TableroKanban.jsx
-import { useCallback as useCallback2, useEffect as useEffect9, useMemo as useMemo5, useRef as useRef9, useState as useState18 } from "react";
+import { useCallback as useCallback3, useEffect as useEffect10, useMemo as useMemo6, useRef as useRef10, useState as useState21 } from "react";
 
 // src/utils/fecha.js
 var ES_PY2 = "es-PY";
@@ -4665,7 +5014,7 @@ function fechaCorta(value, vacio = "\u2014", opciones) {
 }
 
 // src/components/TableroKanban.jsx
-import { jsx as jsx50, jsxs as jsxs39 } from "react/jsx-runtime";
+import { jsx as jsx55, jsxs as jsxs43 } from "react/jsx-runtime";
 var SIN_MOVIMIENTOS = /* @__PURE__ */ new Set();
 function columnasDelTablero(columnas = [], tarjetas = []) {
   const declaradas = [...columnas || []];
@@ -4686,18 +5035,18 @@ function destinosDeTarjeta(tarjeta, columnas = []) {
   return (permitidos || []).filter((valor, indice) => valor !== tarjeta?.estado && permitidos.indexOf(valor) === indice);
 }
 function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
-  const [overrides, setOverrides] = useState18({});
-  const [moviendo, setMoviendo] = useState18(SIN_MOVIMIENTOS);
-  const tarjetasRef = useRef9(tarjetas);
-  const overridesRef = useRef9(overrides);
-  const enVueloRef = useRef9(/* @__PURE__ */ new Set());
-  useEffect9(() => {
+  const [overrides, setOverrides] = useState21({});
+  const [moviendo, setMoviendo] = useState21(SIN_MOVIMIENTOS);
+  const tarjetasRef = useRef10(tarjetas);
+  const overridesRef = useRef10(overrides);
+  const enVueloRef = useRef10(/* @__PURE__ */ new Set());
+  useEffect10(() => {
     tarjetasRef.current = tarjetas;
   }, [tarjetas]);
-  useEffect9(() => {
+  useEffect10(() => {
     overridesRef.current = overrides;
   }, [overrides]);
-  useEffect9(() => {
+  useEffect10(() => {
     setOverrides((actual) => {
       const entradas = Object.entries(actual);
       if (entradas.length === 0) return actual;
@@ -4709,14 +5058,14 @@ function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
       return Object.keys(siguiente).length === entradas.length ? actual : siguiente;
     });
   }, [tarjetas]);
-  const efectivas = useMemo5(
+  const efectivas = useMemo6(
     () => (tarjetas || []).map((tarjeta) => {
       const optimista = overrides[tarjeta.id];
       return optimista && optimista !== tarjeta.estado ? { ...tarjeta, estado: optimista } : tarjeta;
     }),
     [tarjetas, overrides]
   );
-  const revertir = useCallback2(
+  const revertir = useCallback3(
     (id, mensaje) => {
       setOverrides((actual) => {
         if (!(id in actual)) return actual;
@@ -4728,7 +5077,7 @@ function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
     },
     [onError]
   );
-  const moverA = useCallback2(
+  const moverA = useCallback3(
     (id, estadoDestino) => {
       if (!onMover || !id || !estadoDestino) return;
       const tarjeta = tarjetasRef.current.find((candidata) => candidata.id === id);
@@ -4787,10 +5136,10 @@ function TableroKanban({
   className
 }) {
   const { tarjetas: efectivas, moverA, moviendo } = useTableroOptimista({ tarjetas, onMover, onError });
-  const [arrastrandoId, setArrastrandoId] = useState18("");
-  const [sobreColumna, setSobreColumna] = useState18("");
-  const columnasReales = useMemo5(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
-  const grupos = useMemo5(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
+  const [arrastrandoId, setArrastrandoId] = useState21("");
+  const [sobreColumna, setSobreColumna] = useState21("");
+  const columnasReales = useMemo6(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
+  const grupos = useMemo6(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
   const arrastrando = arrastrandoId ? efectivas.find((tarjeta) => tarjeta.id === arrastrandoId) ?? null : null;
   const acepta = (tarjeta, valor) => Boolean(onMover && puedeMover && tarjeta && !moviendo.has(tarjeta.id) && destinosDeTarjeta(tarjeta, columnasReales).includes(valor));
   function terminarArrastre() {
@@ -4798,10 +5147,10 @@ function TableroKanban({
     setSobreColumna("");
   }
   const tituloDe = (valor) => columnasReales.find((columna) => columna.valor === valor)?.titulo ?? valor;
-  return /* @__PURE__ */ jsx50("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
+  return /* @__PURE__ */ jsx55("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
     const deLaColumna = grupos[columna.valor] ?? [];
     const sobre = sobreColumna === columna.valor && acepta(arrastrando, columna.valor);
-    return /* @__PURE__ */ jsxs39(
+    return /* @__PURE__ */ jsxs43(
       "section",
       {
         "aria-label": `${columna.titulo}: ${deLaColumna.length}`,
@@ -4824,17 +5173,17 @@ function TableroKanban({
           if (id) moverA(id, columna.valor);
         },
         children: [
-          /* @__PURE__ */ jsxs39("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx50("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
-            /* @__PURE__ */ jsx50("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
-            /* @__PURE__ */ jsx50("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
+          /* @__PURE__ */ jsxs43("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx55("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx55("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
+            /* @__PURE__ */ jsx55("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
           ] }),
-          /* @__PURE__ */ jsxs39("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
+          /* @__PURE__ */ jsxs43("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
             deLaColumna.map((tarjeta) => {
               const destinos = destinosDeTarjeta(tarjeta, columnasReales);
               const movible = Boolean(onMover && puedeMover && destinos.length > 0 && !moviendo.has(tarjeta.id));
               const tieneMonto = tarjeta.monto !== null && tarjeta.monto !== void 0;
-              return /* @__PURE__ */ jsxs39(
+              return /* @__PURE__ */ jsxs43(
                 "article",
                 {
                   className: cn(
@@ -4855,34 +5204,34 @@ function TableroKanban({
                   },
                   onDragEnd: terminarArrastre,
                   children: [
-                    /* @__PURE__ */ jsxs39("div", { className: "flex items-start justify-between gap-2", children: [
-                      /* @__PURE__ */ jsx50("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
-                      tarjeta.acciones && /* @__PURE__ */ jsx50("span", { className: "shrink-0", children: tarjeta.acciones })
+                    /* @__PURE__ */ jsxs43("div", { className: "flex items-start justify-between gap-2", children: [
+                      /* @__PURE__ */ jsx55("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
+                      tarjeta.acciones && /* @__PURE__ */ jsx55("span", { className: "shrink-0", children: tarjeta.acciones })
                     ] }),
-                    tarjeta.subtitulo && /* @__PURE__ */ jsx50("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
-                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx50("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs39(
+                    tarjeta.subtitulo && /* @__PURE__ */ jsx55("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
+                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx55("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs43(
                       "span",
                       {
                         title: chip.titulo ?? chip.etiqueta,
                         className: cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(chip.tono)),
                         children: [
-                          chip.icono && /* @__PURE__ */ jsx50(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+                          chip.icono && /* @__PURE__ */ jsx55(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
                           chip.etiqueta
                         ]
                       },
                       chip.etiqueta ?? indice
                     )) }),
-                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs39("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
-                      tieneMonto && /* @__PURE__ */ jsxs39("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
-                        /* @__PURE__ */ jsx50(Money, { value: tarjeta.monto }),
-                        tarjeta.montoNota && /* @__PURE__ */ jsx50("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
+                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs43("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
+                      tieneMonto && /* @__PURE__ */ jsxs43("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
+                        /* @__PURE__ */ jsx55(Money, { value: tarjeta.monto }),
+                        tarjeta.montoNota && /* @__PURE__ */ jsx55("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
                       ] }),
-                      tarjeta.fecha && /* @__PURE__ */ jsx50("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
+                      tarjeta.fecha && /* @__PURE__ */ jsx55("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
                     ] }),
-                    tarjeta.detalle && /* @__PURE__ */ jsx50("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
-                    movible && /* @__PURE__ */ jsxs39("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
-                      /* @__PURE__ */ jsx50("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
-                      /* @__PURE__ */ jsxs39(
+                    tarjeta.detalle && /* @__PURE__ */ jsx55("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
+                    movible && /* @__PURE__ */ jsxs43("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
+                      /* @__PURE__ */ jsx55("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
+                      /* @__PURE__ */ jsxs43(
                         "select",
                         {
                           id: `mover-${tarjeta.id}`,
@@ -4896,8 +5245,8 @@ function TableroKanban({
                             "outline-none transition focus:border-fono focus:ring-1 focus:ring-fono/40 [&>option]:bg-ink-800 [&>option]:text-fore"
                           ),
                           children: [
-                            /* @__PURE__ */ jsx50("option", { value: "", children: etiquetaMover }),
-                            destinos.map((valor) => /* @__PURE__ */ jsx50("option", { value: valor, children: tituloDe(valor) }, valor))
+                            /* @__PURE__ */ jsx55("option", { value: "", children: etiquetaMover }),
+                            destinos.map((valor) => /* @__PURE__ */ jsx55("option", { value: valor, children: tituloDe(valor) }, valor))
                           ]
                         }
                       )
@@ -4907,7 +5256,7 @@ function TableroKanban({
                 tarjeta.id
               );
             }),
-            deLaColumna.length === 0 && /* @__PURE__ */ jsx50("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
+            deLaColumna.length === 0 && /* @__PURE__ */ jsx55("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
           ] })
         ]
       },
@@ -4917,7 +5266,7 @@ function TableroKanban({
 }
 
 // src/components/Cronologia.jsx
-import { jsx as jsx51, jsxs as jsxs40 } from "react/jsx-runtime";
+import { jsx as jsx56, jsxs as jsxs44 } from "react/jsx-runtime";
 var ICONOS_HITO = {
   creado: "plus",
   actualizado: "edit",
@@ -5020,18 +5369,18 @@ function FilaHito({ hito, iconos, tonos, etiquetas, mostrarTipo }) {
   const tono = hito.tono || tonos[tipo] || "mute";
   const icono = hito.icono || iconos[tipo] || "info";
   const etiqueta = mostrarTipo ? etiquetaDeHito(tipo, etiquetas) : "";
-  return /* @__PURE__ */ jsxs40("li", { className: "flex gap-3", children: [
-    /* @__PURE__ */ jsx51("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx51(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs40("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
-      /* @__PURE__ */ jsxs40("p", { className: "text-sm font-semibold text-fore", children: [
-        /* @__PURE__ */ jsx51("span", { className: "break-words", children: hito.titulo }),
-        hito.actor && /* @__PURE__ */ jsxs40("span", { className: "font-normal text-mute", children: [
+  return /* @__PURE__ */ jsxs44("li", { className: "flex gap-3", children: [
+    /* @__PURE__ */ jsx56("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx56(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs44("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
+      /* @__PURE__ */ jsxs44("p", { className: "text-sm font-semibold text-fore", children: [
+        /* @__PURE__ */ jsx56("span", { className: "break-words", children: hito.titulo }),
+        hito.actor && /* @__PURE__ */ jsxs44("span", { className: "font-normal text-mute", children: [
           " \xB7 ",
           hito.actor
         ] })
       ] }),
-      hito.detalle && /* @__PURE__ */ jsx51("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
-      /* @__PURE__ */ jsx51("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
+      hito.detalle && /* @__PURE__ */ jsx56("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
+      /* @__PURE__ */ jsx56("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
     ] })
   ] });
 }
@@ -5055,17 +5404,17 @@ function Cronologia({
   className
 }) {
   if (!hitos?.length) {
-    return /* @__PURE__ */ jsx51(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
+    return /* @__PURE__ */ jsx56(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
   }
-  const fila = (hito) => /* @__PURE__ */ jsx51(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
-  return /* @__PURE__ */ jsx51("div", { className, children: agrupar ? /* @__PURE__ */ jsx51("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs40("section", { children: [
-    /* @__PURE__ */ jsx51("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
-    /* @__PURE__ */ jsx51("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
-  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx51("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
+  const fila = (hito) => /* @__PURE__ */ jsx56(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
+  return /* @__PURE__ */ jsx56("div", { className, children: agrupar ? /* @__PURE__ */ jsx56("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs44("section", { children: [
+    /* @__PURE__ */ jsx56("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+    /* @__PURE__ */ jsx56("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
+  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx56("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
 }
 
 // src/components/PlanPagos.jsx
-import { jsx as jsx52, jsxs as jsxs41 } from "react/jsx-runtime";
+import { jsx as jsx57, jsxs as jsxs45 } from "react/jsx-runtime";
 var ESTADOS_CUOTA = {
   pendiente: { chip: "pendiente", etiqueta: "Pendiente", icono: "clock" },
   revision: { chip: "revision", etiqueta: "En revisi\xF3n", icono: "refresh" },
@@ -5075,18 +5424,18 @@ var ESTADOS_CUOTA = {
 function ChipCuota({ estado, estados }) {
   const config = estados[estado];
   if (!config) return null;
-  return /* @__PURE__ */ jsx52(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
+  return /* @__PURE__ */ jsx57(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
 }
 function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, simbolo, estados, destacada, conEstado }) {
-  return /* @__PURE__ */ jsxs41("tr", { className: "border-t border-ink-700", children: [
-    /* @__PURE__ */ jsxs41("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
-      /* @__PURE__ */ jsx52("span", { className: "font-semibold", children: etiqueta }),
-      destacada && /* @__PURE__ */ jsx52("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
-      nota && /* @__PURE__ */ jsx52("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
+  return /* @__PURE__ */ jsxs45("tr", { className: "border-t border-ink-700", children: [
+    /* @__PURE__ */ jsxs45("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
+      /* @__PURE__ */ jsx57("span", { className: "font-semibold", children: etiqueta }),
+      destacada && /* @__PURE__ */ jsx57("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
+      nota && /* @__PURE__ */ jsx57("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx52("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx52(Money, { value: monto, currency: moneda, simbolo }) }),
-    /* @__PURE__ */ jsx52("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
-    conEstado && /* @__PURE__ */ jsx52("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx52(ChipCuota, { estado, estados }) : null })
+    /* @__PURE__ */ jsx57("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx57(Money, { value: monto, currency: moneda, simbolo }) }),
+    /* @__PURE__ */ jsx57("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
+    conEstado && /* @__PURE__ */ jsx57("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx57(ChipCuota, { estado, estados }) : null })
   ] });
 }
 function PlanPagos({
@@ -5124,23 +5473,23 @@ function PlanPagos({
   const conEstado = (cuotas || []).some((cuota) => Boolean(cuota.estado));
   const vacioPlan = !hayAnticipo && !(cuotas || []).length;
   if (vacioPlan && total === null && !condiciones && !aTransferir) {
-    return /* @__PURE__ */ jsx52(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
+    return /* @__PURE__ */ jsx57(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
   }
-  return /* @__PURE__ */ jsxs41("div", { className: cn("space-y-2.5", className), children: [
-    aTransferir && /* @__PURE__ */ jsxs41("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
-      /* @__PURE__ */ jsx52("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
-      /* @__PURE__ */ jsx52("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx52(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
+  return /* @__PURE__ */ jsxs45("div", { className: cn("space-y-2.5", className), children: [
+    aTransferir && /* @__PURE__ */ jsxs45("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
+      /* @__PURE__ */ jsx57("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
+      /* @__PURE__ */ jsx57("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx57(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
     ] }),
-    vacioPlan ? /* @__PURE__ */ jsx52("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs41("table", { className: "w-full", children: [
-      /* @__PURE__ */ jsx52("caption", { className: "sr-only", children: "Plan de pagos" }),
-      /* @__PURE__ */ jsx52("thead", { children: /* @__PURE__ */ jsxs41("tr", { children: [
-        /* @__PURE__ */ jsx52("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
-        /* @__PURE__ */ jsx52("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
-        /* @__PURE__ */ jsx52("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
-        conEstado && /* @__PURE__ */ jsx52("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
+    vacioPlan ? /* @__PURE__ */ jsx57("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs45("table", { className: "w-full", children: [
+      /* @__PURE__ */ jsx57("caption", { className: "sr-only", children: "Plan de pagos" }),
+      /* @__PURE__ */ jsx57("thead", { children: /* @__PURE__ */ jsxs45("tr", { children: [
+        /* @__PURE__ */ jsx57("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
+        /* @__PURE__ */ jsx57("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
+        /* @__PURE__ */ jsx57("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
+        conEstado && /* @__PURE__ */ jsx57("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
       ] }) }),
-      /* @__PURE__ */ jsxs41("tbody", { children: [
-        hayAnticipo && /* @__PURE__ */ jsx52(
+      /* @__PURE__ */ jsxs45("tbody", { children: [
+        hayAnticipo && /* @__PURE__ */ jsx57(
           FilaPlan,
           {
             etiqueta: anticipoEtiqueta,
@@ -5153,7 +5502,7 @@ function PlanPagos({
             destacada: aTransferir?.id === "anticipo"
           }
         ),
-        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx52(
+        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx57(
           FilaPlan,
           {
             etiqueta: cuota.etiqueta,
@@ -5170,27 +5519,27 @@ function PlanPagos({
           cuota.id ?? `${cuota.etiqueta}-${indice}`
         ))
       ] }),
-      total !== null && /* @__PURE__ */ jsx52("tfoot", { children: /* @__PURE__ */ jsxs41("tr", { className: "border-t border-ink-500", children: [
-        /* @__PURE__ */ jsx52("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
-        /* @__PURE__ */ jsx52("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx52(Money, { value: total, currency: moneda, simbolo }) })
+      total !== null && /* @__PURE__ */ jsx57("tfoot", { children: /* @__PURE__ */ jsxs45("tr", { className: "border-t border-ink-500", children: [
+        /* @__PURE__ */ jsx57("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
+        /* @__PURE__ */ jsx57("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx57(Money, { value: total, currency: moneda, simbolo }) })
       ] }) })
     ] }),
-    vacioPlan && total !== null && /* @__PURE__ */ jsxs41("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
-      /* @__PURE__ */ jsx52("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
-      /* @__PURE__ */ jsx52("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx52(Money, { value: total, currency: moneda, simbolo }) })
+    vacioPlan && total !== null && /* @__PURE__ */ jsxs45("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
+      /* @__PURE__ */ jsx57("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
+      /* @__PURE__ */ jsx57("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx57(Money, { value: total, currency: moneda, simbolo }) })
     ] }),
-    saldoSinCuota > 0 && /* @__PURE__ */ jsxs41("p", { className: "text-xs text-mute", children: [
+    saldoSinCuota > 0 && /* @__PURE__ */ jsxs45("p", { className: "text-xs text-mute", children: [
       saldoEtiqueta,
       ":",
       " ",
-      /* @__PURE__ */ jsx52("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx52(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
+      /* @__PURE__ */ jsx57("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx57(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
     ] }),
-    condiciones && /* @__PURE__ */ jsx52(Nota, { tono: "info", compact: true, children: condiciones })
+    condiciones && /* @__PURE__ */ jsx57(Nota, { tono: "info", compact: true, children: condiciones })
   ] });
 }
 
 // src/components/DocumentoImpresion.jsx
-import { Fragment as Fragment8, jsx as jsx53, jsxs as jsxs42 } from "react/jsx-runtime";
+import { Fragment as Fragment8, jsx as jsx58, jsxs as jsxs46 } from "react/jsx-runtime";
 var CANTIDAD_FORMATTER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 3 });
 function cantidadTexto(cantidad) {
   if (cantidad === null || cantidad === void 0 || cantidad === "") return "";
@@ -5198,23 +5547,23 @@ function cantidadTexto(cantidad) {
 }
 function Dato({ etiqueta, valor, className }) {
   if (!valor) return null;
-  return /* @__PURE__ */ jsxs42("p", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsx53("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
-    /* @__PURE__ */ jsx53("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
+  return /* @__PURE__ */ jsxs46("p", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsx58("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
+    /* @__PURE__ */ jsx58("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
   ] });
 }
 function Identidad({ titulo: titulo2, datos, logo, monograma }) {
   if (!datos) return null;
-  return /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque", children: [
-    /* @__PURE__ */ jsx53("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
-    /* @__PURE__ */ jsxs42("div", { className: "flex items-start gap-3", children: [
-      (logo || monograma) && /* @__PURE__ */ jsx53("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx53("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx53("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
-      /* @__PURE__ */ jsxs42("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx53(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
-        /* @__PURE__ */ jsx53(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
-        /* @__PURE__ */ jsx53(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
-        /* @__PURE__ */ jsx53(Dato, { etiqueta: "Correo", valor: datos.correo }),
-        /* @__PURE__ */ jsx53(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
+  return /* @__PURE__ */ jsxs46("section", { className: "oc-print-bloque", children: [
+    /* @__PURE__ */ jsx58("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
+    /* @__PURE__ */ jsxs46("div", { className: "flex items-start gap-3", children: [
+      (logo || monograma) && /* @__PURE__ */ jsx58("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx58("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx58("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
+      /* @__PURE__ */ jsxs46("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx58(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
+        /* @__PURE__ */ jsx58(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
+        /* @__PURE__ */ jsx58(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
+        /* @__PURE__ */ jsx58(Dato, { etiqueta: "Correo", valor: datos.correo }),
+        /* @__PURE__ */ jsx58(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
       ] })
     ] })
   ] });
@@ -5222,17 +5571,17 @@ function Identidad({ titulo: titulo2, datos, logo, monograma }) {
 function FilaLiquidacion({ etiqueta, valor, moneda, simbolo, nota, fuerte = false }) {
   const numero = Number(valor);
   const negativo = Number.isFinite(numero) && numero < 0;
-  return /* @__PURE__ */ jsxs42("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
-    /* @__PURE__ */ jsxs42("span", { className: "min-w-0", children: [
+  return /* @__PURE__ */ jsxs46("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
+    /* @__PURE__ */ jsxs46("span", { className: "min-w-0", children: [
       etiqueta,
-      nota && /* @__PURE__ */ jsxs42("small", { className: "oc-print-suave", children: [
+      nota && /* @__PURE__ */ jsxs46("small", { className: "oc-print-suave", children: [
         " ",
         nota
       ] })
     ] }),
-    /* @__PURE__ */ jsxs42("span", { className: "oc-print-num shrink-0 font-semibold", children: [
+    /* @__PURE__ */ jsxs46("span", { className: "oc-print-num shrink-0 font-semibold", children: [
       negativo && "\u2212 ",
-      /* @__PURE__ */ jsx53(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
+      /* @__PURE__ */ jsx58(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
     ] })
   ] });
 }
@@ -5284,70 +5633,70 @@ function DocumentoImpresion({
 }) {
   const monograma = String(emisor?.nombre ?? "").trim().slice(0, 2).toUpperCase() || "\xB7\xB7";
   const tieneLiquidacion = Boolean(liquidacion && (liquidacion.subtotal !== void 0 || liquidacion.total !== void 0));
-  return /* @__PURE__ */ jsxs42("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
-    onImprimir && /* @__PURE__ */ jsx53("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs42(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
-      /* @__PURE__ */ jsx53(Icon, { name: "printer", className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs46("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
+    onImprimir && /* @__PURE__ */ jsx58("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs46(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
+      /* @__PURE__ */ jsx58(Icon, { name: "printer", className: "h-4 w-4" }),
       etiquetaImprimir
     ] }) }),
-    /* @__PURE__ */ jsxs42("article", { className: "oc-print-hoja", children: [
-      /* @__PURE__ */ jsxs42("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
-        /* @__PURE__ */ jsxs42("div", { className: "flex min-w-0 items-center gap-2.5", children: [
-          emisor?.logo ? /* @__PURE__ */ jsx53("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx53("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
-          /* @__PURE__ */ jsxs42("span", { className: "grid min-w-0 gap-0.5", children: [
-            /* @__PURE__ */ jsx53("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
-            emisor?.direccion && /* @__PURE__ */ jsx53("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
+    /* @__PURE__ */ jsxs46("article", { className: "oc-print-hoja", children: [
+      /* @__PURE__ */ jsxs46("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
+        /* @__PURE__ */ jsxs46("div", { className: "flex min-w-0 items-center gap-2.5", children: [
+          emisor?.logo ? /* @__PURE__ */ jsx58("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx58("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
+          /* @__PURE__ */ jsxs46("span", { className: "grid min-w-0 gap-0.5", children: [
+            /* @__PURE__ */ jsx58("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
+            emisor?.direccion && /* @__PURE__ */ jsx58("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs42("div", { className: "text-right", children: [
-          /* @__PURE__ */ jsx53("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
-          numero && /* @__PURE__ */ jsxs42("p", { className: "text-[12px] font-bold", children: [
+        /* @__PURE__ */ jsxs46("div", { className: "text-right", children: [
+          /* @__PURE__ */ jsx58("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
+          numero && /* @__PURE__ */ jsxs46("p", { className: "text-[12px] font-bold", children: [
             etiquetaNumero,
             " ",
             numero
           ] }),
-          estado && /* @__PURE__ */ jsx53("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
+          estado && /* @__PURE__ */ jsx58("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
         ] })
       ] }),
-      (emisor || receptor) && /* @__PURE__ */ jsxs42("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx53(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
-        /* @__PURE__ */ jsx53(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
+      (emisor || receptor) && /* @__PURE__ */ jsxs46("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx58(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
+        /* @__PURE__ */ jsx58(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
       ] }),
-      meta?.length > 0 && /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx53("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
-        /* @__PURE__ */ jsx53("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx53(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
+      meta?.length > 0 && /* @__PURE__ */ jsxs46("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx58("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
+        /* @__PURE__ */ jsx58("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx58(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
       ] }),
-      /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx53("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
-        detalle?.length > 0 ? /* @__PURE__ */ jsxs42("table", { className: "oc-print-tabla", children: [
-          /* @__PURE__ */ jsx53("thead", { children: /* @__PURE__ */ jsxs42("tr", { children: [
-            /* @__PURE__ */ jsx53("th", { scope: "col", children: "Cantidad" }),
-            /* @__PURE__ */ jsx53("th", { scope: "col", children: "Concepto" }),
-            /* @__PURE__ */ jsx53("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
-            /* @__PURE__ */ jsx53("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
+      /* @__PURE__ */ jsxs46("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx58("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
+        detalle?.length > 0 ? /* @__PURE__ */ jsxs46("table", { className: "oc-print-tabla", children: [
+          /* @__PURE__ */ jsx58("thead", { children: /* @__PURE__ */ jsxs46("tr", { children: [
+            /* @__PURE__ */ jsx58("th", { scope: "col", children: "Cantidad" }),
+            /* @__PURE__ */ jsx58("th", { scope: "col", children: "Concepto" }),
+            /* @__PURE__ */ jsx58("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
+            /* @__PURE__ */ jsx58("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
           ] }) }),
-          /* @__PURE__ */ jsx53("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs42("tr", { children: [
-            /* @__PURE__ */ jsx53("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
-            /* @__PURE__ */ jsxs42("td", { children: [
+          /* @__PURE__ */ jsx58("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs46("tr", { children: [
+            /* @__PURE__ */ jsx58("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
+            /* @__PURE__ */ jsxs46("td", { children: [
               item.concepto,
-              item.nota && /* @__PURE__ */ jsx53("small", { className: "block oc-print-suave", children: item.nota })
+              item.nota && /* @__PURE__ */ jsx58("small", { className: "block oc-print-suave", children: item.nota })
             ] }),
-            /* @__PURE__ */ jsx53("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx53(Money, { value: item.unitario, currency: moneda, simbolo }) }),
-            /* @__PURE__ */ jsx53("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx53(Money, { value: item.subtotal, currency: moneda, simbolo }) })
+            /* @__PURE__ */ jsx58("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx58(Money, { value: item.unitario, currency: moneda, simbolo }) }),
+            /* @__PURE__ */ jsx58("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx58(Money, { value: item.subtotal, currency: moneda, simbolo }) })
           ] }, item.id ?? indice)) })
-        ] }) : /* @__PURE__ */ jsx53("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
+        ] }) : /* @__PURE__ */ jsx58("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
       ] }),
-      tieneLiquidacion && /* @__PURE__ */ jsxs42("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
-        /* @__PURE__ */ jsx53("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
-        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx53(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
-        liquidacion.descuento ? /* @__PURE__ */ jsx53(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
-        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx53(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
-        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx53(
+      tieneLiquidacion && /* @__PURE__ */ jsxs46("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
+        /* @__PURE__ */ jsx58("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
+        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx58(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
+        liquidacion.descuento ? /* @__PURE__ */ jsx58(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
+        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx58(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
+        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx58(
           FilaLiquidacion,
           {
             etiqueta: `IVA ${iva.tasa}%`,
-            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs42(Fragment8, { children: [
+            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs46(Fragment8, { children: [
               "sobre ",
-              /* @__PURE__ */ jsx53(Money, { value: iva.base, currency: moneda, simbolo })
+              /* @__PURE__ */ jsx58(Money, { value: iva.base, currency: moneda, simbolo })
             ] }) : null,
             valor: iva.monto,
             moneda,
@@ -5355,20 +5704,20 @@ function DocumentoImpresion({
           },
           `${iva.tasa}-${indice}`
         )),
-        liquidacion.total !== void 0 && /* @__PURE__ */ jsx53(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
+        liquidacion.total !== void 0 && /* @__PURE__ */ jsx58(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
       ] }),
-      notas && /* @__PURE__ */ jsxs42("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx53("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
-        /* @__PURE__ */ jsx53("div", { className: "oc-print-nota", children: notas })
+      notas && /* @__PURE__ */ jsxs46("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx58("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
+        /* @__PURE__ */ jsx58("div", { className: "oc-print-nota", children: notas })
       ] }),
-      pie && /* @__PURE__ */ jsx53("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
+      pie && /* @__PURE__ */ jsx58("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
     ] })
   ] });
 }
 
 // src/components/SubidaImagen.jsx
-import { useId as useId5, useRef as useRef10, useState as useState19 } from "react";
-import { jsx as jsx54, jsxs as jsxs43 } from "react/jsx-runtime";
+import { useId as useId7, useRef as useRef11, useState as useState22 } from "react";
+import { jsx as jsx59, jsxs as jsxs47 } from "react/jsx-runtime";
 var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
 var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 var TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024;
@@ -5524,14 +5873,14 @@ function SubidaImagen({
   ocupado = false,
   className
 }) {
-  const inputRef = useRef10(null);
-  const campoId = useId5();
+  const inputRef = useRef11(null);
+  const campoId = useId7();
   const errorId = `${campoId}-error`;
   const ayudaId = `${campoId}-ayuda`;
-  const [preparando, setPreparando] = useState19(false);
-  const [errorLocal, setErrorLocal] = useState19("");
-  const [vistaLocal, setVistaLocal] = useState19(null);
-  const [arrastrando, setArrastrando] = useState19(false);
+  const [preparando, setPreparando] = useState22(false);
+  const [errorLocal, setErrorLocal] = useState22("");
+  const [vistaLocal, setVistaLocal] = useState22(null);
+  const [arrastrando, setArrastrando] = useState22(false);
   const mensaje = error || errorLocal;
   const trabajando = Boolean(ocupado) || preparando;
   const vista = vistaLocal ?? valor;
@@ -5564,9 +5913,9 @@ function SubidaImagen({
     if (inputRef.current) inputRef.current.value = "";
     onLimpiar?.();
   }
-  return /* @__PURE__ */ jsxs43("div", { className: cn("min-w-0", className), children: [
-    etiqueta && /* @__PURE__ */ jsx54("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
-    /* @__PURE__ */ jsxs43(
+  return /* @__PURE__ */ jsxs47("div", { className: cn("min-w-0", className), children: [
+    etiqueta && /* @__PURE__ */ jsx59("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
+    /* @__PURE__ */ jsxs47(
       "div",
       {
         className: cn(
@@ -5588,23 +5937,23 @@ function SubidaImagen({
           void elegir(event.dataTransfer.files?.[0] ?? null);
         },
         children: [
-          vista ? /* @__PURE__ */ jsx54("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx54("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx54("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx54(Icon, { name: "image", className: "h-6 w-6" }) }),
-          /* @__PURE__ */ jsxs43("div", { className: "min-w-0 flex-1", children: [
-            /* @__PURE__ */ jsx54("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
-            /* @__PURE__ */ jsxs43("p", { className: "mt-0.5 text-[11px] text-mute", children: [
+          vista ? /* @__PURE__ */ jsx59("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx59("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx59("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx59(Icon, { name: "image", className: "h-6 w-6" }) }),
+          /* @__PURE__ */ jsxs47("div", { className: "min-w-0 flex-1", children: [
+            /* @__PURE__ */ jsx59("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
+            /* @__PURE__ */ jsxs47("p", { className: "mt-0.5 text-[11px] text-mute", children: [
               tipos.map((tipo) => ETIQUETA_TIPO[tipo] || tipo).join(" \xB7 "),
               " \xB7 hasta ",
               pesoLegible(tamanoMaximo)
             ] }),
-            /* @__PURE__ */ jsxs43("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
-              /* @__PURE__ */ jsxs43(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
-                /* @__PURE__ */ jsx54(Icon, { name: "upload", className: "h-4 w-4" }),
+            /* @__PURE__ */ jsxs47("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
+              /* @__PURE__ */ jsxs47(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
+                /* @__PURE__ */ jsx59(Icon, { name: "upload", className: "h-4 w-4" }),
                 trabajando ? "Procesando\u2026" : vista ? cambiarEtiqueta : subirEtiqueta
               ] }),
-              (vista || vistaLocal) && /* @__PURE__ */ jsx54(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
+              (vista || vistaLocal) && /* @__PURE__ */ jsx59(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
             ] })
           ] }),
-          /* @__PURE__ */ jsx54(
+          /* @__PURE__ */ jsx59(
             "input",
             {
               ref: inputRef,
@@ -5622,12 +5971,12 @@ function SubidaImagen({
         ]
       }
     ),
-    mensaje ? /* @__PURE__ */ jsx54("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx54("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
+    mensaje ? /* @__PURE__ */ jsx59("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx59("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
   ] });
 }
 
 // src/components/ProgresoChecklist.jsx
-import { jsx as jsx55, jsxs as jsxs44 } from "react/jsx-runtime";
+import { jsx as jsx60, jsxs as jsxs48 } from "react/jsx-runtime";
 function progresoChecklist({
   hechas = 0,
   total = 0,
@@ -5683,19 +6032,19 @@ function ProgresoChecklist({
   const avance = progresoChecklist({ hechas, total, vencidas, riesgo, sustantivo, textoVacio });
   const tonoTexto = avance.tono === "ok" ? "text-ok" : avance.tono === "bad" ? "text-bad" : avance.tono === "warn" ? "text-warn" : "text-fore";
   const hayDetalle = avance.vencidas > 0 || avance.riesgo;
-  return /* @__PURE__ */ jsxs44("div", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsxs44("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx55("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
-      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs44("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
+  return /* @__PURE__ */ jsxs48("div", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsxs48("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx60("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
+      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs48("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
         avance.porcentaje,
         "%"
       ] })
     ] }),
-    avance.total > 0 && /* @__PURE__ */ jsx55(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
-    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs44("p", { className: "mt-1 text-[11px] text-mute", children: [
-      avance.riesgo && /* @__PURE__ */ jsx55("span", { className: "text-bad", children: "Sin avance" }),
+    avance.total > 0 && /* @__PURE__ */ jsx60(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
+    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs48("p", { className: "mt-1 text-[11px] text-mute", children: [
+      avance.riesgo && /* @__PURE__ */ jsx60("span", { className: "text-bad", children: "Sin avance" }),
       avance.riesgo && avance.vencidas > 0 && " \xB7 ",
-      avance.vencidas > 0 && /* @__PURE__ */ jsxs44("span", { className: "text-warn", children: [
+      avance.vencidas > 0 && /* @__PURE__ */ jsxs48("span", { className: "text-warn", children: [
         avance.vencidas,
         " vencida",
         avance.vencidas === 1 ? "" : "s"
@@ -6270,20 +6619,6 @@ function buscarEnCatalogo(catalogo = [], texto = "") {
   if (!q) return catalogo;
   return catalogo.filter((item) => norm2(item).includes(q));
 }
-
-// src/utils/serial.js
-function ultimos4(serial) {
-  return String(serial ?? "").slice(-4);
-}
-function partirSerial(serial) {
-  const texto = String(serial ?? "");
-  if (!texto) return { cabeza: "", cola: "" };
-  return { cabeza: texto.slice(0, -4), cola: texto.slice(-4) };
-}
-function serialEnmascarado(serial) {
-  const cola = ultimos4(serial);
-  return cola ? `\u2022\u2022\u2022\u2022${cola}` : "";
-}
 export {
   ANCHOS_PAPEL,
   AVANCES_FIRMA,
@@ -6348,6 +6683,7 @@ export {
   EmailField,
   EmptyState,
   ErrorState,
+  EstadoBadge,
   Eyebrow,
   FichaCertificado,
   FilaChecklist,
@@ -6402,19 +6738,24 @@ export {
   PhoneField,
   PinInput,
   PlanPagos,
+  ProductCombobox,
   ProductFooter,
   ProgresoChecklist,
   QR_OPCIONES,
   ROTULO_DATO,
   ROTULO_SECCION,
+  RUC_RE,
   RangoFecha,
+  RucField,
   SIMBOLOS_MONEDA,
   SIMBOLO_PYG,
   SearchField_default as SearchField,
+  SeccionColapsable,
   SegmentedField,
   Select,
   SemaforoItem,
   SerialField,
+  SerialTexto,
   Skeleton,
   Stat,
   Stepper,
@@ -6475,6 +6816,7 @@ export {
   esAtajo,
   esClaveDia,
   esRazonSocial,
+  esRuc,
   esToken,
   estadoChip,
   estadoDeDiagnostico,
@@ -6489,6 +6831,7 @@ export {
   etiquetaTrabajo,
   excedeMonto,
   extractTokenFromUrl,
+  extraerRuc,
   fechaCorta,
   fechaDeClave,
   fechaDia,

@@ -52,6 +52,12 @@ export { default as EmailField, DOMINIOS_EMAIL, sugerenciasDe } from './componen
 export { default as PhoneField, parseTelefono, componerTelefono, CODIGOS_PAIS } from './components/PhoneField.jsx'
 export { default as SerialField, normalizarSerial } from './components/SerialField.jsx'
 export { default as InstagramField, normalizarInstagram } from './components/InstagramField.jsx'
+export { default as ProductCombobox } from './components/ProductCombobox.jsx'
+export { default as RucField } from './components/RucField.jsx'
+export { RUC_RE, extraerRuc, esRuc } from './utils/ruc.js'
+export { default as SerialTexto } from './components/SerialTexto.jsx'
+export { default as EstadoBadge } from './components/EstadoBadge.jsx'
+export { default as SeccionColapsable } from './components/SeccionColapsable.jsx'
 
 // Acceso y shell (sin API: todo por props)
 export { default as GoogleButton, GoogleMark, OAuthDivider } from './components/GoogleButton.jsx'
