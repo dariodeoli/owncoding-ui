@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.13.1
+npm install github:dariodeoli/owncoding-ui#v0.14.7
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.13.1
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.14.7
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -36,6 +36,9 @@ Requisitos: **React 18+** y **Tailwind CSS 3.4+**.
 >
 > **Migrar una pantalla (otras apps):** proceso por fases, tabla de reemplazos
 > y verificación en **`docs/MIGRACION-V2.md`**.
+>
+> **Adoptar la biblioteca en una app:** instalación, preset/CSS, peers
+> opcionales, errores comunes y rollback en **`docs/ADOPCION.md`**.
 
 ```js
 // tailwind.config.js
@@ -587,7 +590,7 @@ src/utils/        lógica compartida pura (moneda, fechas, teléfono, nombre, ba
 src/printing/     estado de impresoras y trabajos (puro)
 src/styles/       tokens.css (solo variables) · base.css (base opt-in) · styles.css (las dos)
 types/            declaraciones .d.ts escritas a mano (el build las copia a dist/)
-docs/             REGLAS.md · V2.md · MIGRACION-V2.md · MODOS-DE-TRABAJO.md · COMANDOS.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
+docs/             REGLAS.md · V2.md · MIGRACION-V2.md · ADOPCION.md · MODOS-DE-TRABAJO.md · COMANDOS.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
 tools/            auto-ht.sh (política automática de integración, ver docs/COMANDOS.md)
 scripts/build.mjs build (esbuild → dist/index.js + dist/index.d.ts + dist/styles.css + tokens.css/base.css)
 test/             smoke de render (vitest + renderToStaticMarkup), lógica y contrato del paquete

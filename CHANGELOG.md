@@ -58,6 +58,16 @@ integrador decide el número final).
   construido (tipos, `owncodingContent`, hojas CSS, `timeZone`, símbolo y
   `ChipEstado`). `dist/` regenerado (incluye `dist/index.d.ts`).
 
+## v0.14.7 — 2026-09-22
+
+- **`docs/ADOPCION.md` (nuevo):** la guía práctica para sumar la biblioteca a
+  una app — requisitos y versión fija, instalación (git/SSH/packages, `prepare`
+  y `dist` commiteado), preset + CSS por partes (`styles.css` o `tokens.css` +
+  `base.css`), peers opcionales (`qrcode`), estrategia incremental (piloto y un
+  objeto por commit), tabla de errores comunes (purga de Tailwind, orden del
+  CSS, tipos, CI) y verificación/rollback con checklist por app. Referenciada
+  desde el README.
+
 ## v0.14.6 — 2026-09-22
 
 - **`docs/MIGRACION-V2.md` (nuevo):** la guía para que las otras apps
