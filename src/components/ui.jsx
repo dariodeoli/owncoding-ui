@@ -343,7 +343,9 @@ const ICON_ACTION_TONE = {
   bad: 'border-bad/30 text-bad hover:bg-bad/10',
   mute: 'border-transparent text-mute hover:bg-ink-700 hover:text-fore',
 }
-export function IconAction({ icon, label, tone = 'mute', onClick, disabled = false }) {
+// `size="touch"` agranda el área táctil (móvil): mismo ícono y tono. En
+// paridad con MobOS (#236), donde la lista de Clientes lo estrenó.
+export function IconAction({ icon, label, tone = 'mute', onClick, disabled = false, size = 'sm' }) {
   return (
     <button
       type="button"
@@ -352,7 +354,8 @@ export function IconAction({ icon, label, tone = 'mute', onClick, disabled = fal
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        'inline-flex h-7 w-7 items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40',
+        'inline-flex items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40',
+        size === 'touch' ? 'h-9 w-9' : 'h-7 w-7',
         ICON_ACTION_TONE[tone],
       )}
     >

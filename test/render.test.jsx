@@ -17,6 +17,7 @@ import {
   FilaChecklist,
   FilaDato,
   GradoBadge,
+  IconAction,
   IconoCategoria,
   Input,
   Label,
@@ -64,6 +65,16 @@ describe('render de los objetos base', () => {
     expect(renderToStaticMarkup(<Badge color="green">Activo</Badge>)).toContain('Activo')
     expect(renderToStaticMarkup(<Stat label="Ventas" valor="10" />)).toContain('Ventas')
     expect(renderToStaticMarkup(<Card>Contenido</Card>)).toContain('Contenido')
+  })
+
+  test('IconAction: el tamaño táctil agranda el área y conserva el contrato', () => {
+    const chico = renderToStaticMarkup(<IconAction icon="eye" label="Ver resumen" />)
+    expect(chico).toContain('aria-label="Ver resumen"')
+    expect(chico).toContain('h-7 w-7')
+    const tactil = renderToStaticMarkup(<IconAction icon="eye" label="Ver resumen" tone="fono" size="touch" />)
+    expect(tactil).toContain('aria-label="Ver resumen"')
+    expect(tactil).toContain('h-9 w-9')
+    expect(tactil).not.toContain('h-7 w-7')
   })
 
   test('dinero, fila de dato y barra de progreso', () => {

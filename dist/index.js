@@ -621,7 +621,7 @@ var ICON_ACTION_TONE = {
   bad: "border-bad/30 text-bad hover:bg-bad/10",
   mute: "border-transparent text-mute hover:bg-ink-700 hover:text-fore"
 };
-function IconAction({ icon, label, tone = "mute", onClick, disabled = false }) {
+function IconAction({ icon, label, tone = "mute", onClick, disabled = false, size = "sm" }) {
   return /* @__PURE__ */ jsx2(
     "button",
     {
@@ -631,7 +631,8 @@ function IconAction({ icon, label, tone = "mute", onClick, disabled = false }) {
       disabled,
       onClick,
       className: cn(
-        "inline-flex h-7 w-7 items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40",
+        "inline-flex items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40",
+        size === "touch" ? "h-9 w-9" : "h-7 w-7",
         ICON_ACTION_TONE[tone]
       ),
       children: /* @__PURE__ */ jsx2(Icon, { name: icon, className: "h-4 w-4" })

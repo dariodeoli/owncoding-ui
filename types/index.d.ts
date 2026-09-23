@@ -93,7 +93,7 @@ export function ConfirmDialog(props: {
 
 export function Badge(props: HTMLAttributes<HTMLSpanElement> & { color?: 'blue' | 'green' | 'red' | 'orange' | 'yellow' | 'slate' }): ReactElement
 export function Dot(props: { color?: 'green' | 'red' | 'blue' | 'slate' | 'orange'; pulse?: boolean; className?: string }): ReactElement
-export function IconAction(props: { icon: string; label: string; tone?: Tono; onClick?: () => void; disabled?: boolean }): ReactElement
+export function IconAction(props: { icon: string; label: string; tone?: Tono; onClick?: () => void; disabled?: boolean; size?: 'sm' | 'touch' }): ReactElement
 export function Drawer(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; side?: 'left' | 'right'; className?: string }): ReactElement | null
 export function ToastProvider(props: { children?: ReactNode; demo?: boolean }): ReactElement
 export function useToast(): { success: (title: string, description?: string) => void; error: (title: string, description?: string) => void; info: (title: string, description?: string) => void }
