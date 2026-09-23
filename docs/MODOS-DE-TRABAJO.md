@@ -29,9 +29,11 @@ Dueño ──▶ ORQUESTADOR ──▶ SLOTS (worktrees, ramas persistentes)
 
 ## Ciclo de un pedido
 
-> Los comandos abreviados del dueño (`pp`, `pd`, `al`, `ht`, `hd`) están en
-> **`docs/COMANDOS.md`**: `ht` es el ciclo completo (merge → suite → push →
-> `NOVEDADES.md` → release + smoke).
+> Los comandos abreviados del dueño (`pp`, `pd`, `al`, `hd`, `hdd`, `ht`) están
+> en **`docs/COMANDOS.md`**: `hd` es el deploy **rápido** (merge + specs
+> afectados + push + release) y `hdd` el **completo** (todo lo del rápido +
+> suite completa + CI verde + smoke + cierres); `ht` es el alias histórico del
+> completo. El mismo doc tiene un **glosario en simple** para el dueño.
 
 1. El dueño le cuenta el problema al orquestador, en lenguaje de producto.
 2. El orquestador abre un issue (plantilla) y elige el slot por dominio.

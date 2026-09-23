@@ -2,16 +2,18 @@
 # auto-ht.sh — política automática de integración (ver docs/COMANDOS.md)
 #
 # Cuenta los commits sin integrar de las ramas de los slots y, si llegan al
-# umbral y el integrador está libre, dispara un `hd`/`ht` (merge → suite →
-# push → NOVEDADES → release + smoke) respetando un cooldown. Es genérico: cada
-# app lo copia y lo parametriza; el comando del ciclo se pasa por `--comando`.
+# umbral y el integrador está libre, dispara el ciclo que le pases por
+# `--comando` — el automático usa `hd`, el modo rápido (merge → specs afectados
+# → push → release) — respetando un cooldown. Es genérico: cada app lo copia y
+# lo parametriza. Los modos (`hd` rápido y `hdd`/`ht` completo) están en
+# docs/COMANDOS.md.
 #
 # Ejemplo de uso (cron cada 5 minutos):
 #   */5 * * * * /ruta/a/owncoding-ui/tools/auto-ht.sh \
 #     --repo /ruta/al/checkout-del-integrador \
 #     --ramas "slot/componentes slot/diseno slot/impresion" \
 #     --agente integrador --umbral 15 --cooldown 20 \
-#     --comando 'herdr agent run integrador "hd"' >> /tmp/auto-ht.log 2>&1
+#     --comando 'herdr agent prompt integrador "hd"' >> /tmp/auto-ht.log 2>&1
 #
 # Ejemplo de prueba (no dispara nada, solo informa):
 #   tools/auto-ht.sh --repo ../MobOS --ramas "slot/componentes" --dry-run
@@ -21,7 +23,7 @@
 #   --ramas "<a b c>"   Ramas de los slots a relevar (obligatorio).
 #   --ref <ref>         Referencia contra la que se cuenta (default: origin/main).
 #   --agente <nombre>   Nombre del agente integrador (se informa y exporta como AUTO_HT_AGENTE).
-#   --umbral <n>        Commits sin integrar que disparan el hd (default: 15).
+#   --umbral <n>        Commits sin integrar que disparan el ciclo (default: 15).
 #   --cooldown <min>    Minutos mínimos entre disparos (default: 20).
 #   --estado <archivo>  Marca del último disparo (default: /tmp/auto-ht-<repo>.stamp).
 #   --comando "<cmd>"   Comando a ejecutar al disparar (default: solo informa).
@@ -147,10 +149,10 @@ date +%s > "$ESTADO"
 export AUTO_HT_AGENTE="$AGENTE"
 export AUTO_HT_TOTAL="$TOTAL"
 export AUTO_HT_REPO="$REPO"
-echo "auto-ht: disparando el hd con el agente «$AGENTE» (marca: $ESTADO)"
+echo "auto-ht: disparando el ciclo (hd por defecto) con el agente «$AGENTE» (marca: $ESTADO)"
 if [ -n "$COMANDO" ]; then
   bash -c "$COMANDO"
 else
-  echo "auto-ht: sin --comando, el ciclo queda a cargo del dueño/agente: escribí ht/hd."
+  echo "auto-ht: sin --comando, el ciclo queda a cargo del dueño/agente: escribí hd (rápido) o hdd/ht (completo)."
 fi
 exit 10

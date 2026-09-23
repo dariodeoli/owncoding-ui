@@ -15,18 +15,23 @@ Complementa `owncoding-ui/docs/MODOS-DE-TRABAJO.md` (topología y ciclo) y
 - Los agentes no copian clases ni patrones entre pantallas: usan la clase o el
   objeto compartido y lo fijan con un test de aserción de fuente.
 
-## Comando abreviado `ht` (integrar y desplegar)
+## Comandos `hd` (rápido) y `hdd` (completo) — integrar y desplegar
 
-- Cuando el dueño escribe solo `ht`, el integrador ejecuta el ciclo completo:
-  (0) preámbulo: matar servidores zombies del repo y verificar que no haya otro
-  merge en curso (`.git/MERGE_HEAD`); (1) `git fetch origin --prune` y relevar
-  ramas con trabajo; (2) integrar a `main` una rama por vez (API antes que
-  frontend), verificando el árbol mergeado; (3) conflictos: si la rama quedó
-  superseded, resolver del lado de `main` y verificar diff neto vacío; si hay
-  trabajo real en conflicto, parar y preguntar; (4) pushear con
-  `<APP>_INTEGRATOR=1`; (5) desplegar con `<COMANDO_RELEASE>` y validar el smoke
-  hasta que producción sirva la versión nueva.
-- `ht` es exclusivo del integrador: los worktrees nunca lo ejecutan.
+- **`hd` (rápido, rutina):** el integrador ejecuta: (0) preámbulo: matar
+  servidores zombies del repo y verificar que no haya otro merge en curso
+  (`.git/MERGE_HEAD`); (1) `git fetch origin --prune` y relevar ramas con
+  trabajo; (2) integrar a `main` una rama por vez (API antes que frontend),
+  verificando el árbol mergeado y los **specs afectados** por lo que entró;
+  (3) conflictos: si la rama quedó superseded, resolver del lado de `main` y
+  verificar diff neto vacío; si hay trabajo real en conflicto, parar y
+  preguntar; (4) pushear con `<APP>_INTEGRATOR=1`; (5) release con
+  `<COMANDO_RELEASE>`. Sin suite completa, sin smoke y sin cierres.
+- **`hdd` (completo, ronda):** todo lo del `hd` y además la **suite completa**,
+  el **CI verde**, el **smoke de producción** hasta que sirva la versión nueva
+  y el **cierre de issues**. `ht` es el alias histórico de este ciclo.
+- Los tres comandos son **exclusivos del integrador**: los worktrees nunca los
+  ejecutan. El glosario de términos (suite, smoke, gate, release, ronda…) está
+  en `docs/COMANDOS.md`.
 
 ## Hook y protección de main
 

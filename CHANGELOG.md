@@ -4,6 +4,26 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.14.11 — 2026-09-23
+
+- **Dos modos de deploy (`docs/COMANDOS.md`):** **`hd`** es el modo **rápido**
+  de rutina (merge de las ramas + specs afectados en verde + push + release,
+  sin suite completa ni smoke) y **`hdd`** el **completo** (lo de `hd` + suite
+  completa + CI verde + smoke de producción + cierre de issues); **`ht`** queda
+  como alias histórico del completo. La tabla de comandos, los pasos de cada
+  modo y las reglas quedan explícitos.
+- **Política automática:** el disparo por ≥15 commits usa `hd` (rápido);
+  `hdd` no se dispara solo, lo pide el dueño/orquestador para la ronda con
+  smoke y cierres.
+- **`tools/auto-ht.sh`:** comentarios, `--help` y el ejemplo alineados con los
+  dos modos (el disparo automático sugiere `hd`; el ejemplo usa
+  `herdr agent prompt`).
+- **Glosario para el dueño (`docs/COMANDOS.md`):** suite, specs afectados,
+  unitarias, integración, E2E, smoke, CI (verde/rojo), gate, release, ronda,
+  `NOVEDADES.md` y los modos `hd`/`hdd`, explicados en simple (sin jerga) para
+  leer handovers y tablero. `MODOS-DE-TRABAJO.md` y la plantilla de agentes lo
+  referencian.
+
 ## v0.14.10 — 2026-09-23
 
 - **Cierre de los huecos del shell v2 (#241):** los chips de contenido de tono
