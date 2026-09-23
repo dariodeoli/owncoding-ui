@@ -89,6 +89,10 @@ Reglas del shell (medidas sobre el shell real, claro y oscuro): **vienen con
    (`[role="tab"][aria-selected="true"]`).
 3. **Foco visible** por tema (en `base.css`): `--c-fono-dark` en claro — el de
    marca quedaba casi blanco — y `--oc-brand` en oscuro.
+4. **Alto táctil de 44 px (#249):** los botones de ícono del shell (menú,
+   notificaciones, acciones, tema, ayuda, salir) suman `.toque-44`: 36 px de
+   dibujo y 44 de toque, sin mover el layout; los controles agrupados
+   (segmentados, solapas) usan `min-h-11`.
 4. **Contenido del scope**: los chips (`… .v2-chip`) van tipo pill con
    micro-rótulo, los de tono `bg-fono/15` pasan al azul de acción y los
    `bg-warn/15` al ámbar suave; los números blancos se aprietan

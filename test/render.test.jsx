@@ -20,10 +20,13 @@ import {
   IconAction,
   IconoCategoria,
   EstadoBadge,
+  ListGridToggle,
   ProductCombobox,
   RucField,
   SeccionColapsable,
+  SegmentedField,
   SerialTexto,
+  Subtabs,
   Input,
   Label,
   MedidorBateria,
@@ -79,7 +82,18 @@ describe('render de los objetos base', () => {
     const tactil = renderToStaticMarkup(<IconAction icon="eye" label="Ver resumen" tone="fono" size="touch" />)
     expect(tactil).toContain('aria-label="Ver resumen"')
     expect(tactil).toContain('h-9 w-9')
+    // 36 px de dibujo + 44 px de área de toque (#249).
+    expect(tactil).toContain('toque-44')
     expect(tactil).not.toContain('h-7 w-7')
+  })
+
+  test('los controles agrupados miden 44 px de alto (#249)', () => {
+    const segmentado = renderToStaticMarkup(<SegmentedField value="dia" onChange={() => {}} options={[['dia', 'Día'], ['mes', 'Mes']]} />)
+    expect(segmentado).toContain('min-h-11')
+    const solapas = renderToStaticMarkup(<Subtabs value="uno" onChange={() => {}} items={[['uno', 'Uno'], ['dos', 'Dos']]} />)
+    expect(solapas).toContain('min-h-11')
+    const lista = renderToStaticMarkup(<ListGridToggle value="list" onChange={() => {}} />)
+    expect(lista).toContain('toque-44')
   })
 
   test('dinero, fila de dato y barra de progreso', () => {
@@ -232,6 +246,8 @@ describe('render de los objetos base', () => {
     // El QR se genera en el cliente (useEffect): en SSR no aparece la imagen.
     expect(ficha).not.toContain('<img')
     expect(renderToStaticMarkup(<FichaCertificado modelo="iPad" total={0} />)).toContain('Sin verificación física')
+    // El chip de la cabecera refleja el estado real del equipo cuando la app lo pasa.
+    expect(renderToStaticMarkup(<FichaCertificado modelo="iPad" estado="revision" />)).toContain('En revisión')
   })
 
   test('Stat con tono y nota, dinero con símbolo propio y chip de negocio', () => {

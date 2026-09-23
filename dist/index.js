@@ -632,7 +632,7 @@ function IconAction({ icon, label, tone = "mute", onClick, disabled = false, siz
       onClick,
       className: cn(
         "inline-flex items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40",
-        size === "touch" ? "h-9 w-9" : "h-7 w-7",
+        size === "touch" ? "toque-44 h-9 w-9" : "h-7 w-7",
         ICON_ACTION_TONE[tone]
       ),
       children: /* @__PURE__ */ jsx2(Icon, { name: icon, className: "h-4 w-4" })
@@ -888,7 +888,7 @@ function Subtabs({ value, onChange, items = [], className }) {
       "aria-selected": value === id,
       onClick: () => onChange(id),
       className: cn(
-        "rounded-xl px-3 py-2 text-sm font-medium transition",
+        "min-h-11 rounded-xl px-3 py-2 text-sm font-medium transition",
         value === id ? "bg-fono text-onbrand" : "text-mute hover:bg-fore/5 hover:text-fore"
       ),
       children: label
@@ -1060,7 +1060,7 @@ function SegmentedField({ value, onChange, options = [], ariaLabel, className })
         title: label,
         onClick: () => onChange(id),
         className: cn(
-          "inline-flex min-h-8 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition",
+          "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition",
           activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-fore/5 hover:text-fore"
         ),
         children: [
@@ -1152,7 +1152,7 @@ function ListGridToggle({ value, onChange, className }) {
       "aria-label": option.label,
       "aria-pressed": value === option.key,
       onClick: () => onChange(option.key),
-      className: cn("grid h-9 w-9 place-items-center transition", value === option.key ? "bg-fono/15 text-fono-light" : "text-mute hover:text-fore"),
+      className: cn("toque-44 grid h-9 w-9 place-items-center transition", value === option.key ? "bg-fono/15 text-fono-light" : "text-mute hover:text-fore"),
       children: /* @__PURE__ */ jsx9(Icon, { name: option.icon, className: "h-4 w-4" })
     },
     option.key
@@ -3535,6 +3535,7 @@ function FichaCertificado({
   verificadoAt,
   enlace,
   etiquetaQr = "Escane\xE1 para ver el informe completo",
+  estado = "pass",
   acciones,
   className
 }) {
@@ -3546,7 +3547,7 @@ function FichaCertificado({
         /* @__PURE__ */ jsx43("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
         /* @__PURE__ */ jsx43("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
       ] }),
-      /* @__PURE__ */ jsx43(ChipEstado, { estado: "pass" })
+      /* @__PURE__ */ jsx43(ChipEstado, { estado })
     ] }),
     /* @__PURE__ */ jsxs34("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
       /* @__PURE__ */ jsxs34("div", { className: "min-w-0 space-y-3", children: [
@@ -4476,7 +4477,7 @@ function BarraInferior({
   const visibles = items.slice(0, maxItems);
   if (!visibles.length && !onMas) return null;
   const claseItem = (esActivo) => cn(
-    "flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition",
+    "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition",
     esActivo ? "text-fono-light" : "text-mute hover:text-fore"
   );
   return /* @__PURE__ */ jsxs39(

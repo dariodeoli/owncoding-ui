@@ -62,7 +62,15 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   fantasma. No se restylean sin pedido.
 - Botón solo-icono: `IconAction` (trae `aria-label` y `title`).
 - Deshabilitado: opacidad reducida y `cursor: not-allowed`; foco visible.
-- Altura táctil ≥44 px en móvil; radios por contexto.
+- **Alto táctil ≥44 px (móvil, #249):** los controles agrupados crecen con
+  `min-h-11` (`SegmentedField`, `Subtabs`, barra inferior) y los que no pueden
+  cambiar su dibujo suman la utilidad **`.toque-44`** (pseudo-elemento centrado
+  de 44×44 que captura el toque, sin mover el layout): `ListGridToggle`,
+  `IconAction size="touch"` (36 px de dibujo, 44 de toque) y los botones del
+  shell. Radios por contexto.
+- Medición y hallazgos: auditoría responsive mobile (#249). Una acción de fila
+  que quede corta se agrupa en un menú (`MenuDesplegable`) en vez de achicar el
+  toque.
 
 ## 2 bis. Acceso (login/registro)
 

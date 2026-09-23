@@ -45,6 +45,27 @@ input[inputmode="numeric"], [data-serial] {
 html.dark :focus-visible {
   outline-color: var(--oc-brand);
 }
+
+/* ── Área táctil de 44 px (#249) ────────────────────────────────────────────
+   Expande la zona de TOQUE de un control sin cambiar su dibujo ni el layout:
+   un pseudo-elemento centrado mide al menos 44×44 y captura el toque. Es el
+   patrón para acciones de ícono (topbar del shell, herramientas densas) y lo
+   adoptan los controles agrupados que no pueden crecer (`ListGridToggle`,
+   `IconAction size="touch"`). Los chips y segmentados que sí pueden crecer
+   usan `min-h-11` (44 px) directamente. Medición y hallazgos: auditoría
+   responsive mobile (#249). */
+.toque-44 {
+  position: relative;
+}
+.toque-44::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(100%, 44px);
+  height: max(100%, 44px);
+  transform: translate(-50%, -50%);
+}
 input::placeholder, textarea::placeholder {
   color: #8197a5;
 }

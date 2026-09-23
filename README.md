@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.15.0
+npm install github:dariodeoli/owncoding-ui#v0.15.1
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.15.0
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.15.1
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -209,7 +209,8 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `LoadingScreen` y `PegarEnlaceToken` (extrae el token del enlace). No leen
   sesión ni llaman a la API: reciben props y avisan por callback.
 - **Acciones y contenedores:** `Button`, `IconAction` (con `size="touch"` para
-  el área táctil de móvil), `Card`, `Stat`,
+  el área táctil de móvil: 36 px de dibujo + 44 de toque con `.toque-44`),
+  `Card`, `Stat`,
   `Modal` (ancho por `size`: corto/formulario/amplio/completo),
   `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`.
   El interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias

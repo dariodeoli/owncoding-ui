@@ -298,6 +298,7 @@ export function FichaCertificado(props: Record<string, any> & {
   verificadoAt?: string
   enlace?: string
   etiquetaQr?: string
+  estado?: string
   acciones?: ReactNode
   className?: string
 }): ReactElement

@@ -10,7 +10,9 @@ import { cn } from '../utils/cn.js'
 // dispositivo (modelo, IMEI enmascarado, grado, batería, checklist, locks y
 // quién/cuándo verificó) con el QR al informe. Portable: todo entra por props y
 // las acciones las pone la pantalla; sirve igual en la página pública y en la
-// vista previa del informe.
+// vista previa del informe. `estado` pinta el chip de la cabecera (por defecto
+// `pass`: certificado); la app pasa el estado real si el equipo todavía no
+// está certificado.
 export default function FichaCertificado({
   empresa,
   modelo,
@@ -25,6 +27,7 @@ export default function FichaCertificado({
   verificadoAt,
   enlace,
   etiquetaQr = 'Escaneá para ver el informe completo',
+  estado = 'pass',
   acciones,
   className,
 }) {
@@ -37,7 +40,7 @@ export default function FichaCertificado({
           <p className="text-[11px] font-bold uppercase tracking-wider text-mute">{empresa || 'Informe de dispositivo'}</p>
           <h2 className="truncate text-lg font-bold">{modelo || 'Equipo'}</h2>
         </div>
-        <ChipEstado estado="pass" />
+        <ChipEstado estado={estado} />
       </header>
 
       <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]">

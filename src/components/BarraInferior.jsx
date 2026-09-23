@@ -33,7 +33,7 @@ export default function BarraInferior({
 
   const claseItem = (esActivo) =>
     cn(
-      'flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition',
+      'flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition',
       esActivo ? 'text-fono-light' : 'text-mute hover:text-fore',
     )
 

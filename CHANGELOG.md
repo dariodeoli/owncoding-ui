@@ -4,6 +4,21 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.15.1 — 2026-09-23
+
+- **Alto táctil de 44 px (#249, H3 de la auditoría responsive mobile, con
+  DSN):** `SegmentedField` y `Subtabs` pasan a `min-h-11` (44 px),
+  `ListGridToggle` e `IconAction size="touch"` suman la utilidad **`.toque-44`**
+  (pseudo-elemento centrado de 44×44 que captura el toque sin cambiar el dibujo
+  ni el layout) y la barra inferior garantiza 44 px por ítem. El patrón queda
+  documentado en `REGLAS.md` §2 y `SHELL.md` §4 para que POS/INV/CRM/FIN lo
+  apliquen en sus dominios.
+- **`FichaCertificado` (#240):** suma `estado` (chip de la cabecera; por defecto
+  `pass`) para el certificado embebible del informe público: la app puede
+  mostrar el estado real del equipo sin copiar la tarjeta.
+- Tests: guarda del alto táctil (`test/tactil.test.js`) más los renders del
+  segmentado, las solapas y la ficha (169 en total).
+
 ## v0.15.0 — 2026-09-23
 
 - **Objetos que faltaban (cierre de los pendientes de la fase 2):**

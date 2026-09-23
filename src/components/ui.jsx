@@ -355,7 +355,7 @@ export function IconAction({ icon, label, tone = 'mute', onClick, disabled = fal
       onClick={onClick}
       className={cn(
         'inline-flex items-center justify-center rounded-lg border transition active:scale-95 disabled:pointer-events-none disabled:opacity-40',
-        size === 'touch' ? 'h-9 w-9' : 'h-7 w-7',
+        size === 'touch' ? 'toque-44 h-9 w-9' : 'h-7 w-7',
         ICON_ACTION_TONE[tone],
       )}
     >
@@ -698,7 +698,7 @@ export function Subtabs({ value, onChange, items = [], className }) {
           aria-selected={value === id}
           onClick={() => onChange(id)}
           className={cn(
-            'rounded-xl px-3 py-2 text-sm font-medium transition',
+            'min-h-11 rounded-xl px-3 py-2 text-sm font-medium transition',
             value === id ? 'bg-fono text-onbrand' : 'text-mute hover:bg-fore/5 hover:text-fore',
           )}
         >
