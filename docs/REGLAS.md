@@ -194,12 +194,20 @@ IMEI/serial van en monoespaciada (`data-serial`).
 
 **Tema v2 `device ops`** (`tema-v2`, alias `v2-piloto` para las pantallas del
 piloto): variante clara y oscura del mismo lenguaje, promovida desde el piloto
-de DSN. En claro: fondo #F6F8FB, superficie #FFFFFF, borde #D6DCE6, texto
-#0E1116, ok #16A34A, bad #DC2626, warn #D97706 y azul acción #4D7CFE. En oscuro
-(`html.dark`): fondo #0E1116, panel #1F2430, borde #373F51, texto #F4F6FA, ok
-#22C55E, bad #EF4444, warn #F59E0B. Los números grandes van con `.v2-numero`
-(tabular + tracking ajustado). Se aplica por clase al contenedor de la pantalla,
-así el resto de la app no cambia.
+de DSN. En claro: fondo #F6F8FB, superficie #FFFFFF, borde #D6DCE6 y texto
+#0E1116. En oscuro (`html.dark`): fondo #0E1116, panel #1F2430, borde #373F51 y
+texto #F4F6FA. Los números grandes van con `.v2-numero` (tabular + tracking
+ajustado). Se aplica por clase al contenedor de la pantalla, así el resto de la
+app no cambia.
+
+**Tonos de TEXTO AA (#241):** los roles semánticos del scope v2 son los que
+llegan a 4.5:1 sobre las superficies v2 —claro `ok` #166534, `bad` #B91C1C,
+`warn` #92400E, `info` #2059BE; oscuro `ok` #4ADE80, `bad` #FCA5A5, `warn`
+#FCD34D, `info` #9FB8FF—. Los vivos de PhoneCheck (#16A34A/#22C55E, #DC2626,
+#D97706, #4D7CFE) quedan para **rellenos e indicadores** (`--c-pass`,
+`--c-accion` y las clases `bg-*`). La guarda `test/contraste-tokens.test.js`
+frena si un tono de texto deja de cumplir; el armado del shell y la tabla de
+contrastes están en **`docs/SHELL.md`**.
 
 ### Objetos y props
 
@@ -352,5 +360,10 @@ export function Agenda({ items, buscar, ir }) {
 Los días no se corren de zona (clave pura); un rango invertido se dice; la
 paleta no busca ni navega por su cuenta; el avatar no inventa fotos; el contador
 de avisos cuenta lo que hay; un gráfico sin datos lo dice.
+
+El **shell** se arma como en **`docs/SHELL.md`**: scope `tema-v2` con los tonos
+de texto AA, ítem activo con `aria-current="page"`, grupos plegables con
+`aria-expanded`, identidad con `Avatar` en el pie y el contenido con
+`ESPACIO_BARRA_INFERIOR` cuando hay barra inferior.
 
 

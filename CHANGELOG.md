@@ -4,6 +4,25 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.14.8 — 2026-09-23
+
+- **Tonos de texto AA en el scope v2 (#241):** los roles semánticos de
+  `.tema-v2`/`.v2-piloto` pasan a los tonos de **texto** medidos sobre el shell
+  v2 —claro `ok` #166534, `bad` #B91C1C, `warn` #92400E, `info` #2059BE; oscuro
+  `ok` #4ADE80, `bad` #FCA5A5, `warn` #FCD34D, `info` #9FB8FF—, y el bloque
+  queda completo en claro y oscuro (fono, reserved, onbrand e ink-950 dejan de
+  heredarse sueltos). Los vivos de PhoneCheck siguen en `--c-pass`/`--c-accion`
+  para rellenos e indicadores. Medición de referencia (antes → después): rótulos
+  de grupo 3.20 → 4.97; ítem activo 2.91 → 4.80 en claro y 3.49 → 5.93 en
+  oscuro. Guarda nueva `test/contraste-tokens.test.js` (AA 4.5:1 sobre las
+  superficies del scope en ambos temas).
+- **Guía del shell v2 (`docs/SHELL.md`, nueva):** piezas del shell (barra
+  lateral, menú, cajón, paleta, ayuda, barra inferior, avisos e identidad),
+  props, anatomía por breakpoint, reglas de contraste AA y checklist de
+  adopción. Referenciada desde `README`, `docs/V2.md` y `docs/REGLAS.md`.
+- **`IconAction size="touch"`:** paridad con MobOS (#236), donde la lista de
+  Clientes lo estrenó; el default `sm` no cambia. Tipos actualizados.
+
 ## Sin publicar — v0.14.0 propuesta (2026-09-22)
 
 Cierre de los huecos que dejó el piloto de adopción en LedBox/EventOS (issue

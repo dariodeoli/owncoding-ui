@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.14.7
+npm install github:dariodeoli/owncoding-ui#v0.14.8
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.14.7
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.14.8
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -32,7 +32,11 @@ Requisitos: **React 18+** y **Tailwind CSS 3.4+**.
 
 > **Sistema v2 (tokens + iconos):** guía de adopción paso a paso en
 > **`docs/V2.md`** — scope `tema-v2` (alias `v2-piloto`), verde pass, azul
-> acción, `.v2-numero` e iconos de categoría con `IconoCategoria`.
+> acción, tonos de texto AA, `.v2-numero` e iconos de categoría con
+> `IconoCategoria`.
+>
+> **Shell v2 (navegación):** piezas, props, breakpoints y reglas de contraste
+> AA en **`docs/SHELL.md`**.
 >
 > **Migrar una pantalla (otras apps):** proceso por fases, tabla de reemplazos
 > y verificación en **`docs/MIGRACION-V2.md`**.
@@ -201,14 +205,16 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `AuthLayout` (slots de logo/copy/acciones/pie), `ProductFooter`,
   `LoadingScreen` y `PegarEnlaceToken` (extrae el token del enlace). No leen
   sesión ni llaman a la API: reciben props y avisan por callback.
-- **Acciones y contenedores:** `Button`, `IconAction`, `Card`, `Stat`,
+- **Acciones y contenedores:** `Button`, `IconAction` (con `size="touch"` para
+  el área táctil de móvil), `Card`, `Stat`,
   `Modal` (ancho por `size`: corto/formulario/amplio/completo),
   `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`.
   El interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   `Toggle`).
 - **Navegación y shell:** `NavLateral` (colapsable, modelo `[{id,label,icono,contador}]`),
   `MenuDesplegable` (usuario, acciones de fila), `AuthLayout`, `ProductFooter`,
-  `LoadingScreen`.
+  `LoadingScreen`. El armado completo (breakpoints, barra inferior, paleta y
+  contraste AA) está en **`docs/SHELL.md`**.
 - **Ajustes (modelo):** `PanelDerecho` (contenido + formulario fijo a la
   derecha) y `TarjetaAjuste` (título/descripción/acción + cuerpo).
 - **Impresión LAN/USB (funcional):** `AjustesImpresion`, `BotonImprimir` y
@@ -590,7 +596,7 @@ src/utils/        lógica compartida pura (moneda, fechas, teléfono, nombre, ba
 src/printing/     estado de impresoras y trabajos (puro)
 src/styles/       tokens.css (solo variables) · base.css (base opt-in) · styles.css (las dos)
 types/            declaraciones .d.ts escritas a mano (el build las copia a dist/)
-docs/             REGLAS.md · V2.md · MIGRACION-V2.md · ADOPCION.md · MODOS-DE-TRABAJO.md · COMANDOS.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
+docs/             REGLAS.md · SHELL.md · V2.md · MIGRACION-V2.md · ADOPCION.md · MODOS-DE-TRABAJO.md · COMANDOS.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
 tools/            auto-ht.sh (política automática de integración, ver docs/COMANDOS.md)
 scripts/build.mjs build (esbuild → dist/index.js + dist/index.d.ts + dist/styles.css + tokens.css/base.css)
 test/             smoke de render (vitest + renderToStaticMarkup), lógica y contrato del paquete
