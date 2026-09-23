@@ -141,9 +141,19 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 ## 6. Identidad y personas
 
 - Identidad **por ID**, nunca por nombre o correo.
-- Un solo objeto para mostrar personas (foto local → foto de identidad →
-  iniciales, sin imágenes rotas). **TODO:** entra cuando cierre #211 (DSN) en
-  MobOS; hasta entonces, la librería no expone avatar.
+- **`PersonaChip` (#211) es el único objeto para mostrar a una persona** en
+  cualquier superficie: envuelve a `Avatar` y resuelve la foto en un solo
+  orden —**foto local** (`foto`, la resuelve la app por id) → **foto de Google**
+  (`picture`) → **iniciales**—, con caída a la siguiente fuente si la imagen
+  falla (nunca un cuadro roto). Props: `user` (objeto o texto), `foto`,
+  `picture`, `size` (`xs`…`xl`), `nombre` (mostrar/ocultar), `nombreCorto`
+  (solo el primer nombre en contextos compactos), `estado`
+  (`en-linea`/`ausente`/`ocupado`/`offline`), `title` y `children` (texto extra,
+  p. ej. la fecha). Expone `data-testid="persona-chip"`.
+- El adaptador `identidadDeUsuario(fuente)` normaliza los campos habituales
+  (`name`/`nombre`, `avatarUrl`/`foto`/`photoURL`, `picture`, `hasAvatar`) y
+  `ESTADOS_PRESENCIA` define la etiqueta y el punto de cada estado. La app no
+  vuelve a pluckear campos ni dibuja la foto a mano.
 - `primerNombre` para contextos compactos (la cronología) — ya en la librería.
 - `normalizarNombre` respeta las **razones sociales** (`esRazonSocial`): un
   nombre de empresa con tipo societario (S.A., S.R.L., LTDA, cooperativa…)

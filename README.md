@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.15.1
+npm install github:dariodeoli/owncoding-ui#v0.16.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.15.1
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.16.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -275,6 +275,12 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `buscar` async y `onElegir`), `AyudaModulo` («¿Qué es esto?»),
   `BarraInferior` (+ `ESPACIO_BARRA_INFERIOR`) y `Avatar` (iniciales con color
   derivado del nombre, imagen con caída a iniciales).
+- **Identidad de usuario (#211):** `PersonaChip` es el único objeto para
+  mostrar a una persona: foto local → foto de Google → iniciales (con
+  `nombreCorto`, `estado` de presencia, `size` xs…xl y `title`), más el
+  adaptador `identidadDeUsuario` y `ESTADOS_PRESENCIA`. `BarraLote` (acciones
+  por lote), `PeriodoTabs` (Día/Semana/Mes/Año) y `NumericKeypad` (teclado de
+  cobro en pantalla) completan el lote.
 - **Tablero (lote 2, sin publicar):** `ImporteDelta` (monto con signo y color),
   `IndicadorConexion` (en línea / pendientes de subir), `CampanaAvisos`
   (contador + panel por props) y `GraficoBarras` (barras CSS sin dependencias).
@@ -625,10 +631,10 @@ traerlo).
 
 ## Pendientes (fase 2)
 
-- **Identidad unificada (#211, DSN):** entra cuando esté cerrada en MobOS
-  (`PersonaChip`/`UsuarioIdentidad`). El `Avatar` de iniciales/color e imagen
-  con caída ya vive acá; falta la cadena foto local → foto de identidad →
-  iniciales.
+- ✅ **Identidad unificada (#211):** publicada en **v0.16.0** — `PersonaChip`
+  (foto local → Google → iniciales, con `size`/`nombreCorto`/`estado`/`title`)
+  y el adaptador `identidadDeUsuario`; el `Avatar` suma `onError` y los tamaños
+  `xs`/`xl` para la cadena de fotos.
 - **Tipos:** el paquete publica `dist/index.d.ts` con los objetos principales
   (props de uso real). Sigue pendiente que los tipos sean exhaustivos y se
   generen desde el código (hoy se escriben a mano en `types/index.d.ts`).

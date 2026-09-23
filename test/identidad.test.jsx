@@ -4,9 +4,12 @@ import { renderToStaticMarkup } from 'react-dom/server'
 import {
   Avatar,
   COLORES_AVATAR,
+  ESTADOS_PRESENCIA,
+  PersonaChip,
   TAMANOS_AVATAR,
   claveColorDeNombre,
   colorDeNombre,
+  identidadDeUsuario,
   inicialesDeNombre,
 } from '../src/index.js'
 
@@ -67,5 +70,61 @@ describe('Avatar', () => {
     const html = renderToStaticMarkup(<Avatar nombre="Ana Pérez" title="Ana P." ariaLabel="Perfil de Ana" />)
     expect(html).toContain('title="Ana P."')
     expect(html).toContain('aria-label="Perfil de Ana"')
+  })
+})
+
+// Identidad de usuario unificada (#211): un solo objeto para mostrar a alguien,
+// con la cadena de foto en un orden (local → Google → iniciales), nombre corto
+// y presencia. El adaptador normaliza los campos habituales.
+describe('PersonaChip e identidad', () => {
+  const ANA = { id: 'u1', name: 'Ana Pérez', picture: 'https://google.test/ana.png', scope: 'Sucursal Centro' }
+
+  test('resuelve la cadena de foto: local → Google → iniciales', () => {
+    const local = renderToStaticMarkup(<PersonaChip user={ANA} foto="https://cdn.test/ana.png" />)
+    expect(local).toContain('src="https://cdn.test/ana.png"')
+    const google = renderToStaticMarkup(<PersonaChip user={ANA} />)
+    expect(google).toContain('src="https://google.test/ana.png"')
+    const iniciales = renderToStaticMarkup(<PersonaChip user={{ name: 'Ana Pérez' }} />)
+    expect(iniciales).toContain('AP')
+    expect(iniciales).not.toContain('<img')
+  })
+
+  test('hasAvatar=false apaga la local y deja pasar la de Google', () => {
+    const html = renderToStaticMarkup(<PersonaChip user={{ ...ANA, hasAvatar: false, avatarUrl: 'https://cdn.test/ana.png' }} />)
+    expect(html).not.toContain('https://cdn.test/ana.png')
+    expect(html).toContain('https://google.test/ana.png')
+  })
+
+  test('nombreCorto usa solo el primer nombre y el tooltip suma la presencia', () => {
+    const html = renderToStaticMarkup(<PersonaChip user={ANA} nombreCorto estado="en-linea" />)
+    expect(html).toContain('Ana')
+    expect(html).not.toContain('>Ana Pérez<')
+    expect(html).toContain('title="Ana Pérez · En línea · Sucursal Centro"')
+    expect(html).toContain('bg-ok')
+    expect(html).toContain('data-testid="persona-chip"')
+  })
+
+  test('nombre=false deja solo el avatar (píldora de presencia)', () => {
+    const html = renderToStaticMarkup(<PersonaChip user={ANA} nombre={false} estado="en-linea" />)
+    expect(html).not.toContain('>Ana Pérez<')
+    expect(html).toContain('aria-hidden="true"')
+  })
+
+  test('acepta un texto suelto y children (fecha)', () => {
+    const html = renderToStaticMarkup(<PersonaChip user="Sistema" nombreCorto>hace 2 min</PersonaChip>)
+    expect(html).toContain('Sistema')
+    expect(html).toContain('hace 2 min')
+  })
+
+  test('el adaptador normaliza los campos habituales', () => {
+    expect(identidadDeUsuario({ nombre: 'Juan', foto: 'https://x/1.png' })).toMatchObject({ nombre: 'Juan', primerNombre: 'Juan', fotoLocal: 'https://x/1.png' })
+    expect(identidadDeUsuario({ name: 'Ana Pérez', avatarUrl: 'https://x/2.png', picture: 'https://x/3.png' })).toMatchObject({ nombre: 'Ana Pérez', primerNombre: 'Ana', fotoLocal: 'https://x/2.png', picture: 'https://x/3.png' })
+    expect(identidadDeUsuario({ email: 'a@b.com' }).nombre).toBe('a@b.com')
+    expect(identidadDeUsuario({}).nombre).toBe('Sistema')
+  })
+
+  test('los estados de presencia traen etiqueta y punto', () => {
+    expect(ESTADOS_PRESENCIA['en-linea']).toEqual({ etiqueta: 'En línea', punto: 'bg-ok' })
+    expect(ESTADOS_PRESENCIA.offline.etiqueta).toBe('Sin conexión')
   })
 })

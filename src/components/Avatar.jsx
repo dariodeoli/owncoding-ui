@@ -8,16 +8,20 @@ import { colorDeNombre, inicialesDeNombre } from '../utils/avatar.js'
 //
 // Portable: recibe el nombre y la URL de la imagen por props (la app resuelve
 // si tiene foto, logo o ninguna). `forma="cuadrado"` es para empresas/logos;
-// `forma="redondo"` (predeterminado) para personas.
+// `forma="redondo"` (predeterminado) para personas. `tamano`: `xs`…`xl`.
+// `onError` avisa cuando la imagen falla (además de caer a iniciales), para que
+// la app pueda intentar la siguiente fuente (foto local → Google).
 //
 // Accesible: el marco es `role="img"` con `aria-label` (nombre o el que se
 // pase). Si el avatar solo acompaña a un texto que ya dice el nombre, se usa
 // `decorativo` para no repetirlo al lector de pantalla.
 
 export const TAMANOS_AVATAR = {
+  xs: 'h-5 w-5 text-[9px]',
   sm: 'h-7 w-7 text-[10px]',
   md: 'h-9 w-9 text-xs',
   lg: 'h-14 w-14 text-lg',
+  xl: 'h-20 w-20 text-2xl',
 }
 
 export default function Avatar({
@@ -29,6 +33,7 @@ export default function Avatar({
   title,
   ariaLabel,
   decorativo = false,
+  onError,
   className,
 }) {
   const [fallo, setFallo] = useState(false)
@@ -63,7 +68,7 @@ export default function Avatar({
           alt=""
           decoding="async"
           referrerPolicy="no-referrer"
-          onError={() => setFallo(true)}
+          onError={(event) => { setFallo(true); onError?.(event) }}
           className={cn('h-full w-full', redondo ? 'object-cover' : 'object-contain')}
         />
       ) : (

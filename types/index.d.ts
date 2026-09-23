@@ -393,7 +393,26 @@ export function estadoPaleta(props: { consulta?: string; cargando?: boolean; err
 export function AyudaModulo(props: { titulo?: ReactNode; resumen?: ReactNode; puntos?: ReactNode[]; enlaces?: Array<{ href: string; etiqueta: ReactNode; onClick?: () => void }>; abierta?: boolean; onAbrir?: () => void; onCerrar?: () => void; className?: string }): ReactElement | null
 export function BarraInferior(props: { items?: Array<{ id: string; etiqueta: ReactNode; icono?: string; href?: string }>; activo?: string; onSelect?: (item: any) => void; onMas?: () => void; masEtiqueta?: string; menuAbierto?: boolean; menuId?: string; maxItems?: number; className?: string }): ReactElement | null
 export const ESPACIO_BARRA_INFERIOR: string
-export function Avatar(props: { nombre?: string; src?: string | null; tamano?: 'sm' | 'md' | 'lg'; forma?: 'redondo' | 'cuadrado'; empresa?: boolean | string; title?: string; ariaLabel?: string; decorativo?: boolean; className?: string }): ReactElement
+export function Avatar(props: { nombre?: string; src?: string | null; tamano?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'; forma?: 'redondo' | 'cuadrado'; empresa?: boolean | string; title?: string; ariaLabel?: string; decorativo?: boolean; onError?: (event: any) => void; className?: string }): ReactElement
+export function PersonaChip(props: {
+  user?: string | { name?: string; nombre?: string; email?: string; id?: string; picture?: string; foto?: string; avatarUrl?: string; photoURL?: string; hasAvatar?: boolean; tieneFoto?: boolean; scope?: string; [clave: string]: any }
+  foto?: string
+  picture?: string
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  nombre?: boolean
+  nombreCorto?: boolean
+  estado?: 'en-linea' | 'ausente' | 'ocupado' | 'offline' | (string & {})
+  title?: string
+  className?: string
+  textoClassName?: string
+  avatarClassName?: string
+  children?: ReactNode
+}): ReactElement
+export function identidadDeUsuario(fuente?: any): { nombre: string; primerNombre: string; fotoLocal: string; picture: string; hasAvatar?: boolean; scope: string }
+export const ESTADOS_PRESENCIA: Record<string, { etiqueta: string; punto: string }>
+export function BarraLote(props: { cantidad?: number; onLimpiar?: () => void; children?: ReactNode; etiqueta?: string; className?: string }): ReactElement | null
+export function PeriodoTabs(props: { periodo: string; setPeriodo: (id: string) => void; periodos?: Array<[string, ReactNode, string?, number?]>; ariaLabel?: string; className?: string }): ReactElement | null
+export function NumericKeypad(props: { value?: string; onChange: (valor: string) => void; max?: number; className?: string; ariaLabel?: string }): ReactElement
 export const TAMANOS_AVATAR: Record<string, string>
 export const COLORES_AVATAR: Record<string, string>
 export function inicialesDeNombre(nombre: string): string

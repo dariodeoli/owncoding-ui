@@ -4,6 +4,25 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.16.0 — 2026-09-23
+
+- **Identidad de usuario unificada (#211):** `PersonaChip` es el único objeto
+  para mostrar a una persona: envuelve a `Avatar` y resuelve la foto en un solo
+  orden —**foto local** (`foto`, la resuelve la app por id) → **foto de Google**
+  (`picture`) → **iniciales**—, con caída a la siguiente fuente si una imagen
+  falla. Props: `user`, `foto`, `picture`, `size` (`xs`…`xl`), `nombre`,
+  **`nombreCorto`**, **`estado`** (presencia), `title` y `children`. Incluye el
+  adaptador **`identidadDeUsuario`** y **`ESTADOS_PRESENCIA`**. El `Avatar`
+  suma `onError` (para encadenar fuentes) y los tamaños `xs`/`xl`.
+- **Más objetos del lote:** `BarraLote` (acciones por lote con «Limpiar»),
+  `PeriodoTabs` (Día/Semana/Mes/Año sobre `SegmentedField`) y `NumericKeypad`
+  (teclado de cobro en pantalla; el set de íconos suma `backspace`).
+- **Adopción en MobOS (#211):** `PresencePill`, `PantallaBloqueada` y la
+  cronología/transacciones de `PedidoDetalle` pasan al objeto de identidad
+  (de paso desaparece un avatar duplicado por evento de la cronología).
+- Tests: cadena de foto, `hasAvatar`, nombre corto, presencia, adaptador y los
+  tres objetos nuevos (177 en total).
+
 ## v0.15.1 — 2026-09-23
 
 - **Alto táctil de 44 px (#249, H3 de la auditoría responsive mobile, con

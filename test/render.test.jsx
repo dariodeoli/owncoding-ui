@@ -16,11 +16,14 @@ import {
   FichaCertificado,
   FilaChecklist,
   FilaDato,
+  BarraLote,
   GradoBadge,
   IconAction,
   IconoCategoria,
   EstadoBadge,
   ListGridToggle,
+  NumericKeypad,
+  PeriodoTabs,
   ProductCombobox,
   RucField,
   SeccionColapsable,
@@ -314,5 +317,21 @@ describe('render de los objetos base', () => {
     expect(ruc).toContain('La razón social se aplica solo si la confirmás.')
     const sinConsultar = renderToStaticMarkup(<RucField value="80012345-6" onChange={() => {}} />)
     expect(sinConsultar).not.toContain('Extraer los datos del RUC')
+  })
+
+  test('los componentes del lote 22 renderizan con su contrato', () => {
+    const barra = renderToStaticMarkup(<BarraLote cantidad={3} onLimpiar={() => {}}><button>Exportar</button></BarraLote>)
+    expect(barra).toContain('3 seleccionada(s)')
+    expect(barra).toContain('Exportar')
+    expect(renderToStaticMarkup(<BarraLote cantidad={0} />)).toBe('')
+
+    const periodos = renderToStaticMarkup(<PeriodoTabs periodo="mes" setPeriodo={() => {}} />)
+    expect(periodos).toContain('Mes')
+    expect(periodos).toContain('aria-pressed="true"')
+
+    const teclado = renderToStaticMarkup(<NumericKeypad value="12" onChange={() => {}} />)
+    expect(teclado).toContain('aria-label="Agregar 00"')
+    expect(teclado).toContain('aria-label="Borrar último dígito"')
+    expect(teclado).toContain('<svg')
   })
 })
