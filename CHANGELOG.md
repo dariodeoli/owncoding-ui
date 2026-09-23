@@ -4,6 +4,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.14.10 — 2026-09-23
+
+- **Cierre de los huecos del shell v2 (#241):** los chips de contenido de tono
+  `bg-fono/15` pasan al azul de acción (`--c-info / .1`, borde `/ .3`) y los
+  `bg-warn/15` al ámbar suave, ambos bajo `.v2-chip`; se suma la utilidad
+  **`.oc-paso-activo`** (burbuja sólida del azul de acción con texto blanco en
+  claro y `--c-onbrand` en oscuro) que `Stepper` ya emite en el paso actual.
+  Con esto el port de navegación + contenido queda verificado 1:1 contra el
+  shell de MobOS (revisión cruzada CMP ↔ DSN) y la app puede vaciar su bloque
+  local `.v2-piloto`.
+- Guardas: `test/shell-v2.test.js` cubre los chips y el paso activo; el stepper
+  del smoke de render exige `oc-paso-activo` (162 tests).
+- Docs: `docs/SHELL.md` con las reglas publicadas y los pendientes actualizados.
+
 ## v0.14.9 — 2026-09-23
 
 - **Shell v2 en la biblioteca (#241):** las reglas de navegación que DSN midió

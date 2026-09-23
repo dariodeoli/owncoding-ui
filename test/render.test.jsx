@@ -178,6 +178,8 @@ describe('render de los objetos base', () => {
     expect(stepper).toContain('Intake')
     expect(stepper).toContain('Diagnóstico')
     expect(stepper).toContain('text-pass')
+    // El paso actual lleva la utilidad del v2 (burbuja azul AA en el scope).
+    expect(stepper).toContain('oc-paso-activo')
 
     const tile = renderToStaticMarkup(<TileEquipo modelo="iPhone 13" imei="•••• 1234" estado="pass" grado="A" bateria={94} locks={[{ clave: 'icloud', estado: 'libre' }]} />)
     expect(tile).toContain('iPhone 13')

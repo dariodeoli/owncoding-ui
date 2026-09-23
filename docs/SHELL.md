@@ -89,11 +89,16 @@ Reglas del shell (medidas sobre el shell real, claro y oscuro): **vienen con
    (`[role="tab"][aria-selected="true"]`).
 3. **Foco visible** por tema (en `base.css`): `--c-fono-dark` en claro — el de
    marca quedaba casi blanco — y `--oc-brand` en oscuro.
-4. **Superficies rojas**: se resuelven en los objetos, no con un override
+4. **Contenido del scope**: los chips (`… .v2-chip`) van tipo pill con
+   micro-rótulo, los de tono `bg-fono/15` pasan al azul de acción y los
+   `bg-warn/15` al ámbar suave; los números blancos se aprietan
+   (`.tabular-nums`) y el paso actual del stepper usa la burbuja sólida
+   (`.oc-paso-activo`, que `Stepper` ya emite).
+5. **Superficies rojas**: se resuelven en los objetos, no con un override
    genérico de `.bg-bad`. El contador de `CampanaAvisos` usa
    `text-white dark:text-onbrand` (en oscuro el rojo es claro y pide texto
    oscuro); una superficie roja nueva sigue la misma regla.
-5. La **guarda** `test/contraste-tokens.test.js` mide los tonos de texto contra
+6. La **guarda** `test/contraste-tokens.test.js` mide los tonos de texto contra
    las superficies del scope en ambos temas y falla por debajo de AA;
    `test/shell-v2.test.js` fija que estas reglas sigan publicadas.
 
@@ -154,10 +159,14 @@ completo sin perder AA. Salen de la revisión cruzada CMP ↔ DSN del shell real
   `styles.css` (scope `tema-v2`) desde **v0.14.9**, y `NavLateral` ya soporta
   grupos plegables (`grupos` + `gruposPlegados`/`onToggleGrupo`) con el activo
   azul AA y el rótulo sólido.
+- ✅ **Capa de contenido genérica**: `.v2-chip` (con sus tonos fono/warn),
+  números del scope (incluido `strong.text-xl.tabular-nums`), activos de
+  segmentados y pestañas, y `.oc-paso-activo` para el stepper — todo en
+  `styles.css` desde **v0.14.10**.
 - ⏳ **Capa de contenido propia de la app**: los selectores de markup de MobOS
-  (`[data-testid="pedido-fila"] …`, `strong.text-xl.tabular-nums`) siguen en su
-  bloque local; lo genérico (`.v2-chip`, números del scope, activos de
-  segmentados y pestañas) ya está en la biblioteca.
+  (`[data-testid="pedido-fila"] …`, la mayúscula de los chips de clientes)
+  siguen en su bloque local; se retiran cuando MobOS ponga la clase `v2-chip`
+  en sus filas.
 - ⏳ **Objetos que hoy son de la app**: alternador de tema y presencia («en
   línea»); el banner ancho de sin conexión (el chip de la cola es
   `IndicadorConexion`).

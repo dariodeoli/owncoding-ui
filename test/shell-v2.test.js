@@ -36,6 +36,15 @@ describe('shell v2 en la biblioteca', () => {
     expect(base).toContain('.dark .tema-v2 .v2-chip.text-mute')
   })
 
+  test('los chips de tono y el paso activo del stepper usan la paleta de acción', () => {
+    expect(base).toContain('.tema-v2 .v2-chip.bg-warn\\/15')
+    expect(base).toContain('.tema-v2 .v2-chip.bg-fono\\/15')
+    expect(base).toContain('border-color: rgb(var(--c-info) / .3)')
+    expect(base).toContain('.tema-v2 .oc-paso-activo')
+    expect(base).toContain('.dark .tema-v2 .oc-paso-activo')
+    expect(base).toContain('color: rgb(var(--c-onbrand))')
+  })
+
   test('las reglas viajan al styles.css publicado', () => {
     expect(distStyles).toContain('.tema-v2 nav [aria-current="page"]')
     expect(distStyles).toContain('.oc-rotulo-grupo')

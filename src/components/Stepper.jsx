@@ -20,7 +20,7 @@ export default function Stepper({ pasos = [], actual = 0, hechos = [], className
               className={cn(
                 'grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[11px] font-bold',
                 hecho && 'border-pass/40 bg-pass/15 text-pass',
-                !hecho && enCurso && 'border-fono bg-fono/10 text-fono-light',
+                !hecho && enCurso && 'oc-paso-activo border-fono bg-fono/10 text-fono-light',
                 !hecho && !enCurso && 'border-ink-600 bg-ink-800 text-mute',
               )}
               aria-hidden="true"

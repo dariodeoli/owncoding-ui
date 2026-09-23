@@ -350,6 +350,26 @@ input::placeholder, textarea::placeholder {
   border-radius: 9999px;
   letter-spacing: .04em;
 }
+/* Los chips de tono fono/warn del contenido usan el azul de acción y el ámbar
+   suave del mock (el Badge de la biblioteca ya trae los mismos tonos). */
+.tema-v2 .v2-chip.bg-warn\/15 {
+  background-color: rgb(var(--c-warn) / .1);
+}
+.tema-v2 .v2-chip.bg-fono\/15 {
+  background-color: rgb(var(--c-info) / .1);
+  border-color: rgb(var(--c-info) / .3);
+  color: rgb(var(--c-info));
+}
+/* Paso activo del stepper (burbuja sólida del azul de acción; en oscuro el
+   azul es claro y pide texto oscuro). `Stepper` ya la emite. */
+.tema-v2 .oc-paso-activo {
+  background: rgb(var(--c-info));
+  border-color: rgb(var(--c-info));
+  color: #fff;
+}
+.dark .tema-v2 .oc-paso-activo {
+  color: rgb(var(--c-onbrand));
+}
 .tema-v2 .tabular-nums {
   letter-spacing: -.02em;
 }
