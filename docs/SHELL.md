@@ -17,7 +17,7 @@ permisos; el shell solo dibuja y navega.
 | Zona | Objeto | Qué resuelve |
 | --- | --- | --- |
 | Encabezado de la vista | `PageHeader` | `eyebrow` + un solo `h1` + `subtitle` + `actions`; `backTo` para subpáginas |
-| Barra lateral (escritorio) | `NavLateral` | Ítems con ícono, contador y activo; colapsable; slots `cabecera` (logo/marca) y `pie` (identidad) |
+| Barra lateral (escritorio) | `NavLateral` | Ítems con ícono, contador y activo; grupos plegables opcionales; colapsable; slots `cabecera` (logo/marca) y `pie` (identidad) |
 | Menú de usuario / acciones | `MenuDesplegable` | Menú portable (`role="menu"`): usuario, acciones de fila y filtros; cierra con clic afuera y `Esc` |
 | Cajón (móvil) | `Drawer` | Panel lateral con overlay, foco atrapado, `Esc` y clic afuera |
 | Buscador global | `PaletaComandos` | `⌘`/`Ctrl`+`K`: búsqueda async (`buscar` → `onElegir`) con estados honestos (mínimo, cargando, sin resultados, error con reintento) |
@@ -34,7 +34,7 @@ permisos; el shell solo dibuja y navega.
 | Objeto | Props |
 | --- | --- |
 | `PageHeader` | `title` (único `h1`), `eyebrow`, `subtitle`, `actions`, `backTo` |
-| `NavLateral` | `items` `[{ id, label, icono?, contador? }]`, `activeId`, `onSelect(id)`, `colapsado`, `onToggle`, `cabecera`, `pie`, `ancho` (`w-64`), `ariaLabel` |
+| `NavLateral` | `items` `[{ id, label, icono?, contador? }]` o `grupos` `[{ titulo, items }]`, `gruposPlegados`/`onToggleGrupo(titulo)`, `activeId`, `onSelect(id)`, `colapsado`, `onToggle`, `cabecera`, `pie`, `ancho` (`w-64`), `ariaLabel` |
 | `MenuDesplegable` | `trigger`, `items` `[{ id?, label, icono?, onClick?, peligro?, disabled?, separador? }]`, `alineacion` (`right`/`left`), `ariaLabel` |
 | `PaletaComandos` | `abierta`/`onAbrir`/`onCerrar`, `buscar(consulta)` async, `onElegir(resultado)`, `etiquetasTipo`, `iconosTipo`, `atajo`, `atajoTexto`, `conAtajo`, `minimo` (2), `espera` (220 ms), `boton`, `textoBoton` |
 | `AyudaModulo` | `titulo`, `resumen`, `puntos` (3–5), `enlaces` `[{ href, etiqueta, onClick? }]`, `abierta`/`onAbrir`/`onCerrar` |
@@ -77,20 +77,25 @@ indicadores (`--c-pass`, `--c-accion` y las clases `bg-*`).
 | `--c-fono` / `--c-fono-light` | `#10B981` / `#047857` | `#05F19C` / `#7CFFC9` | Marca; en claro el tono de texto es el oscuro |
 | Relleno «vivo» | `#22C55E` (`--c-pass`) | `#22C55E` | Sellos, indicadores y barras |
 
-Reglas del shell (medidas sobre el shell real, claro y oscuro):
+Reglas del shell (medidas sobre el shell real, claro y oscuro): **vienen con
+`styles.css`**, dentro del scope `tema-v2`, así la app no las repite.
 
-1. **Rótulos de grupo sólidos**: el verde al 75% daba 3.2:1 en claro; va
-   `--c-fono-light` sin alfa.
-2. **Ítem activo** con el azul de acción AA sobre su tinte (`/14` en claro,
-   `/20` en oscuro); el azul vivo no se usa como texto.
-3. **Foco visible** en cada tema: verde oscuro en claro (el de marca quedaba
-   casi blanco sobre blanco) y el de marca en oscuro.
-4. **Superficies rojas** (contador de notificaciones; el aviso ancho de sin
-   conexión si la app lo muestra): texto blanco en claro; en oscuro el rojo es
-   claro y pide texto oscuro (`--c-onbrand`). El chip de la cola es
-   `IndicadorConexion`; el aviso ancho es de la app (`Aviso`/`Nota`).
+1. **Rótulos de grupo sólidos**: hooks `nav button[aria-expanded] > span` y
+   `.oc-rotulo-grupo` (cajón u otros rótulos) → `--c-fono-light` sin alfa.
+2. **Ítem activo**: hooks `nav [aria-current="page"]` y `nav [aria-pressed="true"]`
+   → azul de acción AA sobre su tinte (`/14` en claro, `/20` en oscuro; en
+   oscuro el texto es `--c-fore`). La misma regla cubre los activos segmentados
+   (`button.bg-fono/15.text-fono-light`) y las pestañas
+   (`[role="tab"][aria-selected="true"]`).
+3. **Foco visible** por tema (en `base.css`): `--c-fono-dark` en claro — el de
+   marca quedaba casi blanco — y `--oc-brand` en oscuro.
+4. **Superficies rojas**: se resuelven en los objetos, no con un override
+   genérico de `.bg-bad`. El contador de `CampanaAvisos` usa
+   `text-white dark:text-onbrand` (en oscuro el rojo es claro y pide texto
+   oscuro); una superficie roja nueva sigue la misma regla.
 5. La **guarda** `test/contraste-tokens.test.js` mide los tonos de texto contra
-   las superficies del scope en ambos temas y falla por debajo de AA.
+   las superficies del scope en ambos temas y falla por debajo de AA;
+   `test/shell-v2.test.js` fija que estas reglas sigan publicadas.
 
 Medición de referencia (antes → después): rótulos de grupo 3.20 → 4.97; ítem
 activo 2.91 → 4.80 en claro y 3.49 → 5.93 en oscuro; `ok` 2.99–3.30 → 6.46+;
@@ -145,23 +150,15 @@ export function Shell({ usuario, nav, activo, ir, buscar }) {
 Lo que falta para que una app pueda retirar su bloque local `.v2-piloto`
 completo sin perder AA. Salen de la revisión cruzada CMP ↔ DSN del shell real:
 
-1. **CSS de navegación en la biblioteca** (DSN confirmó que va acá): rótulos de
-   grupo sólidos (`color: rgb(var(--c-fono-light))`; hooks
-   `nav button[aria-expanded] > span` y el rótulo «Acciones» del cajón), ítem
-   activo (claro `rgb(var(--c-info) / .14)` + `color: var(--c-info)`; oscuro
-   `/ .2` + `color: var(--c-fore)`), foco por tema (claro
-   `rgb(var(--c-fono-dark))`; oscuro `var(--oc-brand)`) y superficies rojas
-   (claro `#fff`; oscuro `rgb(var(--c-onbrand))`). Las superficies rojas se
-   resuelven en los objetos de aviso/contador, no con un override genérico de
-   `.bg-bad`.
-2. **`NavLateral` con grupos**: hoy es lista plana y el activo es verde
-   (`bg-fono/15 text-fono-light`); la variante con grupos plegables + contador y
-   el activo azul del v2 van con el próximo lote (DSN manda el diff sugerido).
-3. **Capa de contenido del v2** (publicada por DSN en MobOS): `v2-chip` (y chip
-   neutro en oscuro), `tabular-nums` con `letter-spacing: -.02em` dentro del
-   scope, el paso extra de `strong.text-xl.tabular-nums` y el activo azul de
-   `button.bg-fono/15.text-fono-light` y de las pestañas seleccionadas.
-4. **Objetos que hoy son de la app**: alternador de tema y presencia («en
-   línea»); el banner ancho de sin conexión.
-5. **`PageHeader`**: si se busca paridad total con la miga de sección de MobOS,
-   evaluar un prop de migas.
+- ✅ **Navegación**: las reglas del shell y de los activos viajan en
+  `styles.css` (scope `tema-v2`) desde **v0.14.9**, y `NavLateral` ya soporta
+  grupos plegables (`grupos` + `gruposPlegados`/`onToggleGrupo`) con el activo
+  azul AA y el rótulo sólido.
+- ⏳ **Capa de contenido propia de la app**: los selectores de markup de MobOS
+  (`[data-testid="pedido-fila"] …`, `strong.text-xl.tabular-nums`) siguen en su
+  bloque local; lo genérico (`.v2-chip`, números del scope, activos de
+  segmentados y pestañas) ya está en la biblioteca.
+- ⏳ **Objetos que hoy son de la app**: alternador de tema y presencia («en
+  línea»); el banner ancho de sin conexión (el chip de la cola es
+  `IndicadorConexion`).
+- ⏳ **`PageHeader`**: evaluar un prop de migas para paridad total con MobOS.

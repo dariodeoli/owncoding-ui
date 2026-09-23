@@ -4,6 +4,26 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.14.9 — 2026-09-23
+
+- **Shell v2 en la biblioteca (#241):** las reglas de navegación que DSN midió
+  sobre el shell real viajan con `styles.css` dentro del scope `tema-v2` —
+  rótulos de grupo sólidos (`nav button[aria-expanded] > span` y
+  `.oc-rotulo-grupo`), ítem activo con el azul de acción AA sobre su tinte
+  (`nav [aria-current="page"]` / `nav [aria-pressed="true"]`, `/14` en claro y
+  `/20` en oscuro), activos de segmentados y pestañas, chip `.v2-chip`, números
+  del scope (`tabular-nums`) y foco visible por tema. Una app puede retirar su
+  bloque local `.v2-piloto` sin perder AA.
+- **`CampanaAvisos`:** el contador usa `text-white dark:text-onbrand` (en oscuro
+  el rojo es claro y el blanco no llegaba a AA).
+- **`NavLateral` con grupos:** `grupos` = `[{ titulo, items }]` con rótulo
+  plegable (`aria-expanded`), estado controlado (`gruposPlegados` +
+  `onToggleGrupo`) o recordado por el objeto; la lista plana sigue igual y los
+  tipos reflejan las props reales.
+- Guardas nuevas: `test/shell-v2.test.js` (reglas publicadas) y ampliación de
+  `test/navegacion.test.jsx`/`test/tablero.test.jsx`; 161 tests en total.
+- Docs: `docs/SHELL.md` con las reglas publicadas y los pendientes declarados.
+
 ## v0.14.8 — 2026-09-23
 
 - **Tonos de texto AA en el scope v2 (#241):** los roles semánticos de

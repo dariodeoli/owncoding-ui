@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.14.8
+npm install github:dariodeoli/owncoding-ui#v0.14.9
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.14.8
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.14.9
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -211,10 +211,12 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `ConfirmDialog`, `Drawer`, `ToastProvider`/`useToast`, `Subtabs`.
   El interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   `Toggle`).
-- **Navegación y shell:** `NavLateral` (colapsable, modelo `[{id,label,icono,contador}]`),
-  `MenuDesplegable` (usuario, acciones de fila), `AuthLayout`, `ProductFooter`,
-  `LoadingScreen`. El armado completo (breakpoints, barra inferior, paleta y
-  contraste AA) está en **`docs/SHELL.md`**.
+- **Navegación y shell:** `NavLateral` (colapsable y con grupos plegables,
+  modelo `[{id,label,icono,contador}]` o `grupos`), `MenuDesplegable` (usuario,
+  acciones de fila), `AuthLayout`, `ProductFooter`, `LoadingScreen`. Las reglas
+  de navegación del v2 (activo AA, rótulos y foco) viajan en `styles.css`; el
+  armado completo (breakpoints, barra inferior, paleta y contraste) está en
+  **`docs/SHELL.md`**.
 - **Ajustes (modelo):** `PanelDerecho` (contenido + formulario fijo a la
   derecha) y `TarjetaAjuste` (título/descripción/acción + cuerpo).
 - **Impresión LAN/USB (funcional):** `AjustesImpresion`, `BotonImprimir` y

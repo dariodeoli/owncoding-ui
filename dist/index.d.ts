@@ -187,11 +187,17 @@ export function PegarEnlaceToken(props: Record<string, any> & { onToken?: (token
 export const NavLateral: ForwardRefExoticComponent<
   {
     items?: Array<{ id: string; label?: ReactNode; etiqueta?: ReactNode; icono?: string; contador?: number; href?: string; roles?: string[]; [clave: string]: any }>
-    activo?: string
+    grupos?: Array<{ titulo: string; items: Array<{ id: string; label?: ReactNode; icono?: string; contador?: number; [clave: string]: any }> }>
+    gruposPlegados?: Record<string, boolean>
+    onToggleGrupo?: (titulo: string) => void
+    activeId?: string
+    onSelect?: (id: string) => void
     colapsado?: boolean
-    onNavegar?: (item: any) => void
     onToggle?: (colapsado: boolean) => void
-    logo?: ReactNode
+    cabecera?: ReactNode
+    pie?: ReactNode
+    ancho?: string
+    ariaLabel?: string
     className?: string
   } & Record<string, any>
 >

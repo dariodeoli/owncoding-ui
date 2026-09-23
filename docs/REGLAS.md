@@ -206,8 +206,11 @@ llegan a 4.5:1 sobre las superficies v2 —claro `ok` #166534, `bad` #B91C1C,
 #FCD34D, `info` #9FB8FF—. Los vivos de PhoneCheck (#16A34A/#22C55E, #DC2626,
 #D97706, #4D7CFE) quedan para **rellenos e indicadores** (`--c-pass`,
 `--c-accion` y las clases `bg-*`). La guarda `test/contraste-tokens.test.js`
-frena si un tono de texto deja de cumplir; el armado del shell y la tabla de
-contrastes están en **`docs/SHELL.md`**.
+frena si un tono de texto deja de cumplir. Con el scope, `base.css` ya trae las
+**reglas del shell** (ítem activo con `aria-current`/`aria-pressed`, rótulos de
+grupo y `.oc-rotulo-grupo`, chips `.v2-chip`, números y foco por tema): la app
+no las repite. El armado del shell y la tabla de contrastes están en
+**`docs/SHELL.md`**.
 
 ### Objetos y props
 

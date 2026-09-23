@@ -5,6 +5,7 @@ import {
   ESPACIO_BARRA_INFERIOR,
   AyudaModulo,
   BarraInferior,
+  NavLateral,
   PaletaComandos,
   agruparResultados,
   estadoPaleta,
@@ -100,6 +101,35 @@ describe('AyudaModulo', () => {
     expect(html).toContain('Cerrar')
     // Mismo ancho de modal que el resto de los formularios de una columna.
     expect(html).toContain('max-w-xl')
+  })
+})
+
+describe('NavLateral con grupos', () => {
+  const GRUPOS = [
+    { titulo: 'Operación', items: [{ id: 'cargar', label: 'Cargar', icono: 'cart' }] },
+    { titulo: 'Stock', items: [{ id: 'inventario', label: 'Inventario', icono: 'box' }] },
+  ]
+
+  test('los grupos llevan rótulo plegable y avisan por callback', () => {
+    const html = renderToStaticMarkup(<NavLateral grupos={GRUPOS} activeId="inventario" />)
+    expect(html).toContain('aria-expanded="true"')
+    expect(html).toContain('Operación')
+    expect(html).toContain('Stock')
+    expect(html).toContain('aria-current="page"')
+    expect(html).toContain('Inventario')
+  })
+
+  test('un grupo plegado esconde sus ítems y lo dice en aria-expanded', () => {
+    const html = renderToStaticMarkup(<NavLateral grupos={GRUPOS} gruposPlegados={{ Stock: true }} />)
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).not.toContain('Inventario')
+    expect(html).toContain('Cargar')
+  })
+
+  test('sin grupos sigue siendo la lista plana de siempre', () => {
+    const html = renderToStaticMarkup(<NavLateral items={GRUPOS[0].items} activeId="cargar" />)
+    expect(html).toContain('aria-current="page"')
+    expect(html).not.toContain('aria-expanded="true"')
   })
 })
 

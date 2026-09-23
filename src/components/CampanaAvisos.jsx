@@ -79,7 +79,7 @@ export default function CampanaAvisos({
       >
         <Icon name="bell" className="h-4 w-4" />
         {sinLeer > 0 && (
-          <span className="absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white">
+          <span className="absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand">
             {textoContador(sinLeer)}
           </span>
         )}

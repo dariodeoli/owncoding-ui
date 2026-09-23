@@ -216,8 +216,13 @@ input[inputmode="numeric"], [data-serial] {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 :focus-visible {
-  outline: 2px solid var(--oc-brand);
+  /* Verde oscuro en claro: el de marca (#10B981) queda casi blanco sobre las
+     superficies claras y no se ve (#241). En oscuro sigue el de marca. */
+  outline: 2px solid rgb(var(--c-fono-dark));
   outline-offset: 3px;
+}
+html.dark :focus-visible {
+  outline-color: var(--oc-brand);
 }
 input::placeholder, textarea::placeholder {
   color: #8197a5;
@@ -311,4 +316,61 @@ input::placeholder, textarea::placeholder {
   .oc-print-fila--total { font-size: 13px; padding: 5px; }
   .oc-print-nota { padding: 5px 8px; font-size: 10px; }
   .oc-print-totales, .oc-print-bloque { break-inside: avoid; }
+}
+
+/* ── Shell v2: navegación accesible y contenido (#241) ──────────────────────
+   Portado de la medición AA del shell real (DSN) para que una app pueda
+   retirar su bloque local `.v2-piloto`/`.tema-v2` sin perder accesibilidad.
+   Solo aplica dentro del scope `tema-v2`; fuera de él no cambia nada.
+   Reglas y contrastes: `docs/SHELL.md` · guarda: `test/shell-v2.test.js`. */
+.tema-v2 nav a,
+.tema-v2 nav button {
+  border-radius: 10px;
+  transition: background-color .15s ease, color .15s ease;
+}
+.tema-v2 nav a:hover,
+.tema-v2 nav button:hover {
+  background: rgb(var(--c-fore) / .05);
+}
+/* Ítem activo: azul de acción con tono AA en cada tema (no el vivo). */
+.tema-v2 nav [aria-current="page"],
+.tema-v2 nav [aria-pressed="true"] {
+  background: rgb(var(--c-info) / .14);
+  color: rgb(var(--c-info));
+  font-weight: 600;
+}
+/* Rótulos de grupo del shell (barra lateral, cajón y `.oc-rotulo-grupo`):
+   en verde sólido; al 75% quedaban en 3.2:1 sobre la barra clara. */
+.tema-v2 nav button[aria-expanded] > span,
+.tema-v2 .oc-rotulo-grupo {
+  color: rgb(var(--c-fono-light));
+}
+/* Chips de contenido tipo pill con micro-rótulo y números de consola. */
+.tema-v2 .v2-chip {
+  border-radius: 9999px;
+  letter-spacing: .04em;
+}
+.tema-v2 .tabular-nums {
+  letter-spacing: -.02em;
+}
+.tema-v2 strong.text-xl.tabular-nums {
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+/* Activos de la navegación interna (filtros segmentados y pestañas): el mismo
+   azul del ítem activo del shell, legible en los dos temas. */
+.tema-v2 button.bg-fono\/15.text-fono-light,
+.tema-v2 [role="tab"][aria-selected="true"] {
+  background: rgb(var(--c-info) / .14);
+  color: rgb(var(--c-info));
+}
+.dark .tema-v2 button.bg-fono\/15.text-fono-light,
+.dark .tema-v2 [role="tab"][aria-selected="true"] {
+  background: rgb(var(--c-info) / .2);
+  color: rgb(var(--c-fore));
+}
+/* El chip neutro mantiene su gris en claro; en oscuro el mute queda en 4.14:1
+   sobre ink-600 y usa el texto de primer nivel (9.8:1). */
+.dark .tema-v2 .v2-chip.text-mute {
+  color: rgb(var(--c-fore));
 }

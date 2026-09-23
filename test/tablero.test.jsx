@@ -120,6 +120,8 @@ describe('CampanaAvisos', () => {
     expect(html).toContain('aria-expanded="false"')
     expect(html).toContain('>1<')
     expect(html).not.toContain('Cobro vencido')
+    // Superficie roja: en oscuro el rojo es claro y pide texto oscuro (#241).
+    expect(html).toContain('text-white dark:text-onbrand')
   })
 
   test('sin avisos no hay contador', () => {

@@ -1641,9 +1641,35 @@ function PegarEnlaceToken({
 }
 
 // src/components/NavLateral.jsx
+import { useState as useState5 } from "react";
 import { jsx as jsx19, jsxs as jsxs14 } from "react/jsx-runtime";
+function ItemNav({ item, activo, colapsado, onSelect }) {
+  return /* @__PURE__ */ jsx19("li", { children: /* @__PURE__ */ jsxs14(
+    "button",
+    {
+      type: "button",
+      onClick: () => onSelect?.(item.id),
+      "aria-current": activo ? "page" : void 0,
+      title: colapsado ? item.label : void 0,
+      className: cn(
+        "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
+        activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore",
+        colapsado && "justify-center px-2"
+      ),
+      children: [
+        item.icono && /* @__PURE__ */ jsx19(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+        !colapsado && /* @__PURE__ */ jsx19("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
+        !colapsado && item.contador != null && /* @__PURE__ */ jsx19("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
+        colapsado && item.contador != null && /* @__PURE__ */ jsx19("span", { className: "sr-only", children: item.contador })
+      ]
+    }
+  ) });
+}
 function NavLateral({
   items = [],
+  grupos,
+  gruposPlegados,
+  onToggleGrupo,
   activeId,
   onSelect,
   colapsado = false,
@@ -1654,6 +1680,13 @@ function NavLateral({
   ariaLabel = "Navegaci\xF3n principal",
   className
 }) {
+  const [plegadosInterno, setPlegadosInterno] = useState5({});
+  const plegados = gruposPlegados ?? plegadosInterno;
+  const alternarGrupo = (titulo2) => {
+    if (onToggleGrupo) onToggleGrupo(titulo2);
+    else setPlegadosInterno((previos) => ({ ...previos, [titulo2]: !previos[titulo2] }));
+  };
+  const lista = (listaItems) => /* @__PURE__ */ jsx19("ul", { className: "space-y-1", children: listaItems.map((item) => /* @__PURE__ */ jsx19(ItemNav, { item, activo: item.id === activeId, colapsado, onSelect }, item.id)) });
   return /* @__PURE__ */ jsxs14(
     "nav",
     {
@@ -1674,29 +1707,36 @@ function NavLateral({
             }
           )
         ] }),
-        /* @__PURE__ */ jsx19("ul", { className: "min-h-0 flex-1 space-y-1 overflow-y-auto px-2 py-2", children: items.map((item) => {
-          const activo = item.id === activeId;
-          return /* @__PURE__ */ jsx19("li", { children: /* @__PURE__ */ jsxs14(
-            "button",
-            {
-              type: "button",
-              onClick: () => onSelect?.(item.id),
-              "aria-current": activo ? "page" : void 0,
-              title: colapsado ? item.label : void 0,
-              className: cn(
-                "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
-                activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore",
-                colapsado && "justify-center px-2"
-              ),
-              children: [
-                item.icono && /* @__PURE__ */ jsx19(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-                !colapsado && /* @__PURE__ */ jsx19("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
-                !colapsado && item.contador != null && /* @__PURE__ */ jsx19("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
-                colapsado && item.contador != null && /* @__PURE__ */ jsx19("span", { className: "sr-only", children: item.contador })
-              ]
-            }
-          ) }, item.id);
-        }) }),
+        /* @__PURE__ */ jsx19("div", { className: "min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2", children: grupos ? grupos.map(({ titulo: titulo2, items: itemsGrupo = [] }) => {
+          const plegado = Boolean(plegados[titulo2]);
+          const tieneActivo = itemsGrupo.some((item) => item.id === activeId);
+          return /* @__PURE__ */ jsxs14("div", { className: "flex flex-col", children: [
+            !colapsado && /* @__PURE__ */ jsxs14(
+              "button",
+              {
+                type: "button",
+                onClick: () => alternarGrupo(titulo2),
+                "aria-expanded": !plegado,
+                title: plegado ? `Mostrar ${titulo2}` : `Ocultar ${titulo2}`,
+                className: "mb-0.5 flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-0.5 text-left transition hover:bg-fore/5",
+                children: [
+                  /* @__PURE__ */ jsxs14("span", { className: "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute", children: [
+                    titulo2,
+                    plegado && tieneActivo && /* @__PURE__ */ jsx19("span", { className: "h-1.5 w-1.5 rounded-full bg-fono", "aria-hidden": true })
+                  ] }),
+                  /* @__PURE__ */ jsx19(
+                    Icon,
+                    {
+                      name: "chevron",
+                      className: cn("h-3 w-3 shrink-0 text-mute transition-transform duration-200", plegado && "-rotate-90")
+                    }
+                  )
+                ]
+              }
+            ),
+            (!plegado || colapsado) && lista(itemsGrupo)
+          ] }, titulo2);
+        }) : lista(items) }),
         pie && /* @__PURE__ */ jsx19("div", { className: "border-t border-ink-600 p-2", children: pie })
       ]
     }
@@ -1704,10 +1744,10 @@ function NavLateral({
 }
 
 // src/components/MenuDesplegable.jsx
-import { useEffect as useEffect2, useRef as useRef3, useState as useState5 } from "react";
+import { useEffect as useEffect2, useRef as useRef3, useState as useState6 } from "react";
 import { jsx as jsx20, jsxs as jsxs15 } from "react/jsx-runtime";
 function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel = "Men\xFA", className }) {
-  const [abierto, setAbierto] = useState5(false);
+  const [abierto, setAbierto] = useState6(false);
   const raiz = useRef3(null);
   useEffect2(() => {
     if (!abierto) return void 0;
@@ -1802,7 +1842,7 @@ function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, children, 
 }
 
 // src/components/AjustesImpresion.jsx
-import { useState as useState6 } from "react";
+import { useState as useState7 } from "react";
 
 // src/printing/estadoImpresoras.js
 var ESTADO_IMPRESORA = Object.freeze({
@@ -1947,7 +1987,7 @@ function AjustesImpresion({
   descripcion = "Eleg\xED c\xF3mo sale el papel: por red (LAN) o por una cola local (USB). La app verifica cada impresora antes de usarla.",
   className
 }) {
-  const [form, setForm] = useState6(null);
+  const [form, setForm] = useState7(null);
   const resumen = agregarEstado(impresoras, estado);
   function cambiar(campo, valor) {
     setForm((actual) => ({ ...actual, [campo]: valor }));
@@ -2097,7 +2137,7 @@ function BotonImprimir({
 }
 
 // src/components/BancoCombobox.jsx
-import { useEffect as useEffect3, useId as useId2, useMemo as useMemo2, useRef as useRef4, useState as useState8 } from "react";
+import { useEffect as useEffect3, useId as useId2, useMemo as useMemo2, useRef as useRef4, useState as useState9 } from "react";
 
 // src/utils/bancos.js
 var BANCOS_PARAGUAY = [
@@ -2187,10 +2227,10 @@ function sugerenciasDeBanco(texto, catalogo = BANCOS_PARAGUAY) {
 }
 
 // src/components/BancoLogo.jsx
-import { useState as useState7 } from "react";
+import { useState as useState8 } from "react";
 import { jsx as jsx25 } from "react/jsx-runtime";
 function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseAssets = "/bancos", marcas = {} }) {
-  const [fallo, setFallo] = useState7(false);
+  const [fallo, setFallo] = useState8(false);
   const texto = String(banco || "").trim();
   const registro = logoDeBanco(texto);
   if (!registro) return null;
@@ -2238,8 +2278,8 @@ function BancoCombobox({
   catalogo = BANCOS_PARAGUAY,
   logoProps
 }) {
-  const [abierto, setAbierto] = useState8(false);
-  const [resaltado, setResaltado] = useState8(0);
+  const [abierto, setAbierto] = useState9(false);
+  const [resaltado, setResaltado] = useState9(0);
   const listaId = useId2();
   const raiz = useRef4(null);
   const lista = useRef4(null);
@@ -2335,7 +2375,7 @@ function BancoCombobox({
 }
 
 // src/components/CityAutocomplete.jsx
-import { useEffect as useEffect4, useRef as useRef5, useState as useState9 } from "react";
+import { useEffect as useEffect4, useRef as useRef5, useState as useState10 } from "react";
 
 // src/catalog/ciudades.js
 var CIUDADES_PARAGUAY = [
@@ -2653,8 +2693,8 @@ function CityAutocomplete({
   maxLength = 100,
   inputProps
 }) {
-  const [sugerencias, setSugerencias] = useState9([]);
-  const [abierto, setAbierto] = useState9(false);
+  const [sugerencias, setSugerencias] = useState10([]);
+  const [abierto, setAbierto] = useState10(false);
   const timer = useRef5(null);
   const raiz = useRef5(null);
   useEffect4(() => {
@@ -3098,7 +3138,7 @@ function Stepper({ pasos = [], actual = 0, hechos = [], className }) {
 }
 
 // src/components/CodigoQr.jsx
-import { useEffect as useEffect5, useState as useState10 } from "react";
+import { useEffect as useEffect5, useState as useState11 } from "react";
 
 // src/utils/qr.js
 var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
@@ -3116,7 +3156,7 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 // src/components/CodigoQr.jsx
 import { jsx as jsx37 } from "react/jsx-runtime";
 function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
-  const [imagen, setImagen] = useState10("");
+  const [imagen, setImagen] = useState11("");
   useEffect5(() => {
     let activo = true;
     qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
@@ -3216,7 +3256,7 @@ function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 =
 }
 
 // src/components/Calendario.jsx
-import { useMemo as useMemo3, useState as useState11 } from "react";
+import { useMemo as useMemo3, useState as useState12 } from "react";
 
 // src/utils/calendario.js
 var ES_PY = "es-PY";
@@ -3381,9 +3421,9 @@ function Calendario({
   className
 }) {
   const claveHoy = useMemo3(() => hoyClave(hoy), [hoy]);
-  const [vistaInterna, setVistaInterna] = useState11(vistaPorDefecto);
-  const [anclaInterna, setAnclaInterna] = useState11(() => anclaPorDefecto || ancla || claveHoy);
-  const [seleccionInterna, setSeleccionInterna] = useState11(null);
+  const [vistaInterna, setVistaInterna] = useState12(vistaPorDefecto);
+  const [anclaInterna, setAnclaInterna] = useState12(() => anclaPorDefecto || ancla || claveHoy);
+  const [seleccionInterna, setSeleccionInterna] = useState12(null);
   const vistaActual = vistas.includes(vista) ? vista : vistas.includes(vistaInterna) ? vistaInterna : vistas[0] || "mes";
   const anclaActual = String(ancla || anclaInterna || claveHoy).slice(0, 10);
   const seleccion = diaSeleccionado !== void 0 ? diaSeleccionado : seleccionInterna;
@@ -3553,7 +3593,7 @@ function Calendario({
 }
 
 // src/components/RangoFecha.jsx
-import { useId as useId3, useRef as useRef6, useState as useState12 } from "react";
+import { useId as useId3, useRef as useRef6, useState as useState13 } from "react";
 
 // src/utils/rangoFecha.js
 var PERIODOS_FECHA = ["hoy", "esta-semana", "este-mes", "mes-pasado", "ultimos-30", "personalizado"];
@@ -3619,7 +3659,7 @@ function RangoFecha({
   className
 }) {
   const controlado = desde !== void 0 || hasta !== void 0;
-  const [interno, setInterno] = useState12(() => {
+  const [interno, setInterno] = useState13(() => {
     if (desdePorDefecto !== void 0 || hastaPorDefecto !== void 0) {
       return { desde: desdePorDefecto || "", hasta: hastaPorDefecto || "" };
     }
@@ -3694,7 +3734,7 @@ function RangoFecha({
 }
 
 // src/components/PaletaComandos.jsx
-import { useEffect as useEffect6, useId as useId4, useMemo as useMemo4, useRef as useRef7, useState as useState13 } from "react";
+import { useEffect as useEffect6, useId as useId4, useMemo as useMemo4, useRef as useRef7, useState as useState14 } from "react";
 import { Fragment as Fragment5, jsx as jsx42, jsxs as jsxs33 } from "react/jsx-runtime";
 var CAPITALIZAR = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
 function agruparResultados(resultados = [], { etiquetasTipo = {}, iconosTipo = {} } = {}) {
@@ -3748,13 +3788,13 @@ function PaletaComandos({
   mostrarAtajoEnBoton = true,
   className
 }) {
-  const [interna, setInterna] = useState13(false);
-  const [consulta, setConsulta] = useState13("");
-  const [resultados, setResultados] = useState13(null);
-  const [cargando, setCargando] = useState13(false);
-  const [error, setError] = useState13("");
-  const [activo, setActivo] = useState13(0);
-  const [intento, setIntento] = useState13(0);
+  const [interna, setInterna] = useState14(false);
+  const [consulta, setConsulta] = useState14("");
+  const [resultados, setResultados] = useState14(null);
+  const [cargando, setCargando] = useState14(false);
+  const [error, setError] = useState14("");
+  const [activo, setActivo] = useState14(0);
+  const [intento, setIntento] = useState14(0);
   const raiz = useRef7(null);
   const entrada = useRef7(null);
   const buscarRef = useRef7(buscar);
@@ -4001,7 +4041,7 @@ function PaletaComandos({
 }
 
 // src/components/AyudaModulo.jsx
-import { useState as useState14 } from "react";
+import { useState as useState15 } from "react";
 import { jsx as jsx43, jsxs as jsxs34 } from "react/jsx-runtime";
 function AyudaModulo({
   titulo: titulo2,
@@ -4015,7 +4055,7 @@ function AyudaModulo({
   onCerrar,
   className
 }) {
-  const [interna, setInterna] = useState14(false);
+  const [interna, setInterna] = useState15(false);
   if (!titulo2 && !resumen) return null;
   const controlada = abierta !== void 0;
   const visible = controlada ? Boolean(abierta) : interna;
@@ -4161,7 +4201,7 @@ function BarraInferior({
 }
 
 // src/components/Avatar.jsx
-import { useEffect as useEffect7, useState as useState15 } from "react";
+import { useEffect as useEffect7, useState as useState16 } from "react";
 
 // src/utils/avatar.js
 var COLORES_AVATAR = {
@@ -4218,7 +4258,7 @@ function Avatar({
   decorativo = false,
   className
 }) {
-  const [fallo, setFallo] = useState15(false);
+  const [fallo, setFallo] = useState16(false);
   useEffect7(() => {
     setFallo(false);
   }, [src]);
@@ -4348,7 +4388,7 @@ function IndicadorConexion({
 }
 
 // src/components/CampanaAvisos.jsx
-import { useEffect as useEffect8, useRef as useRef8, useState as useState16 } from "react";
+import { useEffect as useEffect8, useRef as useRef8, useState as useState17 } from "react";
 import { Fragment as Fragment7, jsx as jsx48, jsxs as jsxs37 } from "react/jsx-runtime";
 function contarSinLeer(avisos = []) {
   const conEstado = avisos.filter((aviso) => aviso && typeof aviso.leido === "boolean");
@@ -4371,7 +4411,7 @@ function CampanaAvisos({
   pie,
   className
 }) {
-  const [abierto, setAbierto] = useState16(false);
+  const [abierto, setAbierto] = useState17(false);
   const raiz = useRef8(null);
   const sinLeer = contarSinLeer(avisos);
   useEffect8(() => {
@@ -4409,7 +4449,7 @@ function CampanaAvisos({
         className: "relative grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
           /* @__PURE__ */ jsx48(Icon, { name: "bell", className: "h-4 w-4" }),
-          sinLeer > 0 && /* @__PURE__ */ jsx48("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white", children: textoContador(sinLeer) })
+          sinLeer > 0 && /* @__PURE__ */ jsx48("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
         ]
       }
     ),
@@ -4552,7 +4592,7 @@ function GraficoBarras({
 }
 
 // src/components/TableroKanban.jsx
-import { useCallback as useCallback2, useEffect as useEffect9, useMemo as useMemo5, useRef as useRef9, useState as useState17 } from "react";
+import { useCallback as useCallback2, useEffect as useEffect9, useMemo as useMemo5, useRef as useRef9, useState as useState18 } from "react";
 
 // src/utils/fecha.js
 var ES_PY2 = "es-PY";
@@ -4646,8 +4686,8 @@ function destinosDeTarjeta(tarjeta, columnas = []) {
   return (permitidos || []).filter((valor, indice) => valor !== tarjeta?.estado && permitidos.indexOf(valor) === indice);
 }
 function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
-  const [overrides, setOverrides] = useState17({});
-  const [moviendo, setMoviendo] = useState17(SIN_MOVIMIENTOS);
+  const [overrides, setOverrides] = useState18({});
+  const [moviendo, setMoviendo] = useState18(SIN_MOVIMIENTOS);
   const tarjetasRef = useRef9(tarjetas);
   const overridesRef = useRef9(overrides);
   const enVueloRef = useRef9(/* @__PURE__ */ new Set());
@@ -4747,8 +4787,8 @@ function TableroKanban({
   className
 }) {
   const { tarjetas: efectivas, moverA, moviendo } = useTableroOptimista({ tarjetas, onMover, onError });
-  const [arrastrandoId, setArrastrandoId] = useState17("");
-  const [sobreColumna, setSobreColumna] = useState17("");
+  const [arrastrandoId, setArrastrandoId] = useState18("");
+  const [sobreColumna, setSobreColumna] = useState18("");
   const columnasReales = useMemo5(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
   const grupos = useMemo5(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
   const arrastrando = arrastrandoId ? efectivas.find((tarjeta) => tarjeta.id === arrastrandoId) ?? null : null;
@@ -5327,7 +5367,7 @@ function DocumentoImpresion({
 }
 
 // src/components/SubidaImagen.jsx
-import { useId as useId5, useRef as useRef10, useState as useState18 } from "react";
+import { useId as useId5, useRef as useRef10, useState as useState19 } from "react";
 import { jsx as jsx54, jsxs as jsxs43 } from "react/jsx-runtime";
 var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
 var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
@@ -5488,10 +5528,10 @@ function SubidaImagen({
   const campoId = useId5();
   const errorId = `${campoId}-error`;
   const ayudaId = `${campoId}-ayuda`;
-  const [preparando, setPreparando] = useState18(false);
-  const [errorLocal, setErrorLocal] = useState18("");
-  const [vistaLocal, setVistaLocal] = useState18(null);
-  const [arrastrando, setArrastrando] = useState18(false);
+  const [preparando, setPreparando] = useState19(false);
+  const [errorLocal, setErrorLocal] = useState19("");
+  const [vistaLocal, setVistaLocal] = useState19(null);
+  const [arrastrando, setArrastrando] = useState19(false);
   const mensaje = error || errorLocal;
   const trabajando = Boolean(ocupado) || preparando;
   const vista = vistaLocal ?? valor;
