@@ -105,15 +105,25 @@ html.dark {
 
 /* ── Tema v2 "device ops" (piloto #241, promovido desde `slot/diseno`) ──────
    Versión con variante clara y oscura del mismo lenguaje: consola oscura en
-   modo oscuro y equivalente claro en modo claro. Aplica a la pantalla que lo
-   use (inventario, ficha de unidad, carrito POS) sin tocar el resto de la app.
-   `.v2-piloto` es el alias que ya usaban las pantallas del piloto; `.tema-v2`
-   es el nombre canónico de la biblioteca. Los números grandes van con
-   `.v2-numero`. */
+   modo oscuro y equivalente claro en modo claro. Aplica a la pantalla o al
+   shell que lo use (inventario, ficha de unidad, carrito POS, navegación) sin
+   tocar el resto de la app. `.v2-piloto` es el alias que ya usaban las
+   pantallas del piloto; `.tema-v2` es el nombre canónico de la biblioteca. Los
+   números grandes van con `.v2-numero`.
+
+   Tonos de TEXTO AA (medición del shell v2, #241): los roles semánticos usan
+   el tono que llega a 4.5:1 sobre las superficies v2 —claro `ok` #166534,
+   `bad` #B91C1C, `warn` #92400E, `info` #2059BE; oscuro `ok` #4ADE80, `bad`
+   #FCA5A5, `warn` #FCD34D, `info` #9FB8FF—. Los vivos de PhoneCheck
+   (#16A34A/#22C55E, #DC2626, #D97706, #4D7CFE) quedan para rellenos e
+   indicadores: siguen disponibles en `--c-pass` y `--c-accion` (cualquier
+   tema) o en las clases `bg-*` del preset. La guarda
+   `test/contraste-tokens.test.js` frena si un tono de texto deja de cumplir. */
 .tema-v2,
 .v2-piloto {
   --c-paper: 246 248 251;
   --c-ink: 255 255 255;
+  --c-ink-950: 246 248 251;
   --c-ink-900: 255 255 255;
   --c-ink-800: 241 244 248;
   --c-ink-700: 232 236 243;
@@ -121,10 +131,16 @@ html.dark {
   --c-ink-500: 148 163 184;
   --c-fore: 14 17 22;
   --c-mute: 71 85 105;
-  --c-ok: 22 163 74;
-  --c-bad: 220 38 38;
-  --c-warn: 217 119 6;
-  --c-info: 77 124 254;
+  --c-fono: 16 185 129;
+  --c-fono-dark: 4 120 87;
+  --c-fono-light: 4 120 87;
+  --c-fono-glow: 16 185 129;
+  --c-ok: 22 101 52;
+  --c-bad: 185 28 28;
+  --c-warn: 146 64 14;
+  --c-info: 32 89 190;
+  --c-reserved: 109 40 217;
+  --c-onbrand: 4 28 18;
 
   --oc-canvas: rgb(var(--c-paper));
   --oc-surface: rgb(var(--c-ink));
@@ -144,10 +160,16 @@ html.dark .v2-piloto,
   --c-ink-500: 90 100 120;
   --c-fore: 244 246 250;
   --c-mute: 154 163 178;
-  --c-ok: 34 197 94;
-  --c-bad: 239 68 68;
-  --c-warn: 245 158 11;
-  --c-info: 77 124 254;
+  --c-fono: 5 241 156;
+  --c-fono-dark: 4 185 120;
+  --c-fono-light: 124 255 201;
+  --c-fono-glow: 5 241 156;
+  --c-ok: 74 222 128;
+  --c-bad: 252 165 165;
+  --c-warn: 252 211 77;
+  --c-info: 159 184 255;
+  --c-reserved: 196 181 253;
+  --c-onbrand: 6 30 20;
 }
 .tema-v2 .v2-numero,
 .v2-piloto .v2-numero {

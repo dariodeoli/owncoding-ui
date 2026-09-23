@@ -23,7 +23,9 @@ describe('tokens del tema v2 (piloto)', () => {
     expect(tokens).toContain('--c-paper: 246 248 251') // claro
     expect(tokens).toContain('html.dark .tema-v2,')
     expect(tokens).toContain('--c-paper: 14 17 22') // consola oscura
-    expect(tokens).toContain('--c-info: 77 124 254') // azul acción
+    expect(tokens).toContain('--c-info: 32 89 190') // azul acción AA en claro
+    expect(tokens).toContain('--c-ok: 22 101 52') // ok de texto AA en claro
+    expect(tokens).toContain('--c-info: 159 184 255') // azul AA en oscuro
     expect(tokens).toContain('.tema-v2 .v2-numero')
   })
 
