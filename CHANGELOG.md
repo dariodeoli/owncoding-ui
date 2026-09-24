@@ -4,6 +4,21 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.19.0 — 2026-09-24
+
+- **Envíos entrantes y recepción (#250 F4/F5, lote del 24-09):**
+  - `ContadorLote`: avance «3 de 12» con tono según el lote (en curso/completo),
+    `mostrarFaltan` y variantes `texto`/`chip`/`barra` (progressbar accesible).
+  - `ResumenDestinos`: la compra consolidada conserva sus destinos
+    («1 pedido A · 3 stock»), con callback opcional al elegir.
+  - `ResumenIncidencias`: faltantes/sobrantes/dañadas/incorrectas/sin IMEI con
+    los conteos reales; sin incidencias lo dice en verde.
+- **Rollout v2 (shell):** `IndicadorConexion` suma **`variante="banner"`** (la
+  franja ancha de sin conexión, con la superficie roja y texto legible por
+  tema) y un `mensaje` propio; el chip de la cola queda igual. Con esto
+  `SHELL.md` §7 solo deja app-side el alternador de tema.
+- Docs (REGLAS §3/§4, SHELL §7, README) y tests (189 en total).
+
 ## v0.18.0 — 2026-09-24
 
 - **Tanda de abastecimiento y entrega (#250/#241, lote del 24-09):**

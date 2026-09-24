@@ -18,6 +18,7 @@ import {
   FilaDato,
   BarraLote,
   CampoSeriales,
+  ContadorLote,
   GradoBadge,
   IconAction,
   IconoCategoria,
@@ -33,8 +34,11 @@ import {
   Subtabs,
   Input,
   Label,
+  IndicadorConexion,
   MedidorBateria,
   MedidorStock,
+  ResumenDestinos,
+  ResumenIncidencias,
   Money,
   Modal,
   PageHeader,
@@ -366,5 +370,30 @@ describe('render de los objetos base', () => {
     expect(renderToStaticMarkup(<MedidorStock stock={null} umbral={5} />)).toContain('Sin dato')
     expect(renderToStaticMarkup(<MedidorStock stock={2} umbral={5} variante="chip" />)).toContain('border-warn/30')
     expect(renderToStaticMarkup(<MedidorStock stock={2} umbral={5} variante="barra" />)).toContain('role="progressbar"')
+  })
+  test('los objetos de envíos y recepción (lote 25)', () => {
+    // Contador de lote «N de M».
+    expect(renderToStaticMarkup(<ContadorLote recibidos={3} total={12} />)).toContain('3 de 12')
+    expect(renderToStaticMarkup(<ContadorLote recibidos={12} total={12} variante="chip" />)).toContain('border-ok/30')
+    expect(renderToStaticMarkup(<ContadorLote recibidos={3} total={12} variante="barra" mostrarFaltan />)).toContain('faltan 9')
+    expect(renderToStaticMarkup(<ContadorLote total={12} />)).toContain('Sin dato')
+
+    // Destinos de la compra consolidada.
+    const destinos = renderToStaticMarkup(<ResumenDestinos destinos={[{ etiqueta: 'Pedido MOB-0042', cantidad: 1 }, { etiqueta: 'Stock', cantidad: 3 }]} />)
+    expect(destinos).toContain('Pedido MOB-0042')
+    expect(destinos).toContain('Stock')
+    expect(renderToStaticMarkup(<ResumenDestinos destinos={[]} />)).toBe('')
+
+    // Incidencias de la recepción.
+    const incidencias = renderToStaticMarkup(<ResumenIncidencias incidencias={[{ tipo: 'faltante', cantidad: 2 }, { tipo: 'sinImei', cantidad: 5 }]} />)
+    expect(incidencias).toContain('Faltan')
+    expect(incidencias).toContain('Sin IMEI')
+    expect(renderToStaticMarkup(<ResumenIncidencias incidencias={[{ tipo: 'faltante', cantidad: 0 }]} />)).toContain('Sin incidencias')
+
+    // Banner de conexión del shell (superficie roja con texto legible por tema).
+    const banner = renderToStaticMarkup(<IndicadorConexion enLinea={false} variante="banner" />)
+    expect(banner).toContain('bg-bad')
+    expect(banner).toContain('text-white dark:text-onbrand')
+    expect(renderToStaticMarkup(<IndicadorConexion enLinea pendientes={3} variante="banner" onSincronizar={() => {}} />)).toContain('Sincronizar')
   })
 })

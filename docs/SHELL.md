@@ -174,8 +174,9 @@ completo sin perder AA. Salen de la revisión cruzada CMP ↔ DSN del shell real
   siguen en su bloque local; se retiran cuando MobOS ponga la clase `v2-chip`
   en sus filas.
 - ✅ **Presencia**: `PilaPersonas` (+ `PersonaChip estado` y `resumenPresencia`)
-  cubre la píldora del shell desde **v0.17.0**; queda app-side el alternador de
-  tema y el banner ancho de sin conexión (el chip de la cola es
-  `IndicadorConexion`).
+  cubre la píldora del shell desde **v0.17.0**.
+- ✅ **Sin conexión**: `IndicadorConexion variante="banner"` (franja ancha con
+  la regla de superficies rojas) desde **v0.19.0**; solo queda app-side el
+  alternador de tema (el chip de la cola sigue siendo la variante `chip`).
 - ✅ **`PageHeader` con migas**: `migas=[{ etiqueta, href? }]` con
   `aria-current="page"` desde v0.17.0.

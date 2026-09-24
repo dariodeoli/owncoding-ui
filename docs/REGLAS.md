@@ -97,6 +97,7 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - Carga: `Skeleton` para placeholders; las pulsaciones decorativas (un ícono,
   un punto de estado) no son skeletons.
 - Errores de pantalla completa: `ErrorState` con reintento.
+- Conexión: `IndicadorConexion` en `variante="chip"` (cola offline) o `variante="banner"` (franja ancha del shell; sin conexión usa la superficie roja con texto legible en cada tema).
 - **Estados de negocio:** también se dibujan con `ChipEstado` (un solo chip en
   toda la app): `borrador`, `enviado`, `aprobado`, `rechazado`, `vencido`,
   `cobrado`/`pagado`, `por cobrar`, `activo`, `pausado`, `anulado`, `cancelado`
@@ -119,6 +120,8 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - `SeccionColapsable`: sección de detalle plegable (arranca cerrada, `aria-expanded` + `aria-controls`); con `clave` recuerda el estado en la sesión y el contenido queda en el DOM con `hidden` (los apoyos de lectura y las pruebas lo encuentran).
 - Barras de avance: `BarraProgreso` (accesible, con tono y altura).
 - Stock contra el punto de reposición: `MedidorStock` (`texto`/`chip`/`barra`; agotado/reponer/en stock; sin dato dice «Sin dato», nunca 0).
+- Avance de un lote: `ContadorLote` («3 de 12», variantes `texto`/`chip`/`barra`, tono según el avance, `mostrarFaltan`); recepción: `ResumenIncidencias` (faltantes/sobrantes/dañadas/incorrectas/sin IMEI con conteos reales; sin incidencias lo dice en verde).
+- Destinos de una compra consolidada: `ResumenDestinos` («1 pedido A · 3 stock», conserva los destinos;#250 §5).
 - Reglas: misma altura de fila, sin cortes de texto, acciones en una línea,
   montos/fechas/códigos con `nowrap` + dígitos tabulares.
 - Vacíos y estados dentro de la tabla: `EmptyState compact`.

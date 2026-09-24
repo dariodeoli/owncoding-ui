@@ -219,6 +219,9 @@ export function CampoSeriales(props: {
   className?: string
 }): ReactElement
 export function MedidorStock(props: { stock?: number | null; umbral?: number | null; variante?: 'texto' | 'chip' | 'barra'; etiqueta?: string; mostrarUmbral?: boolean; vacio?: string; className?: string }): ReactElement
+export function ContadorLote(props: { recibidos?: number | null; total?: number | null; variante?: 'texto' | 'chip' | 'barra'; sufijo?: string; mostrarFaltan?: boolean; vacio?: string; className?: string }): ReactElement
+export function ResumenDestinos(props: { destinos?: Array<{ id?: string; etiqueta: ReactNode; cantidad: number; detalle?: string }>; ariaLabel?: string; onElegir?: (destino: any) => void; className?: string }): ReactElement | null
+export function ResumenIncidencias(props: { incidencias?: Array<{ tipo?: string; etiqueta?: ReactNode; cantidad?: number; tono?: string; detalle?: string }>; sinIncidencias?: string; className?: string }): ReactElement
 export function EstadoBadge(props: { mapa?: Record<string, { label: ReactNode; color?: string }>; valor?: string; vacio?: string }): ReactElement
 export function SeccionColapsable(props: { titulo: ReactNode; resumen?: ReactNode; icono?: string; abierta?: boolean; clave?: string; className?: string; children?: ReactNode }): ReactElement
 
@@ -448,7 +451,7 @@ export function colorDeNombre(nombre: string): string
 
 export function ImporteDelta(props: { valor?: number | string | null; moneda?: Moneda; formato?: 'moneda' | 'porcentaje'; invertir?: boolean; vacio?: string; simbolo?: string; className?: string }): ReactElement
 export function tonoDelta(valor: unknown, opciones?: { invertir?: boolean }): TonoCanonico
-export function IndicadorConexion(props: { enLinea?: boolean; pendientes?: number; sincronizando?: boolean; onSincronizar?: () => void; className?: string }): ReactElement
+export function IndicadorConexion(props: { enLinea?: boolean; pendientes?: number; sincronizando?: boolean; onSincronizar?: () => void; variante?: 'chip' | 'banner'; mensaje?: string; etiquetaEnLinea?: string; etiquetaSinConexion?: string; etiquetaSincronizando?: string; className?: string }): ReactElement
 export function CampanaAvisos(props: Record<string, any> & { avisos?: any[]; onAbrir?: (abierta: boolean) => void; onElegir?: (aviso: any) => void; pie?: ReactNode; anclaje?: string; className?: string }): ReactElement
 export function contarSinLeer(avisos?: any[]): number
 export function textoContador(total: number): string

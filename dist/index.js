@@ -3628,19 +3628,153 @@ function MedidorStock({
   );
 }
 
-// src/components/GradoBadge.jsx
+// src/components/ContadorLote.jsx
 import { jsx as jsx44, jsxs as jsxs35 } from "react/jsx-runtime";
+function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFaltan = false, vacio = "Sin dato", className }) {
+  const r = Number(recibidos);
+  const t = Number(total);
+  if (recibidos === null || recibidos === void 0 || !Number.isFinite(t) || t <= 0 || !Number.isFinite(r)) {
+    return /* @__PURE__ */ jsx44("span", { className: cn("text-xs text-mute", className), children: vacio });
+  }
+  const hechas = Math.max(0, Math.min(t, Math.trunc(r)));
+  const completo = hechas >= t;
+  const tono = completo ? "ok" : hechas > 0 ? "warn" : "mute";
+  const faltan = t - hechas;
+  const texto = sufijo ? `${hechas} de ${t} ${sufijo}` : `${hechas} de ${t}`;
+  if (variante === "barra") {
+    const porcentaje = Math.round(hechas / t * 100);
+    return /* @__PURE__ */ jsxs35("span", { className: cn("block min-w-0 space-y-1", className), children: [
+      /* @__PURE__ */ jsxs35("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx44("span", { className: cn("font-semibold", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
+        mostrarFaltan && !completo && /* @__PURE__ */ jsxs35("span", { className: "text-mute", children: [
+          "faltan ",
+          faltan
+        ] })
+      ] }),
+      /* @__PURE__ */ jsx44(
+        "span",
+        {
+          role: "progressbar",
+          "aria-label": sufijo ? `${hechas} de ${t} ${sufijo}` : `${hechas} de ${t}`,
+          "aria-valuenow": hechas,
+          "aria-valuemin": 0,
+          "aria-valuemax": t,
+          className: "block h-1.5 overflow-hidden rounded-full bg-ink-700",
+          children: /* @__PURE__ */ jsx44("span", { className: cn("block h-full rounded-full transition-[width]", tono === "ok" ? "bg-ok" : tono === "warn" ? "bg-warn" : "bg-mute"), style: { width: `${porcentaje}%` } })
+        }
+      )
+    ] });
+  }
+  if (variante === "chip") {
+    return /* @__PURE__ */ jsxs35(
+      "span",
+      {
+        className: cn(
+          "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold",
+          tono === "ok" ? "border-ok/30 bg-ok/10 text-ok" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn" : "border-ink-500 bg-ink-700 text-mute",
+          className
+        ),
+        title: texto,
+        children: [
+          /* @__PURE__ */ jsx44("span", { className: "tabular-nums", children: texto }),
+          mostrarFaltan && !completo && /* @__PURE__ */ jsxs35("span", { className: "font-normal", children: [
+            "\xB7 faltan ",
+            faltan
+          ] })
+        ]
+      }
+    );
+  }
+  return /* @__PURE__ */ jsxs35("span", { className: cn("inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs", className), title: texto, children: [
+    /* @__PURE__ */ jsx44("span", { className: cn("font-semibold tabular-nums", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
+    mostrarFaltan && !completo && /* @__PURE__ */ jsxs35("span", { className: "text-mute", children: [
+      "faltan ",
+      faltan
+    ] })
+  ] });
+}
+
+// src/components/ResumenDestinos.jsx
+import { jsx as jsx45, jsxs as jsxs36 } from "react/jsx-runtime";
+function ResumenDestinos({ destinos = [], ariaLabel = "Destinos", onElegir, className }) {
+  const lista = (Array.isArray(destinos) ? destinos : []).filter((destino) => destino && Number(destino.cantidad) > 0);
+  if (!lista.length) return null;
+  return /* @__PURE__ */ jsx45("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-mute", className), "aria-label": ariaLabel, children: lista.map((destino, indice) => /* @__PURE__ */ jsxs36("span", { className: "flex min-w-0 items-center gap-1.5", children: [
+    indice > 0 && /* @__PURE__ */ jsx45("span", { "aria-hidden": "true", children: "\xB7" }),
+    onElegir ? /* @__PURE__ */ jsxs36(
+      "button",
+      {
+        type: "button",
+        onClick: () => onElegir(destino),
+        title: destino.detalle || void 0,
+        className: "min-w-0 truncate transition hover:text-fore",
+        children: [
+          /* @__PURE__ */ jsx45("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
+          " ",
+          destino.etiqueta
+        ]
+      }
+    ) : /* @__PURE__ */ jsxs36("span", { className: "min-w-0 truncate", title: destino.detalle || void 0, children: [
+      /* @__PURE__ */ jsx45("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
+      " ",
+      destino.etiqueta
+    ] })
+  ] }, destino.id ?? `${destino.etiqueta}-${indice}`)) });
+}
+
+// src/components/ResumenIncidencias.jsx
+import { jsx as jsx46, jsxs as jsxs37 } from "react/jsx-runtime";
+var TIPOS = {
+  faltante: { etiqueta: "Faltan", tono: "bad" },
+  sobrante: { etiqueta: "Sobran", tono: "warn" },
+  danado: { etiqueta: "Da\xF1adas", tono: "bad" },
+  incorrecto: { etiqueta: "Incorrectas", tono: "warn" },
+  sinImei: { etiqueta: "Sin IMEI", tono: "mute" },
+  sinDocumentacion: { etiqueta: "Sin documentaci\xF3n", tono: "warn" }
+};
+var CLASES = {
+  bad: "border-bad/30 bg-bad/10 text-bad",
+  warn: "border-warn/30 bg-warn/10 text-warn",
+  mute: "border-ink-500 bg-ink-700 text-mute",
+  ok: "border-ok/30 bg-ok/10 text-ok"
+};
+function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencias", className }) {
+  const lista = (Array.isArray(incidencias) ? incidencias : []).map((incidencia) => ({ ...incidencia, cantidad: Math.trunc(Number(incidencia?.cantidad) || 0) })).filter((incidencia) => incidencia.cantidad > 0);
+  if (!lista.length) {
+    return /* @__PURE__ */ jsx46("span", { className: cn("inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES.ok, className), children: sinIncidencias });
+  }
+  return /* @__PURE__ */ jsx46("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), role: "list", "aria-label": "Incidencias de la recepci\xF3n", children: lista.map((incidencia, indice) => {
+    const base = TIPOS[incidencia.tipo] || { etiqueta: incidencia.tipo || "Incidencia", tono: "mute" };
+    const tono = incidencia.tono || base.tono;
+    return /* @__PURE__ */ jsxs37(
+      "span",
+      {
+        role: "listitem",
+        title: incidencia.detalle || void 0,
+        className: cn("inline-flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES[tono] || CLASES.mute),
+        children: [
+          incidencia.etiqueta || base.etiqueta,
+          /* @__PURE__ */ jsx46("span", { className: "tabular-nums", children: incidencia.cantidad })
+        ]
+      },
+      `${incidencia.tipo}-${indice}`
+    );
+  }) });
+}
+
+// src/components/GradoBadge.jsx
+import { jsx as jsx47, jsxs as jsxs38 } from "react/jsx-runtime";
 function GradoBadge({ grado, conDescripcion = false, className }) {
   const config = gradoCondicion(grado);
-  if (!config) return /* @__PURE__ */ jsx44(Badge, { className, children: grado || "Sin grado" });
-  return /* @__PURE__ */ jsxs35("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsx44(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
-    conDescripcion && /* @__PURE__ */ jsx44("span", { className: "text-xs text-mute", children: config.descripcion })
+  if (!config) return /* @__PURE__ */ jsx47(Badge, { className, children: grado || "Sin grado" });
+  return /* @__PURE__ */ jsxs38("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsx47(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
+    conDescripcion && /* @__PURE__ */ jsx47("span", { className: "text-xs text-mute", children: config.descripcion })
   ] });
 }
 
 // src/components/TileEquipo.jsx
-import { Fragment as Fragment3, jsx as jsx45, jsxs as jsxs36 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx48, jsxs as jsxs39 } from "react/jsx-runtime";
 function TileEquipo({
   modelo,
   imei,
@@ -3656,31 +3790,31 @@ function TileEquipo({
   className
 }) {
   const raiz = cn("w-full space-y-2.5 rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left", onOpen && "transition hover:border-fono active:scale-[.995]", className);
-  const contenido = /* @__PURE__ */ jsxs36(Fragment3, { children: [
-    /* @__PURE__ */ jsxs36("div", { className: "flex items-start gap-3", children: [
-      foto ? /* @__PURE__ */ jsx45("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx45("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx45(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
-      /* @__PURE__ */ jsxs36("div", { className: "min-w-0 flex-1", children: [
-        /* @__PURE__ */ jsx45("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
-        imei && /* @__PURE__ */ jsx45("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
-        detalle && /* @__PURE__ */ jsx45("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
+  const contenido = /* @__PURE__ */ jsxs39(Fragment3, { children: [
+    /* @__PURE__ */ jsxs39("div", { className: "flex items-start gap-3", children: [
+      foto ? /* @__PURE__ */ jsx48("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx48("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx48(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
+      /* @__PURE__ */ jsxs39("div", { className: "min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsx48("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
+        imei && /* @__PURE__ */ jsx48("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
+        detalle && /* @__PURE__ */ jsx48("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
       ] }),
-      estado && /* @__PURE__ */ jsx45(ChipEstado, { estado })
+      estado && /* @__PURE__ */ jsx48(ChipEstado, { estado })
     ] }),
-    /* @__PURE__ */ jsxs36("div", { className: "flex flex-wrap items-center gap-2", children: [
-      grado && /* @__PURE__ */ jsx45(GradoBadge, { grado }),
-      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx45(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
-      locks?.length ? /* @__PURE__ */ jsx45(ChipsLocks, { locks }) : null
+    /* @__PURE__ */ jsxs39("div", { className: "flex flex-wrap items-center gap-2", children: [
+      grado && /* @__PURE__ */ jsx48(GradoBadge, { grado }),
+      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx48(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
+      locks?.length ? /* @__PURE__ */ jsx48(ChipsLocks, { locks }) : null
     ] }),
-    acciones && /* @__PURE__ */ jsx45("div", { className: "flex flex-wrap gap-2", children: acciones })
+    acciones && /* @__PURE__ */ jsx48("div", { className: "flex flex-wrap gap-2", children: acciones })
   ] });
   if (onOpen) {
-    return /* @__PURE__ */ jsx45("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
+    return /* @__PURE__ */ jsx48("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
   }
-  return /* @__PURE__ */ jsx45("article", { className: raiz, children: contenido });
+  return /* @__PURE__ */ jsx48("article", { className: raiz, children: contenido });
 }
 
 // src/components/Stepper.jsx
-import { jsx as jsx46, jsxs as jsxs37 } from "react/jsx-runtime";
+import { jsx as jsx49, jsxs as jsxs40 } from "react/jsx-runtime";
 function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", ariaLabel = "Flujo", className }) {
   if (!pasos.length) return null;
   const etiquetaDe = (paso) => typeof paso === "string" ? paso : paso.etiqueta ?? paso.label ?? "";
@@ -3688,11 +3822,11 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
   const esHecho = (paso, indice) => hechos.includes(claveDe(paso, indice)) || typeof actual === "number" && indice < actual;
   const esActual = (paso, indice) => typeof paso === "string" || paso.id === void 0 ? indice === actual : paso.id === actual;
   if (variante === "tarjetas") {
-    return /* @__PURE__ */ jsx46("ol", { className: cn("grid grid-cols-2 gap-2 sm:grid-flow-col sm:auto-cols-fr", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
+    return /* @__PURE__ */ jsx49("ol", { className: cn("grid grid-cols-2 gap-2 sm:grid-flow-col sm:auto-cols-fr", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
       const hecho = esHecho(paso, indice);
       const activo = !hecho && esActual(paso, indice);
-      return /* @__PURE__ */ jsxs37("li", { className: cn("flex items-center gap-2.5 rounded-xl border p-2.5", activo ? "border-info/40 bg-info/5" : "border-ink-600"), children: [
-        /* @__PURE__ */ jsx46(
+      return /* @__PURE__ */ jsxs40("li", { className: cn("flex items-center gap-2.5 rounded-xl border p-2.5", activo ? "border-info/40 bg-info/5" : "border-ink-600"), children: [
+        /* @__PURE__ */ jsx49(
           "span",
           {
             className: cn(
@@ -3700,18 +3834,18 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
               activo ? "oc-paso-activo bg-info/15 text-info" : hecho ? "bg-ok/15 text-ok" : "bg-ink-700 text-mute"
             ),
             "aria-hidden": "true",
-            children: hecho ? /* @__PURE__ */ jsx46(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+            children: hecho ? /* @__PURE__ */ jsx49(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
           }
         ),
-        /* @__PURE__ */ jsx46("span", { className: "min-w-0 truncate text-xs font-semibold", children: etiquetaDe(paso) })
+        /* @__PURE__ */ jsx49("span", { className: "min-w-0 truncate text-xs font-semibold", children: etiquetaDe(paso) })
       ] }, claveDe(paso, indice));
     }) });
   }
-  return /* @__PURE__ */ jsx46("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
+  return /* @__PURE__ */ jsx49("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
     const hecho = esHecho(paso, indice);
     const enCurso = esActual(paso, indice);
-    return /* @__PURE__ */ jsxs37("li", { className: "flex items-center gap-2", children: [
-      /* @__PURE__ */ jsx46(
+    return /* @__PURE__ */ jsxs40("li", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsx49(
         "span",
         {
           className: cn(
@@ -3721,17 +3855,17 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
             !hecho && !enCurso && "border-ink-600 bg-ink-800 text-mute"
           ),
           "aria-hidden": "true",
-          children: hecho ? /* @__PURE__ */ jsx46(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+          children: hecho ? /* @__PURE__ */ jsx49(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
         }
       ),
-      /* @__PURE__ */ jsxs37("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
+      /* @__PURE__ */ jsxs40("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
         etiquetaDe(paso),
-        typeof paso === "object" && paso.detalle && /* @__PURE__ */ jsxs37("span", { className: "ml-1 font-normal text-mute", children: [
+        typeof paso === "object" && paso.detalle && /* @__PURE__ */ jsxs40("span", { className: "ml-1 font-normal text-mute", children: [
           "\xB7 ",
           paso.detalle
         ] })
       ] }),
-      indice < pasos.length - 1 && /* @__PURE__ */ jsx46("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
+      indice < pasos.length - 1 && /* @__PURE__ */ jsx49("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
     ] }, claveDe(paso, indice));
   }) });
 }
@@ -3753,7 +3887,7 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 }
 
 // src/components/CodigoQr.jsx
-import { jsx as jsx47 } from "react/jsx-runtime";
+import { jsx as jsx50 } from "react/jsx-runtime";
 function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
   const [imagen, setImagen] = useState15("");
   useEffect6(() => {
@@ -3766,11 +3900,11 @@ function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3dig
     };
   }, [valor, ancho, nivel, margen]);
   if (!imagen) return null;
-  return /* @__PURE__ */ jsx47("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
+  return /* @__PURE__ */ jsx50("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
 }
 
 // src/components/FichaCertificado.jsx
-import { jsx as jsx48, jsxs as jsxs38 } from "react/jsx-runtime";
+import { jsx as jsx51, jsxs as jsxs41 } from "react/jsx-runtime";
 function FichaCertificado({
   empresa,
   modelo,
@@ -3791,25 +3925,25 @@ function FichaCertificado({
 }) {
   const hayChecklist = Number(total) > 0;
   const completo = hayChecklist && Number(aprobados) === Number(total);
-  return /* @__PURE__ */ jsxs38("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
-    /* @__PURE__ */ jsxs38("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
-      /* @__PURE__ */ jsxs38("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx48("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
-        /* @__PURE__ */ jsx48("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
+  return /* @__PURE__ */ jsxs41("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
+    /* @__PURE__ */ jsxs41("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
+      /* @__PURE__ */ jsxs41("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsx51("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
+        /* @__PURE__ */ jsx51("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
       ] }),
-      /* @__PURE__ */ jsx48(ChipEstado, { estado })
+      /* @__PURE__ */ jsx51(ChipEstado, { estado })
     ] }),
-    /* @__PURE__ */ jsxs38("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
-      /* @__PURE__ */ jsxs38("div", { className: "min-w-0 space-y-3", children: [
-        /* @__PURE__ */ jsxs38("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
-          /* @__PURE__ */ jsx48(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
-          /* @__PURE__ */ jsx48(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx48(GradoBadge, { grado }) : "Sin grado asignado" }),
-          /* @__PURE__ */ jsx48(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx48(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
-          /* @__PURE__ */ jsx48(
+    /* @__PURE__ */ jsxs41("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
+      /* @__PURE__ */ jsxs41("div", { className: "min-w-0 space-y-3", children: [
+        /* @__PURE__ */ jsxs41("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
+          /* @__PURE__ */ jsx51(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
+          /* @__PURE__ */ jsx51(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx51(GradoBadge, { grado }) : "Sin grado asignado" }),
+          /* @__PURE__ */ jsx51(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx51(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
+          /* @__PURE__ */ jsx51(
             FilaDato,
             {
               etiqueta: "Checklist",
-              valor: hayChecklist ? /* @__PURE__ */ jsxs38("span", { className: completo ? "text-pass" : "text-mute", children: [
+              valor: hayChecklist ? /* @__PURE__ */ jsxs41("span", { className: completo ? "text-pass" : "text-mute", children: [
                 aprobados,
                 " de ",
                 total,
@@ -3818,23 +3952,23 @@ function FichaCertificado({
             }
           )
         ] }),
-        locks.length ? /* @__PURE__ */ jsx48(ChipsLocks, { locks, conEstado: true }) : null,
-        /* @__PURE__ */ jsxs38("p", { className: "text-xs text-mute", children: [
+        locks.length ? /* @__PURE__ */ jsx51(ChipsLocks, { locks, conEstado: true }) : null,
+        /* @__PURE__ */ jsxs41("p", { className: "text-xs text-mute", children: [
           verificadoPor ? `Verificado por ${verificadoPor}` : "Verificaci\xF3n pendiente",
           verificadoAt ? ` \xB7 ${verificadoAt}` : ""
         ] })
       ] }),
-      enlace ? /* @__PURE__ */ jsxs38("div", { className: "flex flex-col items-center gap-2", children: [
-        /* @__PURE__ */ jsx48(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
-        /* @__PURE__ */ jsx48("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
+      enlace ? /* @__PURE__ */ jsxs41("div", { className: "flex flex-col items-center gap-2", children: [
+        /* @__PURE__ */ jsx51(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
+        /* @__PURE__ */ jsx51("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
       ] }) : null
     ] }),
-    acciones ? /* @__PURE__ */ jsx48("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
+    acciones ? /* @__PURE__ */ jsx51("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
   ] });
 }
 
 // src/components/VistaPreviaPapel.jsx
-import { jsx as jsx49 } from "react/jsx-runtime";
+import { jsx as jsx52 } from "react/jsx-runtime";
 var ANCHOS_PAPEL = {
   "thermal-80": "max-w-[302px]",
   "thermal-58": "max-w-[219px]",
@@ -3844,7 +3978,7 @@ var ANCHOS_PAPEL = {
 };
 function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 = "Vista previa del documento", alto = "h-[60vh]", className, ...props }) {
   const ancho = ANCHOS_PAPEL[formato];
-  return /* @__PURE__ */ jsx49(
+  return /* @__PURE__ */ jsx52(
     "iframe",
     {
       title: titulo2,
@@ -3963,7 +4097,7 @@ function claveUTC(fecha) {
 }
 
 // src/components/Calendario.jsx
-import { Fragment as Fragment4, jsx as jsx50, jsxs as jsxs39 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx53, jsxs as jsxs42 } from "react/jsx-runtime";
 var TONO_ITEM = { info: TONOS.chip.info, ok: TONOS.chip.ok, warn: TONOS.chip.warn, bad: TONOS.chip.bad };
 function ItemCalendario({ item, contexto, onElegir }) {
   const tono = TONO_ITEM[item.tono] || TONOS.chip.mute;
@@ -3973,28 +4107,28 @@ function ItemCalendario({ item, contexto, onElegir }) {
     contexto.vista === "lista" ? "px-2.5 py-1.5 text-xs" : "px-1.5 py-0.5 text-[11px]",
     tono
   );
-  const contenido = /* @__PURE__ */ jsxs39(Fragment4, { children: [
-    item.hora && /* @__PURE__ */ jsx50("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
-    /* @__PURE__ */ jsxs39("span", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx50("span", { className: "block truncate font-medium", children: item.titulo }),
-      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx50("span", { className: "block truncate opacity-80", children: item.detalle })
+  const contenido = /* @__PURE__ */ jsxs42(Fragment4, { children: [
+    item.hora && /* @__PURE__ */ jsx53("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
+    /* @__PURE__ */ jsxs42("span", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx53("span", { className: "block truncate font-medium", children: item.titulo }),
+      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx53("span", { className: "block truncate opacity-80", children: item.detalle })
     ] })
   ] });
   const etiqueta = [titulo2, item.detalle].filter(Boolean).join(" \u2014 ");
-  return item.href ? /* @__PURE__ */ jsx50("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx50("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
+  return item.href ? /* @__PURE__ */ jsx53("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx53("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
 }
 function ListaDias({ dias, porDia, hoy, onElegir, renderItem, soloConItems }) {
   const visibles = soloConItems ? dias.filter((dia) => (porDia.get(dia)?.length ?? 0) > 0 || dia === hoy) : dias;
-  if (!visibles.length) return /* @__PURE__ */ jsx50(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
-  return /* @__PURE__ */ jsx50("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
+  if (!visibles.length) return /* @__PURE__ */ jsx53(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
+  return /* @__PURE__ */ jsx53("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
     const delDia = porDia.get(dia) || [];
-    return /* @__PURE__ */ jsxs39("section", { className: "py-2", children: [
-      /* @__PURE__ */ jsxs39("header", { className: "flex items-center justify-between gap-2 px-1", children: [
-        /* @__PURE__ */ jsx50("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
-        dia === hoy && /* @__PURE__ */ jsx50("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
+    return /* @__PURE__ */ jsxs42("section", { className: "py-2", children: [
+      /* @__PURE__ */ jsxs42("header", { className: "flex items-center justify-between gap-2 px-1", children: [
+        /* @__PURE__ */ jsx53("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
+        dia === hoy && /* @__PURE__ */ jsx53("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
       ] }),
-      /* @__PURE__ */ jsx50("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx50("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx50("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx50(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
+      /* @__PURE__ */ jsx53("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx53("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
+        (item, indice) => renderItem ? /* @__PURE__ */ jsx53("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx53(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
       ) })
     ] }, dia);
   }) });
@@ -4058,10 +4192,10 @@ function Calendario({
     if (diaSeleccionado === void 0) setSeleccionInterna(dia);
     onSeleccionarDia?.(dia);
   }
-  return /* @__PURE__ */ jsxs39("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
-    /* @__PURE__ */ jsxs39("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs39("div", { className: "flex items-center gap-1.5", children: [
-        /* @__PURE__ */ jsx50(
+  return /* @__PURE__ */ jsxs42("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
+    /* @__PURE__ */ jsxs42("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs42("div", { className: "flex items-center gap-1.5", children: [
+        /* @__PURE__ */ jsx53(
           "button",
           {
             type: "button",
@@ -4069,11 +4203,11 @@ function Calendario({
             "aria-label": vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
             title: vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
             className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx50(Icon, { name: "back", className: "h-4 w-4" })
+            children: /* @__PURE__ */ jsx53(Icon, { name: "back", className: "h-4 w-4" })
           }
         ),
-        /* @__PURE__ */ jsx50(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
-        /* @__PURE__ */ jsx50(
+        /* @__PURE__ */ jsx53(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
+        /* @__PURE__ */ jsx53(
           "button",
           {
             type: "button",
@@ -4081,12 +4215,12 @@ function Calendario({
             "aria-label": vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
             title: vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
             className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx50(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
+            children: /* @__PURE__ */ jsx53(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
           }
         )
       ] }),
-      /* @__PURE__ */ jsx50("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
-      vistas.length > 1 && /* @__PURE__ */ jsx50(
+      /* @__PURE__ */ jsx53("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
+      vistas.length > 1 && /* @__PURE__ */ jsx53(
         SegmentedField,
         {
           value: vistaActual,
@@ -4099,15 +4233,15 @@ function Calendario({
         }
       )
     ] }),
-    cargando ? /* @__PURE__ */ jsx50("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx50(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs39(Fragment4, { children: [
-      /* @__PURE__ */ jsxs39("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
-        /* @__PURE__ */ jsx50("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx50("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
-        /* @__PURE__ */ jsx50("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
+    cargando ? /* @__PURE__ */ jsx53("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx53(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs42(Fragment4, { children: [
+      /* @__PURE__ */ jsxs42("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
+        /* @__PURE__ */ jsx53("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx53("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
+        /* @__PURE__ */ jsx53("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
           const delDia = porDia.get(dia) || [];
           const ocultos = delDia.length - maxPorDia;
           const esHoy = dia === claveHoy;
           const esSeleccionado = dia === seleccion;
-          return /* @__PURE__ */ jsxs39(
+          return /* @__PURE__ */ jsxs42(
             "div",
             {
               "data-fuera": mismoMes(dia, anclaActual) ? void 0 : "true",
@@ -4119,7 +4253,7 @@ function Calendario({
                 esSeleccionado && "bg-fono/5"
               ),
               children: [
-                /* @__PURE__ */ jsxs39(
+                /* @__PURE__ */ jsxs42(
                   "button",
                   {
                     type: "button",
@@ -4132,15 +4266,15 @@ function Calendario({
                       esHoy ? "bg-fono/15 font-bold text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore"
                     ),
                     children: [
-                      /* @__PURE__ */ jsx50("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
-                      delDia.length > 0 && /* @__PURE__ */ jsx50("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
+                      /* @__PURE__ */ jsx53("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
+                      delDia.length > 0 && /* @__PURE__ */ jsx53("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
                     ]
                   }
                 ),
-                /* @__PURE__ */ jsx50("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
-                  (item, indice) => renderItem ? /* @__PURE__ */ jsx50("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx50(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
+                /* @__PURE__ */ jsx53("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
+                  (item, indice) => renderItem ? /* @__PURE__ */ jsx53("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx53(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
                 ) }),
-                ocultos > 0 && /* @__PURE__ */ jsxs39(
+                ocultos > 0 && /* @__PURE__ */ jsxs42(
                   "button",
                   {
                     type: "button",
@@ -4160,7 +4294,7 @@ function Calendario({
           );
         }) })
       ] }),
-      /* @__PURE__ */ jsx50("div", { className: "md:hidden", children: /* @__PURE__ */ jsx50(
+      /* @__PURE__ */ jsx53("div", { className: "md:hidden", children: /* @__PURE__ */ jsx53(
         ListaDias,
         {
           dias: rango.dias,
@@ -4172,21 +4306,21 @@ function Calendario({
         }
       ) })
     ] }),
-    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx50(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
-    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs39("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
-      /* @__PURE__ */ jsxs39("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-        /* @__PURE__ */ jsx50("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
-        /* @__PURE__ */ jsxs39("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxs39("span", { className: "text-xs tabular-nums text-mute", children: [
+    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx53(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
+    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs42("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
+      /* @__PURE__ */ jsxs42("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+        /* @__PURE__ */ jsx53("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
+        /* @__PURE__ */ jsxs42("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxs42("span", { className: "text-xs tabular-nums text-mute", children: [
             delSeleccionado.length,
             " ",
             delSeleccionado.length === 1 ? "movimiento" : "movimientos"
           ] }),
-          /* @__PURE__ */ jsx50(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
+          /* @__PURE__ */ jsx53(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
         ] })
       ] }),
-      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx50(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx50("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx50("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx50(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
+      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx53(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx53("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
+        (item, indice) => renderItem ? /* @__PURE__ */ jsx53("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx53(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
       ) })
     ] })
   ] });
@@ -4244,7 +4378,7 @@ function rangoInvertido(desde, hasta) {
 }
 
 // src/components/RangoFecha.jsx
-import { jsx as jsx51, jsxs as jsxs40 } from "react/jsx-runtime";
+import { jsx as jsx54, jsxs as jsxs43 } from "react/jsx-runtime";
 function RangoFecha({
   desde,
   hasta,
@@ -4276,10 +4410,10 @@ function RangoFecha({
     if (!controlado) setInterno(par);
     onCambio?.(par.desde, par.hasta);
   }
-  return /* @__PURE__ */ jsxs40("div", { className: cn("space-y-2", className), children: [
-    /* @__PURE__ */ jsx51("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
+  return /* @__PURE__ */ jsxs43("div", { className: cn("space-y-2", className), children: [
+    /* @__PURE__ */ jsx54("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
       const esActivo = activo === periodo;
-      return /* @__PURE__ */ jsx51(
+      return /* @__PURE__ */ jsx54(
         "button",
         {
           type: "button",
@@ -4298,10 +4432,10 @@ function RangoFecha({
         periodo
       );
     }) }),
-    mostrarCampos && /* @__PURE__ */ jsxs40("div", { className: "flex flex-wrap items-end gap-2", children: [
-      /* @__PURE__ */ jsxs40("div", { children: [
-        /* @__PURE__ */ jsx51(Label, { htmlFor: idDesde, children: "Desde" }),
-        /* @__PURE__ */ jsx51(
+    mostrarCampos && /* @__PURE__ */ jsxs43("div", { className: "flex flex-wrap items-end gap-2", children: [
+      /* @__PURE__ */ jsxs43("div", { children: [
+        /* @__PURE__ */ jsx54(Label, { htmlFor: idDesde, children: "Desde" }),
+        /* @__PURE__ */ jsx54(
           Input,
           {
             id: idDesde,
@@ -4314,9 +4448,9 @@ function RangoFecha({
           }
         )
       ] }),
-      /* @__PURE__ */ jsxs40("div", { children: [
-        /* @__PURE__ */ jsx51(Label, { htmlFor: idHasta, children: "Hasta" }),
-        /* @__PURE__ */ jsx51(
+      /* @__PURE__ */ jsxs43("div", { children: [
+        /* @__PURE__ */ jsx54(Label, { htmlFor: idHasta, children: "Hasta" }),
+        /* @__PURE__ */ jsx54(
           Input,
           {
             id: idHasta,
@@ -4329,13 +4463,13 @@ function RangoFecha({
         )
       ] })
     ] }),
-    invertido && /* @__PURE__ */ jsx51(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
+    invertido && /* @__PURE__ */ jsx54(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
   ] });
 }
 
 // src/components/PaletaComandos.jsx
 import { useEffect as useEffect7, useId as useId6, useMemo as useMemo6, useRef as useRef8, useState as useState18 } from "react";
-import { Fragment as Fragment5, jsx as jsx52, jsxs as jsxs41 } from "react/jsx-runtime";
+import { Fragment as Fragment5, jsx as jsx55, jsxs as jsxs44 } from "react/jsx-runtime";
 var CAPITALIZAR = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
 function agruparResultados(resultados = [], { etiquetasTipo = {}, iconosTipo = {} } = {}) {
   const grupos = [];
@@ -4516,8 +4650,8 @@ function PaletaComandos({
     }
   }
   const textoContinuar = textoSeguir || `Segu\xED escribiendo: buscamos desde ${minimo} caracteres.`;
-  return /* @__PURE__ */ jsxs41(Fragment5, { children: [
-    boton && /* @__PURE__ */ jsxs41(
+  return /* @__PURE__ */ jsxs44(Fragment5, { children: [
+    boton && /* @__PURE__ */ jsxs44(
       "button",
       {
         type: "button",
@@ -4527,19 +4661,19 @@ function PaletaComandos({
         title: `${titulo2} \xB7 ${atajoTexto}`,
         className: "inline-flex h-9 items-center gap-2 rounded-lg border border-ink-500 px-3 text-sm text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx52(Icon, { name: "search", className: "h-4 w-4" }),
-          /* @__PURE__ */ jsx52("span", { className: "hidden sm:inline", children: textoBoton }),
-          mostrarAtajoEnBoton && /* @__PURE__ */ jsx52("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
+          /* @__PURE__ */ jsx55(Icon, { name: "search", className: "h-4 w-4" }),
+          /* @__PURE__ */ jsx55("span", { className: "hidden sm:inline", children: textoBoton }),
+          mostrarAtajoEnBoton && /* @__PURE__ */ jsx55("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
         ]
       }
     ),
-    visible && /* @__PURE__ */ jsx52(
+    visible && /* @__PURE__ */ jsx55(
       "div",
       {
         className: "fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-3 sm:p-6",
         onMouseDown: (event) => event.target === event.currentTarget && cerrar(),
         onKeyDown,
-        children: /* @__PURE__ */ jsxs41(
+        children: /* @__PURE__ */ jsxs44(
           "div",
           {
             ref: raiz,
@@ -4548,7 +4682,7 @@ function PaletaComandos({
             "aria-label": titulo2,
             className: cn("mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink-800 shadow-2xl", className),
             children: [
-              /* @__PURE__ */ jsx52("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx52(
+              /* @__PURE__ */ jsx55("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx55(
                 SearchField_default,
                 {
                   ref: entrada,
@@ -4563,18 +4697,18 @@ function PaletaComandos({
                   autoComplete: "off"
                 }
               ) }),
-              /* @__PURE__ */ jsxs41("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
-                estado === "seguir" && /* @__PURE__ */ jsx52("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
-                estado === "error" && /* @__PURE__ */ jsxs41("div", { className: "space-y-2 p-2", children: [
-                  /* @__PURE__ */ jsx52(Aviso, { tono: "error", compact: true, children: error }),
-                  /* @__PURE__ */ jsx52(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
+              /* @__PURE__ */ jsxs44("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
+                estado === "seguir" && /* @__PURE__ */ jsx55("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
+                estado === "error" && /* @__PURE__ */ jsxs44("div", { className: "space-y-2 p-2", children: [
+                  /* @__PURE__ */ jsx55(Aviso, { tono: "error", compact: true, children: error }),
+                  /* @__PURE__ */ jsx55(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
                 ] }),
-                estado === "cargando" && /* @__PURE__ */ jsxs41("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
-                  /* @__PURE__ */ jsx52(Skeleton, { className: "h-4 w-1/3" }),
-                  /* @__PURE__ */ jsx52(Skeleton, { className: "h-9 w-full" }),
-                  /* @__PURE__ */ jsx52(Skeleton, { className: "h-9 w-full" })
+                estado === "cargando" && /* @__PURE__ */ jsxs44("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
+                  /* @__PURE__ */ jsx55(Skeleton, { className: "h-4 w-1/3" }),
+                  /* @__PURE__ */ jsx55(Skeleton, { className: "h-9 w-full" }),
+                  /* @__PURE__ */ jsx55(Skeleton, { className: "h-9 w-full" })
                 ] }),
-                estado === "vacio" && /* @__PURE__ */ jsx52(
+                estado === "vacio" && /* @__PURE__ */ jsx55(
                   EmptyState,
                   {
                     compact: true,
@@ -4583,12 +4717,12 @@ function PaletaComandos({
                     description: `No encontramos nada para \xAB${termino}\xBB. Prob\xE1 con otro nombre o n\xFAmero.`
                   }
                 ),
-                estado === "listo" && /* @__PURE__ */ jsx52("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs41("section", { role: "group", "aria-label": grupo.etiqueta, children: [
-                  /* @__PURE__ */ jsx52("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+                estado === "listo" && /* @__PURE__ */ jsx55("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs44("section", { role: "group", "aria-label": grupo.etiqueta, children: [
+                  /* @__PURE__ */ jsx55("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
                   grupo.items.map((item) => {
                     const posicion = indice.get(item) ?? 0;
                     const esActivo = posicion === activo;
-                    return /* @__PURE__ */ jsxs41(
+                    return /* @__PURE__ */ jsxs44(
                       "button",
                       {
                         type: "button",
@@ -4603,12 +4737,12 @@ function PaletaComandos({
                           esActivo ? "bg-fono/10 text-fore" : "text-mute hover:bg-ink-700/60 hover:text-fore"
                         ),
                         children: [
-                          /* @__PURE__ */ jsx52(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
-                          /* @__PURE__ */ jsxs41("span", { className: "min-w-0 flex-1", children: [
-                            /* @__PURE__ */ jsx52("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
-                            item.detalle && /* @__PURE__ */ jsx52("span", { className: "block truncate text-xs text-mute", children: item.detalle })
+                          /* @__PURE__ */ jsx55(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
+                          /* @__PURE__ */ jsxs44("span", { className: "min-w-0 flex-1", children: [
+                            /* @__PURE__ */ jsx55("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
+                            item.detalle && /* @__PURE__ */ jsx55("span", { className: "block truncate text-xs text-mute", children: item.detalle })
                           ] }),
-                          /* @__PURE__ */ jsx52(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
+                          /* @__PURE__ */ jsx55(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
                         ]
                       },
                       item.id ?? `${grupo.tipo}-${posicion}`
@@ -4616,19 +4750,19 @@ function PaletaComandos({
                   })
                 ] }, grupo.tipo)) })
               ] }),
-              /* @__PURE__ */ jsxs41("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
-                /* @__PURE__ */ jsxs41("span", { children: [
-                  /* @__PURE__ */ jsx52("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
+              /* @__PURE__ */ jsxs44("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
+                /* @__PURE__ */ jsxs44("span", { children: [
+                  /* @__PURE__ */ jsx55("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
                   " ",
-                  /* @__PURE__ */ jsx52("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
+                  /* @__PURE__ */ jsx55("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
                   " moverse"
                 ] }),
-                /* @__PURE__ */ jsxs41("span", { children: [
-                  /* @__PURE__ */ jsx52("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
+                /* @__PURE__ */ jsxs44("span", { children: [
+                  /* @__PURE__ */ jsx55("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
                   " abrir"
                 ] }),
-                /* @__PURE__ */ jsxs41("span", { children: [
-                  /* @__PURE__ */ jsx52("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
+                /* @__PURE__ */ jsxs44("span", { children: [
+                  /* @__PURE__ */ jsx55("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
                   " cerrar"
                 ] })
               ] })
@@ -4642,7 +4776,7 @@ function PaletaComandos({
 
 // src/components/AyudaModulo.jsx
 import { useState as useState19 } from "react";
-import { jsx as jsx53, jsxs as jsxs42 } from "react/jsx-runtime";
+import { jsx as jsx56, jsxs as jsxs45 } from "react/jsx-runtime";
 function AyudaModulo({
   titulo: titulo2,
   resumen,
@@ -4668,8 +4802,8 @@ function AyudaModulo({
     onCerrar?.();
   };
   const encabezado = tituloDialogo || `${etiquetaBoton} \xB7 ${titulo2 || "Ayuda"}`;
-  return /* @__PURE__ */ jsxs42("div", { className: cn("inline-flex", className), children: [
-    /* @__PURE__ */ jsx53(
+  return /* @__PURE__ */ jsxs45("div", { className: cn("inline-flex", className), children: [
+    /* @__PURE__ */ jsx56(
       "button",
       {
         type: "button",
@@ -4678,16 +4812,16 @@ function AyudaModulo({
         "aria-haspopup": "dialog",
         title: encabezado,
         className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-sm font-bold text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-        children: /* @__PURE__ */ jsx53("span", { "aria-hidden": "true", children: "?" })
+        children: /* @__PURE__ */ jsx56("span", { "aria-hidden": "true", children: "?" })
       }
     ),
-    /* @__PURE__ */ jsx53(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs42("div", { className: "space-y-4", children: [
-      resumen && /* @__PURE__ */ jsx53("p", { className: "text-sm leading-6 text-mute", children: resumen }),
-      puntos.length > 0 && /* @__PURE__ */ jsx53("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs42("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
-        /* @__PURE__ */ jsx53(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
-        /* @__PURE__ */ jsx53("span", { className: "min-w-0", children: punto })
+    /* @__PURE__ */ jsx56(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs45("div", { className: "space-y-4", children: [
+      resumen && /* @__PURE__ */ jsx56("p", { className: "text-sm leading-6 text-mute", children: resumen }),
+      puntos.length > 0 && /* @__PURE__ */ jsx56("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs45("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
+        /* @__PURE__ */ jsx56(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
+        /* @__PURE__ */ jsx56("span", { className: "min-w-0", children: punto })
       ] }, punto)) }),
-      enlaces.length > 0 && /* @__PURE__ */ jsx53("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs42(
+      enlaces.length > 0 && /* @__PURE__ */ jsx56("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs45(
         "a",
         {
           href: enlace.href,
@@ -4697,19 +4831,19 @@ function AyudaModulo({
           },
           className: "flex items-center justify-between gap-2 rounded-lg border border-ink-600 px-3 py-2 text-sm font-medium text-fore transition hover:border-fono hover:bg-fono/10",
           children: [
-            /* @__PURE__ */ jsx53("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
-            /* @__PURE__ */ jsx53(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
+            /* @__PURE__ */ jsx56("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
+            /* @__PURE__ */ jsx56(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
           ]
         },
         enlace.href || enlace.etiqueta
       )) }),
-      /* @__PURE__ */ jsx53("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx53(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
+      /* @__PURE__ */ jsx56("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx56(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
     ] }) })
   ] });
 }
 
 // src/components/BarraInferior.jsx
-import { Fragment as Fragment6, jsx as jsx54, jsxs as jsxs43 } from "react/jsx-runtime";
+import { Fragment as Fragment6, jsx as jsx57, jsxs as jsxs46 } from "react/jsx-runtime";
 var ESPACIO_BARRA_INFERIOR = "pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0";
 function BarraInferior({
   items = [],
@@ -4730,7 +4864,7 @@ function BarraInferior({
     "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition",
     esActivo ? "text-fono-light" : "text-mute hover:text-fore"
   );
-  return /* @__PURE__ */ jsxs43(
+  return /* @__PURE__ */ jsxs46(
     "nav",
     {
       "aria-label": ariaLabel,
@@ -4741,16 +4875,16 @@ function BarraInferior({
       children: [
         visibles.map((item) => {
           const esActivo = item.id === activo;
-          const contenido = /* @__PURE__ */ jsxs43(Fragment6, { children: [
-            /* @__PURE__ */ jsxs43("span", { className: "relative", children: [
-              item.icono && /* @__PURE__ */ jsx54(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
-              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx54("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
+          const contenido = /* @__PURE__ */ jsxs46(Fragment6, { children: [
+            /* @__PURE__ */ jsxs46("span", { className: "relative", children: [
+              item.icono && /* @__PURE__ */ jsx57(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
+              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx57("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
             ] }),
-            /* @__PURE__ */ jsx54("span", { className: "max-w-full truncate", children: item.etiqueta })
+            /* @__PURE__ */ jsx57("span", { className: "max-w-full truncate", children: item.etiqueta })
           ] });
           const titulo2 = item.title || item.etiqueta;
           const clase = cn(claseItem(esActivo), "h-14");
-          return item.href ? /* @__PURE__ */ jsx54(
+          return item.href ? /* @__PURE__ */ jsx57(
             "a",
             {
               href: item.href,
@@ -4762,7 +4896,7 @@ function BarraInferior({
               children: contenido
             },
             item.id ?? item.href
-          ) : /* @__PURE__ */ jsx54(
+          ) : /* @__PURE__ */ jsx57(
             "button",
             {
               type: "button",
@@ -4779,7 +4913,7 @@ function BarraInferior({
             item.id ?? item.etiqueta
           );
         }),
-        onMas && /* @__PURE__ */ jsxs43(
+        onMas && /* @__PURE__ */ jsxs46(
           "button",
           {
             type: "button",
@@ -4790,8 +4924,8 @@ function BarraInferior({
             title: masEtiqueta,
             className: cn(claseItem(menuAbierto), "h-14"),
             children: [
-              /* @__PURE__ */ jsx54(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
-              /* @__PURE__ */ jsx54("span", { className: "max-w-full truncate", children: masEtiqueta })
+              /* @__PURE__ */ jsx57(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
+              /* @__PURE__ */ jsx57("span", { className: "max-w-full truncate", children: masEtiqueta })
             ]
           }
         )
@@ -4841,7 +4975,7 @@ function colorDeNombre(nombre) {
 }
 
 // src/components/Avatar.jsx
-import { jsx as jsx55 } from "react/jsx-runtime";
+import { jsx as jsx58 } from "react/jsx-runtime";
 var TAMANOS_AVATAR = {
   xs: "h-5 w-5 text-[9px]",
   sm: "h-7 w-7 text-[10px]",
@@ -4869,7 +5003,7 @@ function Avatar({
   const redondo = cuadro !== "cuadrado";
   const etiqueta = ariaLabel || title || String(nombre ?? "").trim() || "Identidad";
   const conImagen = Boolean(src) && !fallo;
-  return /* @__PURE__ */ jsx55(
+  return /* @__PURE__ */ jsx58(
     "span",
     {
       role: decorativo ? void 0 : "img",
@@ -4883,7 +5017,7 @@ function Avatar({
         TAMANOS_AVATAR[tamano] || TAMANOS_AVATAR.md,
         className
       ),
-      children: conImagen ? /* @__PURE__ */ jsx55(
+      children: conImagen ? /* @__PURE__ */ jsx58(
         "img",
         {
           src,
@@ -4896,7 +5030,7 @@ function Avatar({
           },
           className: cn("h-full w-full", redondo ? "object-cover" : "object-contain")
         }
-      ) : /* @__PURE__ */ jsx55("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
+      ) : /* @__PURE__ */ jsx58("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
     }
   );
 }
@@ -4942,7 +5076,7 @@ function resumenPresencia(personas = []) {
 }
 
 // src/components/PersonaChip.jsx
-import { jsx as jsx56, jsxs as jsxs44 } from "react/jsx-runtime";
+import { jsx as jsx59, jsxs as jsxs47 } from "react/jsx-runtime";
 function PersonaChip({
   user,
   foto,
@@ -4969,9 +5103,9 @@ function PersonaChip({
   }, [local]);
   const src = !localRota && local ? local : google;
   const etiqueta = title || [identidad.nombre, presencia?.etiqueta, identidad.scope].filter(Boolean).join(" \xB7 ");
-  return /* @__PURE__ */ jsxs44("span", { "data-testid": "persona-chip", className: cn("inline-flex min-w-0 items-center gap-2", className), title: etiqueta, children: [
-    /* @__PURE__ */ jsxs44("span", { className: "relative inline-flex shrink-0", children: [
-      /* @__PURE__ */ jsx56(
+  return /* @__PURE__ */ jsxs47("span", { "data-testid": "persona-chip", className: cn("inline-flex min-w-0 items-center gap-2", className), title: etiqueta, children: [
+    /* @__PURE__ */ jsxs47("span", { className: "relative inline-flex shrink-0", children: [
+      /* @__PURE__ */ jsx59(
         Avatar,
         {
           nombre: identidad.nombre,
@@ -4983,15 +5117,15 @@ function PersonaChip({
           title: etiqueta
         }
       ),
-      presencia ? /* @__PURE__ */ jsx56("i", { "aria-hidden": true, className: cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-1 ring-paper", presencia.punto) }) : null
+      presencia ? /* @__PURE__ */ jsx59("i", { "aria-hidden": true, className: cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-1 ring-paper", presencia.punto) }) : null
     ] }),
-    nombre ? /* @__PURE__ */ jsx56("span", { className: cn("min-w-0", CELDA_IDENTIDAD_GRANDE, textoClassName), children: visible }) : null,
-    children ? /* @__PURE__ */ jsx56("span", { className: CELDA_DATO, children }) : null
+    nombre ? /* @__PURE__ */ jsx59("span", { className: cn("min-w-0", CELDA_IDENTIDAD_GRANDE, textoClassName), children: visible }) : null,
+    children ? /* @__PURE__ */ jsx59("span", { className: CELDA_DATO, children }) : null
   ] });
 }
 
 // src/components/PilaPersonas.jsx
-import { Fragment as Fragment7, jsx as jsx57, jsxs as jsxs45 } from "react/jsx-runtime";
+import { Fragment as Fragment7, jsx as jsx60, jsxs as jsxs48 } from "react/jsx-runtime";
 function PilaPersonas({
   personas = [],
   max = 4,
@@ -5007,12 +5141,12 @@ function PilaPersonas({
   const visibles = lista.slice(0, Math.max(0, max));
   const restantes = lista.length - visibles.length;
   const texto = title || resumenPresencia(lista);
-  const contenido = /* @__PURE__ */ jsxs45(Fragment7, { children: [
-    /* @__PURE__ */ jsxs45("span", { className: "flex -space-x-2", children: [
+  const contenido = /* @__PURE__ */ jsxs48(Fragment7, { children: [
+    /* @__PURE__ */ jsxs48("span", { className: "flex -space-x-2", children: [
       visibles.map((persona, indice) => {
         const fuente = typeof persona === "string" ? { name: persona } : persona || {};
         const identidad = identidadDeUsuario(fuente);
-        return /* @__PURE__ */ jsx57(
+        return /* @__PURE__ */ jsx60(
           PersonaChip,
           {
             user: fuente,
@@ -5027,7 +5161,7 @@ function PilaPersonas({
           fuente.id ?? `${identidad.nombre}-${indice}`
         );
       }),
-      restantes > 0 && /* @__PURE__ */ jsxs45(
+      restantes > 0 && /* @__PURE__ */ jsxs48(
         "span",
         {
           className: cn(
@@ -5042,14 +5176,14 @@ function PilaPersonas({
         }
       )
     ] }),
-    resumen && texto ? /* @__PURE__ */ jsx57("span", { className: "whitespace-nowrap text-xs font-semibold text-mute", children: texto }) : null
+    resumen && texto ? /* @__PURE__ */ jsx60("span", { className: "whitespace-nowrap text-xs font-semibold text-mute", children: texto }) : null
   ] });
   const clases = "flex items-center gap-2 rounded-full border border-fore/10 bg-ink-700/60 px-2.5 py-1";
-  return onMas ? /* @__PURE__ */ jsx57("button", { type: "button", onClick: onMas, className: cn(clases, className), "aria-label": texto || ariaLabel, title: texto, children: contenido }) : /* @__PURE__ */ jsx57("div", { role: "group", "aria-label": texto || ariaLabel, title: texto, className: cn(clases, className), children: contenido });
+  return onMas ? /* @__PURE__ */ jsx60("button", { type: "button", onClick: onMas, className: cn(clases, className), "aria-label": texto || ariaLabel, title: texto, children: contenido }) : /* @__PURE__ */ jsx60("div", { role: "group", "aria-label": texto || ariaLabel, title: texto, className: cn(clases, className), children: contenido });
 }
 
 // src/components/ImporteDelta.jsx
-import { jsx as jsx58 } from "react/jsx-runtime";
+import { jsx as jsx61 } from "react/jsx-runtime";
 function tonoDelta(valor, { invertir = false } = {}) {
   const numero = Number(valor);
   if (!Number.isFinite(numero) || numero === 0) return "mute";
@@ -5069,9 +5203,9 @@ function ImporteDelta({
 }) {
   const numero = Number(valor);
   const ausente = valor === null || valor === void 0 || valor === "" || !Number.isFinite(numero);
-  if (ausente) return /* @__PURE__ */ jsx58("span", { className: cn("tabular-nums text-mute", className), children: vacio });
+  if (ausente) return /* @__PURE__ */ jsx61("span", { className: cn("tabular-nums text-mute", className), children: vacio });
   const texto = formato === "porcentaje" ? `${signoDe(numero) ? `${signoDe(numero)} ` : ""}${formatPercent(Math.abs(numero))} %` : montoConSigno(numero, moneda, vacio, { simbolo });
-  return /* @__PURE__ */ jsx58(
+  return /* @__PURE__ */ jsx61(
     "span",
     {
       className: cn(
@@ -5085,12 +5219,14 @@ function ImporteDelta({
 }
 
 // src/components/IndicadorConexion.jsx
-import { jsx as jsx59, jsxs as jsxs46 } from "react/jsx-runtime";
+import { jsx as jsx62, jsxs as jsxs49 } from "react/jsx-runtime";
 function IndicadorConexion({
   enLinea = true,
   pendientes = 0,
   sincronizando = false,
   onSincronizar,
+  variante = "chip",
+  mensaje,
   etiquetaEnLinea = "En l\xEDnea",
   etiquetaSinConexion = "Sin conexi\xF3n",
   etiquetaSincronizando = "Sincronizando\u2026",
@@ -5100,7 +5236,49 @@ function IndicadorConexion({
   const texto = sincronizando ? etiquetaSincronizando : enLinea ? etiquetaEnLinea : etiquetaSinConexion;
   const detalle = cuenta > 0 ? `${formatoNumero(cuenta)} ${cuenta === 1 ? "pendiente" : "pendientes"} de subir` : "";
   const titulo2 = [texto, detalle].filter(Boolean).join(" \xB7 ");
-  return /* @__PURE__ */ jsxs46(
+  const boton = onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs49(
+    "button",
+    {
+      type: "button",
+      onClick: onSincronizar,
+      disabled: sincronizando,
+      "aria-label": sincronizando ? etiquetaSincronizando : `Sincronizar ${formatoNumero(cuenta)} pendientes`,
+      title: sincronizando ? etiquetaSincronizando : "Sincronizar ahora",
+      className: cn(
+        "inline-flex h-6 items-center gap-1 rounded-md border px-1.5 font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
+        variante === "banner" ? "border-current/40 hover:bg-fore/10" : "border-ink-500 text-mute hover:border-fono hover:text-fore"
+      ),
+      children: [
+        /* @__PURE__ */ jsx62(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
+        "Sincronizar"
+      ]
+    }
+  );
+  if (variante === "banner") {
+    return /* @__PURE__ */ jsxs49(
+      "div",
+      {
+        role: "status",
+        "aria-live": "polite",
+        title: titulo2,
+        className: cn(
+          "flex flex-wrap items-center justify-center gap-2 px-4 py-2 text-center text-sm font-medium",
+          enLinea ? "bg-ink-800 text-mute" : "bg-bad text-white dark:text-onbrand",
+          className
+        ),
+        children: [
+          /* @__PURE__ */ jsx62(Icon, { name: enLinea ? "refresh" : "alert", className: "h-4 w-4 shrink-0", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsxs49("span", { children: [
+            mensaje || texto,
+            !mensaje && detalle ? ` \xB7 ${detalle}` : ""
+          ] }),
+          !enLinea && !mensaje && /* @__PURE__ */ jsx62("span", { className: "hidden sm:inline", children: "Se sincroniza al reconectar." }),
+          boton
+        ]
+      }
+    );
+  }
+  return /* @__PURE__ */ jsxs49(
     "div",
     {
       role: "status",
@@ -5112,29 +5290,15 @@ function IndicadorConexion({
         className
       ),
       children: [
-        /* @__PURE__ */ jsx59(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
-        /* @__PURE__ */ jsxs46("span", { className: "min-w-0 truncate font-medium", children: [
+        /* @__PURE__ */ jsx62(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
+        /* @__PURE__ */ jsxs49("span", { className: "min-w-0 truncate font-medium", children: [
           texto,
-          detalle && /* @__PURE__ */ jsxs46("span", { className: "text-mute", children: [
+          detalle && /* @__PURE__ */ jsxs49("span", { className: "text-mute", children: [
             " \xB7 ",
             detalle
           ] })
         ] }),
-        onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs46(
-          "button",
-          {
-            type: "button",
-            onClick: onSincronizar,
-            disabled: sincronizando,
-            "aria-label": sincronizando ? etiquetaSincronizando : `Sincronizar ${formatoNumero(cuenta)} pendientes`,
-            title: sincronizando ? etiquetaSincronizando : "Sincronizar ahora",
-            className: "inline-flex h-6 items-center gap-1 rounded-md border border-ink-500 px-1.5 font-medium text-mute transition hover:border-fono hover:text-fore disabled:cursor-not-allowed disabled:opacity-50",
-            children: [
-              /* @__PURE__ */ jsx59(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
-              "Sincronizar"
-            ]
-          }
-        )
+        boton
       ]
     }
   );
@@ -5142,7 +5306,7 @@ function IndicadorConexion({
 
 // src/components/CampanaAvisos.jsx
 import { useEffect as useEffect10, useRef as useRef9, useState as useState22 } from "react";
-import { Fragment as Fragment8, jsx as jsx60, jsxs as jsxs47 } from "react/jsx-runtime";
+import { Fragment as Fragment8, jsx as jsx63, jsxs as jsxs50 } from "react/jsx-runtime";
 function contarSinLeer(avisos = []) {
   const conEstado = avisos.filter((aviso) => aviso && typeof aviso.leido === "boolean");
   if (conEstado.length) return conEstado.filter((aviso) => !aviso.leido).length;
@@ -5189,8 +5353,8 @@ function CampanaAvisos({
       return !actual;
     });
   }
-  return /* @__PURE__ */ jsxs47("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsxs47(
+  return /* @__PURE__ */ jsxs50("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsxs50(
       "button",
       {
         type: "button",
@@ -5201,12 +5365,12 @@ function CampanaAvisos({
         title: sinLeer > 0 ? `${ariaLabel} \xB7 ${sinLeer} sin leer` : ariaLabel,
         className: "relative grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx60(Icon, { name: "bell", className: "h-4 w-4" }),
-          sinLeer > 0 && /* @__PURE__ */ jsx60("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
+          /* @__PURE__ */ jsx63(Icon, { name: "bell", className: "h-4 w-4" }),
+          sinLeer > 0 && /* @__PURE__ */ jsx63("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
         ]
       }
     ),
-    abierto && /* @__PURE__ */ jsxs47(
+    abierto && /* @__PURE__ */ jsxs50(
       "div",
       {
         role: "menu",
@@ -5216,25 +5380,25 @@ function CampanaAvisos({
           anclaje === "left" ? "left-0" : "right-0"
         ),
         children: [
-          /* @__PURE__ */ jsxs47("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx60("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
-            sinLeer > 0 && /* @__PURE__ */ jsxs47("span", { className: "text-xs tabular-nums text-mute", children: [
+          /* @__PURE__ */ jsxs50("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx63("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
+            sinLeer > 0 && /* @__PURE__ */ jsxs50("span", { className: "text-xs tabular-nums text-mute", children: [
               textoContador(sinLeer),
               " sin leer"
             ] })
           ] }),
-          /* @__PURE__ */ jsx60("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx60(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
+          /* @__PURE__ */ jsx63("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx63(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
             const tono = TONOS.punto[aviso.tono] || TONOS.punto.mute;
-            const contenido = /* @__PURE__ */ jsxs47(Fragment8, { children: [
-              /* @__PURE__ */ jsx60("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx60(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
-              /* @__PURE__ */ jsxs47("span", { className: "min-w-0 flex-1", children: [
-                /* @__PURE__ */ jsx60("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
-                aviso.detalle && /* @__PURE__ */ jsx60("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
-                aviso.fecha && /* @__PURE__ */ jsx60("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
+            const contenido = /* @__PURE__ */ jsxs50(Fragment8, { children: [
+              /* @__PURE__ */ jsx63("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx63(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
+              /* @__PURE__ */ jsxs50("span", { className: "min-w-0 flex-1", children: [
+                /* @__PURE__ */ jsx63("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
+                aviso.detalle && /* @__PURE__ */ jsx63("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
+                aviso.fecha && /* @__PURE__ */ jsx63("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
               ] })
             ] });
             const clases = "flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-ink-700/60";
-            return aviso.href ? /* @__PURE__ */ jsx60(
+            return aviso.href ? /* @__PURE__ */ jsx63(
               "a",
               {
                 role: "menuitem",
@@ -5248,7 +5412,7 @@ function CampanaAvisos({
                 children: contenido
               },
               aviso.id ?? aviso.titulo
-            ) : /* @__PURE__ */ jsx60(
+            ) : /* @__PURE__ */ jsx63(
               "button",
               {
                 type: "button",
@@ -5264,7 +5428,7 @@ function CampanaAvisos({
               aviso.id ?? aviso.titulo
             );
           }) }),
-          pie && /* @__PURE__ */ jsx60("div", { className: "border-t border-ink-600 p-2", children: pie })
+          pie && /* @__PURE__ */ jsx63("div", { className: "border-t border-ink-600 p-2", children: pie })
         ]
       }
     )
@@ -5272,7 +5436,7 @@ function CampanaAvisos({
 }
 
 // src/components/GraficoBarras.jsx
-import { jsx as jsx61, jsxs as jsxs48 } from "react/jsx-runtime";
+import { jsx as jsx64, jsxs as jsxs51 } from "react/jsx-runtime";
 var COLORES = {
   fono: "bg-fono",
   ok: "bg-ok",
@@ -5306,40 +5470,40 @@ function GraficoBarras({
   className
 }) {
   const formatear = formatoValor || ((valor) => formatoNumero(valor));
-  if (!datos.length) return /* @__PURE__ */ jsx61(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
+  if (!datos.length) return /* @__PURE__ */ jsx64(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
   const tope = maximoDeBarras(datos, max);
   const colorDe = (dato) => COLORES[dato.tono] || COLORES[tono] || COLORES.fono;
-  const listaAccesible = /* @__PURE__ */ jsx61("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx61("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
+  const listaAccesible = /* @__PURE__ */ jsx64("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx64("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
   if (orientacion === "horizontal") {
-    return /* @__PURE__ */ jsxs48("div", { className: cn("space-y-1.5", className), children: [
-      datos.map((dato, indice) => /* @__PURE__ */ jsxs48("div", { className: "flex items-center gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx61("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
-        /* @__PURE__ */ jsx61(
+    return /* @__PURE__ */ jsxs51("div", { className: cn("space-y-1.5", className), children: [
+      datos.map((dato, indice) => /* @__PURE__ */ jsxs51("div", { className: "flex items-center gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx64("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
+        /* @__PURE__ */ jsx64(
           "span",
           {
             className: "h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-fore/10",
             role: "img",
             "aria-label": `${dato.etiqueta}: ${formatear(dato.valor)}`,
             title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-            children: /* @__PURE__ */ jsx61("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
+            children: /* @__PURE__ */ jsx64("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
           }
         ),
-        mostrarValores && /* @__PURE__ */ jsx61("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
+        mostrarValores && /* @__PURE__ */ jsx64("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
       ] }, dato.id ?? indice)),
       listaAccesible
     ] });
   }
-  return /* @__PURE__ */ jsxs48("div", { className: cn("space-y-1", className), children: [
-    /* @__PURE__ */ jsx61("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx61("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx61(
+  return /* @__PURE__ */ jsxs51("div", { className: cn("space-y-1", className), children: [
+    /* @__PURE__ */ jsx64("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx64("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx64(
       "span",
       {
         className: cn("absolute inset-x-0 bottom-0 rounded-t-md transition-[height] duration-500", colorDe(dato)),
         style: { height: `${porcentajeBarra(dato.valor, tope)}%` },
         title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-        children: mostrarValores && /* @__PURE__ */ jsx61("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
+        children: mostrarValores && /* @__PURE__ */ jsx64("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
       }
     ) }, dato.id ?? indice)) }),
-    /* @__PURE__ */ jsx61("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx61("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
+    /* @__PURE__ */ jsx64("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx64("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
     listaAccesible
   ] });
 }
@@ -5418,7 +5582,7 @@ function fechaCorta(value, vacio = "\u2014", opciones) {
 }
 
 // src/components/TableroKanban.jsx
-import { jsx as jsx62, jsxs as jsxs49 } from "react/jsx-runtime";
+import { jsx as jsx65, jsxs as jsxs52 } from "react/jsx-runtime";
 var SIN_MOVIMIENTOS = /* @__PURE__ */ new Set();
 function columnasDelTablero(columnas = [], tarjetas = []) {
   const declaradas = [...columnas || []];
@@ -5551,10 +5715,10 @@ function TableroKanban({
     setSobreColumna("");
   }
   const tituloDe = (valor) => columnasReales.find((columna) => columna.valor === valor)?.titulo ?? valor;
-  return /* @__PURE__ */ jsx62("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
+  return /* @__PURE__ */ jsx65("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
     const deLaColumna = grupos[columna.valor] ?? [];
     const sobre = sobreColumna === columna.valor && acepta(arrastrando, columna.valor);
-    return /* @__PURE__ */ jsxs49(
+    return /* @__PURE__ */ jsxs52(
       "section",
       {
         "aria-label": `${columna.titulo}: ${deLaColumna.length}`,
@@ -5577,17 +5741,17 @@ function TableroKanban({
           if (id) moverA(id, columna.valor);
         },
         children: [
-          /* @__PURE__ */ jsxs49("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx62("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
-            /* @__PURE__ */ jsx62("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
-            /* @__PURE__ */ jsx62("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
+          /* @__PURE__ */ jsxs52("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx65("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx65("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
+            /* @__PURE__ */ jsx65("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
           ] }),
-          /* @__PURE__ */ jsxs49("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
+          /* @__PURE__ */ jsxs52("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
             deLaColumna.map((tarjeta) => {
               const destinos = destinosDeTarjeta(tarjeta, columnasReales);
               const movible = Boolean(onMover && puedeMover && destinos.length > 0 && !moviendo.has(tarjeta.id));
               const tieneMonto = tarjeta.monto !== null && tarjeta.monto !== void 0;
-              return /* @__PURE__ */ jsxs49(
+              return /* @__PURE__ */ jsxs52(
                 "article",
                 {
                   className: cn(
@@ -5608,34 +5772,34 @@ function TableroKanban({
                   },
                   onDragEnd: terminarArrastre,
                   children: [
-                    /* @__PURE__ */ jsxs49("div", { className: "flex items-start justify-between gap-2", children: [
-                      /* @__PURE__ */ jsx62("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
-                      tarjeta.acciones && /* @__PURE__ */ jsx62("span", { className: "shrink-0", children: tarjeta.acciones })
+                    /* @__PURE__ */ jsxs52("div", { className: "flex items-start justify-between gap-2", children: [
+                      /* @__PURE__ */ jsx65("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
+                      tarjeta.acciones && /* @__PURE__ */ jsx65("span", { className: "shrink-0", children: tarjeta.acciones })
                     ] }),
-                    tarjeta.subtitulo && /* @__PURE__ */ jsx62("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
-                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx62("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs49(
+                    tarjeta.subtitulo && /* @__PURE__ */ jsx65("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
+                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx65("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs52(
                       "span",
                       {
                         title: chip.titulo ?? chip.etiqueta,
                         className: cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(chip.tono)),
                         children: [
-                          chip.icono && /* @__PURE__ */ jsx62(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+                          chip.icono && /* @__PURE__ */ jsx65(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
                           chip.etiqueta
                         ]
                       },
                       chip.etiqueta ?? indice
                     )) }),
-                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs49("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
-                      tieneMonto && /* @__PURE__ */ jsxs49("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
-                        /* @__PURE__ */ jsx62(Money, { value: tarjeta.monto }),
-                        tarjeta.montoNota && /* @__PURE__ */ jsx62("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
+                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs52("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
+                      tieneMonto && /* @__PURE__ */ jsxs52("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
+                        /* @__PURE__ */ jsx65(Money, { value: tarjeta.monto }),
+                        tarjeta.montoNota && /* @__PURE__ */ jsx65("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
                       ] }),
-                      tarjeta.fecha && /* @__PURE__ */ jsx62("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
+                      tarjeta.fecha && /* @__PURE__ */ jsx65("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
                     ] }),
-                    tarjeta.detalle && /* @__PURE__ */ jsx62("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
-                    movible && /* @__PURE__ */ jsxs49("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
-                      /* @__PURE__ */ jsx62("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
-                      /* @__PURE__ */ jsxs49(
+                    tarjeta.detalle && /* @__PURE__ */ jsx65("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
+                    movible && /* @__PURE__ */ jsxs52("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
+                      /* @__PURE__ */ jsx65("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
+                      /* @__PURE__ */ jsxs52(
                         "select",
                         {
                           id: `mover-${tarjeta.id}`,
@@ -5649,8 +5813,8 @@ function TableroKanban({
                             "outline-none transition focus:border-fono focus:ring-1 focus:ring-fono/40 [&>option]:bg-ink-800 [&>option]:text-fore"
                           ),
                           children: [
-                            /* @__PURE__ */ jsx62("option", { value: "", children: etiquetaMover }),
-                            destinos.map((valor) => /* @__PURE__ */ jsx62("option", { value: valor, children: tituloDe(valor) }, valor))
+                            /* @__PURE__ */ jsx65("option", { value: "", children: etiquetaMover }),
+                            destinos.map((valor) => /* @__PURE__ */ jsx65("option", { value: valor, children: tituloDe(valor) }, valor))
                           ]
                         }
                       )
@@ -5660,7 +5824,7 @@ function TableroKanban({
                 tarjeta.id
               );
             }),
-            deLaColumna.length === 0 && /* @__PURE__ */ jsx62("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
+            deLaColumna.length === 0 && /* @__PURE__ */ jsx65("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
           ] })
         ]
       },
@@ -5670,7 +5834,7 @@ function TableroKanban({
 }
 
 // src/components/Cronologia.jsx
-import { jsx as jsx63, jsxs as jsxs50 } from "react/jsx-runtime";
+import { jsx as jsx66, jsxs as jsxs53 } from "react/jsx-runtime";
 var ICONOS_HITO = {
   creado: "plus",
   actualizado: "edit",
@@ -5773,18 +5937,18 @@ function FilaHito({ hito, iconos, tonos, etiquetas, mostrarTipo }) {
   const tono = hito.tono || tonos[tipo] || "mute";
   const icono = hito.icono || iconos[tipo] || "info";
   const etiqueta = mostrarTipo ? etiquetaDeHito(tipo, etiquetas) : "";
-  return /* @__PURE__ */ jsxs50("li", { className: "flex gap-3", children: [
-    /* @__PURE__ */ jsx63("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx63(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs50("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
-      /* @__PURE__ */ jsxs50("p", { className: "text-sm font-semibold text-fore", children: [
-        /* @__PURE__ */ jsx63("span", { className: "break-words", children: hito.titulo }),
-        hito.actor && /* @__PURE__ */ jsxs50("span", { className: "font-normal text-mute", children: [
+  return /* @__PURE__ */ jsxs53("li", { className: "flex gap-3", children: [
+    /* @__PURE__ */ jsx66("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx66(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs53("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
+      /* @__PURE__ */ jsxs53("p", { className: "text-sm font-semibold text-fore", children: [
+        /* @__PURE__ */ jsx66("span", { className: "break-words", children: hito.titulo }),
+        hito.actor && /* @__PURE__ */ jsxs53("span", { className: "font-normal text-mute", children: [
           " \xB7 ",
           hito.actor
         ] })
       ] }),
-      hito.detalle && /* @__PURE__ */ jsx63("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
-      /* @__PURE__ */ jsx63("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
+      hito.detalle && /* @__PURE__ */ jsx66("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
+      /* @__PURE__ */ jsx66("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
     ] })
   ] });
 }
@@ -5808,17 +5972,17 @@ function Cronologia({
   className
 }) {
   if (!hitos?.length) {
-    return /* @__PURE__ */ jsx63(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
+    return /* @__PURE__ */ jsx66(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
   }
-  const fila = (hito) => /* @__PURE__ */ jsx63(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
-  return /* @__PURE__ */ jsx63("div", { className, children: agrupar ? /* @__PURE__ */ jsx63("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs50("section", { children: [
-    /* @__PURE__ */ jsx63("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
-    /* @__PURE__ */ jsx63("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
-  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx63("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
+  const fila = (hito) => /* @__PURE__ */ jsx66(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
+  return /* @__PURE__ */ jsx66("div", { className, children: agrupar ? /* @__PURE__ */ jsx66("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs53("section", { children: [
+    /* @__PURE__ */ jsx66("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+    /* @__PURE__ */ jsx66("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
+  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx66("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
 }
 
 // src/components/PlanPagos.jsx
-import { jsx as jsx64, jsxs as jsxs51 } from "react/jsx-runtime";
+import { jsx as jsx67, jsxs as jsxs54 } from "react/jsx-runtime";
 var ESTADOS_CUOTA = {
   pendiente: { chip: "pendiente", etiqueta: "Pendiente", icono: "clock" },
   revision: { chip: "revision", etiqueta: "En revisi\xF3n", icono: "refresh" },
@@ -5828,18 +5992,18 @@ var ESTADOS_CUOTA = {
 function ChipCuota({ estado, estados }) {
   const config = estados[estado];
   if (!config) return null;
-  return /* @__PURE__ */ jsx64(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
+  return /* @__PURE__ */ jsx67(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
 }
 function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, simbolo, estados, destacada, conEstado }) {
-  return /* @__PURE__ */ jsxs51("tr", { className: "border-t border-ink-700", children: [
-    /* @__PURE__ */ jsxs51("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
-      /* @__PURE__ */ jsx64("span", { className: "font-semibold", children: etiqueta }),
-      destacada && /* @__PURE__ */ jsx64("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
-      nota && /* @__PURE__ */ jsx64("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
+  return /* @__PURE__ */ jsxs54("tr", { className: "border-t border-ink-700", children: [
+    /* @__PURE__ */ jsxs54("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
+      /* @__PURE__ */ jsx67("span", { className: "font-semibold", children: etiqueta }),
+      destacada && /* @__PURE__ */ jsx67("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
+      nota && /* @__PURE__ */ jsx67("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx64("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx64(Money, { value: monto, currency: moneda, simbolo }) }),
-    /* @__PURE__ */ jsx64("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
-    conEstado && /* @__PURE__ */ jsx64("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx64(ChipCuota, { estado, estados }) : null })
+    /* @__PURE__ */ jsx67("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx67(Money, { value: monto, currency: moneda, simbolo }) }),
+    /* @__PURE__ */ jsx67("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
+    conEstado && /* @__PURE__ */ jsx67("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx67(ChipCuota, { estado, estados }) : null })
   ] });
 }
 function PlanPagos({
@@ -5877,23 +6041,23 @@ function PlanPagos({
   const conEstado = (cuotas || []).some((cuota) => Boolean(cuota.estado));
   const vacioPlan = !hayAnticipo && !(cuotas || []).length;
   if (vacioPlan && total === null && !condiciones && !aTransferir) {
-    return /* @__PURE__ */ jsx64(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
+    return /* @__PURE__ */ jsx67(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
   }
-  return /* @__PURE__ */ jsxs51("div", { className: cn("space-y-2.5", className), children: [
-    aTransferir && /* @__PURE__ */ jsxs51("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
-      /* @__PURE__ */ jsx64("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
-      /* @__PURE__ */ jsx64("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx64(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
+  return /* @__PURE__ */ jsxs54("div", { className: cn("space-y-2.5", className), children: [
+    aTransferir && /* @__PURE__ */ jsxs54("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
+      /* @__PURE__ */ jsx67("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
+      /* @__PURE__ */ jsx67("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx67(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
     ] }),
-    vacioPlan ? /* @__PURE__ */ jsx64("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs51("table", { className: "w-full", children: [
-      /* @__PURE__ */ jsx64("caption", { className: "sr-only", children: "Plan de pagos" }),
-      /* @__PURE__ */ jsx64("thead", { children: /* @__PURE__ */ jsxs51("tr", { children: [
-        /* @__PURE__ */ jsx64("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
-        /* @__PURE__ */ jsx64("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
-        /* @__PURE__ */ jsx64("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
-        conEstado && /* @__PURE__ */ jsx64("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
+    vacioPlan ? /* @__PURE__ */ jsx67("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs54("table", { className: "w-full", children: [
+      /* @__PURE__ */ jsx67("caption", { className: "sr-only", children: "Plan de pagos" }),
+      /* @__PURE__ */ jsx67("thead", { children: /* @__PURE__ */ jsxs54("tr", { children: [
+        /* @__PURE__ */ jsx67("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
+        /* @__PURE__ */ jsx67("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
+        /* @__PURE__ */ jsx67("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
+        conEstado && /* @__PURE__ */ jsx67("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
       ] }) }),
-      /* @__PURE__ */ jsxs51("tbody", { children: [
-        hayAnticipo && /* @__PURE__ */ jsx64(
+      /* @__PURE__ */ jsxs54("tbody", { children: [
+        hayAnticipo && /* @__PURE__ */ jsx67(
           FilaPlan,
           {
             etiqueta: anticipoEtiqueta,
@@ -5906,7 +6070,7 @@ function PlanPagos({
             destacada: aTransferir?.id === "anticipo"
           }
         ),
-        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx64(
+        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx67(
           FilaPlan,
           {
             etiqueta: cuota.etiqueta,
@@ -5923,27 +6087,27 @@ function PlanPagos({
           cuota.id ?? `${cuota.etiqueta}-${indice}`
         ))
       ] }),
-      total !== null && /* @__PURE__ */ jsx64("tfoot", { children: /* @__PURE__ */ jsxs51("tr", { className: "border-t border-ink-500", children: [
-        /* @__PURE__ */ jsx64("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
-        /* @__PURE__ */ jsx64("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx64(Money, { value: total, currency: moneda, simbolo }) })
+      total !== null && /* @__PURE__ */ jsx67("tfoot", { children: /* @__PURE__ */ jsxs54("tr", { className: "border-t border-ink-500", children: [
+        /* @__PURE__ */ jsx67("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
+        /* @__PURE__ */ jsx67("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx67(Money, { value: total, currency: moneda, simbolo }) })
       ] }) })
     ] }),
-    vacioPlan && total !== null && /* @__PURE__ */ jsxs51("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
-      /* @__PURE__ */ jsx64("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
-      /* @__PURE__ */ jsx64("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx64(Money, { value: total, currency: moneda, simbolo }) })
+    vacioPlan && total !== null && /* @__PURE__ */ jsxs54("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
+      /* @__PURE__ */ jsx67("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
+      /* @__PURE__ */ jsx67("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx67(Money, { value: total, currency: moneda, simbolo }) })
     ] }),
-    saldoSinCuota > 0 && /* @__PURE__ */ jsxs51("p", { className: "text-xs text-mute", children: [
+    saldoSinCuota > 0 && /* @__PURE__ */ jsxs54("p", { className: "text-xs text-mute", children: [
       saldoEtiqueta,
       ":",
       " ",
-      /* @__PURE__ */ jsx64("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx64(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
+      /* @__PURE__ */ jsx67("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx67(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
     ] }),
-    condiciones && /* @__PURE__ */ jsx64(Nota, { tono: "info", compact: true, children: condiciones })
+    condiciones && /* @__PURE__ */ jsx67(Nota, { tono: "info", compact: true, children: condiciones })
   ] });
 }
 
 // src/components/DocumentoImpresion.jsx
-import { Fragment as Fragment9, jsx as jsx65, jsxs as jsxs52 } from "react/jsx-runtime";
+import { Fragment as Fragment9, jsx as jsx68, jsxs as jsxs55 } from "react/jsx-runtime";
 var CANTIDAD_FORMATTER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 3 });
 function cantidadTexto(cantidad) {
   if (cantidad === null || cantidad === void 0 || cantidad === "") return "";
@@ -5951,23 +6115,23 @@ function cantidadTexto(cantidad) {
 }
 function Dato({ etiqueta, valor, className }) {
   if (!valor) return null;
-  return /* @__PURE__ */ jsxs52("p", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsx65("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
-    /* @__PURE__ */ jsx65("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
+  return /* @__PURE__ */ jsxs55("p", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsx68("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
+    /* @__PURE__ */ jsx68("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
   ] });
 }
 function Identidad({ titulo: titulo2, datos, logo, monograma }) {
   if (!datos) return null;
-  return /* @__PURE__ */ jsxs52("section", { className: "oc-print-bloque", children: [
-    /* @__PURE__ */ jsx65("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
-    /* @__PURE__ */ jsxs52("div", { className: "flex items-start gap-3", children: [
-      (logo || monograma) && /* @__PURE__ */ jsx65("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx65("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx65("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
-      /* @__PURE__ */ jsxs52("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx65(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
-        /* @__PURE__ */ jsx65(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
-        /* @__PURE__ */ jsx65(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
-        /* @__PURE__ */ jsx65(Dato, { etiqueta: "Correo", valor: datos.correo }),
-        /* @__PURE__ */ jsx65(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
+  return /* @__PURE__ */ jsxs55("section", { className: "oc-print-bloque", children: [
+    /* @__PURE__ */ jsx68("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
+    /* @__PURE__ */ jsxs55("div", { className: "flex items-start gap-3", children: [
+      (logo || monograma) && /* @__PURE__ */ jsx68("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx68("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx68("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
+      /* @__PURE__ */ jsxs55("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx68(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
+        /* @__PURE__ */ jsx68(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
+        /* @__PURE__ */ jsx68(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
+        /* @__PURE__ */ jsx68(Dato, { etiqueta: "Correo", valor: datos.correo }),
+        /* @__PURE__ */ jsx68(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
       ] })
     ] })
   ] });
@@ -5975,17 +6139,17 @@ function Identidad({ titulo: titulo2, datos, logo, monograma }) {
 function FilaLiquidacion({ etiqueta, valor, moneda, simbolo, nota, fuerte = false }) {
   const numero = Number(valor);
   const negativo = Number.isFinite(numero) && numero < 0;
-  return /* @__PURE__ */ jsxs52("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
-    /* @__PURE__ */ jsxs52("span", { className: "min-w-0", children: [
+  return /* @__PURE__ */ jsxs55("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
+    /* @__PURE__ */ jsxs55("span", { className: "min-w-0", children: [
       etiqueta,
-      nota && /* @__PURE__ */ jsxs52("small", { className: "oc-print-suave", children: [
+      nota && /* @__PURE__ */ jsxs55("small", { className: "oc-print-suave", children: [
         " ",
         nota
       ] })
     ] }),
-    /* @__PURE__ */ jsxs52("span", { className: "oc-print-num shrink-0 font-semibold", children: [
+    /* @__PURE__ */ jsxs55("span", { className: "oc-print-num shrink-0 font-semibold", children: [
       negativo && "\u2212 ",
-      /* @__PURE__ */ jsx65(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
+      /* @__PURE__ */ jsx68(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
     ] })
   ] });
 }
@@ -6037,70 +6201,70 @@ function DocumentoImpresion({
 }) {
   const monograma = String(emisor?.nombre ?? "").trim().slice(0, 2).toUpperCase() || "\xB7\xB7";
   const tieneLiquidacion = Boolean(liquidacion && (liquidacion.subtotal !== void 0 || liquidacion.total !== void 0));
-  return /* @__PURE__ */ jsxs52("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
-    onImprimir && /* @__PURE__ */ jsx65("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs52(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
-      /* @__PURE__ */ jsx65(Icon, { name: "printer", className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs55("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
+    onImprimir && /* @__PURE__ */ jsx68("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs55(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
+      /* @__PURE__ */ jsx68(Icon, { name: "printer", className: "h-4 w-4" }),
       etiquetaImprimir
     ] }) }),
-    /* @__PURE__ */ jsxs52("article", { className: "oc-print-hoja", children: [
-      /* @__PURE__ */ jsxs52("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
-        /* @__PURE__ */ jsxs52("div", { className: "flex min-w-0 items-center gap-2.5", children: [
-          emisor?.logo ? /* @__PURE__ */ jsx65("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx65("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
-          /* @__PURE__ */ jsxs52("span", { className: "grid min-w-0 gap-0.5", children: [
-            /* @__PURE__ */ jsx65("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
-            emisor?.direccion && /* @__PURE__ */ jsx65("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
+    /* @__PURE__ */ jsxs55("article", { className: "oc-print-hoja", children: [
+      /* @__PURE__ */ jsxs55("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
+        /* @__PURE__ */ jsxs55("div", { className: "flex min-w-0 items-center gap-2.5", children: [
+          emisor?.logo ? /* @__PURE__ */ jsx68("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx68("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
+          /* @__PURE__ */ jsxs55("span", { className: "grid min-w-0 gap-0.5", children: [
+            /* @__PURE__ */ jsx68("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
+            emisor?.direccion && /* @__PURE__ */ jsx68("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs52("div", { className: "text-right", children: [
-          /* @__PURE__ */ jsx65("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
-          numero && /* @__PURE__ */ jsxs52("p", { className: "text-[12px] font-bold", children: [
+        /* @__PURE__ */ jsxs55("div", { className: "text-right", children: [
+          /* @__PURE__ */ jsx68("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
+          numero && /* @__PURE__ */ jsxs55("p", { className: "text-[12px] font-bold", children: [
             etiquetaNumero,
             " ",
             numero
           ] }),
-          estado && /* @__PURE__ */ jsx65("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
+          estado && /* @__PURE__ */ jsx68("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
         ] })
       ] }),
-      (emisor || receptor) && /* @__PURE__ */ jsxs52("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx65(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
-        /* @__PURE__ */ jsx65(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
+      (emisor || receptor) && /* @__PURE__ */ jsxs55("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx68(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
+        /* @__PURE__ */ jsx68(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
       ] }),
-      meta?.length > 0 && /* @__PURE__ */ jsxs52("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx65("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
-        /* @__PURE__ */ jsx65("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx65(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
+      meta?.length > 0 && /* @__PURE__ */ jsxs55("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx68("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
+        /* @__PURE__ */ jsx68("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx68(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
       ] }),
-      /* @__PURE__ */ jsxs52("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx65("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
-        detalle?.length > 0 ? /* @__PURE__ */ jsxs52("table", { className: "oc-print-tabla", children: [
-          /* @__PURE__ */ jsx65("thead", { children: /* @__PURE__ */ jsxs52("tr", { children: [
-            /* @__PURE__ */ jsx65("th", { scope: "col", children: "Cantidad" }),
-            /* @__PURE__ */ jsx65("th", { scope: "col", children: "Concepto" }),
-            /* @__PURE__ */ jsx65("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
-            /* @__PURE__ */ jsx65("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
+      /* @__PURE__ */ jsxs55("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx68("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
+        detalle?.length > 0 ? /* @__PURE__ */ jsxs55("table", { className: "oc-print-tabla", children: [
+          /* @__PURE__ */ jsx68("thead", { children: /* @__PURE__ */ jsxs55("tr", { children: [
+            /* @__PURE__ */ jsx68("th", { scope: "col", children: "Cantidad" }),
+            /* @__PURE__ */ jsx68("th", { scope: "col", children: "Concepto" }),
+            /* @__PURE__ */ jsx68("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
+            /* @__PURE__ */ jsx68("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
           ] }) }),
-          /* @__PURE__ */ jsx65("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs52("tr", { children: [
-            /* @__PURE__ */ jsx65("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
-            /* @__PURE__ */ jsxs52("td", { children: [
+          /* @__PURE__ */ jsx68("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs55("tr", { children: [
+            /* @__PURE__ */ jsx68("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
+            /* @__PURE__ */ jsxs55("td", { children: [
               item.concepto,
-              item.nota && /* @__PURE__ */ jsx65("small", { className: "block oc-print-suave", children: item.nota })
+              item.nota && /* @__PURE__ */ jsx68("small", { className: "block oc-print-suave", children: item.nota })
             ] }),
-            /* @__PURE__ */ jsx65("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx65(Money, { value: item.unitario, currency: moneda, simbolo }) }),
-            /* @__PURE__ */ jsx65("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx65(Money, { value: item.subtotal, currency: moneda, simbolo }) })
+            /* @__PURE__ */ jsx68("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx68(Money, { value: item.unitario, currency: moneda, simbolo }) }),
+            /* @__PURE__ */ jsx68("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx68(Money, { value: item.subtotal, currency: moneda, simbolo }) })
           ] }, item.id ?? indice)) })
-        ] }) : /* @__PURE__ */ jsx65("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
+        ] }) : /* @__PURE__ */ jsx68("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
       ] }),
-      tieneLiquidacion && /* @__PURE__ */ jsxs52("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
-        /* @__PURE__ */ jsx65("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
-        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx65(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
-        liquidacion.descuento ? /* @__PURE__ */ jsx65(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
-        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx65(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
-        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx65(
+      tieneLiquidacion && /* @__PURE__ */ jsxs55("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
+        /* @__PURE__ */ jsx68("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
+        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx68(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
+        liquidacion.descuento ? /* @__PURE__ */ jsx68(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
+        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx68(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
+        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx68(
           FilaLiquidacion,
           {
             etiqueta: `IVA ${iva.tasa}%`,
-            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs52(Fragment9, { children: [
+            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs55(Fragment9, { children: [
               "sobre ",
-              /* @__PURE__ */ jsx65(Money, { value: iva.base, currency: moneda, simbolo })
+              /* @__PURE__ */ jsx68(Money, { value: iva.base, currency: moneda, simbolo })
             ] }) : null,
             valor: iva.monto,
             moneda,
@@ -6108,20 +6272,20 @@ function DocumentoImpresion({
           },
           `${iva.tasa}-${indice}`
         )),
-        liquidacion.total !== void 0 && /* @__PURE__ */ jsx65(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
+        liquidacion.total !== void 0 && /* @__PURE__ */ jsx68(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
       ] }),
-      notas && /* @__PURE__ */ jsxs52("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx65("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
-        /* @__PURE__ */ jsx65("div", { className: "oc-print-nota", children: notas })
+      notas && /* @__PURE__ */ jsxs55("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx68("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
+        /* @__PURE__ */ jsx68("div", { className: "oc-print-nota", children: notas })
       ] }),
-      pie && /* @__PURE__ */ jsx65("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
+      pie && /* @__PURE__ */ jsx68("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
     ] })
   ] });
 }
 
 // src/components/SubidaImagen.jsx
 import { useId as useId7, useRef as useRef11, useState as useState24 } from "react";
-import { jsx as jsx66, jsxs as jsxs53 } from "react/jsx-runtime";
+import { jsx as jsx69, jsxs as jsxs56 } from "react/jsx-runtime";
 var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
 var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 var TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024;
@@ -6317,9 +6481,9 @@ function SubidaImagen({
     if (inputRef.current) inputRef.current.value = "";
     onLimpiar?.();
   }
-  return /* @__PURE__ */ jsxs53("div", { className: cn("min-w-0", className), children: [
-    etiqueta && /* @__PURE__ */ jsx66("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
-    /* @__PURE__ */ jsxs53(
+  return /* @__PURE__ */ jsxs56("div", { className: cn("min-w-0", className), children: [
+    etiqueta && /* @__PURE__ */ jsx69("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
+    /* @__PURE__ */ jsxs56(
       "div",
       {
         className: cn(
@@ -6341,23 +6505,23 @@ function SubidaImagen({
           void elegir(event.dataTransfer.files?.[0] ?? null);
         },
         children: [
-          vista ? /* @__PURE__ */ jsx66("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx66("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx66("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx66(Icon, { name: "image", className: "h-6 w-6" }) }),
-          /* @__PURE__ */ jsxs53("div", { className: "min-w-0 flex-1", children: [
-            /* @__PURE__ */ jsx66("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
-            /* @__PURE__ */ jsxs53("p", { className: "mt-0.5 text-[11px] text-mute", children: [
+          vista ? /* @__PURE__ */ jsx69("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx69("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx69("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx69(Icon, { name: "image", className: "h-6 w-6" }) }),
+          /* @__PURE__ */ jsxs56("div", { className: "min-w-0 flex-1", children: [
+            /* @__PURE__ */ jsx69("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
+            /* @__PURE__ */ jsxs56("p", { className: "mt-0.5 text-[11px] text-mute", children: [
               tipos.map((tipo) => ETIQUETA_TIPO[tipo] || tipo).join(" \xB7 "),
               " \xB7 hasta ",
               pesoLegible(tamanoMaximo)
             ] }),
-            /* @__PURE__ */ jsxs53("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
-              /* @__PURE__ */ jsxs53(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
-                /* @__PURE__ */ jsx66(Icon, { name: "upload", className: "h-4 w-4" }),
+            /* @__PURE__ */ jsxs56("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
+              /* @__PURE__ */ jsxs56(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
+                /* @__PURE__ */ jsx69(Icon, { name: "upload", className: "h-4 w-4" }),
                 trabajando ? "Procesando\u2026" : vista ? cambiarEtiqueta : subirEtiqueta
               ] }),
-              (vista || vistaLocal) && /* @__PURE__ */ jsx66(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
+              (vista || vistaLocal) && /* @__PURE__ */ jsx69(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
             ] })
           ] }),
-          /* @__PURE__ */ jsx66(
+          /* @__PURE__ */ jsx69(
             "input",
             {
               ref: inputRef,
@@ -6375,12 +6539,12 @@ function SubidaImagen({
         ]
       }
     ),
-    mensaje ? /* @__PURE__ */ jsx66("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx66("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
+    mensaje ? /* @__PURE__ */ jsx69("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx69("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
   ] });
 }
 
 // src/components/ProgresoChecklist.jsx
-import { jsx as jsx67, jsxs as jsxs54 } from "react/jsx-runtime";
+import { jsx as jsx70, jsxs as jsxs57 } from "react/jsx-runtime";
 function progresoChecklist({
   hechas = 0,
   total = 0,
@@ -6436,19 +6600,19 @@ function ProgresoChecklist({
   const avance = progresoChecklist({ hechas, total, vencidas, riesgo, sustantivo, textoVacio });
   const tonoTexto = avance.tono === "ok" ? "text-ok" : avance.tono === "bad" ? "text-bad" : avance.tono === "warn" ? "text-warn" : "text-fore";
   const hayDetalle = avance.vencidas > 0 || avance.riesgo;
-  return /* @__PURE__ */ jsxs54("div", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsxs54("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx67("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
-      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs54("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
+  return /* @__PURE__ */ jsxs57("div", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsxs57("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx70("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
+      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs57("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
         avance.porcentaje,
         "%"
       ] })
     ] }),
-    avance.total > 0 && /* @__PURE__ */ jsx67(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
-    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs54("p", { className: "mt-1 text-[11px] text-mute", children: [
-      avance.riesgo && /* @__PURE__ */ jsx67("span", { className: "text-bad", children: "Sin avance" }),
+    avance.total > 0 && /* @__PURE__ */ jsx70(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
+    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs57("p", { className: "mt-1 text-[11px] text-mute", children: [
+      avance.riesgo && /* @__PURE__ */ jsx70("span", { className: "text-bad", children: "Sin avance" }),
       avance.riesgo && avance.vencidas > 0 && " \xB7 ",
-      avance.vencidas > 0 && /* @__PURE__ */ jsxs54("span", { className: "text-warn", children: [
+      avance.vencidas > 0 && /* @__PURE__ */ jsxs57("span", { className: "text-warn", children: [
         avance.vencidas,
         " vencida",
         avance.vencidas === 1 ? "" : "s"
@@ -7065,6 +7229,7 @@ export {
   CityAutocomplete,
   CodigoQr,
   ConfirmDialog,
+  ContadorLote,
   ConteoChecklist,
   Cronologia,
   CurrencySelect,
@@ -7158,6 +7323,8 @@ export {
   ROTULO_SECCION,
   RUC_RE,
   RangoFecha,
+  ResumenDestinos,
+  ResumenIncidencias,
   RucField,
   SIMBOLOS_MONEDA,
   SIMBOLO_PYG,
