@@ -4,6 +4,21 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.20.0 — 2026-09-24
+
+- **Recepción e incidencias (#250 F5):**
+  - `FilaRevision`: fila de una recepción/control con lo esperado, el serial
+    (últimos 4 visibles) o «IMEI pendiente», el chip del estado y las acciones
+    de la pantalla; las incidencias usan la superficie suave del tono.
+  - `SelectorIncidencia`: elegir el tipo en la fila (y quitarlo volviendo a
+    tocarlo); los tipos entran por prop.
+  - `DestinoRecepcion`: recibir todo en el depósito predeterminado en un clic o
+    elegir otro de la lista, con el aviso de unidades sin IMEI.
+  - `utils/revision.js`: **un solo mapa** de estados de revisión
+    (`ESTADOS_REVISION`, `INCIDENCIAS`, etiquetas singular/plural y tonos) que
+    usan la fila, el selector y `ResumenIncidencias`.
+- Docs (REGLAS §4, README) y tests (192 en total).
+
 ## v0.19.0 — 2026-09-24
 
 - **Envíos entrantes y recepción (#250 F4/F5, lote del 24-09):**

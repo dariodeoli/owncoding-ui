@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 
 import {
   CATEGORIAS_PRODUCTO,
+  INCIDENCIAS,
   ICONO_CATEGORIA,
   LOCKS_DISPOSITIVO,
   TONOS,
@@ -40,9 +41,13 @@ import {
   whatsappUrl,
   extraerRuc,
   esRuc,
+  esIncidencia,
+  etiquetaPluralRevision,
+  etiquetaRevision,
   imeiValido,
   normalizarSeriales,
   separarSeriales,
+  tonoRevision,
   cn,
 } from '../src/index.js'
 
@@ -260,5 +265,24 @@ describe('utils/serial', () => {
     expect(sinValidar.seriales).toEqual(['A1', 'A2', 'A3'])
     expect(sinValidar.invalidos).toEqual([])
     expect(normalizarSeriales('A1 A2 A3', { limite: 2 }).seriales).toEqual(['A1', 'A2'])
+  })
+})
+
+// Lote 26: el mapa de estados de una revisión/recepción es uno solo.
+describe('utils/revision', () => {
+  test('etiquetas, plurales y tonos salen del mismo mapa', () => {
+    expect(etiquetaRevision('faltante')).toBe('Falta')
+    expect(etiquetaPluralRevision('faltante')).toBe('Faltan')
+    expect(tonoRevision('danado')).toBe('bad')
+    expect(tonoRevision('sinImei')).toBe('mute')
+    expect(etiquetaRevision('desconocido')).toBe('desconocido')
+  })
+
+  test('solo los tipos de incidencia suman al resumen', () => {
+    expect(esIncidencia('faltante')).toBe(true)
+    expect(esIncidencia('sobrante')).toBe(true)
+    expect(esIncidencia('ok')).toBe(false)
+    expect(esIncidencia('pendiente')).toBe(false)
+    expect(INCIDENCIAS).toContain('sinDocumentacion')
   })
 })

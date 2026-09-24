@@ -120,7 +120,8 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - `SeccionColapsable`: sección de detalle plegable (arranca cerrada, `aria-expanded` + `aria-controls`); con `clave` recuerda el estado en la sesión y el contenido queda en el DOM con `hidden` (los apoyos de lectura y las pruebas lo encuentran).
 - Barras de avance: `BarraProgreso` (accesible, con tono y altura).
 - Stock contra el punto de reposición: `MedidorStock` (`texto`/`chip`/`barra`; agotado/reponer/en stock; sin dato dice «Sin dato», nunca 0).
-- Avance de un lote: `ContadorLote` («3 de 12», variantes `texto`/`chip`/`barra`, tono según el avance, `mostrarFaltan`); recepción: `ResumenIncidencias` (faltantes/sobrantes/dañadas/incorrectas/sin IMEI con conteos reales; sin incidencias lo dice en verde).
+- Avance de un lote: `ContadorLote` («3 de 12», variantes `texto`/`chip`/`barra`, tono según el avance, `mostrarFaltan`).
+- **Recepción (#250 F5):** `FilaRevision` (lo esperado + serial con los últimos 4 + el chip del estado), `SelectorIncidencia` (elegir/quitar el tipo en la fila) y `DestinoRecepcion` (recibir en el depósito predeterminado en un clic o elegir otro; avisa los IMEI pendientes). Estados, etiquetas y tonos salen de `utils/revision.js` (`ESTADOS_REVISION`, `INCIDENCIAS`), el mismo mapa que usa `ResumenIncidencias` (faltantes/sobrantes/dañadas/incorrectas/sin IMEI con conteos reales; sin incidencias lo dice en verde).
 - Destinos de una compra consolidada: `ResumenDestinos` («1 pedido A · 3 stock», conserva los destinos;#250 §5).
 - Reglas: misma altura de fila, sin cortes de texto, acciones en una línea,
   montos/fechas/códigos con `nowrap` + dígitos tabulares.

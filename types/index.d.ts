@@ -222,6 +222,15 @@ export function MedidorStock(props: { stock?: number | null; umbral?: number | n
 export function ContadorLote(props: { recibidos?: number | null; total?: number | null; variante?: 'texto' | 'chip' | 'barra'; sufijo?: string; mostrarFaltan?: boolean; vacio?: string; className?: string }): ReactElement
 export function ResumenDestinos(props: { destinos?: Array<{ id?: string; etiqueta: ReactNode; cantidad: number; detalle?: string }>; ariaLabel?: string; onElegir?: (destino: any) => void; className?: string }): ReactElement | null
 export function ResumenIncidencias(props: { incidencias?: Array<{ tipo?: string; etiqueta?: ReactNode; cantidad?: number; tono?: string; detalle?: string }>; sinIncidencias?: string; className?: string }): ReactElement
+export function FilaRevision(props: { etiqueta: ReactNode; serial?: string | null; estado?: string; detalle?: ReactNode; acciones?: ReactNode; compact?: boolean; className?: string }): ReactElement
+export function SelectorIncidencia(props: { valor?: string | null; onChange?: (tipo: string | null) => void; tipos?: string[]; permitirQuitar?: boolean; disabled?: boolean; ariaLabel?: string; className?: string }): ReactElement
+export function DestinoRecepcion(props: { destino?: { id: string; nombre: ReactNode } | null; depositos?: Array<{ id: string; nombre: ReactNode }>; pendientes?: number; recibiendo?: boolean; onRecibir?: (depositoId: string) => void; etiqueta?: string; textoRecibir?: string; className?: string }): ReactElement
+export const ESTADOS_REVISION: Record<string, { etiqueta: string; etiquetaPlural: string; tono: string }>
+export const INCIDENCIAS: string[]
+export function esIncidencia(estado?: string): boolean
+export function etiquetaRevision(estado?: string): string
+export function etiquetaPluralRevision(estado?: string): string
+export function tonoRevision(estado?: string): string
 export function EstadoBadge(props: { mapa?: Record<string, { label: ReactNode; color?: string }>; valor?: string; vacio?: string }): ReactElement
 export function SeccionColapsable(props: { titulo: ReactNode; resumen?: ReactNode; icono?: string; abierta?: boolean; clave?: string; className?: string; children?: ReactNode }): ReactElement
 

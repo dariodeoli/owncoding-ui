@@ -19,6 +19,8 @@ import {
   BarraLote,
   CampoSeriales,
   ContadorLote,
+  DestinoRecepcion,
+  FilaRevision,
   GradoBadge,
   IconAction,
   IconoCategoria,
@@ -39,6 +41,7 @@ import {
   MedidorStock,
   ResumenDestinos,
   ResumenIncidencias,
+  SelectorIncidencia,
   Money,
   Modal,
   PageHeader,
@@ -395,5 +398,34 @@ describe('render de los objetos base', () => {
     expect(banner).toContain('bg-bad')
     expect(banner).toContain('text-white dark:text-onbrand')
     expect(renderToStaticMarkup(<IndicadorConexion enLinea pendientes={3} variante="banner" onSincronizar={() => {}} />)).toContain('Sincronizar')
+  })
+  test('los objetos de recepción (lote 26)', () => {
+    // Fila de revisión: estado del mapa compartido y serial con los últimos 4.
+    const fila = renderToStaticMarkup(<FilaRevision etiqueta="iPhone 15 · 128 GB" serial="356789104523178" estado="ok" />)
+    expect(fila).toContain('iPhone 15')
+    expect(fila).toContain('3178')
+    expect(fila).toContain('>OK<')
+    const faltante = renderToStaticMarkup(<FilaRevision etiqueta="AirPods" estado="faltante" detalle="No llegó" />)
+    expect(faltante).toContain('Falta')
+    expect(faltante).toContain('border-bad/25')
+    expect(faltante).toContain('No llegó')
+    expect(renderToStaticMarkup(<FilaRevision etiqueta="iPad" />)).toContain('IMEI pendiente')
+
+    // Selector de incidencia: activo con el tono del tipo y vuelve a null.
+    const selector = renderToStaticMarkup(<SelectorIncidencia valor="danado" tipos={['danado', 'incorrecto']} />)
+    expect(selector).toContain('aria-pressed="true"')
+    expect(selector).toContain('Dañada')
+    expect(selector).toContain('border-bad/40')
+    expect(selector).not.toContain('Sin IMEI')
+
+    // Cierre de la recepción: depósito, un clic y aviso de IMEI pendientes.
+    const cierre = renderToStaticMarkup(<DestinoRecepcion destino={{ id: 'dep-1', nombre: 'Depósito 1' }} depositos={[{ id: 'dep-1', nombre: 'Depósito 1' }, { id: 'dep-2', nombre: 'Depósito 2' }]} pendientes={3} onRecibir={() => {}} />)
+    expect(cierre).toContain('Depósito 1')
+    expect(cierre).toContain('Recibir todo')
+    expect(cierre).toContain('3 unidad(es) sin IMEI')
+    expect(cierre).toContain('<select')
+    const sinAlternativas = renderToStaticMarkup(<DestinoRecepcion destino={{ id: 'dep-1', nombre: 'Depósito 1' }} onRecibir={() => {}} />)
+    expect(sinAlternativas).not.toContain('<select')
+    expect(sinAlternativas).toContain('Recibir todo')
   })
 })
