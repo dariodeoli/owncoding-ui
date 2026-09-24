@@ -4,6 +4,26 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.21.0 — 2026-09-24
+
+- **Tokens v2 promovidos a globales (#241, rollout aprobado, paso 1):** el
+  lenguaje "device ops" pasa de scope (`.tema-v2`/`.v2-piloto`) a la **paleta
+  base** de la biblioteca: claro `#F6F8FB`/`#FFFFFF` con tonos de **texto AA**
+  (`ok` #166534, `bad` #B91C1C, `warn` #92400E, `info` #2059BE) y oscuro
+  `#0E1116`/`#1F2430` con sus tonos AA (`ok` #4ADE80, `bad` #FCA5A5, `warn`
+  #FCD34D, `info` #9FB8FF); el verde pass `#22C55E` y el azul acción `#4D7CFE`
+  siguen en cualquier tema.
+  - **Impacto:** una app que importe `styles.css`/`tokens.css` **sin su propia
+    paleta** pasa a ver la del v2 (es el objetivo del rollout). Las apps con
+    paleta propia no cambian: siguen pisando las variables. Los vivos de
+    PhoneCheck quedan para rellenos e indicadores (`--c-pass`, `--c-accion`).
+  - **Alias temporal:** `.tema-v2`/`.v2-piloto` siguen existiendo (sin
+    overrides de color) porque ahí viven las reglas del shell y de contenido de
+    `base.css`; se retiran cuando las apps terminen la migración.
+- Docs (V2, MIGRACION-V2, SHELL, REGLAS, README) alineadas; la guarda
+  `test/contraste-tokens.test.js` ahora mide **la paleta global** (claro y
+  oscuro) y `test/tokens.test.js` fija que el alias no tenga overrides.
+
 ## v0.20.0 — 2026-09-24
 
 - **Recepción e incidencias (#250 F5):**

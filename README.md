@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.20.0
+npm install github:dariodeoli/owncoding-ui#v0.21.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.20.0
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.21.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -31,9 +31,10 @@ mismo paquete en GitHub Packages (`npm.pkg.github.com`) y consumirlo con
 Requisitos: **React 18+** y **Tailwind CSS 3.4+**.
 
 > **Sistema v2 (tokens + iconos):** guía de adopción paso a paso en
-> **`docs/V2.md`** — scope `tema-v2` (alias `v2-piloto`), verde pass, azul
-> acción, tonos de texto AA, `.v2-numero` e iconos de categoría con
-> `IconoCategoria`.
+> **`docs/V2.md`**. Desde la **v0.21.0** los tokens v2 (consola #0E1116/#1F2430,
+> verde pass, azul acción, tonos de texto AA) son la **paleta global** del
+> paquete; `.tema-v2`/`.v2-piloto` quedan como alias temporal. `.v2-numero` e
+> `IconoCategoria` completan el sistema.
 >
 > **Shell v2 (navegación):** piezas, props, breakpoints y reglas de contraste
 > AA en **`docs/SHELL.md`**.

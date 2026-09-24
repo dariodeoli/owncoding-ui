@@ -1,6 +1,7 @@
-// Tokens del tema v2 del piloto (#241): el CSS y el preset tienen que seguir
-// ofreciendo el scope claro/oscuro y el verde pass, para que las pantallas del
-// piloto no mantengan su propio bloque.
+// Tokens del lenguaje v2 (#241): promovidos a **globales** en la ronda .21, con
+// el scope del piloto como alias temporal. El CSS y el preset tienen que seguir
+// ofreciendo el claro AA y el oscuro consola, más el verde pass y el azul de
+// acción, para que las pantallas no mantengan su propio bloque.
 //
 // Además, la separación pedida por el piloto de LedBox: `tokens.css` (solo
 // variables, importable por una app con diseño propio), `base.css` (la base
@@ -17,15 +18,21 @@ const distStyles = readFileSync(new URL('../dist/styles.css', import.meta.url), 
 const preset = readFileSync(new URL('../tailwind-preset.js', import.meta.url), 'utf8')
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 
-describe('tokens del tema v2 (piloto)', () => {
-  test('el scope v2 existe con alias del piloto y las dos variantes', () => {
-    expect(tokens).toContain('.tema-v2,\n.v2-piloto {')
+describe('tokens v2 globales (con alias del piloto)', () => {
+  test('la paleta global es la del v2, clara y oscura', () => {
     expect(tokens).toContain('--c-paper: 246 248 251') // claro
-    expect(tokens).toContain('html.dark .tema-v2,')
-    expect(tokens).toContain('--c-paper: 14 17 22') // consola oscura
+    expect(tokens).toContain('--c-fore: 14 17 22')
     expect(tokens).toContain('--c-info: 32 89 190') // azul acción AA en claro
     expect(tokens).toContain('--c-ok: 22 101 52') // ok de texto AA en claro
+    expect(tokens).toContain('--c-paper: 14 17 22') // consola oscura #0E1116
+    expect(tokens).toContain('--c-ink: 31 36 48') // panel #1F2430
     expect(tokens).toContain('--c-info: 159 184 255') // azul AA en oscuro
+    expect(tokens).toContain('html.dark {')
+  })
+
+  test('el scope del piloto queda como alias temporal, sin overrides', () => {
+    const alias = tokens.slice(tokens.indexOf('.tema-v2,\n.v2-piloto {'), tokens.indexOf('.tema-v2 .v2-numero,'))
+    expect(alias).not.toContain('--c-')
     expect(tokens).toContain('.tema-v2 .v2-numero')
   })
 

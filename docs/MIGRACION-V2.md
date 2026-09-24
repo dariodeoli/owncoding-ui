@@ -49,8 +49,10 @@ se declaran como `--c-*` en el CSS de la app, **nunca** en la pantalla.
 
 ## 3. Aplicar el scope y los objetos
 
-1. `tema-v2` (alias `v2-piloto`) en el contenedor de la pantalla piloto; el
-   resto de la app sigue igual hasta que se migre a propósito.
+1. Desde la v0.21.0 los **tokens son globales**: no hay que envolver cada
+   pantalla para tener la paleta. La clase `tema-v2` (alias `v2-piloto`) queda
+   en el shell como alias temporal porque ahí viven las reglas de navegación y
+   contenido; el resto de la app hereda la paleta sin hacer nada.
 2. Reemplazá por tipo:
 
 | En la pantalla | Objeto |

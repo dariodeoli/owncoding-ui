@@ -62,9 +62,11 @@ permisos; el shell solo dibuja y navega.
 
 ## 4. Tokens v2 y contraste AA (shell v2, #241)
 
-El shell v2 se activa aplicando el scope **`tema-v2`** (alias `v2-piloto`) al
-contenedor: los tokens bajan a toda la pantalla y se apagan retirando la clase
-(por eso el rollout puede ir detrás de un flag por dispositivo).
+Desde la **v0.21.0** los tokens v2 son la **paleta global** de la biblioteca:
+una app que importa `styles.css` los tiene sin hacer nada. El scope
+**`tema-v2`** (alias `v2-piloto`) queda como **alias temporal** — ahí viven las
+reglas del shell y de contenido de `base.css` — y se retira cuando las apps
+terminen la migración.
 
 Los roles semánticos del scope v2 son **tonos de texto AA**: los vivos de
 PhoneCheck no llegan a 4.5:1 sobre las superficies v2 y quedan para rellenos e
