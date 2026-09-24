@@ -30,6 +30,7 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | Producto | `ProductCombobox` | buscar/elegir y **crear** desde el campo: sugerencias en flujo (no superpuestas) con `role="combobox"`/`listbox`, teclado ↑↓/Enter/Esc y «Agregar … como producto nuevo»; la pantalla filtra en memoria o consulta al servidor (`onQueryChange`) |
 | RUC / CI | `RucField` (+`extraerRuc`/`esRuc`) | input con el botón **Extraer** adentro (trailing, `BotonDentroCampo`): la consulta entra por `consultar` (async) y el resultado se aplica solo al confirmar («Usar estos datos»); sin `consultar` el botón no se muestra |
 | Serial (lectura) | `SerialTexto` | el serial completo si entra y, si la columna queda corta, se recorta la cabeza y los **últimos 4** siguen visibles; vacío → `—` |
+| Seriales por lote (pegar/escanear) | `CampoSeriales` (+`imeiValido`, `separarSeriales`, `normalizarSeriales`) | textarea que normaliza al vuelo y entrega **solo los válidos únicos** por `onCambio`, con conteos de repetidos e inválidos; para IMEI se pasa `validar={imeiValido}` (15 dígitos + Luhn) |
 | Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el texto libre sigue permitido |
 
 ### Tamaños recomendados (#148, portable)
@@ -117,6 +118,7 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - `FilaDato`: fila etiqueta/valor de paneles de detalle (mantiene `dt`/`dd`).
 - `SeccionColapsable`: sección de detalle plegable (arranca cerrada, `aria-expanded` + `aria-controls`); con `clave` recuerda el estado en la sesión y el contenido queda en el DOM con `hidden` (los apoyos de lectura y las pruebas lo encuentran).
 - Barras de avance: `BarraProgreso` (accesible, con tono y altura).
+- Stock contra el punto de reposición: `MedidorStock` (`texto`/`chip`/`barra`; agotado/reponer/en stock; sin dato dice «Sin dato», nunca 0).
 - Reglas: misma altura de fila, sin cortes de texto, acciones en una línea,
   montos/fechas/códigos con `nowrap` + dígitos tabulares.
 - Vacíos y estados dentro de la tabla: `EmptyState compact`.
@@ -249,7 +251,7 @@ no las repite. El armado del shell y la tabla de contrastes están en
 | `MedidorBateria` | `porcentaje`, `ciclos`, `etiqueta`, `variante` (`barra`/`chip`), `compact`, `mostrarEtiqueta` (chip «87% batería»), `className` | Umbrales 90/80; sin dato → `—` y "Sin dato" (nunca 0) |
 | `GradoBadge` | `grado` (`A`/`B`/`C`), `conDescripcion`, `className` | A verde, B naranja, C rojo; un grado inválido se muestra crudo |
 | `TileEquipo` | `modelo`, `imei`, `detalle`, `foto`, `estado`, `grado`, `bateria`, `ciclos`, `locks`, `acciones`, `onOpen` | Compone chip, grado, batería, locks e icono de categoría; `onOpen` lo vuelve botón |
-| `Stepper` | `pasos` = `[{ id, etiqueta, detalle? }]`, `actual`, `hechos`, `className` | Hecho verde `pass`, actual con anillo, pendiente gris |
+| `Stepper` | `pasos` = `[{ id, etiqueta, detalle? }]` o etiquetas sueltas, `actual`, `hechos`, `variante` (`linea`/`tarjetas`), `ariaLabel`, `className` | Línea: hecho verde `pass`, actual con anillo, pendiente gris; **`tarjetas`**: grilla 2/4 con el paso actual en azul (el flujo de entrega del pedido en v2) |
 | `IconoCategoria` | `categoria` (texto libre) o `icono`, `className` | Glifos `mobile`/`laptop`/`tablet`/`watch`/`buds`/`cable`; `servicio`/`otro` delegan en `Icon` |
 | `CodigoQr` | `valor`, `ancho` (220), `nivel` (`M`), `margen` (1), `alt`, `className` | QR del informe/enlace; sin valor no renderiza nada. Requiere `qrcode` (peer opcional) |
 | `qrDataUrl` | `valor`, `{ ancho, nivel, margen }` | Data URL del QR para HTML impreso o previews; vacío → `''`, nunca lanza |

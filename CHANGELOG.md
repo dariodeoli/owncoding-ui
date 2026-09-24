@@ -4,6 +4,23 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.18.0 — 2026-09-24
+
+- **Tanda de abastecimiento y entrega (#250/#241, lote del 24-09):**
+  - `CampoSeriales` (pegar o escanear seriales/IMEI por lote): normaliza al
+    vuelo y entrega **solo los válidos únicos** por `onCambio`, con conteos de
+    repetidos e inválidos; `utils/serial.js` suma **`imeiValido`** (15 dígitos +
+    Luhn), **`separarSeriales`** y **`normalizarSeriales`** (y `normalizarSerial`
+    se movió ahí, re-exportado por `SerialField`).
+  - `MedidorStock`: stock contra el punto de reposición con tonos
+    agotado/reponer/en stock y variantes `texto`/`chip`/`barra`; sin dato dice
+    «Sin dato» (nunca 0).
+  - `Stepper` suma **`variante="tarjetas"`** (grilla 2/4 con el paso actual en
+    azul y los cumplidos en verde) para el flujo de entrega de pedidos, y
+    acepta etiquetas sueltas y `ariaLabel`.
+- Docs: `REGLAS.md` §1/§4/§8 bis; tests de serial/Luhn y de los tres objetos
+  (188 en total).
+
 ## v0.17.0 — 2026-09-24
 
 - **Pila de personas y migas (lote del 24-09, #211/#241):** `PilaPersonas`

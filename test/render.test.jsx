@@ -17,6 +17,7 @@ import {
   FilaChecklist,
   FilaDato,
   BarraLote,
+  CampoSeriales,
   GradoBadge,
   IconAction,
   IconoCategoria,
@@ -33,6 +34,7 @@ import {
   Input,
   Label,
   MedidorBateria,
+  MedidorStock,
   Money,
   Modal,
   PageHeader,
@@ -47,7 +49,7 @@ import {
   TileEquipo,
   VistaPreviaPapel,
 } from '../src/index.js'
-import { BotonDentroCampo } from '../src/index.js'
+import { BotonDentroCampo, imeiValido } from '../src/index.js'
 import { CELDA_DATO, CELDA_ENCABEZADO, CELDA_NUMERO, ROTULO_DATO, ROTULO_SECCION } from '../src/index.js'
 
 // Smoke mínimo: los objetos renderizan en el servidor y el HTML trae el
@@ -341,5 +343,28 @@ describe('render de los objetos base', () => {
     expect(html).toContain('href="/pos/inventario"')
     expect(html).toContain('aria-current="page"')
     expect(renderToStaticMarkup(<PageHeader title="Unidades" />)).not.toContain('Miga de sección')
+  })
+  test('los objetos del abastecimiento y el stepper en tarjetas (lote 24)', () => {
+    // Stepper del flujo de entrega (variante tarjetas).
+    const tarjetas = renderToStaticMarkup(<Stepper variante="tarjetas" pasos={['Pendiente', 'Preparando', 'En camino', 'Entregado']} actual={2} />)
+    expect(tarjetas).toContain('sm:grid-flow-col')
+    expect(tarjetas).toContain('En camino')
+    expect(tarjetas).toContain('oc-paso-activo')
+    expect(tarjetas).toContain('bg-ok/15')
+
+    // Campo de seriales por lote: cuenta listos, repetidos e inválidos.
+    const campo = renderToStaticMarkup(<CampoSeriales valor={'490154203237518\n490154203237518\n12345'} validar={imeiValido} />)
+    expect(campo).toContain('1 listo(s) para cargar')
+    expect(campo).toContain('1 repetido(s)')
+    expect(campo).toContain('1 inválido(s)')
+    expect(campo).toContain('490154203237518')
+
+    // Medidor de stock contra el punto de reposición.
+    expect(renderToStaticMarkup(<MedidorStock stock={0} umbral={5} />)).toContain('Agotado')
+    expect(renderToStaticMarkup(<MedidorStock stock={3} umbral={5} />)).toContain('Reponer')
+    expect(renderToStaticMarkup(<MedidorStock stock={24} umbral={5} />)).toContain('24 de 5')
+    expect(renderToStaticMarkup(<MedidorStock stock={null} umbral={5} />)).toContain('Sin dato')
+    expect(renderToStaticMarkup(<MedidorStock stock={2} umbral={5} variante="chip" />)).toContain('border-warn/30')
+    expect(renderToStaticMarkup(<MedidorStock stock={2} umbral={5} variante="barra" />)).toContain('role="progressbar"')
   })
 })

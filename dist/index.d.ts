@@ -203,6 +203,22 @@ export function extraerRuc(texto: string): string
 export function esRuc(valor: string): boolean
 export const RUC_RE: RegExp
 export function SerialTexto(props: { serial?: string; className?: string; tonoCola?: string; vacio?: string }): ReactElement
+export function imeiValido(valor?: string | null): boolean
+export function separarSeriales(texto?: string, opciones?: { maxLargo?: number }): string[]
+export function normalizarSeriales(texto?: string, opciones?: { validar?: (serial: string) => boolean; limite?: number; maxLargo?: number }): { seriales: string[]; repetidos: string[]; invalidos: string[] }
+export function CampoSeriales(props: {
+  valor?: string[] | string
+  onCambio?: (seriales: string[], resultado: { seriales: string[]; repetidos: string[]; invalidos: string[] }) => void
+  validar?: (serial: string) => boolean
+  limite?: number
+  maxLargo?: number
+  etiqueta?: string
+  placeholder?: string
+  ayuda?: string
+  disabled?: boolean
+  className?: string
+}): ReactElement
+export function MedidorStock(props: { stock?: number | null; umbral?: number | null; variante?: 'texto' | 'chip' | 'barra'; etiqueta?: string; mostrarUmbral?: boolean; vacio?: string; className?: string }): ReactElement
 export function EstadoBadge(props: { mapa?: Record<string, { label: ReactNode; color?: string }>; valor?: string; vacio?: string }): ReactElement
 export function SeccionColapsable(props: { titulo: ReactNode; resumen?: ReactNode; icono?: string; abierta?: boolean; clave?: string; className?: string; children?: ReactNode }): ReactElement
 
@@ -280,7 +296,7 @@ export function ChipsLocks(props: { locks?: Array<{ clave: string; estado: strin
 export function MedidorBateria(props: { porcentaje?: number | null; ciclos?: number | null; etiqueta?: string; variante?: 'barra' | 'chip'; compact?: boolean; className?: string }): ReactElement
 export function GradoBadge(props: { grado: string; conDescripcion?: boolean; className?: string }): ReactElement
 export function TileEquipo(props: Record<string, any> & { modelo?: string; imei?: string; detalle?: ReactNode; foto?: string; estado?: string; grado?: string; bateria?: number | null; ciclos?: number | null; locks?: any[]; acciones?: ReactNode; onOpen?: () => void }): ReactElement
-export function Stepper(props: { pasos?: Array<{ id: string; etiqueta: ReactNode; detalle?: ReactNode }>; actual?: string; hechos?: string[]; className?: string }): ReactElement
+export function Stepper(props: { pasos?: Array<string | { id?: string; etiqueta?: ReactNode; detalle?: ReactNode }>; actual?: string | number; hechos?: Array<string | number>; variante?: 'linea' | 'tarjetas'; ariaLabel?: string; className?: string }): ReactElement | null
 export function CodigoQr(props: { valor?: string; ancho?: number; nivel?: string; margen?: number; alt?: string; className?: string }): ReactElement | null
 export const QR_OPCIONES: { ancho: number; nivel: string; margen: number }
 export function qrDataUrl(valor: string, opciones?: { ancho?: number; nivel?: string; margen?: number }): Promise<string>

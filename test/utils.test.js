@@ -40,6 +40,9 @@ import {
   whatsappUrl,
   extraerRuc,
   esRuc,
+  imeiValido,
+  normalizarSeriales,
+  separarSeriales,
   cn,
 } from '../src/index.js'
 
@@ -227,5 +230,35 @@ describe('utils/ruc', () => {
     expect(esRuc(' 800.123.45-6 ')).toBe(true)
     expect(esRuc('80012345')).toBe(false)
     expect(esRuc('')).toBe(false)
+  })
+})
+
+// Lote 24: IMEI/Luhn y normalización de listas pegadas (abastecimiento, #250).
+describe('utils/serial', () => {
+  test('imeiValido exige 15 dígitos y dígito control (Luhn)', () => {
+    expect(imeiValido('490154203237518')).toBe(true)
+    expect(imeiValido('490154203237519')).toBe(false)
+    expect(imeiValido('490154 203237518')).toBe(true)
+    expect(imeiValido('12345')).toBe(false)
+    expect(imeiValido('')).toBe(false)
+  })
+
+  test('separarSeriales limpia, ordena y descarta repetidos del texto', () => {
+    expect(separarSeriales('a-1\nB2, b2; c3')).toEqual(['A1', 'B2', 'C3'])
+    expect(separarSeriales('  ')).toEqual([])
+  })
+
+  test('normalizarSeriales cuenta listos, repetidos e inválidos', () => {
+    const { seriales, repetidos, invalidos } = normalizarSeriales('490154203237518\n490154203237518\n12345\nPO-SERIAL-1', { validar: imeiValido })
+    expect(seriales).toEqual(['490154203237518'])
+    expect(repetidos).toEqual(['490154203237518'])
+    expect(invalidos).toEqual(['12345', 'POSERIAL1'])
+  })
+
+  test('sin validador no hay inválidos y el límite corta', () => {
+    const sinValidar = normalizarSeriales('A1 A2 A3')
+    expect(sinValidar.seriales).toEqual(['A1', 'A2', 'A3'])
+    expect(sinValidar.invalidos).toEqual([])
+    expect(normalizarSeriales('A1 A2 A3', { limite: 2 }).seriales).toEqual(['A1', 'A2'])
   })
 })

@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.17.0
+npm install github:dariodeoli/owncoding-ui#v0.18.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.17.0
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.18.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -283,6 +283,11 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `BarraLote` (acciones por lote), `PeriodoTabs` (Día/Semana/Mes/Año),
   `NumericKeypad` (teclado de cobro) y la **miga de sección** de `PageHeader`
   (`migas`) completan el lote.
+- **Abastecimiento (#250):** `CampoSeriales` (pegar/escanear IMEI por lote con
+  conteos de repetidos e inválidos) + `imeiValido` (Luhn) · `separarSeriales` ·
+  `normalizarSeriales` en `utils/serial.js`, `MedidorStock` (stock vs punto de
+  reposición) y `Stepper variante="tarjetas"` para el flujo de entrega del
+  pedido (v2).
 - **Tablero (lote 2, sin publicar):** `ImporteDelta` (monto con signo y color),
   `IndicadorConexion` (en línea / pendientes de subir), `CampanaAvisos`
   (contador + panel por props) y `GraficoBarras` (barras CSS sin dependencias).
