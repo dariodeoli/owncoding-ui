@@ -18,6 +18,7 @@ import {
   FilaDato,
   BarraLote,
   CampoSeriales,
+  ColumnaLote,
   ContadorLote,
   DestinoRecepcion,
   FilaRevision,
@@ -44,6 +45,7 @@ import {
   ResumenIncidencias,
   SelectorIncidencia,
   TileRol,
+  Vencimiento,
   Money,
   Modal,
   PageHeader,
@@ -463,5 +465,29 @@ describe('render de los objetos base', () => {
     expect(ficha).toContain('Seminuevo')
     expect(ficha).toContain('Repuestos no OEM')
     expect(ficha).toContain('Cambio con repuesto no original')
+  })
+  test('los objetos del taller/rack y servicio (lote 29)', () => {
+    // Stepper en tarjetas con detalle (el pipeline del taller con conteos).
+    const flujo = renderToStaticMarkup(<Stepper variante="tarjetas" ariaLabel="Flujo del taller" pasos={[{ etiqueta: 'Recepción', detalle: '2 equipos' }, { etiqueta: 'Diagnóstico', detalle: '1 equipo' }, 'Reparación']} actual={1} />)
+    expect(flujo).toContain('aria-label="Flujo del taller"')
+    expect(flujo).toContain('2 equipos')
+    expect(flujo).toContain('oc-paso-activo')
+
+    // Columna de lote: cabecera con chip, contador y acciones; vacío explícito.
+    const columna = renderToStaticMarkup(<ColumnaLote etiqueta="Por verificar" tono="orange" contador={5} acciones={<button>Imprimir (5)</button>}><div>Equipo</div></ColumnaLote>)
+    expect(columna).toContain('Por verificar')
+    expect(columna).toContain('Imprimir (5)')
+    expect(columna).toContain('Equipo')
+    const vacia = renderToStaticMarkup(<ColumnaLote etiqueta="Listo" vacio="Sin equipos" />)
+    expect(vacia).toContain('Sin equipos')
+
+    // Vencimiento con semáforo.
+    const vencido = renderToStaticMarkup(<Vencimiento fecha="2020-01-01" variante="chip" />)
+    expect(vencido).toContain('venció')
+    expect(vencido).toContain('border-bad/30')
+    const porVencer = renderToStaticMarkup(<Vencimiento fecha={new Date(Date.now() + 3 * 86400000).toISOString()} />)
+    expect(porVencer).toContain('en 3 d')
+    expect(porVencer).toContain('text-warn')
+    expect(renderToStaticMarkup(<Vencimiento fecha={null} />)).toContain('—')
   })
 })

@@ -4,6 +4,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.23.0 — 2026-09-24
+
+- **Taller/rack y servicio/garantías (#241, paso 4 y lote E):**
+  - `ColumnaLote`: columna de un tablero por estaciones/lotes con el chip del
+    estado, el conteo, las acciones masivas y las tarjetas abajo (o el vacío
+    explícito); el rack del taller y los tableros dejan de repetir el encabezado.
+  - `Vencimiento` (+`estadoVencimiento`): «venció», «en 3 d» o la fecha con
+    tono según la urgencia y vacío explícito; para garantías, cuotas y
+    cobranzas (texto o chip).
+  - `Stepper` en `tarjetas` acepta **`detalle`** por paso (los conteos del
+    pipeline del taller: «2 equipos» debajo del nombre).
+- Docs (REGLAS §4 bis/§4, README) y tests (195 en total).
+
 ## v0.22.0 — 2026-09-24
 
 - **Apoyo a los lotes F4 A/C/E/F/G (#241):**

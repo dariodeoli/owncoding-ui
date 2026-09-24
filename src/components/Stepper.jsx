@@ -33,7 +33,10 @@ export default function Stepper({ pasos = [], actual = 0, hechos = [], variante 
               >
                 {hecho ? <Icon name="check" className="h-3.5 w-3.5" /> : indice + 1}
               </span>
-              <span className="min-w-0 truncate text-xs font-semibold">{etiquetaDe(paso)}</span>
+              <span className="min-w-0">
+                <span className="block truncate text-xs font-semibold">{etiquetaDe(paso)}</span>
+                {typeof paso === 'object' && paso.detalle ? <span className={cn('block truncate text-[11px]', activo ? 'text-info' : 'text-mute')}>{paso.detalle}</span> : null}
+              </span>
             </li>
           )
         })}

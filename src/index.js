@@ -103,6 +103,8 @@ export { ESTADOS_REVISION, INCIDENCIAS, esIncidencia, etiquetaRevision, etiqueta
 export { default as GradoBadge } from './components/GradoBadge.jsx'
 export { default as TileEquipo } from './components/TileEquipo.jsx'
 export { default as PasosEquipo } from './components/PasosEquipo.jsx'
+export { default as ColumnaLote } from './components/ColumnaLote.jsx'
+export { default as Vencimiento, estadoVencimiento } from './components/Vencimiento.jsx'
 export { default as TileRol } from './components/TileRol.jsx'
 export { default as Stepper } from './components/Stepper.jsx'
 export { default as CodigoQr } from './components/CodigoQr.jsx'

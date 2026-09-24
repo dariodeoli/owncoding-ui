@@ -119,6 +119,7 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - `FilaDato`: fila etiqueta/valor de paneles de detalle (mantiene `dt`/`dd`).
 - `SeccionColapsable`: sección de detalle plegable (arranca cerrada, `aria-expanded` + `aria-controls`); con `clave` recuerda el estado en la sesión y el contenido queda en el DOM con `hidden` (los apoyos de lectura y las pruebas lo encuentran).
 - Barras de avance: `BarraProgreso` (accesible, con tono y altura).
+- Vencimientos: `Vencimiento` (+`estadoVencimiento`) dice «venció», «en 3 d» o la fecha con el tono según la urgencia (garantías, cuotas, cobranzas) y vacío explícito.
 - Stock contra el punto de reposición: `MedidorStock` (`texto`/`chip`/`barra`; agotado/reponer/en stock; sin dato dice «Sin dato», nunca 0).
 - Avance de un lote: `ContadorLote` («3 de 12», variantes `texto`/`chip`/`barra`, tono según el avance, `mostrarFaltan`).
 - **Recepción (#250 F5):** `FilaRevision` (lo esperado + serial con los últimos 4 + el chip del estado), `SelectorIncidencia` (elegir/quitar el tipo en la fila) y `DestinoRecepcion` (recibir en el depósito predeterminado en un clic o elegir otro; avisa los IMEI pendientes). Estados, etiquetas y tonos salen de `utils/revision.js` (`ESTADOS_REVISION`, `INCIDENCIAS`), el mismo mapa que usa `ResumenIncidencias` (faltantes/sobrantes/dañadas/incorrectas/sin IMEI con conteos reales; sin incidencias lo dice en verde).
@@ -257,12 +258,13 @@ no las repite. El armado del shell y la tabla de contrastes están en
 | `MedidorBateria` | `porcentaje`, `ciclos`, `etiqueta`, `variante` (`barra`/`chip`), `compact`, `mostrarEtiqueta` (chip «87% batería»), `className` | Umbrales 90/80; sin dato → `—` y "Sin dato" (nunca 0) |
 | `GradoBadge` | `grado` (`A`/`B`/`C`), `conDescripcion`, `className` | A verde, B naranja, C rojo; un grado inválido se muestra crudo |
 | `TileEquipo` | `modelo`, `imei`, `detalle`, `foto`, `estado`, `grado`, `bateria`, `ciclos`, `locks`, `acciones`, `onOpen` | Compone chip, grado, batería, locks e icono de categoría; `onOpen` lo vuelve botón |
-| `Stepper` | `pasos` = `[{ id, etiqueta, detalle? }]` o etiquetas sueltas, `actual`, `hechos`, `variante` (`linea`/`tarjetas`), `ariaLabel`, `className` | Línea: hecho verde `pass`, actual con anillo, pendiente gris; **`tarjetas`**: grilla 2/4 con el paso actual en azul (el flujo de entrega del pedido en v2) |
+| `Stepper` | `pasos` = `[{ id, etiqueta, detalle? }]` o etiquetas sueltas, `actual`, `hechos`, `variante` (`linea`/`tarjetas`), `ariaLabel`, `className` | Línea: hecho verde `pass`, actual con anillo, pendiente gris; **`tarjetas`**: grilla con el paso actual en azul y el **`detalle`** debajo (conteos del servicio/entrega) |
 | `IconoCategoria` | `categoria` (texto libre) o `icono`, `className` | Glifos `mobile`/`laptop`/`tablet`/`watch`/`buds`/`cable`; `servicio`/`otro` delegan en `Icon` |
 | `CodigoQr` | `valor`, `ancho` (220), `nivel` (`M`), `margen` (1), `alt`, `className` | QR del informe/enlace; sin valor no renderiza nada. Requiere `qrcode` (peer opcional) |
 | `qrDataUrl` | `valor`, `{ ancho, nivel, margen }` | Data URL del QR para HTML impreso o previews; vacío → `''`, nunca lanza |
 | `FichaCertificado` | `empresa`, `modelo`, `imei`, `grado`, `bateria`, `ciclos`, `locks`, `aprobados`, `total`, `puntaje`, `condicion`, `repuestosNoOem`, `repuestosNoOemNota`, `estado`, `verificadoPor`, `verificadoAt`, `enlace`, `etiquetaQr`, `acciones`, `className` | Tarjeta del informe público: compone chip, grado, batería, conteo y **puntaje** del checklist, **condición**, **repuestos no OEM** (con nota), locks y QR |
 | `PasosEquipo` | `pasos` (etiquetas u objetos), `actual` (id o índice), `etiqueta`, `testId`, `className` | Indicador compacto de una línea (puntos + paso actual) para listas, racks y servicios |
+| `ColumnaLote` | `etiqueta`, `tono`, `contador`, `acciones`, `vacio`, `testId`, `children` | Columna de un tablero por lotes/estaciones: chip del estado + conteo + acciones masivas arriba, tarjetas abajo (o el vacío explícito) |
 | `VistaPreviaPapel` (`ANCHOS_PAPEL`) | `formato` (`thermal-80`/`thermal-58`/`thermal-55`/`a4`), `contenido` (HTML), `titulo`, `alto`, `className` | Vista previa del documento impreso con el ancho real del papel (mm a 96 dpi: 302/219/208 y 794 px); el selector de formato va con `SegmentedField` |
 | `CATEGORIAS_PRODUCTO` | — | iPhone/MacBook/iPad/Watch/AirPods/Accesorios/Servicio/Otro con `etiqueta`, `icono` y `alias` |
 | `ICONO_CATEGORIA` | — | Mapa `categoría → glifo` para filtros y chips |

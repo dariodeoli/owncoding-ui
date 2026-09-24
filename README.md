@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.22.0
+npm install github:dariodeoli/owncoding-ui#v0.23.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.22.0
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.23.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
