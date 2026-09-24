@@ -38,10 +38,12 @@ import {
   Label,
   IndicadorConexion,
   MedidorBateria,
+  PasosEquipo,
   MedidorStock,
   ResumenDestinos,
   ResumenIncidencias,
   SelectorIncidencia,
+  TileRol,
   Money,
   Modal,
   PageHeader,
@@ -427,5 +429,39 @@ describe('render de los objetos base', () => {
     const sinAlternativas = renderToStaticMarkup(<DestinoRecepcion destino={{ id: 'dep-1', nombre: 'Depósito 1' }} onRecibir={() => {}} />)
     expect(sinAlternativas).not.toContain('<select')
     expect(sinAlternativas).toContain('Recibir todo')
+  })
+  test('los objetos de los lotes A/C/E/F/G (lote 28)', () => {
+    // Stat en modo consola: delta como chip y barra cuando no hay delta.
+    const chip = renderToStaticMarkup(<Stat label="Ventas" valor="12" delta={4.2} deltaComo="chip" />)
+    expect(chip).toContain('v2-numero')
+    expect(chip).toContain('bg-ok/15')
+    expect(chip).toContain('↑ 4.2%')
+    const barra = renderToStaticMarkup(<Stat label="Ticket" valor="Gs 250.000" barra="bad" />)
+    expect(barra).toContain('bg-bad')
+
+    // Stepper compacto del servicio (puntos + paso actual).
+    const pasos = renderToStaticMarkup(<PasosEquipo pasos={['Por verificar', 'Verificado', 'Listo']} actual={1} />)
+    expect(pasos).toContain('Paso 2 de 3: Verificado')
+    expect(pasos).toContain('data-paso="2"')
+    expect(pasos).toContain('w-5 bg-fono')
+    expect(renderToStaticMarkup(<PasosEquipo pasos={[{ id: 'a', etiqueta: 'Uno' }, { id: 'b', etiqueta: 'Dos' }]} actual="b" />)).toContain('Paso 2 de 2: Dos')
+
+    // Tile de rol/acceso.
+    const rol = renderToStaticMarkup(<TileRol titulo="Gerente" descripcion="Opera el día a día" cantidad={18} total={32} dominios={[{ etiqueta: 'Ventas', activo: true }, { etiqueta: 'Finanzas' }]} />)
+    expect(rol).toContain('Gerente')
+    expect(rol).toContain('18')
+    expect(rol).toContain('/32')
+    expect(rol).toContain('Ventas')
+    expect(rol).toContain('bg-ok/15') // chip verde del dominio activo
+    expect(renderToStaticMarkup(<TileRol titulo="Vendedor" onAbrir={() => {}} />)).toContain('<button')
+
+    // Ficha del certificado: contrato pendiente del informe público (#240).
+    const ficha = renderToStaticMarkup(<FichaCertificado modelo="iPhone 15" puntaje={85} condicion="Seminuevo" repuestosNoOem="Pantalla" repuestosNoOemNota="Cambio con repuesto no original" />)
+    expect(ficha).toContain('Puntaje')
+    expect(ficha).toContain('85%')
+    expect(ficha).toContain('Condición')
+    expect(ficha).toContain('Seminuevo')
+    expect(ficha).toContain('Repuestos no OEM')
+    expect(ficha).toContain('Cambio con repuesto no original')
   })
 })

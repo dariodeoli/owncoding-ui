@@ -23,6 +23,10 @@ export default function FichaCertificado({
   locks = [],
   aprobados,
   total,
+  puntaje,
+  condicion,
+  repuestosNoOem,
+  repuestosNoOemNota,
   verificadoPor,
   verificadoAt,
   enlace,
@@ -55,8 +59,19 @@ export default function FichaCertificado({
                 ? <span className={completo ? 'text-pass' : 'text-mute'}>{aprobados} de {total} pass</span>
                 : 'Sin verificación física'}
             />
+            {puntaje !== null && puntaje !== undefined && puntaje !== '' && (
+              <FilaDato etiqueta="Puntaje" valor={<span className="tabular-nums">{Number.isFinite(Number(puntaje)) ? `${Number(puntaje)}%` : puntaje}</span>} />
+            )}
+            {condicion ? <FilaDato etiqueta="Condición" valor={condicion} /> : null}
           </dl>
           {locks.length ? <ChipsLocks locks={locks} conEstado /> : null}
+          {repuestosNoOem ? (
+            <div className="rounded-xl border border-warn/25 bg-warn/5 p-3 text-sm">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-mute">Repuestos no OEM</p>
+              <p className="mt-0.5 break-words">{repuestosNoOem}</p>
+              {repuestosNoOemNota ? <p className="mt-0.5 text-xs text-mute">{repuestosNoOemNota}</p> : null}
+            </div>
+          ) : null}
           <p className="text-xs text-mute">
             {verificadoPor ? `Verificado por ${verificadoPor}` : 'Verificación pendiente'}{verificadoAt ? ` · ${verificadoAt}` : ''}
           </p>

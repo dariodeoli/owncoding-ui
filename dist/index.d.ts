@@ -120,7 +120,7 @@ export function DataTable<Row = Record<string, unknown>>(props: {
   className?: string
 }): ReactElement
 
-export function Stat(props: { label?: ReactNode; valor?: ReactNode; delta?: number; sub?: ReactNode; nota?: ReactNode; tono?: Tono; destacado?: boolean; className?: string }): ReactElement
+export function Stat(props: { label?: ReactNode; valor?: ReactNode; delta?: number; sub?: ReactNode; nota?: ReactNode; tono?: Tono; destacado?: boolean; deltaComo?: 'texto' | 'chip'; barra?: 'fono' | 'ok' | 'bad' | 'warn' | 'info'; className?: string }): ReactElement
 export function Subtabs(props: { value: string; onChange: (id: string) => void; items?: Array<[string, ReactNode]>; className?: string }): ReactElement | null
 export function FilaDato(props: {
   etiqueta?: ReactNode
@@ -308,6 +308,8 @@ export function ChipsLocks(props: { locks?: Array<{ clave: string; estado: strin
 export function MedidorBateria(props: { porcentaje?: number | null; ciclos?: number | null; etiqueta?: string; variante?: 'barra' | 'chip'; compact?: boolean; className?: string }): ReactElement
 export function GradoBadge(props: { grado: string; conDescripcion?: boolean; className?: string }): ReactElement
 export function TileEquipo(props: Record<string, any> & { modelo?: string; imei?: string; detalle?: ReactNode; foto?: string; estado?: string; grado?: string; bateria?: number | null; ciclos?: number | null; locks?: any[]; acciones?: ReactNode; onOpen?: () => void }): ReactElement
+export function PasosEquipo(props: { pasos?: Array<string | { id?: string; etiqueta?: ReactNode }>; actual?: string | number; etiqueta?: string; testId?: string; className?: string }): ReactElement | null
+export function TileRol(props: { titulo: ReactNode; descripcion?: ReactNode; cantidad?: number; total?: number; dominios?: Array<{ id?: string; etiqueta: ReactNode; activo?: boolean }>; onAbrir?: () => void; className?: string }): ReactElement
 export function Stepper(props: { pasos?: Array<string | { id?: string; etiqueta?: ReactNode; detalle?: ReactNode }>; actual?: string | number; hechos?: Array<string | number>; variante?: 'linea' | 'tarjetas'; ariaLabel?: string; className?: string }): ReactElement | null
 export function CodigoQr(props: { valor?: string; ancho?: number; nivel?: string; margen?: number; alt?: string; className?: string }): ReactElement | null
 export const QR_OPCIONES: { ancho: number; nivel: string; margen: number }
@@ -327,6 +329,10 @@ export function FichaCertificado(props: Record<string, any> & {
   enlace?: string
   etiquetaQr?: string
   estado?: string
+  puntaje?: number | string | null
+  condicion?: ReactNode
+  repuestosNoOem?: ReactNode
+  repuestosNoOemNota?: ReactNode
   acciones?: ReactNode
   className?: string
 }): ReactElement

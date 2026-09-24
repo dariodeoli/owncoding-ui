@@ -672,9 +672,10 @@ export function FormField({ label, hint, error, children, htmlFor }) {
 // `info`/`mute`, con alias como `danger` o `accent`) y `nota` agrega el dato al
 // pie, como el KPI del panel de LedBox; ambos son opcionales y no cambian la
 // firma anterior. `destacado` (tarjeta de marca) gana sobre `tono`.
-export function Stat({ label, valor, delta, sub, nota, tono, destacado = false, className }) {
+export function Stat({ label, valor, delta, sub, nota, tono, destacado = false, deltaComo = 'texto', barra, className }) {
   const sube = typeof delta === 'number' && delta >= 0
   const colorValor = destacado ? 'text-onbrand' : tono ? textoDeTono(tono) : 'text-fore'
+  const colorBarra = { fono: 'bg-fono', ok: 'bg-ok', bad: 'bg-bad', warn: 'bg-warn', info: 'bg-info' }[barra] || 'bg-fono'
   return (
     <div
       className={cn(
@@ -684,15 +685,20 @@ export function Stat({ label, valor, delta, sub, nota, tono, destacado = false, 
       )}
     >
       <div className={cn('text-[11px] font-medium uppercase tracking-wider', destacado ? 'text-onbrand/75' : 'text-mute')}>{label}</div>
-      <div className={cn('mt-1.5 text-2xl font-semibold tracking-tight md:text-3xl', colorValor)}>
+      <div className={cn('v2-numero mt-1.5 text-2xl font-semibold md:text-3xl', colorValor)}>
         {valor}
       </div>
       <div className="mt-1.5 flex items-center gap-2 text-xs">
-        {typeof delta === 'number' && (
-          <span className={cn('font-medium', sube ? 'text-ok' : 'text-bad')}>
-            {sube ? '' : ''} {Math.abs(delta).toFixed(1)}%
+        {typeof delta === 'number' && (deltaComo === 'chip' ? (
+          <span className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium', sube ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad')}>
+            {sube ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}%
           </span>
-        )}
+        ) : (
+          <span className={cn('font-medium', sube ? 'text-ok' : 'text-bad')}>
+            {sube ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}%
+          </span>
+        ))}
+        {typeof delta !== 'number' && barra && <span className={cn('h-0.5 w-4 rounded-full', colorBarra)} aria-hidden="true" />}
         {sub && <span className={destacado ? 'text-onbrand/75' : 'text-mute'}>{sub}</span>}
       </div>
       {nota && <div className={cn('mt-1 text-[11px]', destacado ? 'text-onbrand/75' : 'text-mute')}>{nota}</div>}

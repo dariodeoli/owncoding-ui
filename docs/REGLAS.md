@@ -202,7 +202,9 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   librería; los nombres del panel de LedBox ya existen (mapa en el README) y no
   se renombran glifos existentes. Un nombre desconocido no dibuja nada (nunca
   un cuadrado roto).
-- **KPI:** `Stat` con `tono` (color del valor por tono semántico) y `nota`
+- **KPI:** `Stat` con `tono` (color del valor por tono semántico), `nota`,
+  **`deltaComo="chip"`** (tendencia en chip con tinte AA) y **`barra`**
+  (barrita de color cuando no hay delta); el valor va con `.v2-numero`
   (dato al pie); `destacado` sigue siendo la tarjeta de marca.
 - Modo oscuro con la clase `dark` en `<html>`; toda superficie nueva tiene que
   verse bien en ambos temas.
@@ -259,7 +261,8 @@ no las repite. El armado del shell y la tabla de contrastes están en
 | `IconoCategoria` | `categoria` (texto libre) o `icono`, `className` | Glifos `mobile`/`laptop`/`tablet`/`watch`/`buds`/`cable`; `servicio`/`otro` delegan en `Icon` |
 | `CodigoQr` | `valor`, `ancho` (220), `nivel` (`M`), `margen` (1), `alt`, `className` | QR del informe/enlace; sin valor no renderiza nada. Requiere `qrcode` (peer opcional) |
 | `qrDataUrl` | `valor`, `{ ancho, nivel, margen }` | Data URL del QR para HTML impreso o previews; vacío → `''`, nunca lanza |
-| `FichaCertificado` | `empresa`, `modelo`, `imei`, `grado`, `bateria`, `ciclos`, `locks`, `aprobados`, `total`, `verificadoPor`, `verificadoAt`, `enlace`, `etiquetaQr`, `acciones`, `className` | Tarjeta del informe público: compone chip, grado, batería, conteo del checklist, locks y QR |
+| `FichaCertificado` | `empresa`, `modelo`, `imei`, `grado`, `bateria`, `ciclos`, `locks`, `aprobados`, `total`, `puntaje`, `condicion`, `repuestosNoOem`, `repuestosNoOemNota`, `estado`, `verificadoPor`, `verificadoAt`, `enlace`, `etiquetaQr`, `acciones`, `className` | Tarjeta del informe público: compone chip, grado, batería, conteo y **puntaje** del checklist, **condición**, **repuestos no OEM** (con nota), locks y QR |
+| `PasosEquipo` | `pasos` (etiquetas u objetos), `actual` (id o índice), `etiqueta`, `testId`, `className` | Indicador compacto de una línea (puntos + paso actual) para listas, racks y servicios |
 | `VistaPreviaPapel` (`ANCHOS_PAPEL`) | `formato` (`thermal-80`/`thermal-58`/`thermal-55`/`a4`), `contenido` (HTML), `titulo`, `alto`, `className` | Vista previa del documento impreso con el ancho real del papel (mm a 96 dpi: 302/219/208 y 794 px); el selector de formato va con `SegmentedField` |
 | `CATEGORIAS_PRODUCTO` | — | iPhone/MacBook/iPad/Watch/AirPods/Accesorios/Servicio/Otro con `etiqueta`, `icono` y `alias` |
 | `ICONO_CATEGORIA` | — | Mapa `categoría → glifo` para filtros y chips |

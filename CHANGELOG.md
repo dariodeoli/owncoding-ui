@@ -4,6 +4,21 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.22.0 — 2026-09-24
+
+- **Apoyo a los lotes F4 A/C/E/F/G (#241):**
+  - `TileRol` (lote F): tarjeta de rol/acceso con descripción, «x/y» en número
+    grande y los dominios como chips según el acceso.
+  - `PasosEquipo` (lote E): indicador compacto del flujo de un equipo (puntos +
+    paso actual) para listas, racks y servicios; el `Stepper` completo sigue
+    para los flujos con acciones.
+  - `Stat` en modo consola (lote A): `deltaComo="chip"` (tendencia con tinte AA)
+    y `barra` (barrita cuando no hay delta); el valor usa `.v2-numero`.
+  - `FichaCertificado` (lote G): cierra el contrato acordado en #240 y suma
+    **`puntaje`**, **`condicion`**, **`repuestosNoOem`** y
+    **`repuestosNoOemNota`** para el informe público.
+- Docs (REGLAS §2/§3/§4 bis, README) y tests (194 en total).
+
 ## v0.21.0 — 2026-09-24
 
 - **Tokens v2 promovidos a globales (#241, rollout aprobado, paso 1):** el
