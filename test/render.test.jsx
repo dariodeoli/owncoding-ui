@@ -35,6 +35,7 @@ import {
   MedidorBateria,
   Money,
   Modal,
+  PageHeader,
   Nota,
   Select,
   SemaforoItem,
@@ -333,5 +334,12 @@ describe('render de los objetos base', () => {
     expect(teclado).toContain('aria-label="Agregar 00"')
     expect(teclado).toContain('aria-label="Borrar último dígito"')
     expect(teclado).toContain('<svg')
+  })
+  test('PageHeader con miga de sección (lote 23)', () => {
+    const html = renderToStaticMarkup(<PageHeader title="Unidades" migas={[{ etiqueta: 'Inventario', href: '/pos/inventario' }, { etiqueta: 'Unidades' }]} />)
+    expect(html).toContain('aria-label="Miga de sección"')
+    expect(html).toContain('href="/pos/inventario"')
+    expect(html).toContain('aria-current="page"')
+    expect(renderToStaticMarkup(<PageHeader title="Unidades" />)).not.toContain('Miga de sección')
   })
 })

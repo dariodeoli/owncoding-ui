@@ -4,6 +4,18 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.17.0 — 2026-09-24
+
+- **Pila de personas y migas (lote del 24-09, #211/#241):** `PilaPersonas`
+  apila avatares con el punto de presencia y el contador «+N» (props
+  `personas`, `max`, `size`, `onMas`, `resumen`), con el helper
+  `resumenPresencia` («Ana en línea», «3 en línea»); `PageHeader` suma
+  **`migas`** (`[{ etiqueta, href? }]` con `aria-current="page"`) para la miga
+  de sección del shell. Con eso el pendiente de presencia de `docs/SHELL.md`
+  queda cerrado; solo siguen app-side el alternador de tema y el banner ancho
+  de sin conexión.
+- Tests: pila (presencia, resumen, +N, onMas) y miga (183 en total).
+
 ## v0.16.0 — 2026-09-23
 
 - **Identidad de usuario unificada (#211):** `PersonaChip` es el único objeto

@@ -16,7 +16,7 @@ permisos; el shell solo dibuja y navega.
 
 | Zona | Objeto | Qué resuelve |
 | --- | --- | --- |
-| Encabezado de la vista | `PageHeader` | `eyebrow` + un solo `h1` + `subtitle` + `actions`; `backTo` para subpáginas |
+| Encabezado de la vista | `PageHeader` | Miga de sección (`migas` con `aria-current`), `eyebrow` + un solo `h1` + `subtitle` + `actions`; `backTo` para subpáginas |
 | Barra lateral (escritorio) | `NavLateral` | Ítems con ícono, contador y activo; grupos plegables opcionales; colapsable; slots `cabecera` (logo/marca) y `pie` (identidad) |
 | Menú de usuario / acciones | `MenuDesplegable` | Menú portable (`role="menu"`): usuario, acciones de fila y filtros; cierra con clic afuera y `Esc` |
 | Cajón (móvil) | `Drawer` | Panel lateral con overlay, foco atrapado, `Esc` y clic afuera |
@@ -24,6 +24,7 @@ permisos; el shell solo dibuja y navega.
 | Ayuda de la pantalla | `AyudaModulo` | Botón «?» + diálogo con `titulo`, `resumen`, `puntos` y `enlaces` |
 | Barra inferior (móvil) | `BarraInferior` | Hasta 4 destinos + «Más»; el contenido suma `ESPACIO_BARRA_INFERIOR` |
 | Estado de la cola | `IndicadorConexion` | Chip de `role="status"`: en línea / sin conexión y pendientes de subir (la app decide el estado) |
+| Presencia | `PilaPersonas` | Avatares superpuestos con punto de presencia y contador «+N»; `resumenPresencia` arma el texto («Ana en línea», «3 en línea») |
 | Avisos | `CampanaAvisos` | Contador de no leídos (`99+`) + panel; abrir/elegir se avisan por callback |
 | Identidad de la sesión | `Avatar` | Foto → iniciales con color estable; vive en el `pie` de la barra o del menú |
 | Pie institucional | `ProductFooter` | Versión, crédito y textos por props (la biblioteca no conoce la marca) |
@@ -33,13 +34,14 @@ permisos; el shell solo dibuja y navega.
 
 | Objeto | Props |
 | --- | --- |
-| `PageHeader` | `title` (único `h1`), `eyebrow`, `subtitle`, `actions`, `backTo` |
+| `PageHeader` | `title` (único `h1`), `migas` `[{ etiqueta, href? }]`, `eyebrow`, `subtitle`, `actions`, `backTo` |
 | `NavLateral` | `items` `[{ id, label, icono?, contador? }]` o `grupos` `[{ titulo, items }]`, `gruposPlegados`/`onToggleGrupo(titulo)`, `activeId`, `onSelect(id)`, `colapsado`, `onToggle`, `cabecera`, `pie`, `ancho` (`w-64`), `ariaLabel` |
 | `MenuDesplegable` | `trigger`, `items` `[{ id?, label, icono?, onClick?, peligro?, disabled?, separador? }]`, `alineacion` (`right`/`left`), `ariaLabel` |
 | `PaletaComandos` | `abierta`/`onAbrir`/`onCerrar`, `buscar(consulta)` async, `onElegir(resultado)`, `etiquetasTipo`, `iconosTipo`, `atajo`, `atajoTexto`, `conAtajo`, `minimo` (2), `espera` (220 ms), `boton`, `textoBoton` |
 | `AyudaModulo` | `titulo`, `resumen`, `puntos` (3–5), `enlaces` `[{ href, etiqueta, onClick? }]`, `abierta`/`onAbrir`/`onCerrar` |
 | `BarraInferior` | `items` (máx. 4) `[{ id, etiqueta, icono, href }]`, `activo`, `onSelect`, `onMas`, `masEtiqueta`, `menuAbierto`, `menuId`, `maxItems` (4) |
 | `IndicadorConexion` | `enLinea`, `pendientes`, `sincronizando`, `onSincronizar`, etiquetas (`etiquetaEnLinea`/`etiquetaSinConexion`/`etiquetaSincronizando`) |
+| `PilaPersonas` | `personas` (objetos o strings), `max` (4), `size`, `onMas`, `resumen`, `ariaLabel`, `title`, `className` |
 | `CampanaAvisos` | `avisos` `[{ id, titulo, detalle?, tono?, fecha?, href?, onClick?, leido? }]`, `onAbrir`, `onElegir`, `pie`, `anclaje` |
 | `Avatar` | `nombre`, `src`, `tamano` (`sm`/`md`/`lg`), `forma` (`redondo`/`cuadrado`), `empresa`, `title`, `ariaLabel`, `decorativo` |
 | `ProductFooter` | `nombre`, `version`, `credito`, `creditoUrl`, `anio`, `leading`, `children` |
@@ -171,7 +173,9 @@ completo sin perder AA. Salen de la revisión cruzada CMP ↔ DSN del shell real
   (`[data-testid="pedido-fila"] …`, la mayúscula de los chips de clientes)
   siguen en su bloque local; se retiran cuando MobOS ponga la clase `v2-chip`
   en sus filas.
-- ⏳ **Objetos que hoy son de la app**: alternador de tema y presencia («en
-  línea»); el banner ancho de sin conexión (el chip de la cola es
+- ✅ **Presencia**: `PilaPersonas` (+ `PersonaChip estado` y `resumenPresencia`)
+  cubre la píldora del shell desde **v0.17.0**; queda app-side el alternador de
+  tema y el banner ancho de sin conexión (el chip de la cola es
   `IndicadorConexion`).
-- ⏳ **`PageHeader`**: evaluar un prop de migas para paridad total con MobOS.
+- ✅ **`PageHeader` con migas**: `migas=[{ etiqueta, href? }]` con
+  `aria-current="page"` desde v0.17.0.

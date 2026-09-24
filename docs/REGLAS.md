@@ -391,7 +391,8 @@ de avisos cuenta lo que hay; un gráfico sin datos lo dice.
 
 El **shell** se arma como en **`docs/SHELL.md`**: scope `tema-v2` con los tonos
 de texto AA, ítem activo con `aria-current="page"`, grupos plegables con
-`aria-expanded`, identidad con `Avatar` en el pie y el contenido con
+`aria-expanded`, identidad con `PersonaChip` en el pie, presencia con
+`PilaPersonas`, miga de sección con `PageHeader migas=[…]` y el contenido con
 `ESPACIO_BARRA_INFERIOR` cuando hay barra inferior.
 
 

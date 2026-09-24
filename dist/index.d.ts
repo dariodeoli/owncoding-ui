@@ -102,7 +102,7 @@ export function EmptyState(props: { icon?: string; title?: ReactNode; descriptio
 export function ErrorState(props: { title?: string; description?: ReactNode; onRetry?: () => void }): ReactElement
 export function Aviso(props: HTMLAttributes<HTMLElement> & { tono?: 'error' | 'ok' | 'warn'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function Nota(props: HTMLAttributes<HTMLElement> & { tono?: 'warn' | 'info' | 'neutro'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
-export function PageHeader(props: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; backTo?: () => void; eyebrow?: ReactNode }): ReactElement
+export function PageHeader(props: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; backTo?: () => void; eyebrow?: ReactNode; migas?: Array<{ etiqueta: ReactNode; href?: string }> }): ReactElement
 export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string }): ReactElement
 
 export type DataTableColumn<Row = Record<string, unknown>> = {
@@ -409,6 +409,17 @@ export function PersonaChip(props: {
   children?: ReactNode
 }): ReactElement
 export function identidadDeUsuario(fuente?: any): { nombre: string; primerNombre: string; fotoLocal: string; picture: string; hasAvatar?: boolean; scope: string }
+export function PilaPersonas(props: {
+  personas?: Array<string | { id?: string; name?: string; nombre?: string; foto?: string; avatarUrl?: string; picture?: string; hasAvatar?: boolean; estado?: string; active?: boolean; scope?: string; [clave: string]: any }>
+  max?: number
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'
+  onMas?: () => void
+  resumen?: boolean
+  ariaLabel?: string
+  title?: string
+  className?: string
+}): ReactElement | null
+export function resumenPresencia(personas?: any[]): string
 export const ESTADOS_PRESENCIA: Record<string, { etiqueta: string; punto: string }>
 export function BarraLote(props: { cantidad?: number; onLimpiar?: () => void; children?: ReactNode; etiqueta?: string; className?: string }): ReactElement | null
 export function PeriodoTabs(props: { periodo: string; setPeriodo: (id: string) => void; periodos?: Array<[string, ReactNode, string?, number?]>; ariaLabel?: string; className?: string }): ReactElement | null

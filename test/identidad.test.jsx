@@ -6,11 +6,13 @@ import {
   COLORES_AVATAR,
   ESTADOS_PRESENCIA,
   PersonaChip,
+  PilaPersonas,
   TAMANOS_AVATAR,
   claveColorDeNombre,
   colorDeNombre,
   identidadDeUsuario,
   inicialesDeNombre,
+  resumenPresencia,
 } from '../src/index.js'
 
 // Smoke de la identidad: iniciales, color estable y caída a iniciales cuando no
@@ -126,5 +128,49 @@ describe('PersonaChip e identidad', () => {
   test('los estados de presencia traen etiqueta y punto', () => {
     expect(ESTADOS_PRESENCIA['en-linea']).toEqual({ etiqueta: 'En línea', punto: 'bg-ok' })
     expect(ESTADOS_PRESENCIA.offline.etiqueta).toBe('Sin conexión')
+  })
+})
+
+// Lote 23: la pila de personas del shell y la miga de sección.
+describe('PilaPersonas', () => {
+  const PERSONAS = [
+    { id: 'u1', name: 'Ana Pérez', active: true },
+    { id: 'u2', name: 'Juan Gómez', estado: 'ausente' },
+    { id: 'u3', name: 'Luis Ríos' },
+    { id: 'u4', name: 'Eva Díaz' },
+    { id: 'u5', name: 'Sofi Vera' },
+  ]
+
+  test('apila avatares con presencia y resume la presencia', () => {
+    const html = renderToStaticMarkup(<PilaPersonas personas={PERSONAS} />)
+    expect(html).toContain('role="group"')
+    expect(html).toContain('aria-label="5 en línea"')
+    expect(html).toContain('+1')
+    expect(html).toContain('5 en línea')
+  })
+
+  test('con una sola persona el resumen usa el primer nombre', () => {
+    const html = renderToStaticMarkup(<PilaPersonas personas={[PERSONAS[0]]} />)
+    expect(html).toContain('Ana en línea')
+    expect(html).toContain('title="Ana Pérez"')
+  })
+
+  test('sin personas no monta nada; con onMas es un botón', () => {
+    expect(renderToStaticMarkup(<PilaPersonas personas={[]} />)).toBe('')
+    const boton = renderToStaticMarkup(<PilaPersonas personas={PERSONAS} onMas={() => {}} />)
+    expect(boton).toContain('<button')
+    expect(boton).toContain('aria-label="5 en línea"')
+  })
+
+  test('el resumen visible se puede apagar (la etiqueta accesible queda)', () => {
+    const html = renderToStaticMarkup(<PilaPersonas personas={[PERSONAS[0]]} resumen={false} />)
+    expect(html).not.toContain('whitespace-nowrap text-xs font-semibold text-mute')
+    expect(html).toContain('aria-label="Ana en línea"')
+  })
+
+  test('resumenPresencia en texto plano', () => {
+    expect(resumenPresencia([])).toBe('')
+    expect(resumenPresencia([{ name: 'Ana Pérez' }])).toBe('Ana en línea')
+    expect(resumenPresencia([{ name: 'Ana' }, { name: 'Juan' }])).toBe('2 en línea')
   })
 })

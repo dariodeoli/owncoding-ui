@@ -42,3 +42,15 @@ export const ESTADOS_PRESENCIA = {
   ocupado: { etiqueta: 'Ocupado', punto: 'bg-bad' },
   offline: { etiqueta: 'Sin conexión', punto: 'bg-mute' },
 }
+
+// Resumen de presencia para la píldora del shell: con una sola persona dice
+// «Ana en línea»; con varias, cuántas hay. Sin personas, cadena vacía.
+export function resumenPresencia(personas = []) {
+  const lista = Array.isArray(personas) ? personas : []
+  if (!lista.length) return ''
+  if (lista.length === 1) {
+    const { primerNombre: nombre } = identidadDeUsuario(lista[0])
+    return `${nombre} en línea`
+  }
+  return `${lista.length} en línea`
+}

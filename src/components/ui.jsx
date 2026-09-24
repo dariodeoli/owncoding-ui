@@ -565,7 +565,8 @@ export function Nota({ tono = 'warn', como = 'p', compact = false, className, ch
 }
 
 // ── PageHeader ──────────────────────────────────────────────────────
-export function PageHeader({ title, subtitle, actions, backTo, eyebrow }) {
+export function PageHeader({ title, subtitle, actions, backTo, eyebrow, migas }) {
+  const camino = Array.isArray(migas) ? migas.filter((paso) => paso?.etiqueta) : []
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex min-w-0 items-center gap-3">
@@ -580,6 +581,23 @@ export function PageHeader({ title, subtitle, actions, backTo, eyebrow }) {
           </button>
         )}
         <div className="min-w-0">
+          {camino.length > 0 && (
+            <nav aria-label="Miga de sección" className="mb-0.5 flex min-w-0 items-center gap-1.5 text-xs text-mute">
+              {camino.map((paso, indice) => {
+                const ultimo = indice === camino.length - 1
+                return (
+                  <span key={`${paso.etiqueta}-${indice}`} className="flex min-w-0 items-center gap-1.5">
+                    {paso.href && !ultimo ? (
+                      <a href={paso.href} className="truncate transition hover:text-fore">{paso.etiqueta}</a>
+                    ) : (
+                      <span className={cn('truncate', ultimo && 'font-semibold text-fore')} aria-current={ultimo ? 'page' : undefined}>{paso.etiqueta}</span>
+                    )}
+                    {!ultimo && <Icon name="chevron" className="h-3 w-3 shrink-0 -rotate-90 text-mute" aria-hidden />}
+                  </span>
+                )
+              })}
+            </nav>
+          )}
           {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
           <h1 className="truncate text-2xl font-bold">{title}</h1>
           {subtitle && <p className="mt-1 truncate text-sm text-mute">{subtitle}</p>}

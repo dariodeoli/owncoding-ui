@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.16.0
+npm install github:dariodeoli/owncoding-ui#v0.17.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.16.0
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.17.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -278,9 +278,11 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
 - **Identidad de usuario (#211):** `PersonaChip` es el único objeto para
   mostrar a una persona: foto local → foto de Google → iniciales (con
   `nombreCorto`, `estado` de presencia, `size` xs…xl y `title`), más el
-  adaptador `identidadDeUsuario` y `ESTADOS_PRESENCIA`. `BarraLote` (acciones
-  por lote), `PeriodoTabs` (Día/Semana/Mes/Año) y `NumericKeypad` (teclado de
-  cobro en pantalla) completan el lote.
+  adaptador `identidadDeUsuario`, `ESTADOS_PRESENCIA` y `PilaPersonas` (pila de
+  avatares con «+N» y `resumenPresencia` para la píldora del shell).
+  `BarraLote` (acciones por lote), `PeriodoTabs` (Día/Semana/Mes/Año),
+  `NumericKeypad` (teclado de cobro) y la **miga de sección** de `PageHeader`
+  (`migas`) completan el lote.
 - **Tablero (lote 2, sin publicar):** `ImporteDelta` (monto con signo y color),
   `IndicadorConexion` (en línea / pendientes de subir), `CampanaAvisos`
   (contador + panel por props) y `GraficoBarras` (barras CSS sin dependencias).
