@@ -66,7 +66,9 @@ Desde la **v0.21.0** los tokens v2 son la **paleta global** de la biblioteca:
 una app que importa `styles.css` los tiene sin hacer nada. El scope
 **`tema-v2`** (alias `v2-piloto`) queda como **alias temporal** — ahí viven las
 reglas del shell y de contenido de `base.css` — y se retira cuando las apps
-terminen la migración.
+terminen la migración. Desde la **v0.26.0** las reglas del shell y de contenido
+cubren **los dos scopes**: una pantalla que es v2 por diseño (sin el flag, como
+el tablero `/ops`) lleva `v2-piloto` y recibe exactamente lo mismo.
 
 Los roles semánticos del scope v2 son **tonos de texto AA**: los vivos de
 PhoneCheck no llegan a 4.5:1 sobre las superficies v2 y quedan para rellenos e
@@ -158,23 +160,27 @@ export function Shell({ usuario, nav, activo, ir, buscar }) {
       en esta biblioteca; en la app, su propia guarda).
 - [ ] Capturas antes/después en mobile y escritorio, sin scroll horizontal.
 
-## 7. Pendientes declarados (con DSN, #241)
+## 7. Estado de la migración (con DSN, #241)
 
-Lo que falta para que una app pueda retirar su bloque local `.v2-piloto`
-completo sin perder AA. Salen de la revisión cruzada CMP ↔ DSN del shell real:
+Revisión cruzada CMP ↔ DSN del shell real. **El bloque local de la app se puede
+retirar completo** (MobOS lo hizo en el lote 32, biblioteca v0.26.0): todo lo
+declarado vive en `styles.css`, en los dos scopes (`tema-v2` y su alias
+`v2-piloto`).
 
 - ✅ **Navegación**: las reglas del shell y de los activos viajan en
-  `styles.css` (scope `tema-v2`) desde **v0.14.9**, y `NavLateral` ya soporta
-  grupos plegables (`grupos` + `gruposPlegados`/`onToggleGrupo`) con el activo
-  azul AA y el rótulo sólido.
+  `styles.css` desde **v0.14.9**, y `NavLateral` ya soporta grupos plegables
+  (`grupos` + `gruposPlegados`/`onToggleGrupo`) con el activo azul AA y el
+  rótulo sólido.
 - ✅ **Capa de contenido genérica**: `.v2-chip` (con sus tonos fono/warn),
   números del scope (incluido `strong.text-xl.tabular-nums`), activos de
   segmentados y pestañas, y `.oc-paso-activo` para el stepper — todo en
   `styles.css` desde **v0.14.10**.
-- ⏳ **Capa de contenido propia de la app**: los selectores de markup de MobOS
-  (`[data-testid="pedido-fila"] …`, la mayúscula de los chips de clientes)
-  siguen en su bloque local; se retiran cuando MobOS ponga la clase `v2-chip`
-  en sus filas.
+- ✅ **Capa de contenido de las pantallas**: tiles (`v2-tile`), grado
+  (`v2-grado`), rótulos sobre marca (`text-onbrand/70|75`), medallas
+  (`bg-fono/15|10`), tinte oscuro (`bg-fore/5`), encabezados de tabla, números
+  en verde, chips ok/bad al 10% y el degradado de los heroes — desde
+  **v0.26.0**. La app ya no necesita selectores por `data-testid`: pone la
+  clase `v2-chip` en sus filas.
 - ✅ **Presencia**: `PilaPersonas` (+ `PersonaChip estado` y `resumenPresencia`)
   cubre la píldora del shell desde **v0.17.0**.
 - ✅ **Sin conexión**: `IndicadorConexion variante="banner"` (franja ancha con
@@ -182,3 +188,27 @@ completo sin perder AA. Salen de la revisión cruzada CMP ↔ DSN del shell real
   alternador de tema (el chip de la cola sigue siendo la variante `chip`).
 - ✅ **`PageHeader` con migas**: `migas=[{ etiqueta, href? }]` con
   `aria-current="page"` desde v0.17.0.
+
+## 8. Retirar el bloque local de la app
+
+Checklist para borrar el `.v2-piloto`/`.tema-v2` propio sin perder AA:
+
+**La biblioteca cubre** (en ambos scopes): navegación (hover, activo AA,
+rótulos de grupo), chips (`v2-chip` con tonos ok/bad/warn/fono y el neutro en
+oscuro), stepper (`oc-paso-activo`; el alias `v2-paso-activo` queda para el
+código viejo), números (`tabular-nums`, `v2-numero`), activos de segmentados y
+pestañas, tiles (`v2-tile`), grado (`v2-grado`), rótulos sobre marca, medallas
+de marca, encabezados de tabla, números en verde y el degradado de los heroes.
+
+**Queda en la app a propósito**:
+
+- Las superficies rojas de sus propios objetos (`bg-bad`): la biblioteca
+  resuelve las suyas en los objetos (§5), no con un override genérico.
+- El área táctil de 44 px del topbar si no marca cada botón con `toque-44`.
+- El cursor visible del PIN (`pin-oculto`, #124).
+- Los selectores de markup propio (por ejemplo, el rótulo interno de su cajón
+  o el hook del tablero que usa `v2-piloto`).
+
+Adopción: subir la dependencia al tag **v0.26.0**, poner `v2-chip` en las filas
+y borrar el bloque local. Referencia real: MobOS `src/index.css` y
+`docs/AUDITORIA-DUPLICACION.md` (lote 32).

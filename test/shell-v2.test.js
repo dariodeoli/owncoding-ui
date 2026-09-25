@@ -45,8 +45,31 @@ describe('shell v2 en la biblioteca', () => {
     expect(base).toContain('color: rgb(var(--c-onbrand))')
   })
 
+  test('la capa de contenido completa cubre tiles, chips y textos de marca (v0.26.0)', () => {
+    // Retiro del bloque local de MobOS: cada regla que la app tenía en su
+    // index.css queda publicada acá, en los dos scopes.
+    expect(base).toContain('.tema-v2 .v2-chip.bg-ok\\/15')
+    expect(base).toContain('.tema-v2 .v2-chip.bg-bad\\/15')
+    expect(base).toContain('.tema-v2 .v2-tile')
+    expect(base).toContain('.tema-v2 .v2-grado > :first-child')
+    expect(base).toContain('.tema-v2 .text-onbrand\\/75')
+    expect(base).toContain('.tema-v2 .bg-fono\\/15.text-fono-light')
+    expect(base).toContain('.dark .tema-v2 .bg-fore\\/5')
+    expect(base).toContain('.tema-v2 thead')
+    expect(base).toContain('.tema-v2 .v2-numero.text-fono')
+    expect(base).toContain('.tema-v2 .from-fono-dark.via-fono.to-fono')
+    // Alias histórico del stepper que usaba MobOS antes de migrar a `oc-`.
+    expect(base).toContain('.tema-v2 .v2-paso-activo')
+    // El scope `v2-piloto` (pantallas v2 por diseño) recibe las mismas reglas.
+    expect(base).toContain('.v2-piloto nav [aria-current="page"]')
+    expect(base).toContain('.v2-piloto .v2-chip')
+    expect(base).toContain('.v2-piloto .v2-tile')
+  })
+
   test('las reglas viajan al styles.css publicado', () => {
     expect(distStyles).toContain('.tema-v2 nav [aria-current="page"]')
     expect(distStyles).toContain('.oc-rotulo-grupo')
+    expect(distStyles).toContain('.tema-v2 .v2-tile')
+    expect(distStyles).toContain('.v2-piloto .v2-chip')
   })
 })

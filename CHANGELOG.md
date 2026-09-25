@@ -4,6 +4,29 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.26.0 — 2026-09-25
+
+- **Retiro del bloque local v2 (#241):** la capa de contenido del shell v2
+  queda completa en `styles.css` y las apps pueden borrar su
+  `.v2-piloto`/`.tema-v2` local sin perder AA. Se portan las reglas que MobOS
+  todavía tenía en su `index.css`:
+  - Tiles de consola (`v2-tile`) y grado del tile de equipo (`v2-grado`).
+  - Rótulos sobre el verde de marca (`text-onbrand/70|75`) y medallas con
+    fondo de marca (`bg-fono/15|10`) con el verde de texto del scope.
+  - Encabezados de tabla (`thead`) y números en verde (`v2-numero.text-fono`,
+    `strong.text-fono`, `font-bold/semibold.text-fono`).
+  - Degradado de los heroes (`from-fono-dark via-fono to-fono`) con caída
+    suave que sostiene el contraste.
+  - Chips `ok`/`bad` al 10% (además de warn/fono) y el tinte oscuro
+    `bg-fore/5` al 3%.
+  - El **alias `v2-piloto`** recibe las mismas reglas que `tema-v2` (pantallas
+    que son v2 por diseño, como el tablero `/ops`); `v2-paso-activo` queda como
+    alias histórico de `oc-paso-activo`.
+- Docs: `docs/SHELL.md` §7 actualizado (migración cerrada) y nuevo **§8 —
+  Retirar el bloque local de la app**; `V2.md` paso 3 al día.
+- Tests: `test/shell-v2.test.js` fija las reglas nuevas y su publicación en
+  `dist` (205 en total en verde).
+
 ## v0.25.0 — 2026-09-25
 
 - **Renovación del tema: profundidad en claro y retoques del oscuro (#241).**
