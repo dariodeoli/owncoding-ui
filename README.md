@@ -44,6 +44,10 @@ Requisitos: **React 18+** y **Tailwind CSS 3.4+**.
 >
 > **Adoptar la biblioteca en una app:** instalación, preset/CSS, peers
 > opcionales, errores comunes y rollback en **`docs/ADOPCION.md`**.
+>
+> **Adopción v2 en otra app (guía práctica):** de la paleta al shell, el retiro
+> del bloque local, los puentes de migración y los controles que la sostienen,
+> con el caso real de MobOS: **`docs/ADOPCION-V2.md`**.
 
 ```js
 // tailwind.config.js
@@ -627,7 +631,7 @@ src/utils/        lógica compartida pura (moneda, fechas, teléfono, nombre, ba
 src/printing/     estado de impresoras y trabajos (puro)
 src/styles/       tokens.css (solo variables) · base.css (base opt-in) · styles.css (las dos)
 types/            declaraciones .d.ts escritas a mano (el build las copia a dist/)
-docs/             REGLAS.md · SHELL.md · V2.md · MIGRACION-V2.md · ADOPCION.md · MODOS-DE-TRABAJO.md · COMANDOS.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
+docs/             REGLAS.md · SHELL.md · V2.md · MIGRACION-V2.md · ADOPCION.md · ADOPCION-V2.md · MODOS-DE-TRABAJO.md · COMANDOS.md · PLANTILLA-AGENTS.md · IMPRESION.md · ALIMENTAR.md
 tools/            auto-ht.sh (política automática de integración, ver docs/COMANDOS.md)
 scripts/build.mjs build (esbuild → dist/index.js + dist/index.d.ts + dist/styles.css + tokens.css/base.css)
 test/             smoke de render (vitest + renderToStaticMarkup), lógica y contrato del paquete

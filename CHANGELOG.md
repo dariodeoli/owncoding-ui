@@ -4,6 +4,18 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.30.0 — 2026-09-25
+
+- **Guía práctica de adopción v2 en otra app:** nuevo
+  **`docs/ADOPCION-V2.md`** — de la paleta al shell, contraste AA, retiro del
+  bloque local, puentes de migración, controles que sostienen la migración, el
+  caso real de MobOS (v0.24 → v0.30) y los errores comunes. Enlazada desde el
+  README; complementa `ADOPCION.md` (paquete) y `MIGRACION-V2.md` (pantalla).
+- **Set de íconos único (#253):** `share` se suma al set y `mail` conserva el
+  trazo que la app ya tenía en producción (esquinas rectas). Con eso la app
+  puede puentear `Icon` sin perder ni cambiar ningún glifo.
+- Tests: paridad de `share`/`mail` en `test/iconos.test.jsx`.
+
 ## v0.29.0 — 2026-09-25
 
 - **Objetos de Configuración (#253):**

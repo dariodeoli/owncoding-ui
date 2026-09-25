@@ -38,4 +38,12 @@ describe('íconos portados del panel de LedBox', () => {
   test('un nombre desconocido no renderiza nada (sin íconos rotos)', () => {
     expect(renderToStaticMarkup(<Icon name="no-existe" />)).toBe('')
   })
+
+  test('paridad con la app: `share` existe y `mail` conserva su trazo (#253)', () => {
+    // Al unificar el set, la app no puede quedarse sin íconos ni cambiar los
+    // que ya veía en producción.
+    expect(ICONOS).toContain('share')
+    expect(renderToStaticMarkup(<Icon name="share" />)).toContain('M8.6 13.5l6.8 3.5')
+    expect(renderToStaticMarkup(<Icon name="mail" />)).toContain('M4 5h16a1 1 0 0 1 1 1v12')
+  })
 })
