@@ -425,6 +425,13 @@ sección:
   compuestos por patrón; cada campo nuevo se busca antes de crearlo. El control
   de duplicación de MobOS (`docs/CAMPOS.md` §6 y
   `src/lib/camposReglas.test.js`) falla si un objeto publicado se reimplementa.
+- **Estado de guardado**: `EstadoGuardado` (chip verde «Guardado…» o el error
+  en rojo, `aria-live`) va en el lugar donde iría el botón; la app maneja el
+  POST y la reautenticación. No se dibuja el chip ni el aviso a mano.
+- **Selección múltiple**: `Checkbox` (`variante="simple"` en listas y
+  permisos, `variante="tarjeta"` con título y descripción en preferencias,
+  `tono="bad"` para lo destructivo). Para booleanos de encendido/apagado va
+  `Switch`; el control pelado acepta `ariaLabel` para filas de tabla.
 - **Mapa campo por campo**: `docs/MAPA-CONFIG.md` de MobOS (grupos y detalle).
 
 

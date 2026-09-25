@@ -4,6 +4,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.29.0 — 2026-09-25
+
+- **Objetos de Configuración (#253):**
+  - **`EstadoGuardado`**: el estado transversal de guardado (chip verde
+    «Guardado…» o el error en rojo, con `aria-live`) que MobOS tenía en
+    `control/GuardadoCuenta.jsx`; la app maneja el POST y la reautenticación.
+  - **`Checkbox`**: selección múltiple con `label`/`descripcion`,
+    `variante="simple" | "tarjeta"` y `tono="fono" | "bad"`; sin label queda el
+    control pelado con `ariaLabel`. Para booleanos va `Switch`.
+- Docs: `docs/REGLAS.md` §11 suma las dos piezas (estado de guardado y
+  selección múltiple).
+- Tests: `test/configuracion.test.jsx` (asociación label↔control, variantes,
+  tono/disabled, chip y aviso del guardado).
+
 ## v0.28.1 — 2026-09-25
 
 - **Categorías (#253):** «auriculares genéricos» vuelve a mandar a **accesorios**

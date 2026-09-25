@@ -42,6 +42,7 @@ export {
 // Campos y objetos compartidos
 export { default as Icon, ICONOS } from './components/Icon.jsx'
 export { default as Switch } from './components/Switch.jsx'
+export { default as Checkbox } from './components/Checkbox.jsx'
 export { default as SearchField } from './components/SearchField.jsx'
 export { default as BotonDentroCampo } from './components/BotonDentroCampo.jsx'
 export { default as SegmentedField } from './components/SegmentedField.jsx'
@@ -82,6 +83,7 @@ export { default as MenuDesplegable } from './components/MenuDesplegable.jsx'
 // Ajustes (modelo de configuración) e impresión LAN/USB
 export { default as PanelDerecho } from './components/PanelDerecho.jsx'
 export { default as TarjetaAjuste } from './components/TarjetaAjuste.jsx'
+export { default as EstadoGuardado } from './components/EstadoGuardado.jsx'
 export { default as AjustesImpresion } from './components/AjustesImpresion.jsx'
 export { default as BotonImprimir } from './components/BotonImprimir.jsx'
 export { default as BancoCombobox } from './components/BancoCombobox.jsx'
