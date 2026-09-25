@@ -85,6 +85,16 @@ describe('ajustes e impresión', () => {
     expect(tarjeta).toContain('Acción')
   })
 
+  test('la tarjeta de ajuste cubre ícono y tono peligro (#253)', () => {
+    const normal = renderToStaticMarkup(<TarjetaAjuste titulo="Con ícono" icono="lock" descripcion="Claves"><p>x</p></TarjetaAjuste>)
+    expect(normal).toContain('Con ícono')
+    expect(normal).toContain('<svg')
+    expect(normal).not.toContain('border-bad/30')
+    const peligro = renderToStaticMarkup(<TarjetaAjuste titulo="Eliminar empresa" tono="peligro"><p>x</p></TarjetaAjuste>)
+    expect(peligro).toContain('border-bad/30')
+    expect(peligro).toContain('text-bad')
+  })
+
   test('la navegación lateral colapsa y el menú despliega', () => {
     const nav = renderToStaticMarkup(
       <NavLateral items={[{ id: 'a', label: 'Ventas', icono: 'chart' }, { id: 'b', label: 'Caja', icono: 'money' }]} activeId="a" onToggle={() => {}} />,

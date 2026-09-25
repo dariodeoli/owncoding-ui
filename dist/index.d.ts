@@ -288,8 +288,8 @@ export function MenuDesplegable(props: Record<string, any> & { etiqueta?: ReactN
 
 // ── Ajustes, impresión y bancos ────────────────────────────────────────────
 
-export function PanelDerecho(props: Record<string, any> & { children?: ReactNode; formulario?: ReactNode; className?: string }): ReactElement
-export function TarjetaAjuste(props: Record<string, any> & { titulo?: ReactNode; descripcion?: ReactNode; accion?: ReactNode; children?: ReactNode }): ReactElement
+export function PanelDerecho(props: { children?: ReactNode; panel?: ReactNode; id?: string; className?: string; classNamePanel?: string }): ReactElement
+export function TarjetaAjuste(props: { titulo?: ReactNode; descripcion?: ReactNode; accion?: ReactNode; icono?: string; tono?: 'normal' | 'peligro'; children?: ReactNode; className?: string; id?: string }): ReactElement
 export function AjustesImpresion(props: Record<string, any> & { impresoras?: any[]; onGuardar?: (ajustes: any) => void }): ReactElement
 export function BotonImprimir(props: Record<string, any> & { onImprimir?: () => void; etiqueta?: string }): ReactElement
 export function BancoCombobox(props: Record<string, any> & { value?: string; onChange?: (valor: string) => void; onSelect?: (banco: any) => void }): ReactElement

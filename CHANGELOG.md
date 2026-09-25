@@ -4,6 +4,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.28.0 — 2026-09-25
+
+- **Objetos de Configuración (#253):**
+  - `TarjetaAjuste` suma **`tono="peligro"`** (borde y título rojos) para las
+    tarjetas de archivar/eliminar/cancelar; el default no cambia.
+  - Los tipos corrigen `PanelDerecho` (`panel` en lugar de `formulario`) y
+    declaran `icono`/`id`/`tono` en `TarjetaAjuste`.
+- Docs: **`docs/REGLAS.md` §11** — cómo se arma una pantalla de Configuración
+  con tarjeta de ajuste, `Subtabs`, `PageHeader`/`Eyebrow` y `PanelDerecho`,
+  sin duplicar cards, tabs ni encabezados; campos por el kit y el control de
+  duplicación de MobOS (`docs/CAMPOS.md` §6).
+- Tests: `test/ajustes.test.jsx` cubre el tono peligro y el ícono de la tarjeta.
+
 ## v0.27.0 — 2026-09-25
 
 - **Buscador global (`PaletaComandos`), paridad para la adopción (#241):**

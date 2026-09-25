@@ -2752,11 +2752,12 @@ function PanelDerecho({ children, panel, id, className, classNamePanel }) {
 
 // src/components/TarjetaAjuste.jsx
 import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
-function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, children, className, id }) {
-  return /* @__PURE__ */ jsxs25(Card, { id, className: cn("space-y-3", className), children: [
+function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, tono = "normal", children, className, id }) {
+  const peligro = tono === "peligro";
+  return /* @__PURE__ */ jsxs25(Card, { id, className: cn("space-y-3", peligro && "border-bad/30", className), children: [
     /* @__PURE__ */ jsxs25("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
       /* @__PURE__ */ jsxs25("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs25("h2", { className: "flex items-center gap-2 font-semibold", children: [
+        /* @__PURE__ */ jsxs25("h2", { className: cn("flex items-center gap-2 font-semibold", peligro && "text-bad"), children: [
           icono && /* @__PURE__ */ jsx33(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
           titulo2
         ] }),

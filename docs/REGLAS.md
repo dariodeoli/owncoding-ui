@@ -407,4 +407,24 @@ de texto AA, ítem activo con `aria-current="page"`, grupos plegables con
 `PilaPersonas`, miga de sección con `PageHeader migas=[…]` y el contenido con
 `ESPACIO_BARRA_INFERIOR` cuando hay barra inferior.
 
+## 11. Configuración: tarjetas, solapas y encabezados (#253)
+
+La pantalla de Configuración se arma con estas piezas y no se repiten en cada
+sección:
+
+- **Tarjeta de ajuste**: `TarjetaAjuste` (título + descripción + acción
+  opcional e ícono; `tono="peligro"` para archivar/eliminar). No se escribe a
+  mano el `<h2>` de un `Card` con su descripción.
+- **Solapas internas**: `Subtabs` (`role="tablist"`, `aria-selected`, 44 px en
+  móvil). La pantalla no dibuja su propio `role="tab"`.
+- **Encabezado**: `PageHeader` (con `migas` cuando la sección navega) y
+  `Eyebrow`; la miga no se arma con spans sueltos.
+- **Formulario al costado**: `PanelDerecho` (contenido/lista a la izquierda y
+  formulario fijo a la derecha desde `lg`, apilado en móvil).
+- **Campos**: el kit (`Input`, `Select`, `FormField`, `MoneyInput`, …) y los
+  compuestos por patrón; cada campo nuevo se busca antes de crearlo. El control
+  de duplicación de MobOS (`docs/CAMPOS.md` §6 y
+  `src/lib/camposReglas.test.js`) falla si un objeto publicado se reimplementa.
+- **Mapa campo por campo**: `docs/MAPA-CONFIG.md` de MobOS (grupos y detalle).
+
 
