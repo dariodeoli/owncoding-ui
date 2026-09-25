@@ -136,7 +136,7 @@ export default function ProductCombobox({ products = [], selectedId = '', onSele
         onKeyDown={onKeyDown}
       />
       {open && term && (
-        <ul id={listId} role="listbox" className="mt-1 max-h-48 w-full overflow-auto rounded-lg border border-ink-500 bg-ink-800 py-1 shadow-lg">
+        <ul id={listId} role="listbox" className="mt-1 max-h-48 w-full overflow-auto rounded-lg border border-ink-500 bg-ink py-1 shadow-float">
           {suggestions.map((product, index) => (
             <li key={product.id}>
               <button

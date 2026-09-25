@@ -90,7 +90,7 @@ export default function BancoCombobox({
           ref={lista}
           role="listbox"
           aria-label="Bancos"
-          className="absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-paper p-1 shadow-xl"
+          className="absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-ink p-1 shadow-float"
         >
           {sugerencias.map((banco, indice) => (
             <li key={banco} id={`${listaId}-${indice}`} role="option" aria-selected={indice === resaltado}>

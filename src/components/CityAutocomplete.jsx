@@ -97,7 +97,7 @@ export default function CityAutocomplete({
         {...inputProps}
       />
       {abierto && sugerencias.length > 0 && (
-        <ul role="listbox" aria-label="Ciudades" className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl">
+        <ul role="listbox" aria-label="Ciudades" className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-ink shadow-float">
           {sugerencias.map((fila) => (
             <li key={`${fila.city}-${fila.department}`} role="option" aria-selected={false}>
               <button

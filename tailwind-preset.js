@@ -73,7 +73,10 @@ export default {
         display: ['Space Grotesk', 'Inter', 'sans-serif'],
       },
       boxShadow: {
-        card: '0 1px 2px rgba(15,23,42,.10)',
+        // Profundidad por tema (#241): las apps usan `shadow-card` y
+        // `shadow-float`; cada tema define su sombra en `tokens.css`.
+        card: 'var(--oc-shadow-card)',
+        float: 'var(--oc-shadow-float)',
         glow: '0 0 40px -10px rgb(var(--c-fono) / .45)',
       },
       backgroundImage: {

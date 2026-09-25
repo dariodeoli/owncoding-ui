@@ -20,14 +20,24 @@ const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url),
 
 describe('tokens v2 globales (con alias del piloto)', () => {
   test('la paleta global es la del v2, clara y oscura', () => {
-    expect(tokens).toContain('--c-paper: 246 248 251') // claro
+    expect(tokens).toContain('--c-paper: 241 244 248') // lienzo claro con profundidad
     expect(tokens).toContain('--c-fore: 14 17 22')
     expect(tokens).toContain('--c-info: 32 89 190') // azul acción AA en claro
     expect(tokens).toContain('--c-ok: 22 101 52') // ok de texto AA en claro
     expect(tokens).toContain('--c-paper: 14 17 22') // consola oscura #0E1116
     expect(tokens).toContain('--c-ink: 31 36 48') // panel #1F2430
+    expect(tokens).toContain('--c-ink-600: 213 220 230') // borde claro
+    expect(tokens).toContain('--c-fono-soft: 236 253 245') // tinte de marca
     expect(tokens).toContain('--c-info: 159 184 255') // azul AA en oscuro
     expect(tokens).toContain('html.dark {')
+  })
+
+  test('la profundidad viaja en sombras por tema (#241)', () => {
+    expect(tokens).toContain('--oc-shadow-card:')
+    expect(tokens).toContain('--oc-shadow-float:')
+    const preset = readFileSync(new URL('../tailwind-preset.js', import.meta.url), 'utf8')
+    expect(preset).toContain("card: 'var(--oc-shadow-card)'")
+    expect(preset).toContain("float: 'var(--oc-shadow-float)'")
   })
 
   test('el scope del piloto queda como alias temporal, sin overrides', () => {

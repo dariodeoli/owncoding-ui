@@ -90,7 +90,7 @@ export default function CampanaAvisos({
           role="menu"
           aria-label={titulo}
           className={cn(
-            'absolute z-30 mt-1 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-ink-500 bg-paper shadow-xl',
+            'absolute z-30 mt-1 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-ink-500 bg-ink shadow-float',
             anclaje === 'left' ? 'left-0' : 'right-0',
           )}
         >

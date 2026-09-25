@@ -117,7 +117,7 @@ export default function BuscadorDispositivo({
           onKeyDown={onKeyDown}
         />
         {abierto && texto.trim() && sugerencias.length > 0 && (
-          <ul id={`${listaId}-lista`} role="listbox" className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-ink-500 bg-ink-800 py-1 shadow-xl">
+          <ul id={`${listaId}-lista`} role="listbox" className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-ink-500 bg-ink py-1 shadow-float">
             {sugerencias.map((modelo, indice) => (
               <li key={nombreDeDispositivo(modelo)}>
                 <button

@@ -111,7 +111,7 @@ export default function EmailField({
         <ul
           role="listbox"
           aria-label="Sugerencias de correo"
-          className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-ink-500 bg-paper shadow-xl"
+          className="absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-ink-500 bg-ink shadow-float"
         >
           {sugerencias.map((sugerencia) => (
             <li key={sugerencia}>

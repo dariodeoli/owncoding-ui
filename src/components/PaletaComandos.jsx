@@ -258,7 +258,7 @@ export default function PaletaComandos({
             role="dialog"
             aria-modal="true"
             aria-label={titulo}
-            className={cn('mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink-800 shadow-2xl', className)}
+            className={cn('mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink shadow-float', className)}
           >
             <div className="border-b border-ink-600 p-3">
               <SearchField

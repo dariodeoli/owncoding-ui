@@ -4,6 +4,26 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.25.0 — 2026-09-25
+
+- **Renovación del tema: profundidad en claro y retoques del oscuro (#241).**
+  El claro quedaba plano; ahora las superficies van en capas y la elevación es
+  real, sin renombrar ningún token:
+  - Claro: lienzo **#F1F4F8** (más profundo), tarjetas blancas, paneles
+    #F8FAFD, hovers #EDF1F6 y bordes **#D5DCE6** con más presencia; nuevo tinte
+    de marca **`--c-fono-soft` #ECFDF5**.
+  - Oscuro: capas **#181D27 / #1F2430 / #242A38**, bordes levantados
+    **#3E475A**, hovers #2D3444 y el mismo tinte de marca en #062E22.
+  - **Sombras por tema:** `--oc-shadow-card` y `--oc-shadow-float` (el preset
+    las expone como **`shadow-card`** y **`shadow-float`**); el tema consola
+    también las define. `Card` pasa a borde neutro + `shadow-card` y los
+    modales/cajones/popovers usan `shadow-float` (antes sombras fijas de
+    Tailwind).
+  - Los estados AA no cambian; la guarda `test/contraste-tokens.test.js` sigue
+    en verde con la paleta nueva.
+- Docs (V2.md con la tabla y la sección de profundidad, REGLAS §8) y tests
+  actualizados (205 en total).
+
 ## v0.24.0 — 2026-09-25
 
 - **Buscador dependiente de dispositivos (#241/#250):** `BuscadorDispositivo`

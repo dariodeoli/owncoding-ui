@@ -514,7 +514,7 @@ function Eyebrow({ className, ...props }) {
   );
 }
 function Card({ className, ...props }) {
-  return /* @__PURE__ */ jsx2("div", { className: cn("rounded-xl border border-fono/30 bg-ink-800 p-5", className), ...props });
+  return /* @__PURE__ */ jsx2("div", { className: cn("rounded-2xl border border-ink-600 bg-ink p-5 shadow-card", className), ...props });
 }
 function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
   const dialog = useRef(null);
@@ -552,7 +552,7 @@ function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_
     };
   }, [open]);
   if (!open) return null;
-  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink-800 p-4 shadow-2xl sm:p-6", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className), children: [
+  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className), children: [
     /* @__PURE__ */ jsxs("div", { className: "mb-4 flex items-center justify-between gap-3", children: [
       /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
       /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
@@ -685,7 +685,7 @@ function Drawer({ open, onClose, title, children, side = "right", className }) {
       "aria-modal": "true",
       "aria-labelledby": titleId,
       className: cn(
-        "absolute inset-y-0 flex max-h-full w-full max-w-md flex-col overflow-hidden border-ink-600 bg-ink-800 shadow-2xl",
+        "absolute inset-y-0 flex max-h-full w-full max-w-md flex-col overflow-hidden border-ink-600 bg-ink shadow-float",
         side === "left" ? "left-0 border-r" : "right-0 border-l",
         className
       ),
@@ -1331,7 +1331,7 @@ function EmailField({
       {
         role: "listbox",
         "aria-label": "Sugerencias de correo",
-        className: "absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-ink-500 bg-paper shadow-xl",
+        className: "absolute left-0 right-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-ink-500 bg-ink shadow-float",
         children: sugerencias.map((sugerencia) => /* @__PURE__ */ jsx13("li", { children: /* @__PURE__ */ jsx13(
           "button",
           {
@@ -1765,7 +1765,7 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
         onKeyDown
       }
     ),
-    open && term && /* @__PURE__ */ jsxs11("ul", { id: listId, role: "listbox", className: "mt-1 max-h-48 w-full overflow-auto rounded-lg border border-ink-500 bg-ink-800 py-1 shadow-lg", children: [
+    open && term && /* @__PURE__ */ jsxs11("ul", { id: listId, role: "listbox", className: "mt-1 max-h-48 w-full overflow-auto rounded-lg border border-ink-500 bg-ink py-1 shadow-float", children: [
       suggestions.map((product, index) => /* @__PURE__ */ jsx18("li", { children: /* @__PURE__ */ jsxs11(
         "button",
         {
@@ -2093,7 +2093,7 @@ function BuscadorDispositivo({
           onKeyDown
         }
       ),
-      abierto && texto.trim() && sugerencias.length > 0 && /* @__PURE__ */ jsx19("ul", { id: `${listaId}-lista`, role: "listbox", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-ink-500 bg-ink-800 py-1 shadow-xl", children: sugerencias.map((modelo, indice) => /* @__PURE__ */ jsx19("li", { children: /* @__PURE__ */ jsxs12(
+      abierto && texto.trim() && sugerencias.length > 0 && /* @__PURE__ */ jsx19("ul", { id: `${listaId}-lista`, role: "listbox", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-ink-500 bg-ink py-1 shadow-float", children: sugerencias.map((modelo, indice) => /* @__PURE__ */ jsx19("li", { children: /* @__PURE__ */ jsxs12(
         "button",
         {
           type: "button",
@@ -2709,7 +2709,7 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
       {
         role: "menu",
         "aria-label": ariaLabel,
-        className: cn("absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-paper p-1 shadow-xl", alineacion === "right" ? "right-0" : "left-0"),
+        className: cn("absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-ink p-1 shadow-float", alineacion === "right" ? "right-0" : "left-0"),
         children: items.map((item, indice) => {
           if (item.separador) return /* @__PURE__ */ jsx31("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
           return /* @__PURE__ */ jsxs23(
@@ -3281,7 +3281,7 @@ function BancoCombobox({
         ref: lista,
         role: "listbox",
         "aria-label": "Bancos",
-        className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-paper p-1 shadow-xl",
+        className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-ink p-1 shadow-float",
         children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx37("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs28(
           "button",
           {
@@ -3693,7 +3693,7 @@ function CityAutocomplete({
         ...inputProps
       }
     ),
-    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx38("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx38("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs29(
+    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx38("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-ink shadow-float", children: sugerencias.map((fila) => /* @__PURE__ */ jsx38("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs29(
       "button",
       {
         type: "button",
@@ -5314,7 +5314,7 @@ function PaletaComandos({
             role: "dialog",
             "aria-modal": "true",
             "aria-label": titulo2,
-            className: cn("mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink-800 shadow-2xl", className),
+            className: cn("mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink shadow-float", className),
             children: [
               /* @__PURE__ */ jsx63("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx63(
                 SearchField_default,
@@ -6010,7 +6010,7 @@ function CampanaAvisos({
         role: "menu",
         "aria-label": titulo2,
         className: cn(
-          "absolute z-30 mt-1 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-ink-500 bg-paper shadow-xl",
+          "absolute z-30 mt-1 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-xl border border-ink-500 bg-ink shadow-float",
           anclaje === "left" ? "left-0" : "right-0"
         ),
         children: [

@@ -40,7 +40,7 @@ export default function MenuDesplegable({ trigger, items = [], alineacion = 'rig
         <div
           role="menu"
           aria-label={ariaLabel}
-          className={cn('absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-paper p-1 shadow-xl', alineacion === 'right' ? 'right-0' : 'left-0')}
+          className={cn('absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-ink p-1 shadow-float', alineacion === 'right' ? 'right-0' : 'left-0')}
         >
           {items.map((item, indice) => {
             if (item.separador) return <div key={`sep-${indice}`} className="my-1 h-px bg-ink-600" />
