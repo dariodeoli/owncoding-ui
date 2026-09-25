@@ -20,7 +20,7 @@ export const ICONO_CATEGORIA = Object.fromEntries(CATEGORIAS_PRODUCTO.map(({ cla
 
 // Palabras que mandan a accesorios aunque el nombre mencione un equipo
 // ("Funda iPhone" es accesorio, no iPhone).
-const PALABRAS_ACCESORIO = ['funda', 'cable', 'cargador', 'vidrio', 'lamina', 'templado', 'adaptador', 'protector', 'soporte']
+const PALABRAS_ACCESORIO = ['funda', 'cable', 'cargador', 'vidrio', 'lamina', 'templado', 'adaptador', 'protector', 'soporte', 'auriculares genericos']
 
 const sinAcentos = (texto) => String(texto ?? '').trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ')
 

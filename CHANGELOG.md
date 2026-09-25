@@ -4,6 +4,14 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.28.1 — 2026-09-25
+
+- **Categorías (#253):** «auriculares genéricos» vuelve a mandar a **accesorios**
+  (antes caía en el alias de AirPods); la app tenía la palabra y la biblioteca
+  no, así que los puentes de `IconoCategoria` quedan con el mismo resultado.
+  Test: `utils.test.js` fija los dos casos («auriculares» = AirPods, «genéricos»
+  = accesorios).
+
 ## v0.28.0 — 2026-09-25
 
 - **Objetos de Configuración (#253):**

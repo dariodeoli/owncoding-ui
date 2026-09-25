@@ -1598,7 +1598,7 @@ var CATEGORIAS_PRODUCTO = [
   { clave: "otro", etiqueta: "Otro", icono: "box", alias: [] }
 ];
 var ICONO_CATEGORIA = Object.fromEntries(CATEGORIAS_PRODUCTO.map(({ clave, icono }) => [clave, icono]));
-var PALABRAS_ACCESORIO = ["funda", "cable", "cargador", "vidrio", "lamina", "templado", "adaptador", "protector", "soporte"];
+var PALABRAS_ACCESORIO = ["funda", "cable", "cargador", "vidrio", "lamina", "templado", "adaptador", "protector", "soporte", "auriculares genericos"];
 var sinAcentos = (texto) => String(texto ?? "").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
 function normalizarCategoria(texto) {
   const limpio = sinAcentos(texto);

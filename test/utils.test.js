@@ -214,6 +214,9 @@ describe('lógica compartida', () => {
     expect(categoriaDe('AirPods Pro')).toBe('airpods')
     expect(categoriaDe('Funda iPhone 15')).toBe('accesorios')
     expect(categoriaDe('Cable USB-C')).toBe('accesorios')
+    // Genéricos van a accesorios; «auriculares» a secas es alias de AirPods.
+    expect(categoriaDe('Auriculares genéricos')).toBe('accesorios')
+    expect(categoriaDe('auriculares')).toBe('airpods')
     expect(categoriaDe('Servicio técnico')).toBe('servicio')
     expect(categoriaDe('ZZZ')).toBe('otro')
     expect(iconoDeCategoria('iPad Air')).toBe('tablet')
