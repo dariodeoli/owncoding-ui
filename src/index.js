@@ -57,6 +57,12 @@ export { default as SerialField, normalizarSerial } from './components/SerialFie
 export { imeiValido, separarSeriales, normalizarSeriales } from './utils/serial.js'
 export { default as InstagramField, normalizarInstagram } from './components/InstagramField.jsx'
 export { default as ProductCombobox } from './components/ProductCombobox.jsx'
+export { default as BuscadorDispositivo } from './components/BuscadorDispositivo.jsx'
+export {
+  PERFILES_DISPOSITIVO, CAMPOS_DISPOSITIVO, DISPOSITIVOS_MOBILE, CONECTIVIDADES_MOVIL,
+  buscarDispositivo, opcionesDependiente, limpiarDependientes, etiquetaDispositivo,
+  nombreDeDispositivo, codigoDeDispositivo,
+} from './catalog/dispositivos.js'
 export { default as RucField } from './components/RucField.jsx'
 export { RUC_RE, extraerRuc, esRuc } from './utils/ruc.js'
 export { default as SerialTexto } from './components/SerialTexto.jsx'

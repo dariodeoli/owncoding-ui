@@ -1809,9 +1809,332 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
   ] });
 }
 
-// src/components/RucField.jsx
-import { useState as useState5 } from "react";
+// src/components/BuscadorDispositivo.jsx
+import { useEffect as useEffect3, useId as useId3, useMemo as useMemo3, useRef as useRef4, useState as useState5 } from "react";
+
+// src/catalog/productos.js
+var MODELOS_IPHONE = [
+  // Generación actual y anteriores (del más nuevo al más viejo)
+  "iPhone 17 Pro Max",
+  "iPhone 17 Pro",
+  "iPhone 17 Plus",
+  "iPhone 17",
+  "iPhone 16 Pro Max",
+  "iPhone 16 Pro",
+  "iPhone 16 Plus",
+  "iPhone 16",
+  "iPhone 15 Pro Max",
+  "iPhone 15 Pro",
+  "iPhone 15 Plus",
+  "iPhone 15",
+  "iPhone 14 Pro Max",
+  "iPhone 14 Pro",
+  "iPhone 14 Plus",
+  "iPhone 14",
+  "iPhone 13 Pro Max",
+  "iPhone 13 Pro",
+  "iPhone 13 mini",
+  "iPhone 13",
+  "iPhone 12 Pro Max",
+  "iPhone 12 Pro",
+  "iPhone 12 mini",
+  "iPhone 12",
+  "iPhone 11 Pro Max",
+  "iPhone 11 Pro",
+  "iPhone 11",
+  "iPhone XS Max",
+  "iPhone XS",
+  "iPhone XR",
+  "iPhone X",
+  "iPhone 8 Plus",
+  "iPhone 8",
+  "iPhone 7 Plus",
+  "iPhone 7",
+  "iPhone SE (3.\xAA generaci\xF3n)",
+  "iPhone SE (2.\xAA generaci\xF3n)"
+];
+var CAPACIDADES_IPHONE = ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"];
+var COLORES_IPHONE = [
+  "Negro",
+  "Blanco",
+  "Plata",
+  "Gris espacial",
+  "Dorado",
+  "Azul",
+  "Verde",
+  "Rojo",
+  "Rosa",
+  "Morado",
+  "Amarillo",
+  "Titanio natural",
+  "Titanio azul",
+  "Titanio blanco",
+  "Titanio negro",
+  "Titanio desierto"
+];
+var CATEGORIAS_ACCESORIOS = [
+  "Fundas",
+  "Vidrios templados",
+  "Cargadores",
+  "Cables",
+  "Auriculares",
+  "Bater\xEDas",
+  "Parlantes",
+  "Relojes y correas",
+  "Soportes",
+  "Power banks",
+  "Adaptadores",
+  "L\xE1pices y stylus",
+  "Memorias y almacenamiento",
+  "C\xE1maras y accesorios",
+  "Repuestos",
+  "Otros accesorios"
+];
+var MARCAS_ACCESORIOS = [
+  "Apple",
+  "Samsung",
+  "Xiaomi",
+  "JBL",
+  "Baseus",
+  "Anker",
+  "Hoco",
+  "Generic",
+  "Otro"
+];
+function normalizarBusqueda(texto = "") {
+  return String(texto || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+function buscarEnCatalogo(catalogo = [], texto = "") {
+  const q = normalizarBusqueda(texto);
+  if (!q) return catalogo;
+  return catalogo.filter((item) => normalizarBusqueda(item).includes(q));
+}
+
+// src/catalog/dispositivos.js
+var CONECTIVIDADES_MOVIL = ["5G", "4G LTE", "WiFi", "WiFi + Cellular", "Bluetooth", "eSIM"];
+var DISPOSITIVOS_MOBILE = MODELOS_IPHONE.map((nombre) => ({ nombre }));
+var PERFILES_DISPOSITIVO = {
+  // Celulares: modelo → capacidad, color y conectividad.
+  mobile: {
+    campos: ["capacidad", "color", "conectividad"],
+    etiquetas: { modelo: "Modelo", capacidad: "Capacidad", color: "Color", conectividad: "Conectividad" },
+    catalogo: { modelos: DISPOSITIVOS_MOBILE, capacidades: CAPACIDADES_IPHONE, colores: COLORES_IPHONE, conectividades: CONECTIVIDADES_MOVIL }
+  },
+  // Accesorios: marca → categoría (el modelo compatible es opcional).
+  accesorios: {
+    campos: ["marca", "categoria"],
+    etiquetas: { modelo: "Producto o modelo compatible", marca: "Marca", categoria: "Categor\xEDa" },
+    catalogo: { modelos: [], marcas: MARCAS_ACCESORIOS, categorias: CATEGORIAS_ACCESORIOS }
+  },
+  // Servicio técnico: modelo → capacidad y color (sin conectividad).
+  servicio: {
+    campos: ["capacidad", "color"],
+    etiquetas: { modelo: "Modelo", capacidad: "Capacidad", color: "Color" },
+    catalogo: { modelos: DISPOSITIVOS_MOBILE, capacidades: CAPACIDADES_IPHONE, colores: COLORES_IPHONE }
+  }
+};
+var CAMPOS_DISPOSITIVO = ["capacidad", "color", "conectividad", "marca", "categoria"];
+var CLAVES_DEPENDIENTE = { capacidad: "capacidades", color: "colores", conectividad: "conectividades", marca: "marcas", categoria: "categorias" };
+function nombreDeDispositivo(modelo) {
+  return typeof modelo === "string" ? modelo : modelo?.nombre || "";
+}
+function codigoDeDispositivo(modelo) {
+  return typeof modelo === "string" ? "" : modelo?.codigo || "";
+}
+function buscarDispositivo(modelos = [], texto = "", { porCodigo = true, limite = 8 } = {}) {
+  const q = normalizarBusqueda(texto);
+  const lista = Array.isArray(modelos) ? modelos : [];
+  if (!q) return lista.slice(0, limite);
+  return lista.filter((modelo) => {
+    const nombre = normalizarBusqueda(nombreDeDispositivo(modelo));
+    if (nombre.includes(q)) return true;
+    return porCodigo !== false && normalizarBusqueda(codigoDeDispositivo(modelo)).includes(q);
+  }).slice(0, limite);
+}
+function opcionesDependiente(modelo, campo, perfil = PERFILES_DISPOSITIVO.mobile) {
+  const clave = CLAVES_DEPENDIENTE[campo] || campo;
+  const propias = typeof modelo === "object" && modelo ? modelo[clave] : null;
+  if (Array.isArray(propias) && propias.length) return propias;
+  return perfil?.catalogo?.[clave] || [];
+}
+function limpiarDependientes(valor = {}, modelo, perfil = PERFILES_DISPOSITIVO.mobile) {
+  const siguiente = { ...valor, modelo: nombreDeDispositivo(modelo) };
+  const mismosCampos = nombreDeDispositivo(modelo) && normalizarBusqueda(nombreDeDispositivo(modelo)) === normalizarBusqueda(valor.modelo);
+  for (const campo of perfil?.campos || []) {
+    if (!mismosCampos) {
+      siguiente[campo] = "";
+      continue;
+    }
+    const opciones = opcionesDependiente(modelo, campo, perfil);
+    if (opciones.length && valor[campo] && !opciones.includes(valor[campo])) siguiente[campo] = "";
+  }
+  return siguiente;
+}
+function etiquetaDispositivo(valor = {}, { separador = " \xB7 " } = {}) {
+  const partes = [valor.modelo, valor.capacidad, valor.color, valor.conectividad, valor.marca, valor.categoria];
+  return partes.filter(Boolean).join(separador);
+}
+
+// src/components/BuscadorDispositivo.jsx
 import { jsx as jsx19, jsxs as jsxs12 } from "react/jsx-runtime";
+function BuscadorDispositivo({
+  valor = {},
+  onCambio,
+  tipo = "mobile",
+  perfil,
+  catalogo,
+  buscarPorCodigo = true,
+  permitirLibre = true,
+  limite = 8,
+  disabled = false,
+  etiquetas,
+  className
+}) {
+  const base = perfil || PERFILES_DISPOSITIVO[tipo] || PERFILES_DISPOSITIVO.mobile;
+  const config = useMemo3(() => ({
+    ...base,
+    catalogo: { ...base.catalogo || {}, ...catalogo || {} },
+    etiquetas: { ...base.etiquetas || {}, ...etiquetas || {} }
+  }), [base, catalogo, etiquetas]);
+  const modelos = config.catalogo.modelos || [];
+  const campos = config.campos || [];
+  const etiqueta = (campo) => config.etiquetas?.[campo] || campo.charAt(0).toUpperCase() + campo.slice(1);
+  const [texto, setTexto] = useState5(() => valor.modelo || "");
+  const [abierto, setAbierto] = useState5(false);
+  const [resaltado, setResaltado] = useState5(0);
+  const listaId = useId3();
+  const raiz = useRef4(null);
+  useEffect3(() => {
+    setTexto(valor.modelo || "");
+  }, [valor.modelo]);
+  useEffect3(() => {
+    const cerrarFuera = (event) => {
+      if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
+      setAbierto(false);
+    };
+    document.addEventListener("click", cerrarFuera);
+    return () => document.removeEventListener("click", cerrarFuera);
+  }, []);
+  const sugerencias = useMemo3(() => buscarDispositivo(modelos, texto, { porCodigo: buscarPorCodigo, limite }), [modelos, texto, buscarPorCodigo, limite]);
+  const modeloElegido = useMemo3(() => {
+    const q = String(valor.modelo || "").trim().toLowerCase();
+    return modelos.find((modelo) => nombreDeDispositivo(modelo).toLowerCase() === q) || null;
+  }, [modelos, valor.modelo]);
+  function emitir(siguiente, campo) {
+    onCambio?.(siguiente, campo ? { campo } : void 0);
+  }
+  function elegir(modelo) {
+    emitir(limpiarDependientes(valor, modelo, config));
+    setTexto(nombreDeDispositivo(modelo));
+    setAbierto(false);
+    setResaltado(0);
+  }
+  function confirmarLibre() {
+    if (!permitirLibre) return;
+    const limpio = texto.trim();
+    if (!limpio || limpio === valor.modelo) return;
+    emitir(limpiarDependientes(valor, limpio, config));
+  }
+  function cambiarDependiente(campo, valorCampo) {
+    emitir({ ...valor, [campo]: valorCampo }, campo);
+  }
+  function onKeyDown(event) {
+    if (event.key === "Escape") {
+      setAbierto(false);
+      return;
+    }
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      if (!abierto) {
+        setAbierto(true);
+        return;
+      }
+      if (!sugerencias.length) return;
+      const delta = event.key === "ArrowDown" ? 1 : -1;
+      setResaltado((actual) => (actual + delta + sugerencias.length) % sugerencias.length);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      const modelo = sugerencias[resaltado];
+      if (abierto && modelo) elegir(modelo);
+      else confirmarLibre();
+    }
+  }
+  return /* @__PURE__ */ jsxs12("div", { className: cn("space-y-3", className), children: [
+    /* @__PURE__ */ jsxs12("div", { ref: raiz, className: "relative", children: [
+      /* @__PURE__ */ jsx19(Label, { htmlFor: listaId, children: etiqueta("modelo") }),
+      /* @__PURE__ */ jsx19(
+        Input,
+        {
+          id: listaId,
+          type: "text",
+          role: "combobox",
+          "aria-expanded": abierto,
+          "aria-controls": `${listaId}-lista`,
+          "aria-autocomplete": "list",
+          autoComplete: "off",
+          disabled,
+          value: texto,
+          placeholder: permitirLibre ? "Buscar por nombre o c\xF3digo\u2026" : "Buscar modelo\u2026",
+          onChange: (event) => {
+            setTexto(event.target.value);
+            setAbierto(true);
+            setResaltado(0);
+            if (!event.target.value) emitir(limpiarDependientes(valor, "", config));
+          },
+          onFocus: () => setAbierto(true),
+          onBlur: () => {
+            setTimeout(() => {
+              setAbierto(false);
+              confirmarLibre();
+            }, 120);
+          },
+          onKeyDown
+        }
+      ),
+      abierto && texto.trim() && sugerencias.length > 0 && /* @__PURE__ */ jsx19("ul", { id: `${listaId}-lista`, role: "listbox", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-ink-500 bg-ink-800 py-1 shadow-xl", children: sugerencias.map((modelo, indice) => /* @__PURE__ */ jsx19("li", { children: /* @__PURE__ */ jsxs12(
+        "button",
+        {
+          type: "button",
+          role: "option",
+          "aria-selected": indice === resaltado,
+          tabIndex: -1,
+          className: cn("flex w-full items-baseline justify-between gap-2 px-3 py-2 text-left text-sm transition", indice === resaltado && "bg-ink-700"),
+          onMouseDown: (event) => {
+            event.preventDefault();
+            elegir(modelo);
+          },
+          onMouseEnter: () => setResaltado(indice),
+          children: [
+            /* @__PURE__ */ jsx19("span", { className: "min-w-0 truncate", children: nombreDeDispositivo(modelo) }),
+            codigoDeDispositivo(modelo) ? /* @__PURE__ */ jsx19("span", { className: "shrink-0 font-mono text-[11px] text-mute", children: codigoDeDispositivo(modelo) }) : null
+          ]
+        }
+      ) }, nombreDeDispositivo(modelo))) }),
+      abierto && texto.trim() && permitirLibre && sugerencias.length === 0 && /* @__PURE__ */ jsxs12("p", { className: "mt-1 text-xs text-mute", children: [
+        "No est\xE1 en el cat\xE1logo: se guarda \xAB",
+        texto.trim(),
+        "\xBB tal cual."
+      ] })
+    ] }),
+    valor.modelo && campos.length > 0 && /* @__PURE__ */ jsx19("div", { className: "grid gap-3 sm:grid-cols-2 lg:grid-cols-3", children: campos.map((campo) => {
+      const opciones = opcionesDependiente(modeloElegido, campo, config);
+      const id = `${listaId}-${campo}`;
+      return /* @__PURE__ */ jsxs12("div", { className: "space-y-1", children: [
+        /* @__PURE__ */ jsx19(Label, { htmlFor: id, children: etiqueta(campo) }),
+        /* @__PURE__ */ jsxs12(Select, { id, value: valor[campo] || "", disabled, onChange: (event) => cambiarDependiente(campo, event.target.value), children: [
+          /* @__PURE__ */ jsx19("option", { value: "", children: "Elegir\u2026" }),
+          opciones.map((opcion) => /* @__PURE__ */ jsx19("option", { value: opcion, children: opcion }, opcion))
+        ] })
+      ] }, campo);
+    }) })
+  ] });
+}
+
+// src/components/RucField.jsx
+import { useState as useState6 } from "react";
+import { jsx as jsx20, jsxs as jsxs13 } from "react/jsx-runtime";
 function RucField({
   id,
   value,
@@ -1827,9 +2150,9 @@ function RucField({
   ariaLabel,
   textoAyuda = "La raz\xF3n social se aplica solo si la confirm\xE1s."
 }) {
-  const [resultado, setResultado] = useState5(null);
-  const [consultando, setConsultando] = useState5(false);
-  const [error, setError] = useState5("");
+  const [resultado, setResultado] = useState6(null);
+  const [consultando, setConsultando] = useState6(false);
+  const [error, setError] = useState6("");
   const hayRuc = Boolean(String(value || "").trim());
   const puedeExtraer = mostrarExtractor && typeof consultar === "function";
   async function extraer() {
@@ -1848,9 +2171,9 @@ function RucField({
       setConsultando(false);
     }
   }
-  return /* @__PURE__ */ jsxs12("div", { className: "space-y-2", children: [
-    /* @__PURE__ */ jsxs12("div", { className: "relative", children: [
-      /* @__PURE__ */ jsx19(
+  return /* @__PURE__ */ jsxs13("div", { className: "space-y-2", children: [
+    /* @__PURE__ */ jsxs13("div", { className: "relative", children: [
+      /* @__PURE__ */ jsx20(
         Input,
         {
           id,
@@ -1868,7 +2191,7 @@ function RucField({
           placeholder
         }
       ),
-      puedeExtraer && /* @__PURE__ */ jsx19(
+      puedeExtraer && /* @__PURE__ */ jsx20(
         BotonDentroCampo,
         {
           etiqueta: "Extraer los datos del RUC",
@@ -1880,25 +2203,25 @@ function RucField({
         }
       )
     ] }),
-    puedeExtraer && textoAyuda && /* @__PURE__ */ jsx19("span", { className: "block text-xs text-mute", children: textoAyuda }),
-    resultado && /* @__PURE__ */ jsxs12("div", { className: "flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fono/25 bg-fono/5 p-3 text-sm", children: [
-      /* @__PURE__ */ jsxs12("span", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs12("span", { className: "flex flex-wrap items-center gap-2", children: [
-          /* @__PURE__ */ jsx19("b", { className: "truncate", children: resultado.name }),
-          resultado.simulado && /* @__PURE__ */ jsx19(Badge, { color: "blue", children: "Simulada en demo" })
+    puedeExtraer && textoAyuda && /* @__PURE__ */ jsx20("span", { className: "block text-xs text-mute", children: textoAyuda }),
+    resultado && /* @__PURE__ */ jsxs13("div", { className: "flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fono/25 bg-fono/5 p-3 text-sm", children: [
+      /* @__PURE__ */ jsxs13("span", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs13("span", { className: "flex flex-wrap items-center gap-2", children: [
+          /* @__PURE__ */ jsx20("b", { className: "truncate", children: resultado.name }),
+          resultado.simulado && /* @__PURE__ */ jsx20(Badge, { color: "blue", children: "Simulada en demo" })
         ] }),
-        /* @__PURE__ */ jsxs12("span", { className: "block text-mute", children: [
+        /* @__PURE__ */ jsxs13("span", { className: "block text-mute", children: [
           "RUC ",
           resultado.fullRuc
         ] }),
-        resultado.simulado && /* @__PURE__ */ jsx19("span", { className: "block text-xs text-mute", children: "Resultado ficticio: la demo no consulta registros reales." })
+        resultado.simulado && /* @__PURE__ */ jsx20("span", { className: "block text-xs text-mute", children: "Resultado ficticio: la demo no consulta registros reales." })
       ] }),
-      /* @__PURE__ */ jsx19("button", { type: "button", className: "font-semibold text-fono-light", onClick: () => {
+      /* @__PURE__ */ jsx20("button", { type: "button", className: "font-semibold text-fono-light", onClick: () => {
         onAplicar?.(resultado);
         setResultado(null);
       }, children: "Usar estos datos" })
     ] }),
-    error && /* @__PURE__ */ jsx19("p", { role: "alert", className: "text-sm text-bad", children: error })
+    error && /* @__PURE__ */ jsx20("p", { role: "alert", className: "text-sm text-bad", children: error })
   ] });
 }
 
@@ -1913,19 +2236,19 @@ function esRuc(valor) {
 }
 
 // src/components/SerialTexto.jsx
-import { jsx as jsx20, jsxs as jsxs13 } from "react/jsx-runtime";
+import { jsx as jsx21, jsxs as jsxs14 } from "react/jsx-runtime";
 function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u2014" }) {
   const { cabeza, cola } = partirSerial(serial);
-  if (!cola) return /* @__PURE__ */ jsx20("span", { className: cn("font-mono", className), children: vacio });
-  return /* @__PURE__ */ jsxs13("span", { className: cn("flex min-w-0 font-mono", className), title: String(serial), children: [
-    /* @__PURE__ */ jsx20("span", { className: "min-w-0 truncate", children: cabeza }),
-    /* @__PURE__ */ jsx20("b", { className: cn("shrink-0", tonoCola), children: cola })
+  if (!cola) return /* @__PURE__ */ jsx21("span", { className: cn("font-mono", className), children: vacio });
+  return /* @__PURE__ */ jsxs14("span", { className: cn("flex min-w-0 font-mono", className), title: String(serial), children: [
+    /* @__PURE__ */ jsx21("span", { className: "min-w-0 truncate", children: cabeza }),
+    /* @__PURE__ */ jsx21("b", { className: cn("shrink-0", tonoCola), children: cola })
   ] });
 }
 
 // src/components/CampoSeriales.jsx
-import { useMemo as useMemo3, useState as useState6 } from "react";
-import { jsx as jsx21, jsxs as jsxs14 } from "react/jsx-runtime";
+import { useMemo as useMemo4, useState as useState7 } from "react";
+import { jsx as jsx22, jsxs as jsxs15 } from "react/jsx-runtime";
 function CampoSeriales({
   valor,
   onCambio,
@@ -1938,17 +2261,17 @@ function CampoSeriales({
   disabled = false,
   className
 }) {
-  const [texto, setTexto] = useState6(() => Array.isArray(valor) ? valor.join("\n") : valor || "");
-  const resultado = useMemo3(() => normalizarSeriales(texto, { validar, limite, maxLargo }), [texto, validar, limite, maxLargo]);
+  const [texto, setTexto] = useState7(() => Array.isArray(valor) ? valor.join("\n") : valor || "");
+  const resultado = useMemo4(() => normalizarSeriales(texto, { validar, limite, maxLargo }), [texto, validar, limite, maxLargo]);
   function cambiar(siguiente) {
     setTexto(siguiente);
     const limpio = normalizarSeriales(siguiente, { validar, limite, maxLargo });
     onCambio?.(limpio.seriales, limpio);
   }
   const hay = resultado.seriales.length > 0;
-  return /* @__PURE__ */ jsxs14("div", { className: cn("space-y-2", className), children: [
-    etiqueta ? /* @__PURE__ */ jsx21("span", { className: "block text-xs font-semibold text-mute", children: etiqueta }) : null,
-    /* @__PURE__ */ jsx21(
+  return /* @__PURE__ */ jsxs15("div", { className: cn("space-y-2", className), children: [
+    etiqueta ? /* @__PURE__ */ jsx22("span", { className: "block text-xs font-semibold text-mute", children: etiqueta }) : null,
+    /* @__PURE__ */ jsx22(
       Textarea,
       {
         rows: 4,
@@ -1960,39 +2283,39 @@ function CampoSeriales({
         autoCapitalize: "characters"
       }
     ),
-    /* @__PURE__ */ jsxs14("p", { className: "flex flex-wrap items-center gap-x-3 gap-y-1 text-xs", role: "status", children: [
-      /* @__PURE__ */ jsxs14("span", { className: hay ? "font-semibold text-ok" : "text-mute", children: [
+    /* @__PURE__ */ jsxs15("p", { className: "flex flex-wrap items-center gap-x-3 gap-y-1 text-xs", role: "status", children: [
+      /* @__PURE__ */ jsxs15("span", { className: hay ? "font-semibold text-ok" : "text-mute", children: [
         resultado.seriales.length,
         " listo(s) para cargar"
       ] }),
-      resultado.repetidos.length > 0 && /* @__PURE__ */ jsxs14("span", { className: "text-warn", children: [
+      resultado.repetidos.length > 0 && /* @__PURE__ */ jsxs15("span", { className: "text-warn", children: [
         resultado.repetidos.length,
         " repetido(s)"
       ] }),
-      resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs14("span", { className: "text-bad", children: [
+      resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs15("span", { className: "text-bad", children: [
         resultado.invalidos.length,
         " inv\xE1lido(s)"
       ] })
     ] }),
-    resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs14("p", { className: "break-words text-[11px] text-mute", title: resultado.invalidos.join(" \xB7 "), children: [
+    resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs15("p", { className: "break-words text-[11px] text-mute", title: resultado.invalidos.join(" \xB7 "), children: [
       "Revis\xE1: ",
       resultado.invalidos.slice(0, 5).join(" \xB7 "),
       resultado.invalidos.length > 5 ? " \u2026" : ""
     ] }),
-    ayuda ? /* @__PURE__ */ jsx21("p", { className: "text-[11px] text-mute", children: ayuda }) : null
+    ayuda ? /* @__PURE__ */ jsx22("p", { className: "text-[11px] text-mute", children: ayuda }) : null
   ] });
 }
 
 // src/components/EstadoBadge.jsx
-import { jsx as jsx22 } from "react/jsx-runtime";
+import { jsx as jsx23 } from "react/jsx-runtime";
 function EstadoBadge({ mapa, valor, vacio = "Sin estado" }) {
   const item = mapa?.[valor];
-  if (item) return /* @__PURE__ */ jsx22(Badge, { color: item.color, children: item.label });
-  return /* @__PURE__ */ jsx22(Badge, { children: valor || vacio });
+  if (item) return /* @__PURE__ */ jsx23(Badge, { color: item.color, children: item.label });
+  return /* @__PURE__ */ jsx23(Badge, { children: valor || vacio });
 }
 
 // src/components/SeccionColapsable.jsx
-import { useId as useId3, useState as useState7 } from "react";
+import { useId as useId4, useState as useState8 } from "react";
 
 // src/utils/tabla.js
 var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
@@ -2004,11 +2327,11 @@ var CELDA_IDENTIDAD = "truncate text-[13px] font-semibold";
 var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
 
 // src/components/SeccionColapsable.jsx
-import { jsx as jsx23, jsxs as jsxs15 } from "react/jsx-runtime";
+import { jsx as jsx24, jsxs as jsxs16 } from "react/jsx-runtime";
 function SeccionColapsable({ titulo: titulo2, resumen, icono, abierta = false, clave, className = "", children }) {
-  const autoId = useId3();
+  const autoId = useId4();
   const panelId = `seccion-panel-${autoId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const [expandida, setExpandida] = useState7(() => {
+  const [expandida, setExpandida] = useState8(() => {
     if (!clave) return abierta;
     try {
       const guardado = window.sessionStorage.getItem(clave);
@@ -2029,8 +2352,8 @@ function SeccionColapsable({ titulo: titulo2, resumen, icono, abierta = false, c
       return siguiente;
     });
   }
-  return /* @__PURE__ */ jsxs15("section", { className: cn("rounded-2xl border border-ink-600 bg-ink-900", className), children: [
-    /* @__PURE__ */ jsxs15(
+  return /* @__PURE__ */ jsxs16("section", { className: cn("rounded-2xl border border-ink-600 bg-ink-900", className), children: [
+    /* @__PURE__ */ jsxs16(
       "button",
       {
         type: "button",
@@ -2039,34 +2362,34 @@ function SeccionColapsable({ titulo: titulo2, resumen, icono, abierta = false, c
         onClick: alternar,
         className: "flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-left transition hover:bg-ink-800/60",
         children: [
-          icono ? /* @__PURE__ */ jsx23(Icon, { name: icono, className: "h-4 w-4 shrink-0 text-mute" }) : null,
-          /* @__PURE__ */ jsxs15("span", { className: "min-w-0 flex-1", children: [
-            /* @__PURE__ */ jsx23("span", { className: cn("block", ROTULO_SECCION), children: titulo2 }),
-            resumen ? /* @__PURE__ */ jsx23("span", { className: "mt-0.5 block truncate text-sm", children: resumen }) : null
+          icono ? /* @__PURE__ */ jsx24(Icon, { name: icono, className: "h-4 w-4 shrink-0 text-mute" }) : null,
+          /* @__PURE__ */ jsxs16("span", { className: "min-w-0 flex-1", children: [
+            /* @__PURE__ */ jsx24("span", { className: cn("block", ROTULO_SECCION), children: titulo2 }),
+            resumen ? /* @__PURE__ */ jsx24("span", { className: "mt-0.5 block truncate text-sm", children: resumen }) : null
           ] }),
-          /* @__PURE__ */ jsx23(Icon, { name: "chevron", className: cn("h-4 w-4 shrink-0 text-mute transition-transform", expandida && "rotate-180") })
+          /* @__PURE__ */ jsx24(Icon, { name: "chevron", className: cn("h-4 w-4 shrink-0 text-mute transition-transform", expandida && "rotate-180") })
         ]
       }
     ),
-    /* @__PURE__ */ jsx23("div", { id: panelId, hidden: !expandida, className: "border-t border-ink-600/70 px-4 pb-4 pt-3", children })
+    /* @__PURE__ */ jsx24("div", { id: panelId, hidden: !expandida, className: "border-t border-ink-600/70 px-4 pb-4 pt-3", children })
   ] });
 }
 
 // src/components/GoogleButton.jsx
-import { jsx as jsx24, jsxs as jsxs16 } from "react/jsx-runtime";
+import { jsx as jsx25, jsxs as jsxs17 } from "react/jsx-runtime";
 function GoogleMark({ className }) {
-  return /* @__PURE__ */ jsxs16("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
-    /* @__PURE__ */ jsx24("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
-    /* @__PURE__ */ jsx24("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
-    /* @__PURE__ */ jsx24("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
-    /* @__PURE__ */ jsx24("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
+  return /* @__PURE__ */ jsxs17("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
+    /* @__PURE__ */ jsx25("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
+    /* @__PURE__ */ jsx25("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
+    /* @__PURE__ */ jsx25("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
+    /* @__PURE__ */ jsx25("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
   ] });
 }
 function OAuthDivider({ texto = "o", className }) {
-  return /* @__PURE__ */ jsxs16("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
-    /* @__PURE__ */ jsx24("span", { className: "h-px flex-1 bg-fore/10" }),
+  return /* @__PURE__ */ jsxs17("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
+    /* @__PURE__ */ jsx25("span", { className: "h-px flex-1 bg-fore/10" }),
     texto,
-    /* @__PURE__ */ jsx24("span", { className: "h-px flex-1 bg-fore/10" })
+    /* @__PURE__ */ jsx25("span", { className: "h-px flex-1 bg-fore/10" })
   ] });
 }
 function GoogleButton({
@@ -2078,7 +2401,7 @@ function GoogleButton({
   etiquetaBusy = "Conectando con Google\u2026",
   className
 }) {
-  return /* @__PURE__ */ jsxs16(
+  return /* @__PURE__ */ jsxs17(
     "button",
     {
       type: "button",
@@ -2093,32 +2416,32 @@ function GoogleButton({
         className
       ),
       children: [
-        busy ? /* @__PURE__ */ jsx24("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx24(GoogleMark, {}),
-        /* @__PURE__ */ jsx24("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
+        busy ? /* @__PURE__ */ jsx25("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx25(GoogleMark, {}),
+        /* @__PURE__ */ jsx25("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
       ]
     }
   );
 }
 
 // src/components/AuthLayout.jsx
-import { jsx as jsx25, jsxs as jsxs17 } from "react/jsx-runtime";
+import { jsx as jsx26, jsxs as jsxs18 } from "react/jsx-runtime";
 function AuthLayout({ logo, aside, acciones, pie, children, className }) {
-  return /* @__PURE__ */ jsxs17("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
-    acciones && /* @__PURE__ */ jsx25("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
-    /* @__PURE__ */ jsx25("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
-    /* @__PURE__ */ jsxs17("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
-      /* @__PURE__ */ jsxs17("section", { className: "hidden lg:block", children: [
+  return /* @__PURE__ */ jsxs18("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
+    acciones && /* @__PURE__ */ jsx26("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
+    /* @__PURE__ */ jsx26("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
+    /* @__PURE__ */ jsxs18("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
+      /* @__PURE__ */ jsxs18("section", { className: "hidden lg:block", children: [
         logo,
         aside
       ] }),
       children
     ] }),
-    pie && /* @__PURE__ */ jsx25("div", { className: "shrink-0", children: pie })
+    pie && /* @__PURE__ */ jsx26("div", { className: "shrink-0", children: pie })
   ] });
 }
 
 // src/components/ProductFooter.jsx
-import { Fragment as Fragment2, jsx as jsx26, jsxs as jsxs18 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx27, jsxs as jsxs19 } from "react/jsx-runtime";
 function ProductFooter({
   nombre = "",
   version = "",
@@ -2129,9 +2452,9 @@ function ProductFooter({
   children,
   className
 }) {
-  return /* @__PURE__ */ jsxs18("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
+  return /* @__PURE__ */ jsxs19("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
     leading,
-    /* @__PURE__ */ jsxs18("span", { children: [
+    /* @__PURE__ */ jsxs19("span", { children: [
       "\xA9 ",
       anio,
       " ",
@@ -2139,23 +2462,23 @@ function ProductFooter({
       ". Todos los derechos reservados.",
       version ? ` \xB7 ${version}` : ""
     ] }),
-    children && /* @__PURE__ */ jsxs18(Fragment2, { children: [
+    children && /* @__PURE__ */ jsxs19(Fragment2, { children: [
       " \xB7 ",
       children
     ] }),
-    credito && /* @__PURE__ */ jsxs18(Fragment2, { children: [
+    credito && /* @__PURE__ */ jsxs19(Fragment2, { children: [
       " \xB7 ",
-      /* @__PURE__ */ jsx26("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
+      /* @__PURE__ */ jsx27("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
     ] })
   ] });
 }
 
 // src/components/LoadingScreen.jsx
-import { jsx as jsx27, jsxs as jsxs19 } from "react/jsx-runtime";
+import { jsx as jsx28, jsxs as jsxs20 } from "react/jsx-runtime";
 function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etiqueta = "", className }) {
   const nombreTienda = tienda?.nombre || "";
   const imagenTienda = tienda?.logo || "";
-  return /* @__PURE__ */ jsxs19(
+  return /* @__PURE__ */ jsxs20(
     "div",
     {
       className: cn("relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-paper px-6 text-fore", className),
@@ -2163,17 +2486,17 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
       "aria-busy": "true",
       "aria-label": mensaje,
       children: [
-        /* @__PURE__ */ jsx27("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
-        /* @__PURE__ */ jsx27("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
-        /* @__PURE__ */ jsxs19("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
-          /* @__PURE__ */ jsx27("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
-          /* @__PURE__ */ jsx27("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
-          /* @__PURE__ */ jsx27("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx27("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
+        /* @__PURE__ */ jsx28("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
+        /* @__PURE__ */ jsx28("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
+        /* @__PURE__ */ jsxs20("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
+          /* @__PURE__ */ jsx28("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
+          /* @__PURE__ */ jsx28("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
+          /* @__PURE__ */ jsx28("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx28("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
         ] }),
-        nombreTienda && /* @__PURE__ */ jsx27("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs19("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
-          imagenTienda ? /* @__PURE__ */ jsx27("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx27("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
-          /* @__PURE__ */ jsx27("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
-          etiqueta && /* @__PURE__ */ jsx27("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
+        nombreTienda && /* @__PURE__ */ jsx28("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs20("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
+          imagenTienda ? /* @__PURE__ */ jsx28("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx28("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
+          /* @__PURE__ */ jsx28("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
+          etiqueta && /* @__PURE__ */ jsx28("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
         ] }) })
       ]
     }
@@ -2181,7 +2504,7 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { useState as useState8 } from "react";
+import { useState as useState9 } from "react";
 
 // src/utils/token.js
 var RUTA_CON_TOKEN = /(?:^|\/)([^/?#]+)\/([a-f0-9]{64})(?:[/?#]|$)/i;
@@ -2203,7 +2526,7 @@ function esToken(value) {
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { jsx as jsx28, jsxs as jsxs20 } from "react/jsx-runtime";
+import { jsx as jsx29, jsxs as jsxs21 } from "react/jsx-runtime";
 function PegarEnlaceToken({
   onToken,
   etiqueta = "Peg\xE1 tu enlace completo",
@@ -2212,8 +2535,8 @@ function PegarEnlaceToken({
   id = "pegar-enlace",
   className
 }) {
-  const [enlace, setEnlace] = useState8("");
-  const [error, setError] = useState8("");
+  const [enlace, setEnlace] = useState9("");
+  const [error, setError] = useState9("");
   function aplicar(event) {
     event.preventDefault();
     setError("");
@@ -2221,10 +2544,10 @@ function PegarEnlaceToken({
     if (!token) return setError(errorMensaje);
     onToken?.(token);
   }
-  return /* @__PURE__ */ jsxs20("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
-    /* @__PURE__ */ jsxs20("div", { children: [
-      /* @__PURE__ */ jsx28(Label, { htmlFor: id, children: etiqueta }),
-      /* @__PURE__ */ jsx28(
+  return /* @__PURE__ */ jsxs21("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
+    /* @__PURE__ */ jsxs21("div", { children: [
+      /* @__PURE__ */ jsx29(Label, { htmlFor: id, children: etiqueta }),
+      /* @__PURE__ */ jsx29(
         Input,
         {
           id,
@@ -2239,16 +2562,16 @@ function PegarEnlaceToken({
         }
       )
     ] }),
-    error && /* @__PURE__ */ jsx28(Aviso, { tono: "error", children: error }),
-    /* @__PURE__ */ jsx28(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
+    error && /* @__PURE__ */ jsx29(Aviso, { tono: "error", children: error }),
+    /* @__PURE__ */ jsx29(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
   ] });
 }
 
 // src/components/NavLateral.jsx
-import { useState as useState9 } from "react";
-import { jsx as jsx29, jsxs as jsxs21 } from "react/jsx-runtime";
+import { useState as useState10 } from "react";
+import { jsx as jsx30, jsxs as jsxs22 } from "react/jsx-runtime";
 function ItemNav({ item, activo, colapsado, onSelect }) {
-  return /* @__PURE__ */ jsx29("li", { children: /* @__PURE__ */ jsxs21(
+  return /* @__PURE__ */ jsx30("li", { children: /* @__PURE__ */ jsxs22(
     "button",
     {
       type: "button",
@@ -2261,10 +2584,10 @@ function ItemNav({ item, activo, colapsado, onSelect }) {
         colapsado && "justify-center px-2"
       ),
       children: [
-        item.icono && /* @__PURE__ */ jsx29(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-        !colapsado && /* @__PURE__ */ jsx29("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
-        !colapsado && item.contador != null && /* @__PURE__ */ jsx29("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
-        colapsado && item.contador != null && /* @__PURE__ */ jsx29("span", { className: "sr-only", children: item.contador })
+        item.icono && /* @__PURE__ */ jsx30(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+        !colapsado && /* @__PURE__ */ jsx30("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
+        !colapsado && item.contador != null && /* @__PURE__ */ jsx30("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
+        colapsado && item.contador != null && /* @__PURE__ */ jsx30("span", { className: "sr-only", children: item.contador })
       ]
     }
   ) });
@@ -2284,22 +2607,22 @@ function NavLateral({
   ariaLabel = "Navegaci\xF3n principal",
   className
 }) {
-  const [plegadosInterno, setPlegadosInterno] = useState9({});
+  const [plegadosInterno, setPlegadosInterno] = useState10({});
   const plegados = gruposPlegados ?? plegadosInterno;
   const alternarGrupo = (titulo2) => {
     if (onToggleGrupo) onToggleGrupo(titulo2);
     else setPlegadosInterno((previos) => ({ ...previos, [titulo2]: !previos[titulo2] }));
   };
-  const lista = (listaItems) => /* @__PURE__ */ jsx29("ul", { className: "space-y-1", children: listaItems.map((item) => /* @__PURE__ */ jsx29(ItemNav, { item, activo: item.id === activeId, colapsado, onSelect }, item.id)) });
-  return /* @__PURE__ */ jsxs21(
+  const lista = (listaItems) => /* @__PURE__ */ jsx30("ul", { className: "space-y-1", children: listaItems.map((item) => /* @__PURE__ */ jsx30(ItemNav, { item, activo: item.id === activeId, colapsado, onSelect }, item.id)) });
+  return /* @__PURE__ */ jsxs22(
     "nav",
     {
       "aria-label": ariaLabel,
       className: cn("flex h-dvh flex-col border-r border-ink-600 bg-ink-900 transition-[width] duration-200", colapsado ? "w-[4.5rem]" : ancho, className),
       children: [
-        /* @__PURE__ */ jsxs21("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
-          cabecera && /* @__PURE__ */ jsx29("div", { className: "min-w-0 flex-1", children: cabecera }),
-          onToggle && /* @__PURE__ */ jsx29(
+        /* @__PURE__ */ jsxs22("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
+          cabecera && /* @__PURE__ */ jsx30("div", { className: "min-w-0 flex-1", children: cabecera }),
+          onToggle && /* @__PURE__ */ jsx30(
             "button",
             {
               type: "button",
@@ -2307,15 +2630,15 @@ function NavLateral({
               "aria-label": colapsado ? "Expandir men\xFA" : "Contraer men\xFA",
               "aria-expanded": !colapsado,
               className: cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg text-mute transition hover:bg-ink-700 hover:text-fore", colapsado && "w-full"),
-              children: /* @__PURE__ */ jsx29(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
+              children: /* @__PURE__ */ jsx30(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
             }
           )
         ] }),
-        /* @__PURE__ */ jsx29("div", { className: "min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2", children: grupos ? grupos.map(({ titulo: titulo2, items: itemsGrupo = [] }) => {
+        /* @__PURE__ */ jsx30("div", { className: "min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2", children: grupos ? grupos.map(({ titulo: titulo2, items: itemsGrupo = [] }) => {
           const plegado = Boolean(plegados[titulo2]);
           const tieneActivo = itemsGrupo.some((item) => item.id === activeId);
-          return /* @__PURE__ */ jsxs21("div", { className: "flex flex-col", children: [
-            !colapsado && /* @__PURE__ */ jsxs21(
+          return /* @__PURE__ */ jsxs22("div", { className: "flex flex-col", children: [
+            !colapsado && /* @__PURE__ */ jsxs22(
               "button",
               {
                 type: "button",
@@ -2324,11 +2647,11 @@ function NavLateral({
                 title: plegado ? `Mostrar ${titulo2}` : `Ocultar ${titulo2}`,
                 className: "mb-0.5 flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-0.5 text-left transition hover:bg-fore/5",
                 children: [
-                  /* @__PURE__ */ jsxs21("span", { className: "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute", children: [
+                  /* @__PURE__ */ jsxs22("span", { className: "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute", children: [
                     titulo2,
-                    plegado && tieneActivo && /* @__PURE__ */ jsx29("span", { className: "h-1.5 w-1.5 rounded-full bg-fono", "aria-hidden": true })
+                    plegado && tieneActivo && /* @__PURE__ */ jsx30("span", { className: "h-1.5 w-1.5 rounded-full bg-fono", "aria-hidden": true })
                   ] }),
-                  /* @__PURE__ */ jsx29(
+                  /* @__PURE__ */ jsx30(
                     Icon,
                     {
                       name: "chevron",
@@ -2341,19 +2664,19 @@ function NavLateral({
             (!plegado || colapsado) && lista(itemsGrupo)
           ] }, titulo2);
         }) : lista(items) }),
-        pie && /* @__PURE__ */ jsx29("div", { className: "border-t border-ink-600 p-2", children: pie })
+        pie && /* @__PURE__ */ jsx30("div", { className: "border-t border-ink-600 p-2", children: pie })
       ]
     }
   );
 }
 
 // src/components/MenuDesplegable.jsx
-import { useEffect as useEffect3, useRef as useRef4, useState as useState10 } from "react";
-import { jsx as jsx30, jsxs as jsxs22 } from "react/jsx-runtime";
+import { useEffect as useEffect4, useRef as useRef5, useState as useState11 } from "react";
+import { jsx as jsx31, jsxs as jsxs23 } from "react/jsx-runtime";
 function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel = "Men\xFA", className }) {
-  const [abierto, setAbierto] = useState10(false);
-  const raiz = useRef4(null);
-  useEffect3(() => {
+  const [abierto, setAbierto] = useState11(false);
+  const raiz = useRef5(null);
+  useEffect4(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -2369,8 +2692,8 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
       document.removeEventListener("keydown", cerrarEsc);
     };
   }, [abierto]);
-  return /* @__PURE__ */ jsxs22("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx30(
+  return /* @__PURE__ */ jsxs23("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx31(
       "button",
       {
         type: "button",
@@ -2381,15 +2704,15 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
         children: trigger
       }
     ),
-    abierto && /* @__PURE__ */ jsx30(
+    abierto && /* @__PURE__ */ jsx31(
       "div",
       {
         role: "menu",
         "aria-label": ariaLabel,
         className: cn("absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-paper p-1 shadow-xl", alineacion === "right" ? "right-0" : "left-0"),
         children: items.map((item, indice) => {
-          if (item.separador) return /* @__PURE__ */ jsx30("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
-          return /* @__PURE__ */ jsxs22(
+          if (item.separador) return /* @__PURE__ */ jsx31("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
+          return /* @__PURE__ */ jsxs23(
             "button",
             {
               type: "button",
@@ -2405,8 +2728,8 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
                 item.disabled && "cursor-not-allowed opacity-40"
               ),
               children: [
-                item.icono && /* @__PURE__ */ jsx30(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-                /* @__PURE__ */ jsx30("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
+                item.icono && /* @__PURE__ */ jsx31(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+                /* @__PURE__ */ jsx31("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
                 item.extra
               ]
             },
@@ -2419,34 +2742,34 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
 }
 
 // src/components/PanelDerecho.jsx
-import { jsx as jsx31, jsxs as jsxs23 } from "react/jsx-runtime";
+import { jsx as jsx32, jsxs as jsxs24 } from "react/jsx-runtime";
 function PanelDerecho({ children, panel, id, className, classNamePanel }) {
-  return /* @__PURE__ */ jsxs23("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
-    /* @__PURE__ */ jsx31("div", { className: "min-w-0 space-y-4", children }),
-    /* @__PURE__ */ jsx31("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
+  return /* @__PURE__ */ jsxs24("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
+    /* @__PURE__ */ jsx32("div", { className: "min-w-0 space-y-4", children }),
+    /* @__PURE__ */ jsx32("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
   ] });
 }
 
 // src/components/TarjetaAjuste.jsx
-import { jsx as jsx32, jsxs as jsxs24 } from "react/jsx-runtime";
+import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
 function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, children, className, id }) {
-  return /* @__PURE__ */ jsxs24(Card, { id, className: cn("space-y-3", className), children: [
-    /* @__PURE__ */ jsxs24("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs24("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs24("h2", { className: "flex items-center gap-2 font-semibold", children: [
-          icono && /* @__PURE__ */ jsx32(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
+  return /* @__PURE__ */ jsxs25(Card, { id, className: cn("space-y-3", className), children: [
+    /* @__PURE__ */ jsxs25("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs25("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs25("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          icono && /* @__PURE__ */ jsx33(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
           titulo2
         ] }),
-        descripcion && /* @__PURE__ */ jsx32("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        descripcion && /* @__PURE__ */ jsx33("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      accion && /* @__PURE__ */ jsx32("div", { className: "shrink-0", children: accion })
+      accion && /* @__PURE__ */ jsx33("div", { className: "shrink-0", children: accion })
     ] }),
     children
   ] });
 }
 
 // src/components/AjustesImpresion.jsx
-import { useState as useState11 } from "react";
+import { useState as useState12 } from "react";
 
 // src/printing/estadoImpresoras.js
 var ESTADO_IMPRESORA = Object.freeze({
@@ -2543,7 +2866,7 @@ function agregarEstado(impresoras = [], estados = {}) {
 }
 
 // src/components/AjustesImpresion.jsx
-import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
+import { jsx as jsx34, jsxs as jsxs26 } from "react/jsx-runtime";
 var VACIO = () => ({
   id: null,
   nombre: "",
@@ -2591,7 +2914,7 @@ function AjustesImpresion({
   descripcion = "Eleg\xED c\xF3mo sale el papel: por red (LAN) o por una cola local (USB). La app verifica cada impresora antes de usarla.",
   className
 }) {
-  const [form, setForm] = useState11(null);
+  const [form, setForm] = useState12(null);
   const resumen = agregarEstado(impresoras, estado);
   function cambiar(campo, valor) {
     setForm((actual) => ({ ...actual, [campo]: valor }));
@@ -2604,40 +2927,40 @@ function AjustesImpresion({
     onGuardar?.({ ...form, destino, copias: Number(form.copias) || 1 });
     setForm(null);
   }
-  return /* @__PURE__ */ jsxs25(Card, { className: cn("space-y-4", className), children: [
-    /* @__PURE__ */ jsxs25("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs25("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs25("h2", { className: "flex items-center gap-2 font-semibold", children: [
-          /* @__PURE__ */ jsx33(Icon, { name: "printer", className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs26(Card, { className: cn("space-y-4", className), children: [
+    /* @__PURE__ */ jsxs26("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs26("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs26("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          /* @__PURE__ */ jsx34(Icon, { name: "printer", className: "h-4 w-4" }),
           titulo2
         ] }),
-        /* @__PURE__ */ jsx33("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        /* @__PURE__ */ jsx34("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      /* @__PURE__ */ jsxs25("div", { className: "flex flex-wrap items-center gap-2", children: [
-        /* @__PURE__ */ jsx33(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
-        onVerificar && /* @__PURE__ */ jsxs25(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
-          /* @__PURE__ */ jsx33(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
+      /* @__PURE__ */ jsxs26("div", { className: "flex flex-wrap items-center gap-2", children: [
+        /* @__PURE__ */ jsx34(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
+        onVerificar && /* @__PURE__ */ jsxs26(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
+          /* @__PURE__ */ jsx34(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
           "Verificar"
         ] }),
-        /* @__PURE__ */ jsxs25(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
-          /* @__PURE__ */ jsx33(Icon, { name: "plus", className: "h-4 w-4" }),
+        /* @__PURE__ */ jsxs26(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
+          /* @__PURE__ */ jsx34(Icon, { name: "plus", className: "h-4 w-4" }),
           "Agregar impresora"
         ] })
       ] })
     ] }),
-    impresoras.length === 0 && /* @__PURE__ */ jsx33("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
-    /* @__PURE__ */ jsx33("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
+    impresoras.length === 0 && /* @__PURE__ */ jsx34("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
+    /* @__PURE__ */ jsx34("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
       const registro = estado?.[impresora.id];
       const tono = TONO_ESTADO[registro?.estado] || "slate";
-      return /* @__PURE__ */ jsxs25("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
-        /* @__PURE__ */ jsxs25("div", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsxs25("p", { className: "flex items-center gap-2 font-medium", children: [
-            /* @__PURE__ */ jsx33(Dot, { color: tono }),
+      return /* @__PURE__ */ jsxs26("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
+        /* @__PURE__ */ jsxs26("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsxs26("p", { className: "flex items-center gap-2 font-medium", children: [
+            /* @__PURE__ */ jsx34(Dot, { color: tono }),
             impresora.nombre || "Impresora",
-            impresora.predeterminada && /* @__PURE__ */ jsx33(Badge, { color: "fono", children: "Predeterminada" }),
-            impresora.activa === false && /* @__PURE__ */ jsx33(Badge, { color: "slate", children: "Inactiva" })
+            impresora.predeterminada && /* @__PURE__ */ jsx34(Badge, { color: "fono", children: "Predeterminada" }),
+            impresora.activa === false && /* @__PURE__ */ jsx34(Badge, { color: "slate", children: "Inactiva" })
           ] }),
-          /* @__PURE__ */ jsxs25("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
+          /* @__PURE__ */ jsxs26("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
             conexionDeDestino(impresora.destino) === "cups" ? "USB / cola local" : "LAN",
             " \xB7 ",
             impresora.destino || "sin destino",
@@ -2647,79 +2970,79 @@ function AjustesImpresion({
             registro ? ` \xB7 ${textoVerificacion(registro)}` : ""
           ] })
         ] }),
-        /* @__PURE__ */ jsxs25("div", { className: "flex flex-wrap items-center gap-1", children: [
-          onProbar && /* @__PURE__ */ jsx33(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
-          /* @__PURE__ */ jsx33(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
-          onEliminar && /* @__PURE__ */ jsx33(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
+        /* @__PURE__ */ jsxs26("div", { className: "flex flex-wrap items-center gap-1", children: [
+          onProbar && /* @__PURE__ */ jsx34(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
+          /* @__PURE__ */ jsx34(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
+          onEliminar && /* @__PURE__ */ jsx34(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
         ] })
       ] }, impresora.id);
     }) }),
-    form && /* @__PURE__ */ jsxs25("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
-      /* @__PURE__ */ jsxs25("div", { className: "grid gap-3 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsxs25("div", { children: [
-          /* @__PURE__ */ jsx33(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
-          /* @__PURE__ */ jsx33(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
+    form && /* @__PURE__ */ jsxs26("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
+      /* @__PURE__ */ jsxs26("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs26("div", { children: [
+          /* @__PURE__ */ jsx34(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
+          /* @__PURE__ */ jsx34(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
         ] }),
-        /* @__PURE__ */ jsxs25("div", { children: [
-          /* @__PURE__ */ jsx33(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
-          /* @__PURE__ */ jsx33(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
+        /* @__PURE__ */ jsxs26("div", { children: [
+          /* @__PURE__ */ jsx34(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
+          /* @__PURE__ */ jsx34(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs25("div", { className: "grid gap-3 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsxs25("div", { children: [
-          /* @__PURE__ */ jsx33(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
-          /* @__PURE__ */ jsxs25(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
-            /* @__PURE__ */ jsx33("option", { value: "lan", children: "LAN (impresora de red)" }),
-            /* @__PURE__ */ jsx33("option", { value: "cups", children: "USB / cola local (CUPS)" })
+      /* @__PURE__ */ jsxs26("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs26("div", { children: [
+          /* @__PURE__ */ jsx34(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
+          /* @__PURE__ */ jsxs26(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
+            /* @__PURE__ */ jsx34("option", { value: "lan", children: "LAN (impresora de red)" }),
+            /* @__PURE__ */ jsx34("option", { value: "cups", children: "USB / cola local (CUPS)" })
           ] })
         ] }),
-        form.conexion === "lan" ? /* @__PURE__ */ jsxs25("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
-          /* @__PURE__ */ jsxs25("div", { children: [
-            /* @__PURE__ */ jsx33(Label, { htmlFor: "imp-ip", children: "IP" }),
-            /* @__PURE__ */ jsx33(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
+        form.conexion === "lan" ? /* @__PURE__ */ jsxs26("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
+          /* @__PURE__ */ jsxs26("div", { children: [
+            /* @__PURE__ */ jsx34(Label, { htmlFor: "imp-ip", children: "IP" }),
+            /* @__PURE__ */ jsx34(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
           ] }),
-          /* @__PURE__ */ jsxs25("div", { children: [
-            /* @__PURE__ */ jsx33(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
-            /* @__PURE__ */ jsx33(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
+          /* @__PURE__ */ jsxs26("div", { children: [
+            /* @__PURE__ */ jsx34(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
+            /* @__PURE__ */ jsx34(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
           ] })
-        ] }) : /* @__PURE__ */ jsxs25("div", { children: [
-          /* @__PURE__ */ jsx33(Label, { htmlFor: "imp-cola", children: "Cola local" }),
-          /* @__PURE__ */ jsx33(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
-          /* @__PURE__ */ jsx33("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
+        ] }) : /* @__PURE__ */ jsxs26("div", { children: [
+          /* @__PURE__ */ jsx34(Label, { htmlFor: "imp-cola", children: "Cola local" }),
+          /* @__PURE__ */ jsx34(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
+          /* @__PURE__ */ jsx34("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs25("div", { className: "grid gap-3 sm:grid-cols-3", children: [
-        /* @__PURE__ */ jsxs25("div", { children: [
-          /* @__PURE__ */ jsx33(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
-          /* @__PURE__ */ jsx33(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx33("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
+      /* @__PURE__ */ jsxs26("div", { className: "grid gap-3 sm:grid-cols-3", children: [
+        /* @__PURE__ */ jsxs26("div", { children: [
+          /* @__PURE__ */ jsx34(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
+          /* @__PURE__ */ jsx34(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx34("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
         ] }),
-        /* @__PURE__ */ jsxs25("div", { children: [
-          /* @__PURE__ */ jsx33(Label, { htmlFor: "imp-copias", children: "Copias" }),
-          /* @__PURE__ */ jsx33(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
+        /* @__PURE__ */ jsxs26("div", { children: [
+          /* @__PURE__ */ jsx34(Label, { htmlFor: "imp-copias", children: "Copias" }),
+          /* @__PURE__ */ jsx34(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
         ] }),
-        /* @__PURE__ */ jsxs25("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
-          /* @__PURE__ */ jsx33("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
+        /* @__PURE__ */ jsxs26("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
+          /* @__PURE__ */ jsx34("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
           "Predeterminada"
         ] })
       ] }),
-      /* @__PURE__ */ jsx33("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
-      /* @__PURE__ */ jsxs25("div", { className: "flex flex-wrap justify-end gap-2", children: [
-        /* @__PURE__ */ jsx33(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
-        /* @__PURE__ */ jsx33(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
+      /* @__PURE__ */ jsx34("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
+      /* @__PURE__ */ jsxs26("div", { className: "flex flex-wrap justify-end gap-2", children: [
+        /* @__PURE__ */ jsx34(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
+        /* @__PURE__ */ jsx34(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs25("p", { className: "text-xs text-mute", children: [
+    /* @__PURE__ */ jsxs26("p", { className: "text-xs text-mute", children: [
       "La impresi\xF3n sale por el ",
-      /* @__PURE__ */ jsx33("b", { className: "text-fore", children: "agente local" }),
+      /* @__PURE__ */ jsx34("b", { className: "text-fore", children: "agente local" }),
       ": instalalo en la computadora que tiene la impresora (LAN o USB conectada) y vinculala con el c\xF3digo. Con el agente ca\xEDdo, los trabajos quedan en cola; nunca se pierden. Ver ",
-      /* @__PURE__ */ jsx33("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
+      /* @__PURE__ */ jsx34("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
       "."
     ] })
   ] });
 }
 
 // src/components/BotonImprimir.jsx
-import { jsx as jsx34, jsxs as jsxs26 } from "react/jsx-runtime";
+import { jsx as jsx35, jsxs as jsxs27 } from "react/jsx-runtime";
 function BotonImprimir({
   onImprimir,
   estado = null,
@@ -2731,17 +3054,17 @@ function BotonImprimir({
 }) {
   const enCurso = estado === "pendiente" || estado === "reclamado";
   const texto = enCurso ? etiquetaTrabajo(estado) : etiqueta;
-  return /* @__PURE__ */ jsxs26("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsxs26(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
-      /* @__PURE__ */ jsx34(Icon, { name: icono, className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs27("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsxs27(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
+      /* @__PURE__ */ jsx35(Icon, { name: icono, className: "h-4 w-4" }),
       texto
     ] }),
-    estado && !enCurso && /* @__PURE__ */ jsx34(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
+    estado && !enCurso && /* @__PURE__ */ jsx35(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
   ] });
 }
 
 // src/components/BancoCombobox.jsx
-import { useEffect as useEffect4, useId as useId4, useMemo as useMemo4, useRef as useRef5, useState as useState13 } from "react";
+import { useEffect as useEffect5, useId as useId5, useMemo as useMemo5, useRef as useRef6, useState as useState14 } from "react";
 
 // src/utils/bancos.js
 var BANCOS_PARAGUAY = [
@@ -2831,21 +3154,21 @@ function sugerenciasDeBanco(texto, catalogo = BANCOS_PARAGUAY) {
 }
 
 // src/components/BancoLogo.jsx
-import { useState as useState12 } from "react";
-import { jsx as jsx35 } from "react/jsx-runtime";
+import { useState as useState13 } from "react";
+import { jsx as jsx36 } from "react/jsx-runtime";
 function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseAssets = "/bancos", marcas = {} }) {
-  const [fallo, setFallo] = useState12(false);
+  const [fallo, setFallo] = useState13(false);
   const texto = String(banco || "").trim();
   const registro = logoDeBanco(texto);
   if (!registro) return null;
   const marca = registro.tipo === "marca" ? registro.marca : null;
   if (marca && marcas[marca]) {
     const Logo = marcas[marca];
-    return /* @__PURE__ */ jsx35("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx35(Logo, {}) });
+    return /* @__PURE__ */ jsx36("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx36(Logo, {}) });
   }
   if (soloCatalogo && registro.generico) return null;
   if (registro.tipo === "archivo" && !fallo) {
-    return /* @__PURE__ */ jsx35("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx35(
+    return /* @__PURE__ */ jsx36("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx36(
       "img",
       {
         src: baseAssets ? `${baseAssets.replace(/\/$/, "")}/${registro.archivo}` : registro.archivo,
@@ -2858,7 +3181,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
   }
   const iniciales = registro.iniciales || inicialesDeBanco(texto);
   const color = registro.color || colorDeBanco(texto);
-  return /* @__PURE__ */ jsx35("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx35(
+  return /* @__PURE__ */ jsx36("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx36(
     "span",
     {
       "aria-hidden": "true",
@@ -2870,7 +3193,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
 }
 
 // src/components/BancoCombobox.jsx
-import { jsx as jsx36, jsxs as jsxs27 } from "react/jsx-runtime";
+import { jsx as jsx37, jsxs as jsxs28 } from "react/jsx-runtime";
 function BancoCombobox({
   id,
   value = "",
@@ -2882,12 +3205,12 @@ function BancoCombobox({
   catalogo = BANCOS_PARAGUAY,
   logoProps
 }) {
-  const [abierto, setAbierto] = useState13(false);
-  const [resaltado, setResaltado] = useState13(0);
-  const listaId = useId4();
-  const raiz = useRef5(null);
-  const lista = useRef5(null);
-  useEffect4(() => {
+  const [abierto, setAbierto] = useState14(false);
+  const [resaltado, setResaltado] = useState14(0);
+  const listaId = useId5();
+  const raiz = useRef6(null);
+  const lista = useRef6(null);
+  useEffect5(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -2895,8 +3218,8 @@ function BancoCombobox({
     document.addEventListener("click", cerrarFuera);
     return () => document.removeEventListener("click", cerrarFuera);
   }, []);
-  const sugerencias = useMemo4(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
-  useEffect4(() => {
+  const sugerencias = useMemo5(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
+  useEffect5(() => {
     if (!abierto) return;
     lista.current?.querySelector(`#${CSS.escape(`${listaId}-${resaltado}`)}`)?.scrollIntoView({ block: "nearest" });
   }, [abierto, resaltado, listaId]);
@@ -2927,8 +3250,8 @@ function BancoCombobox({
     }
   }
   const listaVisible = abierto && sugerencias.length > 0;
-  return /* @__PURE__ */ jsxs27("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx36(
+  return /* @__PURE__ */ jsxs28("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx37(
       Input,
       {
         id,
@@ -2951,7 +3274,7 @@ function BancoCombobox({
         onKeyDown: alTeclear
       }
     ),
-    listaVisible && /* @__PURE__ */ jsx36(
+    listaVisible && /* @__PURE__ */ jsx37(
       "ul",
       {
         id: listaId,
@@ -2959,7 +3282,7 @@ function BancoCombobox({
         role: "listbox",
         "aria-label": "Bancos",
         className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-paper p-1 shadow-xl",
-        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx36("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs27(
+        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx37("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs28(
           "button",
           {
             type: "button",
@@ -2968,8 +3291,8 @@ function BancoCombobox({
             onMouseDown: (event) => event.preventDefault(),
             onClick: () => elegir(banco),
             children: [
-              /* @__PURE__ */ jsx36(BancoLogo, { banco, alto: "h-4", ...logoProps }),
-              /* @__PURE__ */ jsx36("span", { className: "min-w-0 flex-1 truncate", children: banco })
+              /* @__PURE__ */ jsx37(BancoLogo, { banco, alto: "h-4", ...logoProps }),
+              /* @__PURE__ */ jsx37("span", { className: "min-w-0 flex-1 truncate", children: banco })
             ]
           }
         ) }, banco))
@@ -2979,7 +3302,7 @@ function BancoCombobox({
 }
 
 // src/components/CityAutocomplete.jsx
-import { useEffect as useEffect5, useRef as useRef6, useState as useState14 } from "react";
+import { useEffect as useEffect6, useRef as useRef7, useState as useState15 } from "react";
 
 // src/catalog/ciudades.js
 var CIUDADES_PARAGUAY = [
@@ -3285,7 +3608,7 @@ function buscarCiudad(texto, limite = 8) {
 }
 
 // src/components/CityAutocomplete.jsx
-import { jsx as jsx37, jsxs as jsxs28 } from "react/jsx-runtime";
+import { jsx as jsx38, jsxs as jsxs29 } from "react/jsx-runtime";
 function CityAutocomplete({
   value = "",
   onSelect,
@@ -3297,11 +3620,11 @@ function CityAutocomplete({
   maxLength = 100,
   inputProps
 }) {
-  const [sugerencias, setSugerencias] = useState14([]);
-  const [abierto, setAbierto] = useState14(false);
-  const timer = useRef6(null);
-  const raiz = useRef6(null);
-  useEffect5(() => {
+  const [sugerencias, setSugerencias] = useState15([]);
+  const [abierto, setAbierto] = useState15(false);
+  const timer = useRef7(null);
+  const raiz = useRef7(null);
+  useEffect6(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -3309,7 +3632,7 @@ function CityAutocomplete({
     document.addEventListener("mousedown", cerrarFuera);
     return () => document.removeEventListener("mousedown", cerrarFuera);
   }, []);
-  useEffect5(() => () => {
+  useEffect6(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
   function resolver(texto) {
@@ -3350,8 +3673,8 @@ function CityAutocomplete({
     const departamento = departamentoDe(value);
     if (departamento) onSelect?.(value, departamento);
   }
-  return /* @__PURE__ */ jsxs28("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx37(
+  return /* @__PURE__ */ jsxs29("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx38(
       Input,
       {
         maxLength,
@@ -3370,7 +3693,7 @@ function CityAutocomplete({
         ...inputProps
       }
     ),
-    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx37("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx37("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs28(
+    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx38("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-paper shadow-xl", children: sugerencias.map((fila) => /* @__PURE__ */ jsx38("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs29(
       "button",
       {
         type: "button",
@@ -3378,8 +3701,8 @@ function CityAutocomplete({
         onMouseDown: (event) => event.preventDefault(),
         onClick: () => elegir(fila),
         children: [
-          /* @__PURE__ */ jsx37("span", { className: "truncate font-medium text-fore", children: fila.city }),
-          /* @__PURE__ */ jsx37("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
+          /* @__PURE__ */ jsx38("span", { className: "truncate font-medium text-fore", children: fila.city }),
+          /* @__PURE__ */ jsx38("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
         ]
       }
     ) }, `${fila.city}-${fila.department}`)) })
@@ -3463,21 +3786,21 @@ var COLOR_BADGE = { ok: "green", warn: "orange", bad: "red", mute: "slate", info
 var colorBadge = (tono) => COLOR_BADGE[tono] || "slate";
 
 // src/components/SemaforoItem.jsx
-import { jsx as jsx38, jsxs as jsxs29 } from "react/jsx-runtime";
+import { jsx as jsx39, jsxs as jsxs30 } from "react/jsx-runtime";
 function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li", className, ...props }) {
   const config = estadoItem(estado);
   const Etiqueta = como === "div" ? "div" : "li";
-  return /* @__PURE__ */ jsxs29(
+  return /* @__PURE__ */ jsxs30(
     Etiqueta,
     {
       className: cn("flex items-center gap-2.5", className),
       "aria-label": etiqueta ? `${etiqueta}: ${config.etiqueta}` : config.etiqueta,
       ...props,
       children: [
-        /* @__PURE__ */ jsx38("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx38(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
-        /* @__PURE__ */ jsxs29("span", { className: "min-w-0 flex-1", children: [
-          /* @__PURE__ */ jsx38("span", { className: "block truncate text-sm", children: etiqueta }),
-          detalle && /* @__PURE__ */ jsx38("span", { className: "block truncate text-xs text-mute", children: detalle })
+        /* @__PURE__ */ jsx39("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx39(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+        /* @__PURE__ */ jsxs30("span", { className: "min-w-0 flex-1", children: [
+          /* @__PURE__ */ jsx39("span", { className: "block truncate text-sm", children: etiqueta }),
+          detalle && /* @__PURE__ */ jsx39("span", { className: "block truncate text-xs text-mute", children: detalle })
         ] })
       ]
     }
@@ -3485,30 +3808,30 @@ function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li",
 }
 
 // src/components/FilaChecklist.jsx
-import { jsx as jsx39, jsxs as jsxs30 } from "react/jsx-runtime";
+import { jsx as jsx40, jsxs as jsxs31 } from "react/jsx-runtime";
 function FilaChecklist({ etiqueta, estado = "sinVerificar", nota, accion, className }) {
   const config = estadoItem(estado);
-  return /* @__PURE__ */ jsxs30("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
-    /* @__PURE__ */ jsx39("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx39(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs30("div", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx39("p", { className: "truncate text-sm", children: etiqueta }),
-      nota && /* @__PURE__ */ jsx39("p", { className: "mt-0.5 text-xs text-mute", children: nota })
+  return /* @__PURE__ */ jsxs31("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
+    /* @__PURE__ */ jsx40("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx40(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs31("div", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx40("p", { className: "truncate text-sm", children: etiqueta }),
+      nota && /* @__PURE__ */ jsx40("p", { className: "mt-0.5 text-xs text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx39("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
+    /* @__PURE__ */ jsx40("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
     accion
   ] });
 }
 function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass", className }) {
   const completo = total > 0 && pasan === total;
-  return /* @__PURE__ */ jsxs30("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
-    /* @__PURE__ */ jsxs30("span", { className: completo ? "text-pass" : "text-mute", children: [
+  return /* @__PURE__ */ jsxs31("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
+    /* @__PURE__ */ jsxs31("span", { className: completo ? "text-pass" : "text-mute", children: [
       pasan,
       " de ",
       total,
       " ",
       sustantivo
     ] }),
-    fallas > 0 && /* @__PURE__ */ jsxs30("span", { className: "text-bad", children: [
+    fallas > 0 && /* @__PURE__ */ jsxs31("span", { className: "text-bad", children: [
       fallas,
       " ",
       fallas === 1 ? "falla" : "fallas"
@@ -3517,18 +3840,18 @@ function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass"
 }
 
 // src/components/ChipEstado.jsx
-import { jsx as jsx40, jsxs as jsxs31 } from "react/jsx-runtime";
+import { jsx as jsx41, jsxs as jsxs32 } from "react/jsx-runtime";
 function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, title, className }) {
   const config = estadoChip(estado);
   const texto = etiqueta || config.etiqueta;
-  return /* @__PURE__ */ jsxs31(
+  return /* @__PURE__ */ jsxs32(
     "span",
     {
       "data-estado": estado,
       title: title ?? texto,
       className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[tonoCanonico(tono || config.tono)], className),
       children: [
-        /* @__PURE__ */ jsx40(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsx41(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
         texto
       ]
     }
@@ -3536,19 +3859,19 @@ function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, title, classN
 }
 
 // src/components/ChipsLocks.jsx
-import { jsx as jsx41, jsxs as jsxs32 } from "react/jsx-runtime";
+import { jsx as jsx42, jsxs as jsxs33 } from "react/jsx-runtime";
 function ChipsLocks({ locks = [], conEstado = false, className }) {
   if (!locks.length) return null;
-  return /* @__PURE__ */ jsx41("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
+  return /* @__PURE__ */ jsx42("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
     const config = estadoLock(lock.estado);
     const etiqueta = lock.etiqueta || LOCKS_DISPOSITIVO[lock.clave] || lock.clave;
-    return /* @__PURE__ */ jsxs32(
+    return /* @__PURE__ */ jsxs33(
       "li",
       {
         className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono]),
         title: lock.detalle || `${etiqueta}: ${config.etiqueta}`,
         children: [
-          /* @__PURE__ */ jsx41(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx42(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
           etiqueta,
           conEstado ? ` \xB7 ${config.etiqueta}` : ""
         ]
@@ -3559,7 +3882,7 @@ function ChipsLocks({ locks = [], conEstado = false, className }) {
 }
 
 // src/components/MedidorBateria.jsx
-import { jsx as jsx42, jsxs as jsxs33 } from "react/jsx-runtime";
+import { jsx as jsx43, jsxs as jsxs34 } from "react/jsx-runtime";
 function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, mostrarEtiqueta = false, className }) {
   const hay = porcentaje !== null && porcentaje !== void 0 && porcentaje !== "" && Number.isFinite(Number(porcentaje));
   const valor = hay ? Number(porcentaje) : null;
@@ -3567,22 +3890,22 @@ function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante 
   const texto = hay ? `${valor}%` : "\u2014";
   const title = hay ? `${etiqueta}: ${valor}%${ciclos ? ` \xB7 ${ciclos} ciclos` : ""}` : `${etiqueta}: sin dato`;
   if (variante === "chip") {
-    return /* @__PURE__ */ jsxs33("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: [
+    return /* @__PURE__ */ jsxs34("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: [
       texto,
       mostrarEtiqueta ? ` ${etiqueta.toLowerCase()}` : ""
     ] });
   }
-  return /* @__PURE__ */ jsxs33("div", { className: cn("space-y-1", className), title, children: [
-    /* @__PURE__ */ jsxs33("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx42("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
-      /* @__PURE__ */ jsx42("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
+  return /* @__PURE__ */ jsxs34("div", { className: cn("space-y-1", className), title, children: [
+    /* @__PURE__ */ jsxs34("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx43("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
+      /* @__PURE__ */ jsx43("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
     ] }),
-    hay ? /* @__PURE__ */ jsx42(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx42(Badge, { color: "slate", children: "Sin dato" })
+    hay ? /* @__PURE__ */ jsx43(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx43(Badge, { color: "slate", children: "Sin dato" })
   ] });
 }
 
 // src/components/MedidorStock.jsx
-import { jsx as jsx43, jsxs as jsxs34 } from "react/jsx-runtime";
+import { jsx as jsx44, jsxs as jsxs35 } from "react/jsx-runtime";
 function MedidorStock({
   stock,
   umbral,
@@ -3596,7 +3919,7 @@ function MedidorStock({
   const n = Number(stock);
   const u = Number(umbral);
   if (sinDato || !Number.isFinite(n)) {
-    return /* @__PURE__ */ jsx43("span", { className: cn("text-xs text-mute", className), children: vacio });
+    return /* @__PURE__ */ jsx44("span", { className: cn("text-xs text-mute", className), children: vacio });
   }
   const tieneUmbral = Number.isFinite(u);
   const agotado = n <= 0;
@@ -3607,15 +3930,15 @@ function MedidorStock({
   if (variante === "barra") {
     const techo = tieneUmbral ? Math.max(u, n) : n;
     const porcentaje = techo > 0 ? Math.min(100, Math.round(n / techo * 100)) : 0;
-    return /* @__PURE__ */ jsxs34("span", { className: cn("block min-w-0 space-y-1", className), children: [
-      /* @__PURE__ */ jsxs34("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx43("span", { className: cn("font-semibold", tono === "bad" ? "text-bad" : tono === "warn" ? "text-warn" : "text-ok"), children: texto }),
-        /* @__PURE__ */ jsx43("span", { className: "tabular-nums text-mute", children: detalle })
+    return /* @__PURE__ */ jsxs35("span", { className: cn("block min-w-0 space-y-1", className), children: [
+      /* @__PURE__ */ jsxs35("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx44("span", { className: cn("font-semibold", tono === "bad" ? "text-bad" : tono === "warn" ? "text-warn" : "text-ok"), children: texto }),
+        /* @__PURE__ */ jsx44("span", { className: "tabular-nums text-mute", children: detalle })
       ] }),
-      /* @__PURE__ */ jsx43("span", { role: "progressbar", "aria-label": etiqueta ?? `Stock ${detalle}`, "aria-valuenow": porcentaje, "aria-valuemin": 0, "aria-valuemax": 100, className: "block h-1.5 overflow-hidden rounded-full bg-ink-700", children: /* @__PURE__ */ jsx43("span", { className: cn("block h-full rounded-full transition-[width]", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), style: { width: `${porcentaje}%` } }) })
+      /* @__PURE__ */ jsx44("span", { role: "progressbar", "aria-label": etiqueta ?? `Stock ${detalle}`, "aria-valuenow": porcentaje, "aria-valuemin": 0, "aria-valuemax": 100, className: "block h-1.5 overflow-hidden rounded-full bg-ink-700", children: /* @__PURE__ */ jsx44("span", { className: cn("block h-full rounded-full transition-[width]", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), style: { width: `${porcentaje}%` } }) })
     ] });
   }
-  return /* @__PURE__ */ jsxs34(
+  return /* @__PURE__ */ jsxs35(
     "span",
     {
       className: cn(
@@ -3627,21 +3950,21 @@ function MedidorStock({
       ),
       title: etiqueta ?? `${texto} \xB7 ${detalle}`,
       children: [
-        variante !== "chip" && /* @__PURE__ */ jsx43("span", { className: cn("h-1.5 w-1.5 rounded-full", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx43("span", { className: "tabular-nums", children: detalle }),
-        mostrarUmbral && /* @__PURE__ */ jsx43("span", { className: "font-normal text-mute", children: texto })
+        variante !== "chip" && /* @__PURE__ */ jsx44("span", { className: cn("h-1.5 w-1.5 rounded-full", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), "aria-hidden": "true" }),
+        /* @__PURE__ */ jsx44("span", { className: "tabular-nums", children: detalle }),
+        mostrarUmbral && /* @__PURE__ */ jsx44("span", { className: "font-normal text-mute", children: texto })
       ]
     }
   );
 }
 
 // src/components/ContadorLote.jsx
-import { jsx as jsx44, jsxs as jsxs35 } from "react/jsx-runtime";
+import { jsx as jsx45, jsxs as jsxs36 } from "react/jsx-runtime";
 function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFaltan = false, vacio = "Sin dato", className }) {
   const r = Number(recibidos);
   const t = Number(total);
   if (recibidos === null || recibidos === void 0 || !Number.isFinite(t) || t <= 0 || !Number.isFinite(r)) {
-    return /* @__PURE__ */ jsx44("span", { className: cn("text-xs text-mute", className), children: vacio });
+    return /* @__PURE__ */ jsx45("span", { className: cn("text-xs text-mute", className), children: vacio });
   }
   const hechas = Math.max(0, Math.min(t, Math.trunc(r)));
   const completo = hechas >= t;
@@ -3650,15 +3973,15 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
   const texto = sufijo ? `${hechas} de ${t} ${sufijo}` : `${hechas} de ${t}`;
   if (variante === "barra") {
     const porcentaje = Math.round(hechas / t * 100);
-    return /* @__PURE__ */ jsxs35("span", { className: cn("block min-w-0 space-y-1", className), children: [
-      /* @__PURE__ */ jsxs35("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx44("span", { className: cn("font-semibold", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
-        mostrarFaltan && !completo && /* @__PURE__ */ jsxs35("span", { className: "text-mute", children: [
+    return /* @__PURE__ */ jsxs36("span", { className: cn("block min-w-0 space-y-1", className), children: [
+      /* @__PURE__ */ jsxs36("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx45("span", { className: cn("font-semibold", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
+        mostrarFaltan && !completo && /* @__PURE__ */ jsxs36("span", { className: "text-mute", children: [
           "faltan ",
           faltan
         ] })
       ] }),
-      /* @__PURE__ */ jsx44(
+      /* @__PURE__ */ jsx45(
         "span",
         {
           role: "progressbar",
@@ -3667,13 +3990,13 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
           "aria-valuemin": 0,
           "aria-valuemax": t,
           className: "block h-1.5 overflow-hidden rounded-full bg-ink-700",
-          children: /* @__PURE__ */ jsx44("span", { className: cn("block h-full rounded-full transition-[width]", tono === "ok" ? "bg-ok" : tono === "warn" ? "bg-warn" : "bg-mute"), style: { width: `${porcentaje}%` } })
+          children: /* @__PURE__ */ jsx45("span", { className: cn("block h-full rounded-full transition-[width]", tono === "ok" ? "bg-ok" : tono === "warn" ? "bg-warn" : "bg-mute"), style: { width: `${porcentaje}%` } })
         }
       )
     ] });
   }
   if (variante === "chip") {
-    return /* @__PURE__ */ jsxs35(
+    return /* @__PURE__ */ jsxs36(
       "span",
       {
         className: cn(
@@ -3683,8 +4006,8 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
         ),
         title: texto,
         children: [
-          /* @__PURE__ */ jsx44("span", { className: "tabular-nums", children: texto }),
-          mostrarFaltan && !completo && /* @__PURE__ */ jsxs35("span", { className: "font-normal", children: [
+          /* @__PURE__ */ jsx45("span", { className: "tabular-nums", children: texto }),
+          mostrarFaltan && !completo && /* @__PURE__ */ jsxs36("span", { className: "font-normal", children: [
             "\xB7 faltan ",
             faltan
           ] })
@@ -3692,9 +4015,9 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
       }
     );
   }
-  return /* @__PURE__ */ jsxs35("span", { className: cn("inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs", className), title: texto, children: [
-    /* @__PURE__ */ jsx44("span", { className: cn("font-semibold tabular-nums", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
-    mostrarFaltan && !completo && /* @__PURE__ */ jsxs35("span", { className: "text-mute", children: [
+  return /* @__PURE__ */ jsxs36("span", { className: cn("inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs", className), title: texto, children: [
+    /* @__PURE__ */ jsx45("span", { className: cn("font-semibold tabular-nums", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
+    mostrarFaltan && !completo && /* @__PURE__ */ jsxs36("span", { className: "text-mute", children: [
       "faltan ",
       faltan
     ] })
@@ -3702,13 +4025,13 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
 }
 
 // src/components/ResumenDestinos.jsx
-import { jsx as jsx45, jsxs as jsxs36 } from "react/jsx-runtime";
+import { jsx as jsx46, jsxs as jsxs37 } from "react/jsx-runtime";
 function ResumenDestinos({ destinos = [], ariaLabel = "Destinos", onElegir, className }) {
   const lista = (Array.isArray(destinos) ? destinos : []).filter((destino) => destino && Number(destino.cantidad) > 0);
   if (!lista.length) return null;
-  return /* @__PURE__ */ jsx45("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-mute", className), "aria-label": ariaLabel, children: lista.map((destino, indice) => /* @__PURE__ */ jsxs36("span", { className: "flex min-w-0 items-center gap-1.5", children: [
-    indice > 0 && /* @__PURE__ */ jsx45("span", { "aria-hidden": "true", children: "\xB7" }),
-    onElegir ? /* @__PURE__ */ jsxs36(
+  return /* @__PURE__ */ jsx46("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-mute", className), "aria-label": ariaLabel, children: lista.map((destino, indice) => /* @__PURE__ */ jsxs37("span", { className: "flex min-w-0 items-center gap-1.5", children: [
+    indice > 0 && /* @__PURE__ */ jsx46("span", { "aria-hidden": "true", children: "\xB7" }),
+    onElegir ? /* @__PURE__ */ jsxs37(
       "button",
       {
         type: "button",
@@ -3716,13 +4039,13 @@ function ResumenDestinos({ destinos = [], ariaLabel = "Destinos", onElegir, clas
         title: destino.detalle || void 0,
         className: "min-w-0 truncate transition hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx45("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
+          /* @__PURE__ */ jsx46("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
           " ",
           destino.etiqueta
         ]
       }
-    ) : /* @__PURE__ */ jsxs36("span", { className: "min-w-0 truncate", title: destino.detalle || void 0, children: [
-      /* @__PURE__ */ jsx45("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
+    ) : /* @__PURE__ */ jsxs37("span", { className: "min-w-0 truncate", title: destino.detalle || void 0, children: [
+      /* @__PURE__ */ jsx46("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
       " ",
       destino.etiqueta
     ] })
@@ -3747,7 +4070,7 @@ var etiquetaPluralRevision = (estado) => ESTADOS_REVISION[estado]?.etiquetaPlura
 var tonoRevision = (estado) => ESTADOS_REVISION[estado]?.tono || "mute";
 
 // src/components/ResumenIncidencias.jsx
-import { jsx as jsx46, jsxs as jsxs37 } from "react/jsx-runtime";
+import { jsx as jsx47, jsxs as jsxs38 } from "react/jsx-runtime";
 var CLASES = {
   bad: "border-bad/30 bg-bad/10 text-bad",
   warn: "border-warn/30 bg-warn/10 text-warn",
@@ -3757,11 +4080,11 @@ var CLASES = {
 function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencias", className }) {
   const lista = (Array.isArray(incidencias) ? incidencias : []).map((incidencia) => ({ ...incidencia, cantidad: Math.trunc(Number(incidencia?.cantidad) || 0) })).filter((incidencia) => incidencia.cantidad > 0);
   if (!lista.length) {
-    return /* @__PURE__ */ jsx46("span", { className: cn("inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES.ok, className), children: sinIncidencias });
+    return /* @__PURE__ */ jsx47("span", { className: cn("inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES.ok, className), children: sinIncidencias });
   }
-  return /* @__PURE__ */ jsx46("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), role: "list", "aria-label": "Incidencias de la recepci\xF3n", children: lista.map((incidencia, indice) => {
+  return /* @__PURE__ */ jsx47("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), role: "list", "aria-label": "Incidencias de la recepci\xF3n", children: lista.map((incidencia, indice) => {
     const tono = incidencia.tono || tonoRevision(incidencia.tipo);
-    return /* @__PURE__ */ jsxs37(
+    return /* @__PURE__ */ jsxs38(
       "span",
       {
         role: "listitem",
@@ -3769,7 +4092,7 @@ function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencia
         className: cn("inline-flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES[tono] || CLASES.mute),
         children: [
           incidencia.etiqueta || etiquetaPluralRevision(incidencia.tipo),
-          /* @__PURE__ */ jsx46("span", { className: "tabular-nums", children: incidencia.cantidad })
+          /* @__PURE__ */ jsx47("span", { className: "tabular-nums", children: incidencia.cantidad })
         ]
       },
       `${incidencia.tipo}-${indice}`
@@ -3778,7 +4101,7 @@ function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencia
 }
 
 // src/components/FilaRevision.jsx
-import { jsx as jsx47, jsxs as jsxs38 } from "react/jsx-runtime";
+import { jsx as jsx48, jsxs as jsxs39 } from "react/jsx-runtime";
 var TONOS2 = {
   ok: "border-ok/30 bg-ok/5",
   warn: "border-warn/25 bg-warn/5",
@@ -3793,21 +4116,21 @@ var CHIP = {
 };
 function FilaRevision({ etiqueta, serial, estado = "ok", detalle, acciones, compact = false, className }) {
   const tono = tonoRevision(estado);
-  return /* @__PURE__ */ jsxs38("div", { className: cn("flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-3", compact ? "py-1.5" : "py-2.5", TONOS2[tono] || TONOS2.mute, className), children: [
-    /* @__PURE__ */ jsxs38("span", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx47("span", { className: "block truncate text-sm font-semibold", children: etiqueta }),
-      /* @__PURE__ */ jsxs38("span", { className: "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-mute", children: [
-        serial ? /* @__PURE__ */ jsx47(SerialTexto, { serial, className: "text-[11px]" }) : /* @__PURE__ */ jsx47("span", { children: "IMEI pendiente" }),
-        detalle ? /* @__PURE__ */ jsx47("span", { className: CELDA_DATO, title: String(detalle), children: detalle }) : null
+  return /* @__PURE__ */ jsxs39("div", { className: cn("flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-3", compact ? "py-1.5" : "py-2.5", TONOS2[tono] || TONOS2.mute, className), children: [
+    /* @__PURE__ */ jsxs39("span", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx48("span", { className: "block truncate text-sm font-semibold", children: etiqueta }),
+      /* @__PURE__ */ jsxs39("span", { className: "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-mute", children: [
+        serial ? /* @__PURE__ */ jsx48(SerialTexto, { serial, className: "text-[11px]" }) : /* @__PURE__ */ jsx48("span", { children: "IMEI pendiente" }),
+        detalle ? /* @__PURE__ */ jsx48("span", { className: CELDA_DATO, title: String(detalle), children: detalle }) : null
       ] })
     ] }),
-    /* @__PURE__ */ jsx47("span", { className: cn("shrink-0 rounded-lg border px-2 py-0.5 text-xs font-semibold", CHIP[tono] || CHIP.mute), "data-estado": estado, children: etiquetaRevision(estado) }),
-    acciones ? /* @__PURE__ */ jsx47("span", { className: "flex shrink-0 flex-wrap items-center gap-2", children: acciones }) : null
+    /* @__PURE__ */ jsx48("span", { className: cn("shrink-0 rounded-lg border px-2 py-0.5 text-xs font-semibold", CHIP[tono] || CHIP.mute), "data-estado": estado, children: etiquetaRevision(estado) }),
+    acciones ? /* @__PURE__ */ jsx48("span", { className: "flex shrink-0 flex-wrap items-center gap-2", children: acciones }) : null
   ] });
 }
 
 // src/components/SelectorIncidencia.jsx
-import { jsx as jsx48 } from "react/jsx-runtime";
+import { jsx as jsx49 } from "react/jsx-runtime";
 var CHIP2 = {
   ok: "border-ok/40 bg-ok/10 text-ok",
   warn: "border-warn/40 bg-warn/10 text-warn",
@@ -3816,10 +4139,10 @@ var CHIP2 = {
 };
 var CHIP_APAGADO = "border-ink-500 text-mute hover:border-fono hover:text-fore";
 function SelectorIncidencia({ valor, onChange, tipos = INCIDENCIAS, permitirQuitar = true, disabled = false, ariaLabel = "Incidencia de la unidad", className }) {
-  return /* @__PURE__ */ jsx48("span", { role: "group", "aria-label": ariaLabel, className: cn("flex flex-wrap items-center gap-1.5", className), children: tipos.map((tipo) => {
+  return /* @__PURE__ */ jsx49("span", { role: "group", "aria-label": ariaLabel, className: cn("flex flex-wrap items-center gap-1.5", className), children: tipos.map((tipo) => {
     const activo = valor === tipo;
     const tono = tonoRevision(tipo);
-    return /* @__PURE__ */ jsx48(
+    return /* @__PURE__ */ jsx49(
       "button",
       {
         type: "button",
@@ -3839,8 +4162,8 @@ function SelectorIncidencia({ valor, onChange, tipos = INCIDENCIAS, permitirQuit
 }
 
 // src/components/DestinoRecepcion.jsx
-import { useId as useId5, useState as useState15 } from "react";
-import { jsx as jsx49, jsxs as jsxs39 } from "react/jsx-runtime";
+import { useId as useId6, useState as useState16 } from "react";
+import { jsx as jsx50, jsxs as jsxs40 } from "react/jsx-runtime";
 function DestinoRecepcion({
   destino,
   depositos = [],
@@ -3851,26 +4174,26 @@ function DestinoRecepcion({
   textoRecibir = "Recibir todo",
   className
 }) {
-  const [elegido, setElegido] = useState15(destino?.id ?? depositos[0]?.id ?? "");
-  const id = useId5();
+  const [elegido, setElegido] = useState16(destino?.id ?? depositos[0]?.id ?? "");
+  const id = useId6();
   const actual = depositos.find((deposito) => deposito.id === elegido) || destino || null;
   const alternativas = depositos.filter((deposito) => deposito.id !== actual?.id);
-  return /* @__PURE__ */ jsxs39("section", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3", className), "aria-label": "Cierre de la recepci\xF3n", children: [
-    /* @__PURE__ */ jsxs39("div", { className: "flex flex-wrap items-end gap-3", children: [
-      /* @__PURE__ */ jsxs39("label", { htmlFor: id, className: "min-w-0 flex-1 space-y-1 text-xs text-mute", children: [
-        /* @__PURE__ */ jsx49("span", { className: "block font-semibold", children: etiqueta }),
-        alternativas.length > 0 ? /* @__PURE__ */ jsxs39(Select, { id, value: elegido, onChange: (event) => setElegido(event.target.value), className: "w-full", children: [
-          actual ? /* @__PURE__ */ jsx49("option", { value: actual.id, children: actual.nombre }) : null,
-          alternativas.map((deposito) => /* @__PURE__ */ jsx49("option", { value: deposito.id, children: deposito.nombre }, deposito.id))
-        ] }) : /* @__PURE__ */ jsxs39("span", { className: "flex h-9 items-center gap-2 rounded-lg border border-ink-600 px-3 text-sm font-semibold text-fore", children: [
-          /* @__PURE__ */ jsx49(Icon, { name: "box", className: "h-4 w-4 text-mute" }),
+  return /* @__PURE__ */ jsxs40("section", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3", className), "aria-label": "Cierre de la recepci\xF3n", children: [
+    /* @__PURE__ */ jsxs40("div", { className: "flex flex-wrap items-end gap-3", children: [
+      /* @__PURE__ */ jsxs40("label", { htmlFor: id, className: "min-w-0 flex-1 space-y-1 text-xs text-mute", children: [
+        /* @__PURE__ */ jsx50("span", { className: "block font-semibold", children: etiqueta }),
+        alternativas.length > 0 ? /* @__PURE__ */ jsxs40(Select, { id, value: elegido, onChange: (event) => setElegido(event.target.value), className: "w-full", children: [
+          actual ? /* @__PURE__ */ jsx50("option", { value: actual.id, children: actual.nombre }) : null,
+          alternativas.map((deposito) => /* @__PURE__ */ jsx50("option", { value: deposito.id, children: deposito.nombre }, deposito.id))
+        ] }) : /* @__PURE__ */ jsxs40("span", { className: "flex h-9 items-center gap-2 rounded-lg border border-ink-600 px-3 text-sm font-semibold text-fore", children: [
+          /* @__PURE__ */ jsx50(Icon, { name: "box", className: "h-4 w-4 text-mute" }),
           actual?.nombre || "Sin dep\xF3sito"
         ] })
       ] }),
-      /* @__PURE__ */ jsx49(Button, { type: "button", disabled: recibiendo || !actual?.id || !onRecibir, onClick: () => onRecibir?.(actual.id), children: recibiendo ? "Recibiendo\u2026" : textoRecibir })
+      /* @__PURE__ */ jsx50(Button, { type: "button", disabled: recibiendo || !actual?.id || !onRecibir, onClick: () => onRecibir?.(actual.id), children: recibiendo ? "Recibiendo\u2026" : textoRecibir })
     ] }),
-    Number(pendientes) > 0 && /* @__PURE__ */ jsxs39("p", { className: "mt-2 flex items-center gap-1.5 text-xs text-warn", children: [
-      /* @__PURE__ */ jsx49(Icon, { name: "alert", className: "h-3.5 w-3.5 shrink-0", "aria-hidden": "true" }),
+    Number(pendientes) > 0 && /* @__PURE__ */ jsxs40("p", { className: "mt-2 flex items-center gap-1.5 text-xs text-warn", children: [
+      /* @__PURE__ */ jsx50(Icon, { name: "alert", className: "h-3.5 w-3.5 shrink-0", "aria-hidden": "true" }),
       Number(pendientes),
       " unidad(es) sin IMEI: se reciben igual y el IMEI se completa despu\xE9s."
     ] })
@@ -3878,18 +4201,18 @@ function DestinoRecepcion({
 }
 
 // src/components/GradoBadge.jsx
-import { jsx as jsx50, jsxs as jsxs40 } from "react/jsx-runtime";
+import { jsx as jsx51, jsxs as jsxs41 } from "react/jsx-runtime";
 function GradoBadge({ grado, conDescripcion = false, className }) {
   const config = gradoCondicion(grado);
-  if (!config) return /* @__PURE__ */ jsx50(Badge, { className, children: grado || "Sin grado" });
-  return /* @__PURE__ */ jsxs40("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsx50(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
-    conDescripcion && /* @__PURE__ */ jsx50("span", { className: "text-xs text-mute", children: config.descripcion })
+  if (!config) return /* @__PURE__ */ jsx51(Badge, { className, children: grado || "Sin grado" });
+  return /* @__PURE__ */ jsxs41("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsx51(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
+    conDescripcion && /* @__PURE__ */ jsx51("span", { className: "text-xs text-mute", children: config.descripcion })
   ] });
 }
 
 // src/components/TileEquipo.jsx
-import { Fragment as Fragment3, jsx as jsx51, jsxs as jsxs41 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx52, jsxs as jsxs42 } from "react/jsx-runtime";
 function TileEquipo({
   modelo,
   imei,
@@ -3905,31 +4228,31 @@ function TileEquipo({
   className
 }) {
   const raiz = cn("w-full space-y-2.5 rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left", onOpen && "transition hover:border-fono active:scale-[.995]", className);
-  const contenido = /* @__PURE__ */ jsxs41(Fragment3, { children: [
-    /* @__PURE__ */ jsxs41("div", { className: "flex items-start gap-3", children: [
-      foto ? /* @__PURE__ */ jsx51("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx51("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx51(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
-      /* @__PURE__ */ jsxs41("div", { className: "min-w-0 flex-1", children: [
-        /* @__PURE__ */ jsx51("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
-        imei && /* @__PURE__ */ jsx51("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
-        detalle && /* @__PURE__ */ jsx51("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
+  const contenido = /* @__PURE__ */ jsxs42(Fragment3, { children: [
+    /* @__PURE__ */ jsxs42("div", { className: "flex items-start gap-3", children: [
+      foto ? /* @__PURE__ */ jsx52("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx52("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx52(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
+      /* @__PURE__ */ jsxs42("div", { className: "min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsx52("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
+        imei && /* @__PURE__ */ jsx52("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
+        detalle && /* @__PURE__ */ jsx52("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
       ] }),
-      estado && /* @__PURE__ */ jsx51(ChipEstado, { estado })
+      estado && /* @__PURE__ */ jsx52(ChipEstado, { estado })
     ] }),
-    /* @__PURE__ */ jsxs41("div", { className: "flex flex-wrap items-center gap-2", children: [
-      grado && /* @__PURE__ */ jsx51(GradoBadge, { grado }),
-      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx51(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
-      locks?.length ? /* @__PURE__ */ jsx51(ChipsLocks, { locks }) : null
+    /* @__PURE__ */ jsxs42("div", { className: "flex flex-wrap items-center gap-2", children: [
+      grado && /* @__PURE__ */ jsx52(GradoBadge, { grado }),
+      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx52(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
+      locks?.length ? /* @__PURE__ */ jsx52(ChipsLocks, { locks }) : null
     ] }),
-    acciones && /* @__PURE__ */ jsx51("div", { className: "flex flex-wrap gap-2", children: acciones })
+    acciones && /* @__PURE__ */ jsx52("div", { className: "flex flex-wrap gap-2", children: acciones })
   ] });
   if (onOpen) {
-    return /* @__PURE__ */ jsx51("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
+    return /* @__PURE__ */ jsx52("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
   }
-  return /* @__PURE__ */ jsx51("article", { className: raiz, children: contenido });
+  return /* @__PURE__ */ jsx52("article", { className: raiz, children: contenido });
 }
 
 // src/components/PasosEquipo.jsx
-import { jsx as jsx52, jsxs as jsxs42 } from "react/jsx-runtime";
+import { jsx as jsx53, jsxs as jsxs43 } from "react/jsx-runtime";
 function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
   if (!pasos.length) return null;
   const etiquetaDe = (paso) => typeof paso === "string" ? paso : paso.etiqueta ?? paso.label ?? "";
@@ -3941,7 +4264,7 @@ function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
     return Number.isInteger(numero) ? Math.min(Math.max(0, numero), pasos.length - 1) : 0;
   })();
   const texto = etiqueta || etiquetaDe(pasos[indiceActual]) || String(actual);
-  return /* @__PURE__ */ jsxs42(
+  return /* @__PURE__ */ jsxs43(
     "span",
     {
       className: cn("flex items-center gap-1", className),
@@ -3949,7 +4272,7 @@ function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
       "data-paso": indiceActual + 1,
       "aria-label": `Paso ${indiceActual + 1} de ${pasos.length}: ${texto}`,
       children: [
-        pasos.map((paso, orden) => /* @__PURE__ */ jsx52(
+        pasos.map((paso, orden) => /* @__PURE__ */ jsx53(
           "span",
           {
             "aria-hidden": "true",
@@ -3960,26 +4283,26 @@ function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
           },
           claveDe(paso, orden)
         )),
-        /* @__PURE__ */ jsx52("span", { className: "text-[10px] font-semibold text-mute", children: texto })
+        /* @__PURE__ */ jsx53("span", { className: "text-[10px] font-semibold text-mute", children: texto })
       ]
     }
   );
 }
 
 // src/components/ColumnaLote.jsx
-import { jsx as jsx53, jsxs as jsxs43 } from "react/jsx-runtime";
+import { jsx as jsx54, jsxs as jsxs44 } from "react/jsx-runtime";
 function ColumnaLote({ etiqueta, tono = "slate", contador, acciones, children, vacio = "Sin equipos", testId, className }) {
   const lista = Array.isArray(children) ? children.filter(Boolean) : children;
   const vacia = !lista || Array.isArray(lista) && lista.length === 0;
-  return /* @__PURE__ */ jsxs43("section", { "data-testid": testId, className: cn("rounded-2xl border border-ink-600 bg-ink-800/40 p-3", className), children: [
-    /* @__PURE__ */ jsxs43("header", { className: "flex items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs43("span", { className: "flex min-w-0 items-center gap-2", children: [
-        /* @__PURE__ */ jsx53(Badge, { color: tono, children: etiqueta }),
-        contador !== void 0 && contador !== null && /* @__PURE__ */ jsx53("span", { className: "text-xs tabular-nums text-mute", children: contador })
+  return /* @__PURE__ */ jsxs44("section", { "data-testid": testId, className: cn("rounded-2xl border border-ink-600 bg-ink-800/40 p-3", className), children: [
+    /* @__PURE__ */ jsxs44("header", { className: "flex items-center justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs44("span", { className: "flex min-w-0 items-center gap-2", children: [
+        /* @__PURE__ */ jsx54(Badge, { color: tono, children: etiqueta }),
+        contador !== void 0 && contador !== null && /* @__PURE__ */ jsx54("span", { className: "text-xs tabular-nums text-mute", children: contador })
       ] }),
-      acciones ? /* @__PURE__ */ jsx53("span", { className: "flex flex-wrap items-center gap-2", children: acciones }) : null
+      acciones ? /* @__PURE__ */ jsx54("span", { className: "flex flex-wrap items-center gap-2", children: acciones }) : null
     ] }),
-    /* @__PURE__ */ jsx53("div", { className: "mt-3 space-y-2", children: vacia ? /* @__PURE__ */ jsx53(EmptyState, { compact: true, title: vacio }) : lista })
+    /* @__PURE__ */ jsx54("div", { className: "mt-3 space-y-2", children: vacia ? /* @__PURE__ */ jsx54(EmptyState, { compact: true, title: vacio }) : lista })
   ] });
 }
 
@@ -4054,7 +4377,7 @@ function fechaCorta(value, vacio = "\u2014", opciones) {
 }
 
 // src/components/Vencimiento.jsx
-import { jsx as jsx54 } from "react/jsx-runtime";
+import { jsx as jsx55 } from "react/jsx-runtime";
 function estadoVencimiento(fecha, { hoy = /* @__PURE__ */ new Date(), diasAviso = 7 } = {}) {
   const vence = fecha ? new Date(fecha) : null;
   if (!vence || Number.isNaN(vence.getTime())) return { texto: "\u2014", tono: "mute", vencido: false, dias: null, titulo: "Sin vencimiento cargado" };
@@ -4077,41 +4400,41 @@ var CHIP3 = {
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 function Vencimiento({ fecha, variante = "texto", diasAviso = 7, hoy, texto, vacio = "\u2014", className }) {
-  if (!fecha) return /* @__PURE__ */ jsx54("span", { className: cn("text-xs text-mute", className), children: vacio });
+  if (!fecha) return /* @__PURE__ */ jsx55("span", { className: cn("text-xs text-mute", className), children: vacio });
   const estado = estadoVencimiento(fecha, { hoy, diasAviso });
   const contenido = texto || estado.texto;
   if (variante === "chip") {
-    return /* @__PURE__ */ jsx54("span", { className: cn("inline-flex items-center whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold tabular-nums", CHIP3[estado.tono] || CHIP3.mute, className), title: estado.titulo, children: contenido });
+    return /* @__PURE__ */ jsx55("span", { className: cn("inline-flex items-center whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold tabular-nums", CHIP3[estado.tono] || CHIP3.mute, className), title: estado.titulo, children: contenido });
   }
-  return /* @__PURE__ */ jsx54("span", { className: cn("whitespace-nowrap text-xs font-medium tabular-nums", CLASES2[estado.tono] || CLASES2.mute, className), title: estado.titulo, children: contenido });
+  return /* @__PURE__ */ jsx55("span", { className: cn("whitespace-nowrap text-xs font-medium tabular-nums", CLASES2[estado.tono] || CLASES2.mute, className), title: estado.titulo, children: contenido });
 }
 
 // src/components/TileRol.jsx
-import { Fragment as Fragment4, jsx as jsx55, jsxs as jsxs44 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx56, jsxs as jsxs45 } from "react/jsx-runtime";
 function TileRol({ titulo: titulo2, descripcion, cantidad, total, dominios = [], onAbrir, className }) {
-  const contenido = /* @__PURE__ */ jsxs44(Fragment4, { children: [
-    /* @__PURE__ */ jsxs44("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs44("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx55("b", { className: "block truncate text-sm", children: titulo2 }),
-        descripcion ? /* @__PURE__ */ jsx55("p", { className: "mt-0.5 text-[11px] leading-4 text-mute", children: descripcion }) : null
+  const contenido = /* @__PURE__ */ jsxs45(Fragment4, { children: [
+    /* @__PURE__ */ jsxs45("div", { className: "flex items-start justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs45("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsx56("b", { className: "block truncate text-sm", children: titulo2 }),
+        descripcion ? /* @__PURE__ */ jsx56("p", { className: "mt-0.5 text-[11px] leading-4 text-mute", children: descripcion }) : null
       ] }),
-      Number.isFinite(Number(total)) && Number(total) > 0 ? /* @__PURE__ */ jsxs44("span", { className: "v2-numero shrink-0 text-2xl font-bold tabular-nums", children: [
+      Number.isFinite(Number(total)) && Number(total) > 0 ? /* @__PURE__ */ jsxs45("span", { className: "v2-numero shrink-0 text-2xl font-bold tabular-nums", children: [
         Number(cantidad) || 0,
-        /* @__PURE__ */ jsxs44("span", { className: "text-sm font-semibold text-mute", children: [
+        /* @__PURE__ */ jsxs45("span", { className: "text-sm font-semibold text-mute", children: [
           "/",
           Number(total)
         ] })
       ] }) : null
     ] }),
-    dominios.length > 0 && /* @__PURE__ */ jsx55("div", { className: "mt-2 flex flex-wrap gap-1", children: dominios.map((dominio, indice) => /* @__PURE__ */ jsx55(Badge, { color: dominio.activo ? "green" : "slate", children: dominio.etiqueta }, dominio.id ?? `${dominio.etiqueta}-${indice}`)) })
+    dominios.length > 0 && /* @__PURE__ */ jsx56("div", { className: "mt-2 flex flex-wrap gap-1", children: dominios.map((dominio, indice) => /* @__PURE__ */ jsx56(Badge, { color: dominio.activo ? "green" : "slate", children: dominio.etiqueta }, dominio.id ?? `${dominio.etiqueta}-${indice}`)) })
   ] });
   const clases = "block w-full rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left";
-  if (!onAbrir) return /* @__PURE__ */ jsx55("div", { className: cn(clases, className), children: contenido });
-  return /* @__PURE__ */ jsx55("button", { type: "button", onClick: onAbrir, className: cn(clases, "transition hover:border-fono/60", className), children: contenido });
+  if (!onAbrir) return /* @__PURE__ */ jsx56("div", { className: cn(clases, className), children: contenido });
+  return /* @__PURE__ */ jsx56("button", { type: "button", onClick: onAbrir, className: cn(clases, "transition hover:border-fono/60", className), children: contenido });
 }
 
 // src/components/Stepper.jsx
-import { jsx as jsx56, jsxs as jsxs45 } from "react/jsx-runtime";
+import { jsx as jsx57, jsxs as jsxs46 } from "react/jsx-runtime";
 function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", ariaLabel = "Flujo", className }) {
   if (!pasos.length) return null;
   const etiquetaDe = (paso) => typeof paso === "string" ? paso : paso.etiqueta ?? paso.label ?? "";
@@ -4119,11 +4442,11 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
   const esHecho = (paso, indice) => hechos.includes(claveDe(paso, indice)) || typeof actual === "number" && indice < actual;
   const esActual = (paso, indice) => typeof paso === "string" || paso.id === void 0 ? indice === actual : paso.id === actual;
   if (variante === "tarjetas") {
-    return /* @__PURE__ */ jsx56("ol", { className: cn("grid grid-cols-2 gap-2 sm:grid-flow-col sm:auto-cols-fr", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
+    return /* @__PURE__ */ jsx57("ol", { className: cn("grid grid-cols-2 gap-2 sm:grid-flow-col sm:auto-cols-fr", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
       const hecho = esHecho(paso, indice);
       const activo = !hecho && esActual(paso, indice);
-      return /* @__PURE__ */ jsxs45("li", { className: cn("flex items-center gap-2.5 rounded-xl border p-2.5", activo ? "border-info/40 bg-info/5" : "border-ink-600"), children: [
-        /* @__PURE__ */ jsx56(
+      return /* @__PURE__ */ jsxs46("li", { className: cn("flex items-center gap-2.5 rounded-xl border p-2.5", activo ? "border-info/40 bg-info/5" : "border-ink-600"), children: [
+        /* @__PURE__ */ jsx57(
           "span",
           {
             className: cn(
@@ -4131,21 +4454,21 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
               activo ? "oc-paso-activo bg-info/15 text-info" : hecho ? "bg-ok/15 text-ok" : "bg-ink-700 text-mute"
             ),
             "aria-hidden": "true",
-            children: hecho ? /* @__PURE__ */ jsx56(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+            children: hecho ? /* @__PURE__ */ jsx57(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
           }
         ),
-        /* @__PURE__ */ jsxs45("span", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsx56("span", { className: "block truncate text-xs font-semibold", children: etiquetaDe(paso) }),
-          typeof paso === "object" && paso.detalle ? /* @__PURE__ */ jsx56("span", { className: cn("block truncate text-[11px]", activo ? "text-info" : "text-mute"), children: paso.detalle }) : null
+        /* @__PURE__ */ jsxs46("span", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsx57("span", { className: "block truncate text-xs font-semibold", children: etiquetaDe(paso) }),
+          typeof paso === "object" && paso.detalle ? /* @__PURE__ */ jsx57("span", { className: cn("block truncate text-[11px]", activo ? "text-info" : "text-mute"), children: paso.detalle }) : null
         ] })
       ] }, claveDe(paso, indice));
     }) });
   }
-  return /* @__PURE__ */ jsx56("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
+  return /* @__PURE__ */ jsx57("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
     const hecho = esHecho(paso, indice);
     const enCurso = esActual(paso, indice);
-    return /* @__PURE__ */ jsxs45("li", { className: "flex items-center gap-2", children: [
-      /* @__PURE__ */ jsx56(
+    return /* @__PURE__ */ jsxs46("li", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsx57(
         "span",
         {
           className: cn(
@@ -4155,23 +4478,23 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
             !hecho && !enCurso && "border-ink-600 bg-ink-800 text-mute"
           ),
           "aria-hidden": "true",
-          children: hecho ? /* @__PURE__ */ jsx56(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+          children: hecho ? /* @__PURE__ */ jsx57(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
         }
       ),
-      /* @__PURE__ */ jsxs45("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
+      /* @__PURE__ */ jsxs46("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
         etiquetaDe(paso),
-        typeof paso === "object" && paso.detalle && /* @__PURE__ */ jsxs45("span", { className: "ml-1 font-normal text-mute", children: [
+        typeof paso === "object" && paso.detalle && /* @__PURE__ */ jsxs46("span", { className: "ml-1 font-normal text-mute", children: [
           "\xB7 ",
           paso.detalle
         ] })
       ] }),
-      indice < pasos.length - 1 && /* @__PURE__ */ jsx56("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
+      indice < pasos.length - 1 && /* @__PURE__ */ jsx57("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
     ] }, claveDe(paso, indice));
   }) });
 }
 
 // src/components/CodigoQr.jsx
-import { useEffect as useEffect6, useState as useState16 } from "react";
+import { useEffect as useEffect7, useState as useState17 } from "react";
 
 // src/utils/qr.js
 var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
@@ -4187,10 +4510,10 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 }
 
 // src/components/CodigoQr.jsx
-import { jsx as jsx57 } from "react/jsx-runtime";
+import { jsx as jsx58 } from "react/jsx-runtime";
 function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
-  const [imagen, setImagen] = useState16("");
-  useEffect6(() => {
+  const [imagen, setImagen] = useState17("");
+  useEffect7(() => {
     let activo = true;
     qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
       if (activo) setImagen(data);
@@ -4200,11 +4523,11 @@ function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3dig
     };
   }, [valor, ancho, nivel, margen]);
   if (!imagen) return null;
-  return /* @__PURE__ */ jsx57("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
+  return /* @__PURE__ */ jsx58("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
 }
 
 // src/components/FichaCertificado.jsx
-import { jsx as jsx58, jsxs as jsxs46 } from "react/jsx-runtime";
+import { jsx as jsx59, jsxs as jsxs47 } from "react/jsx-runtime";
 function FichaCertificado({
   empresa,
   modelo,
@@ -4229,25 +4552,25 @@ function FichaCertificado({
 }) {
   const hayChecklist = Number(total) > 0;
   const completo = hayChecklist && Number(aprobados) === Number(total);
-  return /* @__PURE__ */ jsxs46("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
-    /* @__PURE__ */ jsxs46("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
-      /* @__PURE__ */ jsxs46("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx58("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
-        /* @__PURE__ */ jsx58("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
+  return /* @__PURE__ */ jsxs47("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
+    /* @__PURE__ */ jsxs47("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
+      /* @__PURE__ */ jsxs47("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsx59("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
+        /* @__PURE__ */ jsx59("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
       ] }),
-      /* @__PURE__ */ jsx58(ChipEstado, { estado })
+      /* @__PURE__ */ jsx59(ChipEstado, { estado })
     ] }),
-    /* @__PURE__ */ jsxs46("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
-      /* @__PURE__ */ jsxs46("div", { className: "min-w-0 space-y-3", children: [
-        /* @__PURE__ */ jsxs46("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
-          /* @__PURE__ */ jsx58(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
-          /* @__PURE__ */ jsx58(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx58(GradoBadge, { grado }) : "Sin grado asignado" }),
-          /* @__PURE__ */ jsx58(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx58(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
-          /* @__PURE__ */ jsx58(
+    /* @__PURE__ */ jsxs47("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
+      /* @__PURE__ */ jsxs47("div", { className: "min-w-0 space-y-3", children: [
+        /* @__PURE__ */ jsxs47("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
+          /* @__PURE__ */ jsx59(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
+          /* @__PURE__ */ jsx59(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx59(GradoBadge, { grado }) : "Sin grado asignado" }),
+          /* @__PURE__ */ jsx59(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx59(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
+          /* @__PURE__ */ jsx59(
             FilaDato,
             {
               etiqueta: "Checklist",
-              valor: hayChecklist ? /* @__PURE__ */ jsxs46("span", { className: completo ? "text-pass" : "text-mute", children: [
+              valor: hayChecklist ? /* @__PURE__ */ jsxs47("span", { className: completo ? "text-pass" : "text-mute", children: [
                 aprobados,
                 " de ",
                 total,
@@ -4255,31 +4578,31 @@ function FichaCertificado({
               ] }) : "Sin verificaci\xF3n f\xEDsica"
             }
           ),
-          puntaje !== null && puntaje !== void 0 && puntaje !== "" && /* @__PURE__ */ jsx58(FilaDato, { etiqueta: "Puntaje", valor: /* @__PURE__ */ jsx58("span", { className: "tabular-nums", children: Number.isFinite(Number(puntaje)) ? `${Number(puntaje)}%` : puntaje }) }),
-          condicion ? /* @__PURE__ */ jsx58(FilaDato, { etiqueta: "Condici\xF3n", valor: condicion }) : null
+          puntaje !== null && puntaje !== void 0 && puntaje !== "" && /* @__PURE__ */ jsx59(FilaDato, { etiqueta: "Puntaje", valor: /* @__PURE__ */ jsx59("span", { className: "tabular-nums", children: Number.isFinite(Number(puntaje)) ? `${Number(puntaje)}%` : puntaje }) }),
+          condicion ? /* @__PURE__ */ jsx59(FilaDato, { etiqueta: "Condici\xF3n", valor: condicion }) : null
         ] }),
-        locks.length ? /* @__PURE__ */ jsx58(ChipsLocks, { locks, conEstado: true }) : null,
-        repuestosNoOem ? /* @__PURE__ */ jsxs46("div", { className: "rounded-xl border border-warn/25 bg-warn/5 p-3 text-sm", children: [
-          /* @__PURE__ */ jsx58("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: "Repuestos no OEM" }),
-          /* @__PURE__ */ jsx58("p", { className: "mt-0.5 break-words", children: repuestosNoOem }),
-          repuestosNoOemNota ? /* @__PURE__ */ jsx58("p", { className: "mt-0.5 text-xs text-mute", children: repuestosNoOemNota }) : null
+        locks.length ? /* @__PURE__ */ jsx59(ChipsLocks, { locks, conEstado: true }) : null,
+        repuestosNoOem ? /* @__PURE__ */ jsxs47("div", { className: "rounded-xl border border-warn/25 bg-warn/5 p-3 text-sm", children: [
+          /* @__PURE__ */ jsx59("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: "Repuestos no OEM" }),
+          /* @__PURE__ */ jsx59("p", { className: "mt-0.5 break-words", children: repuestosNoOem }),
+          repuestosNoOemNota ? /* @__PURE__ */ jsx59("p", { className: "mt-0.5 text-xs text-mute", children: repuestosNoOemNota }) : null
         ] }) : null,
-        /* @__PURE__ */ jsxs46("p", { className: "text-xs text-mute", children: [
+        /* @__PURE__ */ jsxs47("p", { className: "text-xs text-mute", children: [
           verificadoPor ? `Verificado por ${verificadoPor}` : "Verificaci\xF3n pendiente",
           verificadoAt ? ` \xB7 ${verificadoAt}` : ""
         ] })
       ] }),
-      enlace ? /* @__PURE__ */ jsxs46("div", { className: "flex flex-col items-center gap-2", children: [
-        /* @__PURE__ */ jsx58(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
-        /* @__PURE__ */ jsx58("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
+      enlace ? /* @__PURE__ */ jsxs47("div", { className: "flex flex-col items-center gap-2", children: [
+        /* @__PURE__ */ jsx59(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
+        /* @__PURE__ */ jsx59("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
       ] }) : null
     ] }),
-    acciones ? /* @__PURE__ */ jsx58("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
+    acciones ? /* @__PURE__ */ jsx59("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
   ] });
 }
 
 // src/components/VistaPreviaPapel.jsx
-import { jsx as jsx59 } from "react/jsx-runtime";
+import { jsx as jsx60 } from "react/jsx-runtime";
 var ANCHOS_PAPEL = {
   "thermal-80": "max-w-[302px]",
   "thermal-58": "max-w-[219px]",
@@ -4289,7 +4612,7 @@ var ANCHOS_PAPEL = {
 };
 function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 = "Vista previa del documento", alto = "h-[60vh]", className, ...props }) {
   const ancho = ANCHOS_PAPEL[formato];
-  return /* @__PURE__ */ jsx59(
+  return /* @__PURE__ */ jsx60(
     "iframe",
     {
       title: titulo2,
@@ -4301,7 +4624,7 @@ function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 =
 }
 
 // src/components/Calendario.jsx
-import { useMemo as useMemo5, useState as useState17 } from "react";
+import { useMemo as useMemo6, useState as useState18 } from "react";
 
 // src/utils/calendario.js
 var ES_PY2 = "es-PY";
@@ -4408,7 +4731,7 @@ function claveUTC(fecha) {
 }
 
 // src/components/Calendario.jsx
-import { Fragment as Fragment5, jsx as jsx60, jsxs as jsxs47 } from "react/jsx-runtime";
+import { Fragment as Fragment5, jsx as jsx61, jsxs as jsxs48 } from "react/jsx-runtime";
 var TONO_ITEM = { info: TONOS.chip.info, ok: TONOS.chip.ok, warn: TONOS.chip.warn, bad: TONOS.chip.bad };
 function ItemCalendario({ item, contexto, onElegir }) {
   const tono = TONO_ITEM[item.tono] || TONOS.chip.mute;
@@ -4418,28 +4741,28 @@ function ItemCalendario({ item, contexto, onElegir }) {
     contexto.vista === "lista" ? "px-2.5 py-1.5 text-xs" : "px-1.5 py-0.5 text-[11px]",
     tono
   );
-  const contenido = /* @__PURE__ */ jsxs47(Fragment5, { children: [
-    item.hora && /* @__PURE__ */ jsx60("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
-    /* @__PURE__ */ jsxs47("span", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx60("span", { className: "block truncate font-medium", children: item.titulo }),
-      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx60("span", { className: "block truncate opacity-80", children: item.detalle })
+  const contenido = /* @__PURE__ */ jsxs48(Fragment5, { children: [
+    item.hora && /* @__PURE__ */ jsx61("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
+    /* @__PURE__ */ jsxs48("span", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx61("span", { className: "block truncate font-medium", children: item.titulo }),
+      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx61("span", { className: "block truncate opacity-80", children: item.detalle })
     ] })
   ] });
   const etiqueta = [titulo2, item.detalle].filter(Boolean).join(" \u2014 ");
-  return item.href ? /* @__PURE__ */ jsx60("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx60("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
+  return item.href ? /* @__PURE__ */ jsx61("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx61("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
 }
 function ListaDias({ dias, porDia, hoy, onElegir, renderItem, soloConItems }) {
   const visibles = soloConItems ? dias.filter((dia) => (porDia.get(dia)?.length ?? 0) > 0 || dia === hoy) : dias;
-  if (!visibles.length) return /* @__PURE__ */ jsx60(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
-  return /* @__PURE__ */ jsx60("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
+  if (!visibles.length) return /* @__PURE__ */ jsx61(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
+  return /* @__PURE__ */ jsx61("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
     const delDia = porDia.get(dia) || [];
-    return /* @__PURE__ */ jsxs47("section", { className: "py-2", children: [
-      /* @__PURE__ */ jsxs47("header", { className: "flex items-center justify-between gap-2 px-1", children: [
-        /* @__PURE__ */ jsx60("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
-        dia === hoy && /* @__PURE__ */ jsx60("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
+    return /* @__PURE__ */ jsxs48("section", { className: "py-2", children: [
+      /* @__PURE__ */ jsxs48("header", { className: "flex items-center justify-between gap-2 px-1", children: [
+        /* @__PURE__ */ jsx61("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
+        dia === hoy && /* @__PURE__ */ jsx61("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
       ] }),
-      /* @__PURE__ */ jsx60("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx60("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx60("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx60(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
+      /* @__PURE__ */ jsx61("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx61("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
+        (item, indice) => renderItem ? /* @__PURE__ */ jsx61("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx61(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
       ) })
     ] }, dia);
   }) });
@@ -4465,19 +4788,19 @@ function Calendario({
   ariaLabel = "Calendario",
   className
 }) {
-  const claveHoy = useMemo5(() => hoyClave(hoy), [hoy]);
-  const [vistaInterna, setVistaInterna] = useState17(vistaPorDefecto);
-  const [anclaInterna, setAnclaInterna] = useState17(() => anclaPorDefecto || ancla || claveHoy);
-  const [seleccionInterna, setSeleccionInterna] = useState17(null);
+  const claveHoy = useMemo6(() => hoyClave(hoy), [hoy]);
+  const [vistaInterna, setVistaInterna] = useState18(vistaPorDefecto);
+  const [anclaInterna, setAnclaInterna] = useState18(() => anclaPorDefecto || ancla || claveHoy);
+  const [seleccionInterna, setSeleccionInterna] = useState18(null);
   const vistaActual = vistas.includes(vista) ? vista : vistas.includes(vistaInterna) ? vistaInterna : vistas[0] || "mes";
   const anclaActual = String(ancla || anclaInterna || claveHoy).slice(0, 10);
   const seleccion = diaSeleccionado !== void 0 ? diaSeleccionado : seleccionInterna;
-  const rango = useMemo5(
+  const rango = useMemo6(
     () => vistaActual === "semana" ? rangoSemana(anclaActual) : rangoMes(anclaActual),
     [vistaActual, anclaActual]
   );
-  const porDia = useMemo5(() => agruparPorDia(items), [items]);
-  const totalEnRango = useMemo5(
+  const porDia = useMemo6(() => agruparPorDia(items), [items]);
+  const totalEnRango = useMemo6(
     () => rango.dias.reduce((suma, dia) => suma + (porDia.get(dia)?.length ?? 0), 0),
     [rango, porDia]
   );
@@ -4503,10 +4826,10 @@ function Calendario({
     if (diaSeleccionado === void 0) setSeleccionInterna(dia);
     onSeleccionarDia?.(dia);
   }
-  return /* @__PURE__ */ jsxs47("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
-    /* @__PURE__ */ jsxs47("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs47("div", { className: "flex items-center gap-1.5", children: [
-        /* @__PURE__ */ jsx60(
+  return /* @__PURE__ */ jsxs48("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
+    /* @__PURE__ */ jsxs48("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs48("div", { className: "flex items-center gap-1.5", children: [
+        /* @__PURE__ */ jsx61(
           "button",
           {
             type: "button",
@@ -4514,11 +4837,11 @@ function Calendario({
             "aria-label": vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
             title: vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
             className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx60(Icon, { name: "back", className: "h-4 w-4" })
+            children: /* @__PURE__ */ jsx61(Icon, { name: "back", className: "h-4 w-4" })
           }
         ),
-        /* @__PURE__ */ jsx60(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
-        /* @__PURE__ */ jsx60(
+        /* @__PURE__ */ jsx61(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
+        /* @__PURE__ */ jsx61(
           "button",
           {
             type: "button",
@@ -4526,12 +4849,12 @@ function Calendario({
             "aria-label": vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
             title: vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
             className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx60(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
+            children: /* @__PURE__ */ jsx61(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
           }
         )
       ] }),
-      /* @__PURE__ */ jsx60("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
-      vistas.length > 1 && /* @__PURE__ */ jsx60(
+      /* @__PURE__ */ jsx61("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
+      vistas.length > 1 && /* @__PURE__ */ jsx61(
         SegmentedField,
         {
           value: vistaActual,
@@ -4544,15 +4867,15 @@ function Calendario({
         }
       )
     ] }),
-    cargando ? /* @__PURE__ */ jsx60("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx60(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs47(Fragment5, { children: [
-      /* @__PURE__ */ jsxs47("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
-        /* @__PURE__ */ jsx60("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx60("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
-        /* @__PURE__ */ jsx60("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
+    cargando ? /* @__PURE__ */ jsx61("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx61(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs48(Fragment5, { children: [
+      /* @__PURE__ */ jsxs48("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
+        /* @__PURE__ */ jsx61("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx61("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
+        /* @__PURE__ */ jsx61("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
           const delDia = porDia.get(dia) || [];
           const ocultos = delDia.length - maxPorDia;
           const esHoy = dia === claveHoy;
           const esSeleccionado = dia === seleccion;
-          return /* @__PURE__ */ jsxs47(
+          return /* @__PURE__ */ jsxs48(
             "div",
             {
               "data-fuera": mismoMes(dia, anclaActual) ? void 0 : "true",
@@ -4564,7 +4887,7 @@ function Calendario({
                 esSeleccionado && "bg-fono/5"
               ),
               children: [
-                /* @__PURE__ */ jsxs47(
+                /* @__PURE__ */ jsxs48(
                   "button",
                   {
                     type: "button",
@@ -4577,15 +4900,15 @@ function Calendario({
                       esHoy ? "bg-fono/15 font-bold text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore"
                     ),
                     children: [
-                      /* @__PURE__ */ jsx60("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
-                      delDia.length > 0 && /* @__PURE__ */ jsx60("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
+                      /* @__PURE__ */ jsx61("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
+                      delDia.length > 0 && /* @__PURE__ */ jsx61("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
                     ]
                   }
                 ),
-                /* @__PURE__ */ jsx60("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
-                  (item, indice) => renderItem ? /* @__PURE__ */ jsx60("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx60(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
+                /* @__PURE__ */ jsx61("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
+                  (item, indice) => renderItem ? /* @__PURE__ */ jsx61("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx61(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
                 ) }),
-                ocultos > 0 && /* @__PURE__ */ jsxs47(
+                ocultos > 0 && /* @__PURE__ */ jsxs48(
                   "button",
                   {
                     type: "button",
@@ -4605,7 +4928,7 @@ function Calendario({
           );
         }) })
       ] }),
-      /* @__PURE__ */ jsx60("div", { className: "md:hidden", children: /* @__PURE__ */ jsx60(
+      /* @__PURE__ */ jsx61("div", { className: "md:hidden", children: /* @__PURE__ */ jsx61(
         ListaDias,
         {
           dias: rango.dias,
@@ -4617,28 +4940,28 @@ function Calendario({
         }
       ) })
     ] }),
-    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx60(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
-    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs47("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
-      /* @__PURE__ */ jsxs47("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-        /* @__PURE__ */ jsx60("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
-        /* @__PURE__ */ jsxs47("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxs47("span", { className: "text-xs tabular-nums text-mute", children: [
+    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx61(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
+    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs48("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
+      /* @__PURE__ */ jsxs48("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+        /* @__PURE__ */ jsx61("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
+        /* @__PURE__ */ jsxs48("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxs48("span", { className: "text-xs tabular-nums text-mute", children: [
             delSeleccionado.length,
             " ",
             delSeleccionado.length === 1 ? "movimiento" : "movimientos"
           ] }),
-          /* @__PURE__ */ jsx60(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
+          /* @__PURE__ */ jsx61(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
         ] })
       ] }),
-      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx60(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx60("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx60("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx60(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
+      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx61(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx61("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
+        (item, indice) => renderItem ? /* @__PURE__ */ jsx61("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx61(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
       ) })
     ] })
   ] });
 }
 
 // src/components/RangoFecha.jsx
-import { useId as useId6, useRef as useRef7, useState as useState18 } from "react";
+import { useId as useId7, useRef as useRef8, useState as useState19 } from "react";
 
 // src/utils/rangoFecha.js
 var PERIODOS_FECHA = ["hoy", "esta-semana", "este-mes", "mes-pasado", "ultimos-30", "personalizado"];
@@ -4689,7 +5012,7 @@ function rangoInvertido(desde, hasta) {
 }
 
 // src/components/RangoFecha.jsx
-import { jsx as jsx61, jsxs as jsxs48 } from "react/jsx-runtime";
+import { jsx as jsx62, jsxs as jsxs49 } from "react/jsx-runtime";
 function RangoFecha({
   desde,
   hasta,
@@ -4704,15 +5027,15 @@ function RangoFecha({
   className
 }) {
   const controlado = desde !== void 0 || hasta !== void 0;
-  const [interno, setInterno] = useState18(() => {
+  const [interno, setInterno] = useState19(() => {
     if (desdePorDefecto !== void 0 || hastaPorDefecto !== void 0) {
       return { desde: desdePorDefecto || "", hasta: hastaPorDefecto || "" };
     }
     return rangoDePeriodo(periodoPorDefecto, { hoy }) || { desde: "", hasta: "" };
   });
-  const idDesde = useId6();
-  const idHasta = useId6();
-  const refDesde = useRef7(null);
+  const idDesde = useId7();
+  const idHasta = useId7();
+  const refDesde = useRef8(null);
   const actual = controlado ? { desde: desde ?? "", hasta: hasta ?? "" } : interno;
   const activo = periodoDeRango(actual.desde, actual.hasta, { hoy });
   const invertido = rangoInvertido(actual.desde, actual.hasta);
@@ -4721,10 +5044,10 @@ function RangoFecha({
     if (!controlado) setInterno(par);
     onCambio?.(par.desde, par.hasta);
   }
-  return /* @__PURE__ */ jsxs48("div", { className: cn("space-y-2", className), children: [
-    /* @__PURE__ */ jsx61("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
+  return /* @__PURE__ */ jsxs49("div", { className: cn("space-y-2", className), children: [
+    /* @__PURE__ */ jsx62("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
       const esActivo = activo === periodo;
-      return /* @__PURE__ */ jsx61(
+      return /* @__PURE__ */ jsx62(
         "button",
         {
           type: "button",
@@ -4743,10 +5066,10 @@ function RangoFecha({
         periodo
       );
     }) }),
-    mostrarCampos && /* @__PURE__ */ jsxs48("div", { className: "flex flex-wrap items-end gap-2", children: [
-      /* @__PURE__ */ jsxs48("div", { children: [
-        /* @__PURE__ */ jsx61(Label, { htmlFor: idDesde, children: "Desde" }),
-        /* @__PURE__ */ jsx61(
+    mostrarCampos && /* @__PURE__ */ jsxs49("div", { className: "flex flex-wrap items-end gap-2", children: [
+      /* @__PURE__ */ jsxs49("div", { children: [
+        /* @__PURE__ */ jsx62(Label, { htmlFor: idDesde, children: "Desde" }),
+        /* @__PURE__ */ jsx62(
           Input,
           {
             id: idDesde,
@@ -4759,9 +5082,9 @@ function RangoFecha({
           }
         )
       ] }),
-      /* @__PURE__ */ jsxs48("div", { children: [
-        /* @__PURE__ */ jsx61(Label, { htmlFor: idHasta, children: "Hasta" }),
-        /* @__PURE__ */ jsx61(
+      /* @__PURE__ */ jsxs49("div", { children: [
+        /* @__PURE__ */ jsx62(Label, { htmlFor: idHasta, children: "Hasta" }),
+        /* @__PURE__ */ jsx62(
           Input,
           {
             id: idHasta,
@@ -4774,13 +5097,13 @@ function RangoFecha({
         )
       ] })
     ] }),
-    invertido && /* @__PURE__ */ jsx61(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
+    invertido && /* @__PURE__ */ jsx62(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
   ] });
 }
 
 // src/components/PaletaComandos.jsx
-import { useEffect as useEffect7, useId as useId7, useMemo as useMemo6, useRef as useRef8, useState as useState19 } from "react";
-import { Fragment as Fragment6, jsx as jsx62, jsxs as jsxs49 } from "react/jsx-runtime";
+import { useEffect as useEffect8, useId as useId8, useMemo as useMemo7, useRef as useRef9, useState as useState20 } from "react";
+import { Fragment as Fragment6, jsx as jsx63, jsxs as jsxs50 } from "react/jsx-runtime";
 var CAPITALIZAR = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
 function agruparResultados(resultados = [], { etiquetasTipo = {}, iconosTipo = {} } = {}) {
   const grupos = [];
@@ -4833,20 +5156,20 @@ function PaletaComandos({
   mostrarAtajoEnBoton = true,
   className
 }) {
-  const [interna, setInterna] = useState19(false);
-  const [consulta, setConsulta] = useState19("");
-  const [resultados, setResultados] = useState19(null);
-  const [cargando, setCargando] = useState19(false);
-  const [error, setError] = useState19("");
-  const [activo, setActivo] = useState19(0);
-  const [intento, setIntento] = useState19(0);
-  const raiz = useRef8(null);
-  const entrada = useRef8(null);
-  const buscarRef = useRef8(buscar);
+  const [interna, setInterna] = useState20(false);
+  const [consulta, setConsulta] = useState20("");
+  const [resultados, setResultados] = useState20(null);
+  const [cargando, setCargando] = useState20(false);
+  const [error, setError] = useState20("");
+  const [activo, setActivo] = useState20(0);
+  const [intento, setIntento] = useState20(0);
+  const raiz = useRef9(null);
+  const entrada = useRef9(null);
+  const buscarRef = useRef9(buscar);
   buscarRef.current = buscar;
-  const onAbrirRef = useRef8(onAbrir);
+  const onAbrirRef = useRef9(onAbrir);
   onAbrirRef.current = onAbrir;
-  const idLista = useId7();
+  const idLista = useId8();
   const controlada = abierta !== void 0;
   const visible = controlada ? Boolean(abierta) : interna;
   function abrir() {
@@ -4857,7 +5180,7 @@ function PaletaComandos({
     if (!controlada) setInterna(false);
     onCerrar?.();
   }
-  useEffect7(() => {
+  useEffect8(() => {
     if (!conAtajo) return void 0;
     const onKeyDown2 = (event) => {
       if (event.defaultPrevented || event.altKey || event.shiftKey) return;
@@ -4870,7 +5193,7 @@ function PaletaComandos({
     document.addEventListener("keydown", onKeyDown2);
     return () => document.removeEventListener("keydown", onKeyDown2);
   }, [conAtajo, atajo, controlada]);
-  useEffect7(() => {
+  useEffect8(() => {
     if (!visible) return void 0;
     setConsulta("");
     setResultados(null);
@@ -4881,7 +5204,7 @@ function PaletaComandos({
     const frame = requestAnimationFrame(() => entrada.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [visible]);
-  useEffect7(() => {
+  useEffect8(() => {
     if (!visible) return void 0;
     const termino2 = consulta.trim();
     if (termino2.length < minimo) {
@@ -4912,17 +5235,17 @@ function PaletaComandos({
   }, [visible, consulta, intento, minimo, espera, mensajeError]);
   const termino = consulta.trim();
   const listo = termino.length >= minimo;
-  const grupos = useMemo6(
+  const grupos = useMemo7(
     () => agruparResultados(resultados || [], { etiquetasTipo, iconosTipo }),
     [resultados, etiquetasTipo, iconosTipo]
   );
-  const planos = useMemo6(() => grupos.flatMap((grupo) => grupo.items), [grupos]);
+  const planos = useMemo7(() => grupos.flatMap((grupo) => grupo.items), [grupos]);
   const estado = estadoPaleta({ listo, cargando, error, total: planos.length });
-  const indice = useMemo6(() => new Map(planos.map((item, posicion) => [item, posicion])), [planos]);
-  useEffect7(() => {
+  const indice = useMemo7(() => new Map(planos.map((item, posicion) => [item, posicion])), [planos]);
+  useEffect8(() => {
     setActivo(0);
   }, [resultados]);
-  useEffect7(() => {
+  useEffect8(() => {
     if (!visible) return;
     raiz.current?.querySelector(`[data-paleta-index="${activo}"]`)?.scrollIntoView?.({ block: "nearest" });
   }, [activo, visible, planos.length]);
@@ -4961,8 +5284,8 @@ function PaletaComandos({
     }
   }
   const textoContinuar = textoSeguir || `Segu\xED escribiendo: buscamos desde ${minimo} caracteres.`;
-  return /* @__PURE__ */ jsxs49(Fragment6, { children: [
-    boton && /* @__PURE__ */ jsxs49(
+  return /* @__PURE__ */ jsxs50(Fragment6, { children: [
+    boton && /* @__PURE__ */ jsxs50(
       "button",
       {
         type: "button",
@@ -4972,19 +5295,19 @@ function PaletaComandos({
         title: `${titulo2} \xB7 ${atajoTexto}`,
         className: "inline-flex h-9 items-center gap-2 rounded-lg border border-ink-500 px-3 text-sm text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx62(Icon, { name: "search", className: "h-4 w-4" }),
-          /* @__PURE__ */ jsx62("span", { className: "hidden sm:inline", children: textoBoton }),
-          mostrarAtajoEnBoton && /* @__PURE__ */ jsx62("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
+          /* @__PURE__ */ jsx63(Icon, { name: "search", className: "h-4 w-4" }),
+          /* @__PURE__ */ jsx63("span", { className: "hidden sm:inline", children: textoBoton }),
+          mostrarAtajoEnBoton && /* @__PURE__ */ jsx63("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
         ]
       }
     ),
-    visible && /* @__PURE__ */ jsx62(
+    visible && /* @__PURE__ */ jsx63(
       "div",
       {
         className: "fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-3 sm:p-6",
         onMouseDown: (event) => event.target === event.currentTarget && cerrar(),
         onKeyDown,
-        children: /* @__PURE__ */ jsxs49(
+        children: /* @__PURE__ */ jsxs50(
           "div",
           {
             ref: raiz,
@@ -4993,7 +5316,7 @@ function PaletaComandos({
             "aria-label": titulo2,
             className: cn("mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink-800 shadow-2xl", className),
             children: [
-              /* @__PURE__ */ jsx62("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx62(
+              /* @__PURE__ */ jsx63("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx63(
                 SearchField_default,
                 {
                   ref: entrada,
@@ -5008,18 +5331,18 @@ function PaletaComandos({
                   autoComplete: "off"
                 }
               ) }),
-              /* @__PURE__ */ jsxs49("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
-                estado === "seguir" && /* @__PURE__ */ jsx62("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
-                estado === "error" && /* @__PURE__ */ jsxs49("div", { className: "space-y-2 p-2", children: [
-                  /* @__PURE__ */ jsx62(Aviso, { tono: "error", compact: true, children: error }),
-                  /* @__PURE__ */ jsx62(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
+              /* @__PURE__ */ jsxs50("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
+                estado === "seguir" && /* @__PURE__ */ jsx63("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
+                estado === "error" && /* @__PURE__ */ jsxs50("div", { className: "space-y-2 p-2", children: [
+                  /* @__PURE__ */ jsx63(Aviso, { tono: "error", compact: true, children: error }),
+                  /* @__PURE__ */ jsx63(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
                 ] }),
-                estado === "cargando" && /* @__PURE__ */ jsxs49("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
-                  /* @__PURE__ */ jsx62(Skeleton, { className: "h-4 w-1/3" }),
-                  /* @__PURE__ */ jsx62(Skeleton, { className: "h-9 w-full" }),
-                  /* @__PURE__ */ jsx62(Skeleton, { className: "h-9 w-full" })
+                estado === "cargando" && /* @__PURE__ */ jsxs50("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
+                  /* @__PURE__ */ jsx63(Skeleton, { className: "h-4 w-1/3" }),
+                  /* @__PURE__ */ jsx63(Skeleton, { className: "h-9 w-full" }),
+                  /* @__PURE__ */ jsx63(Skeleton, { className: "h-9 w-full" })
                 ] }),
-                estado === "vacio" && /* @__PURE__ */ jsx62(
+                estado === "vacio" && /* @__PURE__ */ jsx63(
                   EmptyState,
                   {
                     compact: true,
@@ -5028,12 +5351,12 @@ function PaletaComandos({
                     description: `No encontramos nada para \xAB${termino}\xBB. Prob\xE1 con otro nombre o n\xFAmero.`
                   }
                 ),
-                estado === "listo" && /* @__PURE__ */ jsx62("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs49("section", { role: "group", "aria-label": grupo.etiqueta, children: [
-                  /* @__PURE__ */ jsx62("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+                estado === "listo" && /* @__PURE__ */ jsx63("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs50("section", { role: "group", "aria-label": grupo.etiqueta, children: [
+                  /* @__PURE__ */ jsx63("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
                   grupo.items.map((item) => {
                     const posicion = indice.get(item) ?? 0;
                     const esActivo = posicion === activo;
-                    return /* @__PURE__ */ jsxs49(
+                    return /* @__PURE__ */ jsxs50(
                       "button",
                       {
                         type: "button",
@@ -5048,12 +5371,12 @@ function PaletaComandos({
                           esActivo ? "bg-fono/10 text-fore" : "text-mute hover:bg-ink-700/60 hover:text-fore"
                         ),
                         children: [
-                          /* @__PURE__ */ jsx62(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
-                          /* @__PURE__ */ jsxs49("span", { className: "min-w-0 flex-1", children: [
-                            /* @__PURE__ */ jsx62("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
-                            item.detalle && /* @__PURE__ */ jsx62("span", { className: "block truncate text-xs text-mute", children: item.detalle })
+                          /* @__PURE__ */ jsx63(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
+                          /* @__PURE__ */ jsxs50("span", { className: "min-w-0 flex-1", children: [
+                            /* @__PURE__ */ jsx63("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
+                            item.detalle && /* @__PURE__ */ jsx63("span", { className: "block truncate text-xs text-mute", children: item.detalle })
                           ] }),
-                          /* @__PURE__ */ jsx62(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
+                          /* @__PURE__ */ jsx63(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
                         ]
                       },
                       item.id ?? `${grupo.tipo}-${posicion}`
@@ -5061,19 +5384,19 @@ function PaletaComandos({
                   })
                 ] }, grupo.tipo)) })
               ] }),
-              /* @__PURE__ */ jsxs49("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
-                /* @__PURE__ */ jsxs49("span", { children: [
-                  /* @__PURE__ */ jsx62("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
+              /* @__PURE__ */ jsxs50("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
+                /* @__PURE__ */ jsxs50("span", { children: [
+                  /* @__PURE__ */ jsx63("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
                   " ",
-                  /* @__PURE__ */ jsx62("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
+                  /* @__PURE__ */ jsx63("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
                   " moverse"
                 ] }),
-                /* @__PURE__ */ jsxs49("span", { children: [
-                  /* @__PURE__ */ jsx62("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
+                /* @__PURE__ */ jsxs50("span", { children: [
+                  /* @__PURE__ */ jsx63("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
                   " abrir"
                 ] }),
-                /* @__PURE__ */ jsxs49("span", { children: [
-                  /* @__PURE__ */ jsx62("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
+                /* @__PURE__ */ jsxs50("span", { children: [
+                  /* @__PURE__ */ jsx63("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
                   " cerrar"
                 ] })
               ] })
@@ -5086,8 +5409,8 @@ function PaletaComandos({
 }
 
 // src/components/AyudaModulo.jsx
-import { useState as useState20 } from "react";
-import { jsx as jsx63, jsxs as jsxs50 } from "react/jsx-runtime";
+import { useState as useState21 } from "react";
+import { jsx as jsx64, jsxs as jsxs51 } from "react/jsx-runtime";
 function AyudaModulo({
   titulo: titulo2,
   resumen,
@@ -5100,7 +5423,7 @@ function AyudaModulo({
   onCerrar,
   className
 }) {
-  const [interna, setInterna] = useState20(false);
+  const [interna, setInterna] = useState21(false);
   if (!titulo2 && !resumen) return null;
   const controlada = abierta !== void 0;
   const visible = controlada ? Boolean(abierta) : interna;
@@ -5113,8 +5436,8 @@ function AyudaModulo({
     onCerrar?.();
   };
   const encabezado = tituloDialogo || `${etiquetaBoton} \xB7 ${titulo2 || "Ayuda"}`;
-  return /* @__PURE__ */ jsxs50("div", { className: cn("inline-flex", className), children: [
-    /* @__PURE__ */ jsx63(
+  return /* @__PURE__ */ jsxs51("div", { className: cn("inline-flex", className), children: [
+    /* @__PURE__ */ jsx64(
       "button",
       {
         type: "button",
@@ -5123,16 +5446,16 @@ function AyudaModulo({
         "aria-haspopup": "dialog",
         title: encabezado,
         className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-sm font-bold text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-        children: /* @__PURE__ */ jsx63("span", { "aria-hidden": "true", children: "?" })
+        children: /* @__PURE__ */ jsx64("span", { "aria-hidden": "true", children: "?" })
       }
     ),
-    /* @__PURE__ */ jsx63(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs50("div", { className: "space-y-4", children: [
-      resumen && /* @__PURE__ */ jsx63("p", { className: "text-sm leading-6 text-mute", children: resumen }),
-      puntos.length > 0 && /* @__PURE__ */ jsx63("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs50("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
-        /* @__PURE__ */ jsx63(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
-        /* @__PURE__ */ jsx63("span", { className: "min-w-0", children: punto })
+    /* @__PURE__ */ jsx64(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs51("div", { className: "space-y-4", children: [
+      resumen && /* @__PURE__ */ jsx64("p", { className: "text-sm leading-6 text-mute", children: resumen }),
+      puntos.length > 0 && /* @__PURE__ */ jsx64("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs51("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
+        /* @__PURE__ */ jsx64(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
+        /* @__PURE__ */ jsx64("span", { className: "min-w-0", children: punto })
       ] }, punto)) }),
-      enlaces.length > 0 && /* @__PURE__ */ jsx63("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs50(
+      enlaces.length > 0 && /* @__PURE__ */ jsx64("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs51(
         "a",
         {
           href: enlace.href,
@@ -5142,19 +5465,19 @@ function AyudaModulo({
           },
           className: "flex items-center justify-between gap-2 rounded-lg border border-ink-600 px-3 py-2 text-sm font-medium text-fore transition hover:border-fono hover:bg-fono/10",
           children: [
-            /* @__PURE__ */ jsx63("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
-            /* @__PURE__ */ jsx63(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
+            /* @__PURE__ */ jsx64("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
+            /* @__PURE__ */ jsx64(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
           ]
         },
         enlace.href || enlace.etiqueta
       )) }),
-      /* @__PURE__ */ jsx63("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx63(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
+      /* @__PURE__ */ jsx64("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx64(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
     ] }) })
   ] });
 }
 
 // src/components/BarraInferior.jsx
-import { Fragment as Fragment7, jsx as jsx64, jsxs as jsxs51 } from "react/jsx-runtime";
+import { Fragment as Fragment7, jsx as jsx65, jsxs as jsxs52 } from "react/jsx-runtime";
 var ESPACIO_BARRA_INFERIOR = "pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0";
 function BarraInferior({
   items = [],
@@ -5175,7 +5498,7 @@ function BarraInferior({
     "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition",
     esActivo ? "text-fono-light" : "text-mute hover:text-fore"
   );
-  return /* @__PURE__ */ jsxs51(
+  return /* @__PURE__ */ jsxs52(
     "nav",
     {
       "aria-label": ariaLabel,
@@ -5186,16 +5509,16 @@ function BarraInferior({
       children: [
         visibles.map((item) => {
           const esActivo = item.id === activo;
-          const contenido = /* @__PURE__ */ jsxs51(Fragment7, { children: [
-            /* @__PURE__ */ jsxs51("span", { className: "relative", children: [
-              item.icono && /* @__PURE__ */ jsx64(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
-              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx64("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
+          const contenido = /* @__PURE__ */ jsxs52(Fragment7, { children: [
+            /* @__PURE__ */ jsxs52("span", { className: "relative", children: [
+              item.icono && /* @__PURE__ */ jsx65(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
+              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx65("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
             ] }),
-            /* @__PURE__ */ jsx64("span", { className: "max-w-full truncate", children: item.etiqueta })
+            /* @__PURE__ */ jsx65("span", { className: "max-w-full truncate", children: item.etiqueta })
           ] });
           const titulo2 = item.title || item.etiqueta;
           const clase = cn(claseItem(esActivo), "h-14");
-          return item.href ? /* @__PURE__ */ jsx64(
+          return item.href ? /* @__PURE__ */ jsx65(
             "a",
             {
               href: item.href,
@@ -5207,7 +5530,7 @@ function BarraInferior({
               children: contenido
             },
             item.id ?? item.href
-          ) : /* @__PURE__ */ jsx64(
+          ) : /* @__PURE__ */ jsx65(
             "button",
             {
               type: "button",
@@ -5224,7 +5547,7 @@ function BarraInferior({
             item.id ?? item.etiqueta
           );
         }),
-        onMas && /* @__PURE__ */ jsxs51(
+        onMas && /* @__PURE__ */ jsxs52(
           "button",
           {
             type: "button",
@@ -5235,8 +5558,8 @@ function BarraInferior({
             title: masEtiqueta,
             className: cn(claseItem(menuAbierto), "h-14"),
             children: [
-              /* @__PURE__ */ jsx64(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
-              /* @__PURE__ */ jsx64("span", { className: "max-w-full truncate", children: masEtiqueta })
+              /* @__PURE__ */ jsx65(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
+              /* @__PURE__ */ jsx65("span", { className: "max-w-full truncate", children: masEtiqueta })
             ]
           }
         )
@@ -5246,7 +5569,7 @@ function BarraInferior({
 }
 
 // src/components/Avatar.jsx
-import { useEffect as useEffect8, useState as useState21 } from "react";
+import { useEffect as useEffect9, useState as useState22 } from "react";
 
 // src/utils/avatar.js
 var COLORES_AVATAR = {
@@ -5286,7 +5609,7 @@ function colorDeNombre(nombre) {
 }
 
 // src/components/Avatar.jsx
-import { jsx as jsx65 } from "react/jsx-runtime";
+import { jsx as jsx66 } from "react/jsx-runtime";
 var TAMANOS_AVATAR = {
   xs: "h-5 w-5 text-[9px]",
   sm: "h-7 w-7 text-[10px]",
@@ -5306,15 +5629,15 @@ function Avatar({
   onError,
   className
 }) {
-  const [fallo, setFallo] = useState21(false);
-  useEffect8(() => {
+  const [fallo, setFallo] = useState22(false);
+  useEffect9(() => {
     setFallo(false);
   }, [src]);
   const cuadro = empresa ? "cuadrado" : forma || "redondo";
   const redondo = cuadro !== "cuadrado";
   const etiqueta = ariaLabel || title || String(nombre ?? "").trim() || "Identidad";
   const conImagen = Boolean(src) && !fallo;
-  return /* @__PURE__ */ jsx65(
+  return /* @__PURE__ */ jsx66(
     "span",
     {
       role: decorativo ? void 0 : "img",
@@ -5328,7 +5651,7 @@ function Avatar({
         TAMANOS_AVATAR[tamano] || TAMANOS_AVATAR.md,
         className
       ),
-      children: conImagen ? /* @__PURE__ */ jsx65(
+      children: conImagen ? /* @__PURE__ */ jsx66(
         "img",
         {
           src,
@@ -5341,13 +5664,13 @@ function Avatar({
           },
           className: cn("h-full w-full", redondo ? "object-cover" : "object-contain")
         }
-      ) : /* @__PURE__ */ jsx65("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
+      ) : /* @__PURE__ */ jsx66("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
     }
   );
 }
 
 // src/components/PersonaChip.jsx
-import { useEffect as useEffect9, useState as useState22 } from "react";
+import { useEffect as useEffect10, useState as useState23 } from "react";
 
 // src/utils/identidad.js
 var primerTexto = (...valores) => {
@@ -5387,7 +5710,7 @@ function resumenPresencia(personas = []) {
 }
 
 // src/components/PersonaChip.jsx
-import { jsx as jsx66, jsxs as jsxs52 } from "react/jsx-runtime";
+import { jsx as jsx67, jsxs as jsxs53 } from "react/jsx-runtime";
 function PersonaChip({
   user,
   foto,
@@ -5408,15 +5731,15 @@ function PersonaChip({
   const presencia = ESTADOS_PRESENCIA[estado] || null;
   const local = foto ?? (identidad.hasAvatar === false ? "" : identidad.fotoLocal);
   const google = picture ?? identidad.picture;
-  const [localRota, setLocalRota] = useState22(false);
-  useEffect9(() => {
+  const [localRota, setLocalRota] = useState23(false);
+  useEffect10(() => {
     setLocalRota(false);
   }, [local]);
   const src = !localRota && local ? local : google;
   const etiqueta = title || [identidad.nombre, presencia?.etiqueta, identidad.scope].filter(Boolean).join(" \xB7 ");
-  return /* @__PURE__ */ jsxs52("span", { "data-testid": "persona-chip", className: cn("inline-flex min-w-0 items-center gap-2", className), title: etiqueta, children: [
-    /* @__PURE__ */ jsxs52("span", { className: "relative inline-flex shrink-0", children: [
-      /* @__PURE__ */ jsx66(
+  return /* @__PURE__ */ jsxs53("span", { "data-testid": "persona-chip", className: cn("inline-flex min-w-0 items-center gap-2", className), title: etiqueta, children: [
+    /* @__PURE__ */ jsxs53("span", { className: "relative inline-flex shrink-0", children: [
+      /* @__PURE__ */ jsx67(
         Avatar,
         {
           nombre: identidad.nombre,
@@ -5428,15 +5751,15 @@ function PersonaChip({
           title: etiqueta
         }
       ),
-      presencia ? /* @__PURE__ */ jsx66("i", { "aria-hidden": true, className: cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-1 ring-paper", presencia.punto) }) : null
+      presencia ? /* @__PURE__ */ jsx67("i", { "aria-hidden": true, className: cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-1 ring-paper", presencia.punto) }) : null
     ] }),
-    nombre ? /* @__PURE__ */ jsx66("span", { className: cn("min-w-0", CELDA_IDENTIDAD_GRANDE, textoClassName), children: visible }) : null,
-    children ? /* @__PURE__ */ jsx66("span", { className: CELDA_DATO, children }) : null
+    nombre ? /* @__PURE__ */ jsx67("span", { className: cn("min-w-0", CELDA_IDENTIDAD_GRANDE, textoClassName), children: visible }) : null,
+    children ? /* @__PURE__ */ jsx67("span", { className: CELDA_DATO, children }) : null
   ] });
 }
 
 // src/components/PilaPersonas.jsx
-import { Fragment as Fragment8, jsx as jsx67, jsxs as jsxs53 } from "react/jsx-runtime";
+import { Fragment as Fragment8, jsx as jsx68, jsxs as jsxs54 } from "react/jsx-runtime";
 function PilaPersonas({
   personas = [],
   max = 4,
@@ -5452,12 +5775,12 @@ function PilaPersonas({
   const visibles = lista.slice(0, Math.max(0, max));
   const restantes = lista.length - visibles.length;
   const texto = title || resumenPresencia(lista);
-  const contenido = /* @__PURE__ */ jsxs53(Fragment8, { children: [
-    /* @__PURE__ */ jsxs53("span", { className: "flex -space-x-2", children: [
+  const contenido = /* @__PURE__ */ jsxs54(Fragment8, { children: [
+    /* @__PURE__ */ jsxs54("span", { className: "flex -space-x-2", children: [
       visibles.map((persona, indice) => {
         const fuente = typeof persona === "string" ? { name: persona } : persona || {};
         const identidad = identidadDeUsuario(fuente);
-        return /* @__PURE__ */ jsx67(
+        return /* @__PURE__ */ jsx68(
           PersonaChip,
           {
             user: fuente,
@@ -5472,7 +5795,7 @@ function PilaPersonas({
           fuente.id ?? `${identidad.nombre}-${indice}`
         );
       }),
-      restantes > 0 && /* @__PURE__ */ jsxs53(
+      restantes > 0 && /* @__PURE__ */ jsxs54(
         "span",
         {
           className: cn(
@@ -5487,14 +5810,14 @@ function PilaPersonas({
         }
       )
     ] }),
-    resumen && texto ? /* @__PURE__ */ jsx67("span", { className: "whitespace-nowrap text-xs font-semibold text-mute", children: texto }) : null
+    resumen && texto ? /* @__PURE__ */ jsx68("span", { className: "whitespace-nowrap text-xs font-semibold text-mute", children: texto }) : null
   ] });
   const clases = "flex items-center gap-2 rounded-full border border-fore/10 bg-ink-700/60 px-2.5 py-1";
-  return onMas ? /* @__PURE__ */ jsx67("button", { type: "button", onClick: onMas, className: cn(clases, className), "aria-label": texto || ariaLabel, title: texto, children: contenido }) : /* @__PURE__ */ jsx67("div", { role: "group", "aria-label": texto || ariaLabel, title: texto, className: cn(clases, className), children: contenido });
+  return onMas ? /* @__PURE__ */ jsx68("button", { type: "button", onClick: onMas, className: cn(clases, className), "aria-label": texto || ariaLabel, title: texto, children: contenido }) : /* @__PURE__ */ jsx68("div", { role: "group", "aria-label": texto || ariaLabel, title: texto, className: cn(clases, className), children: contenido });
 }
 
 // src/components/ImporteDelta.jsx
-import { jsx as jsx68 } from "react/jsx-runtime";
+import { jsx as jsx69 } from "react/jsx-runtime";
 function tonoDelta(valor, { invertir = false } = {}) {
   const numero = Number(valor);
   if (!Number.isFinite(numero) || numero === 0) return "mute";
@@ -5514,9 +5837,9 @@ function ImporteDelta({
 }) {
   const numero = Number(valor);
   const ausente = valor === null || valor === void 0 || valor === "" || !Number.isFinite(numero);
-  if (ausente) return /* @__PURE__ */ jsx68("span", { className: cn("tabular-nums text-mute", className), children: vacio });
+  if (ausente) return /* @__PURE__ */ jsx69("span", { className: cn("tabular-nums text-mute", className), children: vacio });
   const texto = formato === "porcentaje" ? `${signoDe(numero) ? `${signoDe(numero)} ` : ""}${formatPercent(Math.abs(numero))} %` : montoConSigno(numero, moneda, vacio, { simbolo });
-  return /* @__PURE__ */ jsx68(
+  return /* @__PURE__ */ jsx69(
     "span",
     {
       className: cn(
@@ -5530,7 +5853,7 @@ function ImporteDelta({
 }
 
 // src/components/IndicadorConexion.jsx
-import { jsx as jsx69, jsxs as jsxs54 } from "react/jsx-runtime";
+import { jsx as jsx70, jsxs as jsxs55 } from "react/jsx-runtime";
 function IndicadorConexion({
   enLinea = true,
   pendientes = 0,
@@ -5547,7 +5870,7 @@ function IndicadorConexion({
   const texto = sincronizando ? etiquetaSincronizando : enLinea ? etiquetaEnLinea : etiquetaSinConexion;
   const detalle = cuenta > 0 ? `${formatoNumero(cuenta)} ${cuenta === 1 ? "pendiente" : "pendientes"} de subir` : "";
   const titulo2 = [texto, detalle].filter(Boolean).join(" \xB7 ");
-  const boton = onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs54(
+  const boton = onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs55(
     "button",
     {
       type: "button",
@@ -5560,13 +5883,13 @@ function IndicadorConexion({
         variante === "banner" ? "border-current/40 hover:bg-fore/10" : "border-ink-500 text-mute hover:border-fono hover:text-fore"
       ),
       children: [
-        /* @__PURE__ */ jsx69(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
+        /* @__PURE__ */ jsx70(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
         "Sincronizar"
       ]
     }
   );
   if (variante === "banner") {
-    return /* @__PURE__ */ jsxs54(
+    return /* @__PURE__ */ jsxs55(
       "div",
       {
         role: "status",
@@ -5578,18 +5901,18 @@ function IndicadorConexion({
           className
         ),
         children: [
-          /* @__PURE__ */ jsx69(Icon, { name: enLinea ? "refresh" : "alert", className: "h-4 w-4 shrink-0", "aria-hidden": "true" }),
-          /* @__PURE__ */ jsxs54("span", { children: [
+          /* @__PURE__ */ jsx70(Icon, { name: enLinea ? "refresh" : "alert", className: "h-4 w-4 shrink-0", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsxs55("span", { children: [
             mensaje || texto,
             !mensaje && detalle ? ` \xB7 ${detalle}` : ""
           ] }),
-          !enLinea && !mensaje && /* @__PURE__ */ jsx69("span", { className: "hidden sm:inline", children: "Se sincroniza al reconectar." }),
+          !enLinea && !mensaje && /* @__PURE__ */ jsx70("span", { className: "hidden sm:inline", children: "Se sincroniza al reconectar." }),
           boton
         ]
       }
     );
   }
-  return /* @__PURE__ */ jsxs54(
+  return /* @__PURE__ */ jsxs55(
     "div",
     {
       role: "status",
@@ -5601,10 +5924,10 @@ function IndicadorConexion({
         className
       ),
       children: [
-        /* @__PURE__ */ jsx69(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
-        /* @__PURE__ */ jsxs54("span", { className: "min-w-0 truncate font-medium", children: [
+        /* @__PURE__ */ jsx70(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
+        /* @__PURE__ */ jsxs55("span", { className: "min-w-0 truncate font-medium", children: [
           texto,
-          detalle && /* @__PURE__ */ jsxs54("span", { className: "text-mute", children: [
+          detalle && /* @__PURE__ */ jsxs55("span", { className: "text-mute", children: [
             " \xB7 ",
             detalle
           ] })
@@ -5616,8 +5939,8 @@ function IndicadorConexion({
 }
 
 // src/components/CampanaAvisos.jsx
-import { useEffect as useEffect10, useRef as useRef9, useState as useState23 } from "react";
-import { Fragment as Fragment9, jsx as jsx70, jsxs as jsxs55 } from "react/jsx-runtime";
+import { useEffect as useEffect11, useRef as useRef10, useState as useState24 } from "react";
+import { Fragment as Fragment9, jsx as jsx71, jsxs as jsxs56 } from "react/jsx-runtime";
 function contarSinLeer(avisos = []) {
   const conEstado = avisos.filter((aviso) => aviso && typeof aviso.leido === "boolean");
   if (conEstado.length) return conEstado.filter((aviso) => !aviso.leido).length;
@@ -5639,10 +5962,10 @@ function CampanaAvisos({
   pie,
   className
 }) {
-  const [abierto, setAbierto] = useState23(false);
-  const raiz = useRef9(null);
+  const [abierto, setAbierto] = useState24(false);
+  const raiz = useRef10(null);
   const sinLeer = contarSinLeer(avisos);
-  useEffect10(() => {
+  useEffect11(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -5664,8 +5987,8 @@ function CampanaAvisos({
       return !actual;
     });
   }
-  return /* @__PURE__ */ jsxs55("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsxs55(
+  return /* @__PURE__ */ jsxs56("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsxs56(
       "button",
       {
         type: "button",
@@ -5676,12 +5999,12 @@ function CampanaAvisos({
         title: sinLeer > 0 ? `${ariaLabel} \xB7 ${sinLeer} sin leer` : ariaLabel,
         className: "relative grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx70(Icon, { name: "bell", className: "h-4 w-4" }),
-          sinLeer > 0 && /* @__PURE__ */ jsx70("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
+          /* @__PURE__ */ jsx71(Icon, { name: "bell", className: "h-4 w-4" }),
+          sinLeer > 0 && /* @__PURE__ */ jsx71("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
         ]
       }
     ),
-    abierto && /* @__PURE__ */ jsxs55(
+    abierto && /* @__PURE__ */ jsxs56(
       "div",
       {
         role: "menu",
@@ -5691,25 +6014,25 @@ function CampanaAvisos({
           anclaje === "left" ? "left-0" : "right-0"
         ),
         children: [
-          /* @__PURE__ */ jsxs55("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx70("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
-            sinLeer > 0 && /* @__PURE__ */ jsxs55("span", { className: "text-xs tabular-nums text-mute", children: [
+          /* @__PURE__ */ jsxs56("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx71("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
+            sinLeer > 0 && /* @__PURE__ */ jsxs56("span", { className: "text-xs tabular-nums text-mute", children: [
               textoContador(sinLeer),
               " sin leer"
             ] })
           ] }),
-          /* @__PURE__ */ jsx70("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx70(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
+          /* @__PURE__ */ jsx71("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx71(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
             const tono = TONOS.punto[aviso.tono] || TONOS.punto.mute;
-            const contenido = /* @__PURE__ */ jsxs55(Fragment9, { children: [
-              /* @__PURE__ */ jsx70("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx70(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
-              /* @__PURE__ */ jsxs55("span", { className: "min-w-0 flex-1", children: [
-                /* @__PURE__ */ jsx70("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
-                aviso.detalle && /* @__PURE__ */ jsx70("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
-                aviso.fecha && /* @__PURE__ */ jsx70("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
+            const contenido = /* @__PURE__ */ jsxs56(Fragment9, { children: [
+              /* @__PURE__ */ jsx71("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx71(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
+              /* @__PURE__ */ jsxs56("span", { className: "min-w-0 flex-1", children: [
+                /* @__PURE__ */ jsx71("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
+                aviso.detalle && /* @__PURE__ */ jsx71("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
+                aviso.fecha && /* @__PURE__ */ jsx71("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
               ] })
             ] });
             const clases = "flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-ink-700/60";
-            return aviso.href ? /* @__PURE__ */ jsx70(
+            return aviso.href ? /* @__PURE__ */ jsx71(
               "a",
               {
                 role: "menuitem",
@@ -5723,7 +6046,7 @@ function CampanaAvisos({
                 children: contenido
               },
               aviso.id ?? aviso.titulo
-            ) : /* @__PURE__ */ jsx70(
+            ) : /* @__PURE__ */ jsx71(
               "button",
               {
                 type: "button",
@@ -5739,7 +6062,7 @@ function CampanaAvisos({
               aviso.id ?? aviso.titulo
             );
           }) }),
-          pie && /* @__PURE__ */ jsx70("div", { className: "border-t border-ink-600 p-2", children: pie })
+          pie && /* @__PURE__ */ jsx71("div", { className: "border-t border-ink-600 p-2", children: pie })
         ]
       }
     )
@@ -5747,7 +6070,7 @@ function CampanaAvisos({
 }
 
 // src/components/GraficoBarras.jsx
-import { jsx as jsx71, jsxs as jsxs56 } from "react/jsx-runtime";
+import { jsx as jsx72, jsxs as jsxs57 } from "react/jsx-runtime";
 var COLORES = {
   fono: "bg-fono",
   ok: "bg-ok",
@@ -5781,47 +6104,47 @@ function GraficoBarras({
   className
 }) {
   const formatear = formatoValor || ((valor) => formatoNumero(valor));
-  if (!datos.length) return /* @__PURE__ */ jsx71(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
+  if (!datos.length) return /* @__PURE__ */ jsx72(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
   const tope = maximoDeBarras(datos, max);
   const colorDe = (dato) => COLORES[dato.tono] || COLORES[tono] || COLORES.fono;
-  const listaAccesible = /* @__PURE__ */ jsx71("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx71("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
+  const listaAccesible = /* @__PURE__ */ jsx72("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx72("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
   if (orientacion === "horizontal") {
-    return /* @__PURE__ */ jsxs56("div", { className: cn("space-y-1.5", className), children: [
-      datos.map((dato, indice) => /* @__PURE__ */ jsxs56("div", { className: "flex items-center gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx71("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
-        /* @__PURE__ */ jsx71(
+    return /* @__PURE__ */ jsxs57("div", { className: cn("space-y-1.5", className), children: [
+      datos.map((dato, indice) => /* @__PURE__ */ jsxs57("div", { className: "flex items-center gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx72("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
+        /* @__PURE__ */ jsx72(
           "span",
           {
             className: "h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-fore/10",
             role: "img",
             "aria-label": `${dato.etiqueta}: ${formatear(dato.valor)}`,
             title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-            children: /* @__PURE__ */ jsx71("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
+            children: /* @__PURE__ */ jsx72("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
           }
         ),
-        mostrarValores && /* @__PURE__ */ jsx71("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
+        mostrarValores && /* @__PURE__ */ jsx72("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
       ] }, dato.id ?? indice)),
       listaAccesible
     ] });
   }
-  return /* @__PURE__ */ jsxs56("div", { className: cn("space-y-1", className), children: [
-    /* @__PURE__ */ jsx71("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx71("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx71(
+  return /* @__PURE__ */ jsxs57("div", { className: cn("space-y-1", className), children: [
+    /* @__PURE__ */ jsx72("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx72("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx72(
       "span",
       {
         className: cn("absolute inset-x-0 bottom-0 rounded-t-md transition-[height] duration-500", colorDe(dato)),
         style: { height: `${porcentajeBarra(dato.valor, tope)}%` },
         title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-        children: mostrarValores && /* @__PURE__ */ jsx71("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
+        children: mostrarValores && /* @__PURE__ */ jsx72("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
       }
     ) }, dato.id ?? indice)) }),
-    /* @__PURE__ */ jsx71("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx71("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
+    /* @__PURE__ */ jsx72("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx72("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
     listaAccesible
   ] });
 }
 
 // src/components/TableroKanban.jsx
-import { useCallback as useCallback3, useEffect as useEffect11, useMemo as useMemo7, useRef as useRef10, useState as useState24 } from "react";
-import { jsx as jsx72, jsxs as jsxs57 } from "react/jsx-runtime";
+import { useCallback as useCallback3, useEffect as useEffect12, useMemo as useMemo8, useRef as useRef11, useState as useState25 } from "react";
+import { jsx as jsx73, jsxs as jsxs58 } from "react/jsx-runtime";
 var SIN_MOVIMIENTOS = /* @__PURE__ */ new Set();
 function columnasDelTablero(columnas = [], tarjetas = []) {
   const declaradas = [...columnas || []];
@@ -5842,18 +6165,18 @@ function destinosDeTarjeta(tarjeta, columnas = []) {
   return (permitidos || []).filter((valor, indice) => valor !== tarjeta?.estado && permitidos.indexOf(valor) === indice);
 }
 function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
-  const [overrides, setOverrides] = useState24({});
-  const [moviendo, setMoviendo] = useState24(SIN_MOVIMIENTOS);
-  const tarjetasRef = useRef10(tarjetas);
-  const overridesRef = useRef10(overrides);
-  const enVueloRef = useRef10(/* @__PURE__ */ new Set());
-  useEffect11(() => {
+  const [overrides, setOverrides] = useState25({});
+  const [moviendo, setMoviendo] = useState25(SIN_MOVIMIENTOS);
+  const tarjetasRef = useRef11(tarjetas);
+  const overridesRef = useRef11(overrides);
+  const enVueloRef = useRef11(/* @__PURE__ */ new Set());
+  useEffect12(() => {
     tarjetasRef.current = tarjetas;
   }, [tarjetas]);
-  useEffect11(() => {
+  useEffect12(() => {
     overridesRef.current = overrides;
   }, [overrides]);
-  useEffect11(() => {
+  useEffect12(() => {
     setOverrides((actual) => {
       const entradas = Object.entries(actual);
       if (entradas.length === 0) return actual;
@@ -5865,7 +6188,7 @@ function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
       return Object.keys(siguiente).length === entradas.length ? actual : siguiente;
     });
   }, [tarjetas]);
-  const efectivas = useMemo7(
+  const efectivas = useMemo8(
     () => (tarjetas || []).map((tarjeta) => {
       const optimista = overrides[tarjeta.id];
       return optimista && optimista !== tarjeta.estado ? { ...tarjeta, estado: optimista } : tarjeta;
@@ -5943,10 +6266,10 @@ function TableroKanban({
   className
 }) {
   const { tarjetas: efectivas, moverA, moviendo } = useTableroOptimista({ tarjetas, onMover, onError });
-  const [arrastrandoId, setArrastrandoId] = useState24("");
-  const [sobreColumna, setSobreColumna] = useState24("");
-  const columnasReales = useMemo7(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
-  const grupos = useMemo7(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
+  const [arrastrandoId, setArrastrandoId] = useState25("");
+  const [sobreColumna, setSobreColumna] = useState25("");
+  const columnasReales = useMemo8(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
+  const grupos = useMemo8(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
   const arrastrando = arrastrandoId ? efectivas.find((tarjeta) => tarjeta.id === arrastrandoId) ?? null : null;
   const acepta = (tarjeta, valor) => Boolean(onMover && puedeMover && tarjeta && !moviendo.has(tarjeta.id) && destinosDeTarjeta(tarjeta, columnasReales).includes(valor));
   function terminarArrastre() {
@@ -5954,10 +6277,10 @@ function TableroKanban({
     setSobreColumna("");
   }
   const tituloDe = (valor) => columnasReales.find((columna) => columna.valor === valor)?.titulo ?? valor;
-  return /* @__PURE__ */ jsx72("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
+  return /* @__PURE__ */ jsx73("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
     const deLaColumna = grupos[columna.valor] ?? [];
     const sobre = sobreColumna === columna.valor && acepta(arrastrando, columna.valor);
-    return /* @__PURE__ */ jsxs57(
+    return /* @__PURE__ */ jsxs58(
       "section",
       {
         "aria-label": `${columna.titulo}: ${deLaColumna.length}`,
@@ -5980,17 +6303,17 @@ function TableroKanban({
           if (id) moverA(id, columna.valor);
         },
         children: [
-          /* @__PURE__ */ jsxs57("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx72("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
-            /* @__PURE__ */ jsx72("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
-            /* @__PURE__ */ jsx72("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
+          /* @__PURE__ */ jsxs58("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx73("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx73("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
+            /* @__PURE__ */ jsx73("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
           ] }),
-          /* @__PURE__ */ jsxs57("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
+          /* @__PURE__ */ jsxs58("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
             deLaColumna.map((tarjeta) => {
               const destinos = destinosDeTarjeta(tarjeta, columnasReales);
               const movible = Boolean(onMover && puedeMover && destinos.length > 0 && !moviendo.has(tarjeta.id));
               const tieneMonto = tarjeta.monto !== null && tarjeta.monto !== void 0;
-              return /* @__PURE__ */ jsxs57(
+              return /* @__PURE__ */ jsxs58(
                 "article",
                 {
                   className: cn(
@@ -6011,34 +6334,34 @@ function TableroKanban({
                   },
                   onDragEnd: terminarArrastre,
                   children: [
-                    /* @__PURE__ */ jsxs57("div", { className: "flex items-start justify-between gap-2", children: [
-                      /* @__PURE__ */ jsx72("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
-                      tarjeta.acciones && /* @__PURE__ */ jsx72("span", { className: "shrink-0", children: tarjeta.acciones })
+                    /* @__PURE__ */ jsxs58("div", { className: "flex items-start justify-between gap-2", children: [
+                      /* @__PURE__ */ jsx73("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
+                      tarjeta.acciones && /* @__PURE__ */ jsx73("span", { className: "shrink-0", children: tarjeta.acciones })
                     ] }),
-                    tarjeta.subtitulo && /* @__PURE__ */ jsx72("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
-                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx72("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs57(
+                    tarjeta.subtitulo && /* @__PURE__ */ jsx73("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
+                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx73("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs58(
                       "span",
                       {
                         title: chip.titulo ?? chip.etiqueta,
                         className: cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(chip.tono)),
                         children: [
-                          chip.icono && /* @__PURE__ */ jsx72(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+                          chip.icono && /* @__PURE__ */ jsx73(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
                           chip.etiqueta
                         ]
                       },
                       chip.etiqueta ?? indice
                     )) }),
-                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs57("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
-                      tieneMonto && /* @__PURE__ */ jsxs57("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
-                        /* @__PURE__ */ jsx72(Money, { value: tarjeta.monto }),
-                        tarjeta.montoNota && /* @__PURE__ */ jsx72("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
+                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs58("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
+                      tieneMonto && /* @__PURE__ */ jsxs58("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
+                        /* @__PURE__ */ jsx73(Money, { value: tarjeta.monto }),
+                        tarjeta.montoNota && /* @__PURE__ */ jsx73("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
                       ] }),
-                      tarjeta.fecha && /* @__PURE__ */ jsx72("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
+                      tarjeta.fecha && /* @__PURE__ */ jsx73("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
                     ] }),
-                    tarjeta.detalle && /* @__PURE__ */ jsx72("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
-                    movible && /* @__PURE__ */ jsxs57("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
-                      /* @__PURE__ */ jsx72("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
-                      /* @__PURE__ */ jsxs57(
+                    tarjeta.detalle && /* @__PURE__ */ jsx73("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
+                    movible && /* @__PURE__ */ jsxs58("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
+                      /* @__PURE__ */ jsx73("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
+                      /* @__PURE__ */ jsxs58(
                         "select",
                         {
                           id: `mover-${tarjeta.id}`,
@@ -6052,8 +6375,8 @@ function TableroKanban({
                             "outline-none transition focus:border-fono focus:ring-1 focus:ring-fono/40 [&>option]:bg-ink-800 [&>option]:text-fore"
                           ),
                           children: [
-                            /* @__PURE__ */ jsx72("option", { value: "", children: etiquetaMover }),
-                            destinos.map((valor) => /* @__PURE__ */ jsx72("option", { value: valor, children: tituloDe(valor) }, valor))
+                            /* @__PURE__ */ jsx73("option", { value: "", children: etiquetaMover }),
+                            destinos.map((valor) => /* @__PURE__ */ jsx73("option", { value: valor, children: tituloDe(valor) }, valor))
                           ]
                         }
                       )
@@ -6063,7 +6386,7 @@ function TableroKanban({
                 tarjeta.id
               );
             }),
-            deLaColumna.length === 0 && /* @__PURE__ */ jsx72("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
+            deLaColumna.length === 0 && /* @__PURE__ */ jsx73("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
           ] })
         ]
       },
@@ -6073,7 +6396,7 @@ function TableroKanban({
 }
 
 // src/components/Cronologia.jsx
-import { jsx as jsx73, jsxs as jsxs58 } from "react/jsx-runtime";
+import { jsx as jsx74, jsxs as jsxs59 } from "react/jsx-runtime";
 var ICONOS_HITO = {
   creado: "plus",
   actualizado: "edit",
@@ -6176,18 +6499,18 @@ function FilaHito({ hito, iconos, tonos, etiquetas, mostrarTipo }) {
   const tono = hito.tono || tonos[tipo] || "mute";
   const icono = hito.icono || iconos[tipo] || "info";
   const etiqueta = mostrarTipo ? etiquetaDeHito(tipo, etiquetas) : "";
-  return /* @__PURE__ */ jsxs58("li", { className: "flex gap-3", children: [
-    /* @__PURE__ */ jsx73("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx73(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs58("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
-      /* @__PURE__ */ jsxs58("p", { className: "text-sm font-semibold text-fore", children: [
-        /* @__PURE__ */ jsx73("span", { className: "break-words", children: hito.titulo }),
-        hito.actor && /* @__PURE__ */ jsxs58("span", { className: "font-normal text-mute", children: [
+  return /* @__PURE__ */ jsxs59("li", { className: "flex gap-3", children: [
+    /* @__PURE__ */ jsx74("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx74(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs59("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
+      /* @__PURE__ */ jsxs59("p", { className: "text-sm font-semibold text-fore", children: [
+        /* @__PURE__ */ jsx74("span", { className: "break-words", children: hito.titulo }),
+        hito.actor && /* @__PURE__ */ jsxs59("span", { className: "font-normal text-mute", children: [
           " \xB7 ",
           hito.actor
         ] })
       ] }),
-      hito.detalle && /* @__PURE__ */ jsx73("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
-      /* @__PURE__ */ jsx73("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
+      hito.detalle && /* @__PURE__ */ jsx74("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
+      /* @__PURE__ */ jsx74("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
     ] })
   ] });
 }
@@ -6211,17 +6534,17 @@ function Cronologia({
   className
 }) {
   if (!hitos?.length) {
-    return /* @__PURE__ */ jsx73(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
+    return /* @__PURE__ */ jsx74(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
   }
-  const fila = (hito) => /* @__PURE__ */ jsx73(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
-  return /* @__PURE__ */ jsx73("div", { className, children: agrupar ? /* @__PURE__ */ jsx73("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs58("section", { children: [
-    /* @__PURE__ */ jsx73("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
-    /* @__PURE__ */ jsx73("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
-  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx73("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
+  const fila = (hito) => /* @__PURE__ */ jsx74(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
+  return /* @__PURE__ */ jsx74("div", { className, children: agrupar ? /* @__PURE__ */ jsx74("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs59("section", { children: [
+    /* @__PURE__ */ jsx74("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+    /* @__PURE__ */ jsx74("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
+  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx74("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
 }
 
 // src/components/PlanPagos.jsx
-import { jsx as jsx74, jsxs as jsxs59 } from "react/jsx-runtime";
+import { jsx as jsx75, jsxs as jsxs60 } from "react/jsx-runtime";
 var ESTADOS_CUOTA = {
   pendiente: { chip: "pendiente", etiqueta: "Pendiente", icono: "clock" },
   revision: { chip: "revision", etiqueta: "En revisi\xF3n", icono: "refresh" },
@@ -6231,18 +6554,18 @@ var ESTADOS_CUOTA = {
 function ChipCuota({ estado, estados }) {
   const config = estados[estado];
   if (!config) return null;
-  return /* @__PURE__ */ jsx74(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
+  return /* @__PURE__ */ jsx75(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
 }
 function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, simbolo, estados, destacada, conEstado }) {
-  return /* @__PURE__ */ jsxs59("tr", { className: "border-t border-ink-700", children: [
-    /* @__PURE__ */ jsxs59("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
-      /* @__PURE__ */ jsx74("span", { className: "font-semibold", children: etiqueta }),
-      destacada && /* @__PURE__ */ jsx74("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
-      nota && /* @__PURE__ */ jsx74("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
+  return /* @__PURE__ */ jsxs60("tr", { className: "border-t border-ink-700", children: [
+    /* @__PURE__ */ jsxs60("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
+      /* @__PURE__ */ jsx75("span", { className: "font-semibold", children: etiqueta }),
+      destacada && /* @__PURE__ */ jsx75("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
+      nota && /* @__PURE__ */ jsx75("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx74("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx74(Money, { value: monto, currency: moneda, simbolo }) }),
-    /* @__PURE__ */ jsx74("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
-    conEstado && /* @__PURE__ */ jsx74("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx74(ChipCuota, { estado, estados }) : null })
+    /* @__PURE__ */ jsx75("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx75(Money, { value: monto, currency: moneda, simbolo }) }),
+    /* @__PURE__ */ jsx75("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
+    conEstado && /* @__PURE__ */ jsx75("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx75(ChipCuota, { estado, estados }) : null })
   ] });
 }
 function PlanPagos({
@@ -6280,23 +6603,23 @@ function PlanPagos({
   const conEstado = (cuotas || []).some((cuota) => Boolean(cuota.estado));
   const vacioPlan = !hayAnticipo && !(cuotas || []).length;
   if (vacioPlan && total === null && !condiciones && !aTransferir) {
-    return /* @__PURE__ */ jsx74(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
+    return /* @__PURE__ */ jsx75(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
   }
-  return /* @__PURE__ */ jsxs59("div", { className: cn("space-y-2.5", className), children: [
-    aTransferir && /* @__PURE__ */ jsxs59("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
-      /* @__PURE__ */ jsx74("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
-      /* @__PURE__ */ jsx74("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx74(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
+  return /* @__PURE__ */ jsxs60("div", { className: cn("space-y-2.5", className), children: [
+    aTransferir && /* @__PURE__ */ jsxs60("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
+      /* @__PURE__ */ jsx75("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
+      /* @__PURE__ */ jsx75("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx75(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
     ] }),
-    vacioPlan ? /* @__PURE__ */ jsx74("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs59("table", { className: "w-full", children: [
-      /* @__PURE__ */ jsx74("caption", { className: "sr-only", children: "Plan de pagos" }),
-      /* @__PURE__ */ jsx74("thead", { children: /* @__PURE__ */ jsxs59("tr", { children: [
-        /* @__PURE__ */ jsx74("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
-        /* @__PURE__ */ jsx74("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
-        /* @__PURE__ */ jsx74("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
-        conEstado && /* @__PURE__ */ jsx74("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
+    vacioPlan ? /* @__PURE__ */ jsx75("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs60("table", { className: "w-full", children: [
+      /* @__PURE__ */ jsx75("caption", { className: "sr-only", children: "Plan de pagos" }),
+      /* @__PURE__ */ jsx75("thead", { children: /* @__PURE__ */ jsxs60("tr", { children: [
+        /* @__PURE__ */ jsx75("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
+        /* @__PURE__ */ jsx75("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
+        /* @__PURE__ */ jsx75("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
+        conEstado && /* @__PURE__ */ jsx75("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
       ] }) }),
-      /* @__PURE__ */ jsxs59("tbody", { children: [
-        hayAnticipo && /* @__PURE__ */ jsx74(
+      /* @__PURE__ */ jsxs60("tbody", { children: [
+        hayAnticipo && /* @__PURE__ */ jsx75(
           FilaPlan,
           {
             etiqueta: anticipoEtiqueta,
@@ -6309,7 +6632,7 @@ function PlanPagos({
             destacada: aTransferir?.id === "anticipo"
           }
         ),
-        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx74(
+        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx75(
           FilaPlan,
           {
             etiqueta: cuota.etiqueta,
@@ -6326,27 +6649,27 @@ function PlanPagos({
           cuota.id ?? `${cuota.etiqueta}-${indice}`
         ))
       ] }),
-      total !== null && /* @__PURE__ */ jsx74("tfoot", { children: /* @__PURE__ */ jsxs59("tr", { className: "border-t border-ink-500", children: [
-        /* @__PURE__ */ jsx74("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
-        /* @__PURE__ */ jsx74("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx74(Money, { value: total, currency: moneda, simbolo }) })
+      total !== null && /* @__PURE__ */ jsx75("tfoot", { children: /* @__PURE__ */ jsxs60("tr", { className: "border-t border-ink-500", children: [
+        /* @__PURE__ */ jsx75("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
+        /* @__PURE__ */ jsx75("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx75(Money, { value: total, currency: moneda, simbolo }) })
       ] }) })
     ] }),
-    vacioPlan && total !== null && /* @__PURE__ */ jsxs59("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
-      /* @__PURE__ */ jsx74("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
-      /* @__PURE__ */ jsx74("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx74(Money, { value: total, currency: moneda, simbolo }) })
+    vacioPlan && total !== null && /* @__PURE__ */ jsxs60("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
+      /* @__PURE__ */ jsx75("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
+      /* @__PURE__ */ jsx75("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx75(Money, { value: total, currency: moneda, simbolo }) })
     ] }),
-    saldoSinCuota > 0 && /* @__PURE__ */ jsxs59("p", { className: "text-xs text-mute", children: [
+    saldoSinCuota > 0 && /* @__PURE__ */ jsxs60("p", { className: "text-xs text-mute", children: [
       saldoEtiqueta,
       ":",
       " ",
-      /* @__PURE__ */ jsx74("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx74(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
+      /* @__PURE__ */ jsx75("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx75(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
     ] }),
-    condiciones && /* @__PURE__ */ jsx74(Nota, { tono: "info", compact: true, children: condiciones })
+    condiciones && /* @__PURE__ */ jsx75(Nota, { tono: "info", compact: true, children: condiciones })
   ] });
 }
 
 // src/components/DocumentoImpresion.jsx
-import { Fragment as Fragment10, jsx as jsx75, jsxs as jsxs60 } from "react/jsx-runtime";
+import { Fragment as Fragment10, jsx as jsx76, jsxs as jsxs61 } from "react/jsx-runtime";
 var CANTIDAD_FORMATTER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 3 });
 function cantidadTexto(cantidad) {
   if (cantidad === null || cantidad === void 0 || cantidad === "") return "";
@@ -6354,23 +6677,23 @@ function cantidadTexto(cantidad) {
 }
 function Dato({ etiqueta, valor, className }) {
   if (!valor) return null;
-  return /* @__PURE__ */ jsxs60("p", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsx75("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
-    /* @__PURE__ */ jsx75("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
+  return /* @__PURE__ */ jsxs61("p", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsx76("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
+    /* @__PURE__ */ jsx76("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
   ] });
 }
 function Identidad({ titulo: titulo2, datos, logo, monograma }) {
   if (!datos) return null;
-  return /* @__PURE__ */ jsxs60("section", { className: "oc-print-bloque", children: [
-    /* @__PURE__ */ jsx75("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
-    /* @__PURE__ */ jsxs60("div", { className: "flex items-start gap-3", children: [
-      (logo || monograma) && /* @__PURE__ */ jsx75("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx75("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx75("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
-      /* @__PURE__ */ jsxs60("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx75(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
-        /* @__PURE__ */ jsx75(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
-        /* @__PURE__ */ jsx75(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
-        /* @__PURE__ */ jsx75(Dato, { etiqueta: "Correo", valor: datos.correo }),
-        /* @__PURE__ */ jsx75(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
+  return /* @__PURE__ */ jsxs61("section", { className: "oc-print-bloque", children: [
+    /* @__PURE__ */ jsx76("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
+    /* @__PURE__ */ jsxs61("div", { className: "flex items-start gap-3", children: [
+      (logo || monograma) && /* @__PURE__ */ jsx76("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx76("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx76("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
+      /* @__PURE__ */ jsxs61("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx76(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
+        /* @__PURE__ */ jsx76(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
+        /* @__PURE__ */ jsx76(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
+        /* @__PURE__ */ jsx76(Dato, { etiqueta: "Correo", valor: datos.correo }),
+        /* @__PURE__ */ jsx76(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
       ] })
     ] })
   ] });
@@ -6378,17 +6701,17 @@ function Identidad({ titulo: titulo2, datos, logo, monograma }) {
 function FilaLiquidacion({ etiqueta, valor, moneda, simbolo, nota, fuerte = false }) {
   const numero = Number(valor);
   const negativo = Number.isFinite(numero) && numero < 0;
-  return /* @__PURE__ */ jsxs60("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
-    /* @__PURE__ */ jsxs60("span", { className: "min-w-0", children: [
+  return /* @__PURE__ */ jsxs61("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
+    /* @__PURE__ */ jsxs61("span", { className: "min-w-0", children: [
       etiqueta,
-      nota && /* @__PURE__ */ jsxs60("small", { className: "oc-print-suave", children: [
+      nota && /* @__PURE__ */ jsxs61("small", { className: "oc-print-suave", children: [
         " ",
         nota
       ] })
     ] }),
-    /* @__PURE__ */ jsxs60("span", { className: "oc-print-num shrink-0 font-semibold", children: [
+    /* @__PURE__ */ jsxs61("span", { className: "oc-print-num shrink-0 font-semibold", children: [
       negativo && "\u2212 ",
-      /* @__PURE__ */ jsx75(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
+      /* @__PURE__ */ jsx76(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
     ] })
   ] });
 }
@@ -6440,70 +6763,70 @@ function DocumentoImpresion({
 }) {
   const monograma = String(emisor?.nombre ?? "").trim().slice(0, 2).toUpperCase() || "\xB7\xB7";
   const tieneLiquidacion = Boolean(liquidacion && (liquidacion.subtotal !== void 0 || liquidacion.total !== void 0));
-  return /* @__PURE__ */ jsxs60("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
-    onImprimir && /* @__PURE__ */ jsx75("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs60(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
-      /* @__PURE__ */ jsx75(Icon, { name: "printer", className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs61("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
+    onImprimir && /* @__PURE__ */ jsx76("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs61(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
+      /* @__PURE__ */ jsx76(Icon, { name: "printer", className: "h-4 w-4" }),
       etiquetaImprimir
     ] }) }),
-    /* @__PURE__ */ jsxs60("article", { className: "oc-print-hoja", children: [
-      /* @__PURE__ */ jsxs60("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
-        /* @__PURE__ */ jsxs60("div", { className: "flex min-w-0 items-center gap-2.5", children: [
-          emisor?.logo ? /* @__PURE__ */ jsx75("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx75("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
-          /* @__PURE__ */ jsxs60("span", { className: "grid min-w-0 gap-0.5", children: [
-            /* @__PURE__ */ jsx75("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
-            emisor?.direccion && /* @__PURE__ */ jsx75("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
+    /* @__PURE__ */ jsxs61("article", { className: "oc-print-hoja", children: [
+      /* @__PURE__ */ jsxs61("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
+        /* @__PURE__ */ jsxs61("div", { className: "flex min-w-0 items-center gap-2.5", children: [
+          emisor?.logo ? /* @__PURE__ */ jsx76("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx76("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
+          /* @__PURE__ */ jsxs61("span", { className: "grid min-w-0 gap-0.5", children: [
+            /* @__PURE__ */ jsx76("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
+            emisor?.direccion && /* @__PURE__ */ jsx76("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs60("div", { className: "text-right", children: [
-          /* @__PURE__ */ jsx75("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
-          numero && /* @__PURE__ */ jsxs60("p", { className: "text-[12px] font-bold", children: [
+        /* @__PURE__ */ jsxs61("div", { className: "text-right", children: [
+          /* @__PURE__ */ jsx76("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
+          numero && /* @__PURE__ */ jsxs61("p", { className: "text-[12px] font-bold", children: [
             etiquetaNumero,
             " ",
             numero
           ] }),
-          estado && /* @__PURE__ */ jsx75("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
+          estado && /* @__PURE__ */ jsx76("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
         ] })
       ] }),
-      (emisor || receptor) && /* @__PURE__ */ jsxs60("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx75(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
-        /* @__PURE__ */ jsx75(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
+      (emisor || receptor) && /* @__PURE__ */ jsxs61("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx76(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
+        /* @__PURE__ */ jsx76(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
       ] }),
-      meta?.length > 0 && /* @__PURE__ */ jsxs60("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx75("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
-        /* @__PURE__ */ jsx75("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx75(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
+      meta?.length > 0 && /* @__PURE__ */ jsxs61("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx76("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
+        /* @__PURE__ */ jsx76("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx76(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
       ] }),
-      /* @__PURE__ */ jsxs60("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx75("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
-        detalle?.length > 0 ? /* @__PURE__ */ jsxs60("table", { className: "oc-print-tabla", children: [
-          /* @__PURE__ */ jsx75("thead", { children: /* @__PURE__ */ jsxs60("tr", { children: [
-            /* @__PURE__ */ jsx75("th", { scope: "col", children: "Cantidad" }),
-            /* @__PURE__ */ jsx75("th", { scope: "col", children: "Concepto" }),
-            /* @__PURE__ */ jsx75("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
-            /* @__PURE__ */ jsx75("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
+      /* @__PURE__ */ jsxs61("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx76("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
+        detalle?.length > 0 ? /* @__PURE__ */ jsxs61("table", { className: "oc-print-tabla", children: [
+          /* @__PURE__ */ jsx76("thead", { children: /* @__PURE__ */ jsxs61("tr", { children: [
+            /* @__PURE__ */ jsx76("th", { scope: "col", children: "Cantidad" }),
+            /* @__PURE__ */ jsx76("th", { scope: "col", children: "Concepto" }),
+            /* @__PURE__ */ jsx76("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
+            /* @__PURE__ */ jsx76("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
           ] }) }),
-          /* @__PURE__ */ jsx75("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs60("tr", { children: [
-            /* @__PURE__ */ jsx75("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
-            /* @__PURE__ */ jsxs60("td", { children: [
+          /* @__PURE__ */ jsx76("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs61("tr", { children: [
+            /* @__PURE__ */ jsx76("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
+            /* @__PURE__ */ jsxs61("td", { children: [
               item.concepto,
-              item.nota && /* @__PURE__ */ jsx75("small", { className: "block oc-print-suave", children: item.nota })
+              item.nota && /* @__PURE__ */ jsx76("small", { className: "block oc-print-suave", children: item.nota })
             ] }),
-            /* @__PURE__ */ jsx75("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx75(Money, { value: item.unitario, currency: moneda, simbolo }) }),
-            /* @__PURE__ */ jsx75("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx75(Money, { value: item.subtotal, currency: moneda, simbolo }) })
+            /* @__PURE__ */ jsx76("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx76(Money, { value: item.unitario, currency: moneda, simbolo }) }),
+            /* @__PURE__ */ jsx76("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx76(Money, { value: item.subtotal, currency: moneda, simbolo }) })
           ] }, item.id ?? indice)) })
-        ] }) : /* @__PURE__ */ jsx75("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
+        ] }) : /* @__PURE__ */ jsx76("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
       ] }),
-      tieneLiquidacion && /* @__PURE__ */ jsxs60("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
-        /* @__PURE__ */ jsx75("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
-        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx75(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
-        liquidacion.descuento ? /* @__PURE__ */ jsx75(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
-        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx75(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
-        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx75(
+      tieneLiquidacion && /* @__PURE__ */ jsxs61("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
+        /* @__PURE__ */ jsx76("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
+        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx76(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
+        liquidacion.descuento ? /* @__PURE__ */ jsx76(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
+        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx76(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
+        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx76(
           FilaLiquidacion,
           {
             etiqueta: `IVA ${iva.tasa}%`,
-            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs60(Fragment10, { children: [
+            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs61(Fragment10, { children: [
               "sobre ",
-              /* @__PURE__ */ jsx75(Money, { value: iva.base, currency: moneda, simbolo })
+              /* @__PURE__ */ jsx76(Money, { value: iva.base, currency: moneda, simbolo })
             ] }) : null,
             valor: iva.monto,
             moneda,
@@ -6511,20 +6834,20 @@ function DocumentoImpresion({
           },
           `${iva.tasa}-${indice}`
         )),
-        liquidacion.total !== void 0 && /* @__PURE__ */ jsx75(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
+        liquidacion.total !== void 0 && /* @__PURE__ */ jsx76(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
       ] }),
-      notas && /* @__PURE__ */ jsxs60("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx75("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
-        /* @__PURE__ */ jsx75("div", { className: "oc-print-nota", children: notas })
+      notas && /* @__PURE__ */ jsxs61("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx76("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
+        /* @__PURE__ */ jsx76("div", { className: "oc-print-nota", children: notas })
       ] }),
-      pie && /* @__PURE__ */ jsx75("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
+      pie && /* @__PURE__ */ jsx76("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
     ] })
   ] });
 }
 
 // src/components/SubidaImagen.jsx
-import { useId as useId8, useRef as useRef11, useState as useState25 } from "react";
-import { jsx as jsx76, jsxs as jsxs61 } from "react/jsx-runtime";
+import { useId as useId9, useRef as useRef12, useState as useState26 } from "react";
+import { jsx as jsx77, jsxs as jsxs62 } from "react/jsx-runtime";
 var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
 var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 var TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024;
@@ -6680,14 +7003,14 @@ function SubidaImagen({
   ocupado = false,
   className
 }) {
-  const inputRef = useRef11(null);
-  const campoId = useId8();
+  const inputRef = useRef12(null);
+  const campoId = useId9();
   const errorId = `${campoId}-error`;
   const ayudaId = `${campoId}-ayuda`;
-  const [preparando, setPreparando] = useState25(false);
-  const [errorLocal, setErrorLocal] = useState25("");
-  const [vistaLocal, setVistaLocal] = useState25(null);
-  const [arrastrando, setArrastrando] = useState25(false);
+  const [preparando, setPreparando] = useState26(false);
+  const [errorLocal, setErrorLocal] = useState26("");
+  const [vistaLocal, setVistaLocal] = useState26(null);
+  const [arrastrando, setArrastrando] = useState26(false);
   const mensaje = error || errorLocal;
   const trabajando = Boolean(ocupado) || preparando;
   const vista = vistaLocal ?? valor;
@@ -6720,9 +7043,9 @@ function SubidaImagen({
     if (inputRef.current) inputRef.current.value = "";
     onLimpiar?.();
   }
-  return /* @__PURE__ */ jsxs61("div", { className: cn("min-w-0", className), children: [
-    etiqueta && /* @__PURE__ */ jsx76("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
-    /* @__PURE__ */ jsxs61(
+  return /* @__PURE__ */ jsxs62("div", { className: cn("min-w-0", className), children: [
+    etiqueta && /* @__PURE__ */ jsx77("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
+    /* @__PURE__ */ jsxs62(
       "div",
       {
         className: cn(
@@ -6744,23 +7067,23 @@ function SubidaImagen({
           void elegir(event.dataTransfer.files?.[0] ?? null);
         },
         children: [
-          vista ? /* @__PURE__ */ jsx76("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx76("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx76("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx76(Icon, { name: "image", className: "h-6 w-6" }) }),
-          /* @__PURE__ */ jsxs61("div", { className: "min-w-0 flex-1", children: [
-            /* @__PURE__ */ jsx76("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
-            /* @__PURE__ */ jsxs61("p", { className: "mt-0.5 text-[11px] text-mute", children: [
+          vista ? /* @__PURE__ */ jsx77("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx77("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx77("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx77(Icon, { name: "image", className: "h-6 w-6" }) }),
+          /* @__PURE__ */ jsxs62("div", { className: "min-w-0 flex-1", children: [
+            /* @__PURE__ */ jsx77("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
+            /* @__PURE__ */ jsxs62("p", { className: "mt-0.5 text-[11px] text-mute", children: [
               tipos.map((tipo) => ETIQUETA_TIPO[tipo] || tipo).join(" \xB7 "),
               " \xB7 hasta ",
               pesoLegible(tamanoMaximo)
             ] }),
-            /* @__PURE__ */ jsxs61("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
-              /* @__PURE__ */ jsxs61(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
-                /* @__PURE__ */ jsx76(Icon, { name: "upload", className: "h-4 w-4" }),
+            /* @__PURE__ */ jsxs62("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
+              /* @__PURE__ */ jsxs62(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
+                /* @__PURE__ */ jsx77(Icon, { name: "upload", className: "h-4 w-4" }),
                 trabajando ? "Procesando\u2026" : vista ? cambiarEtiqueta : subirEtiqueta
               ] }),
-              (vista || vistaLocal) && /* @__PURE__ */ jsx76(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
+              (vista || vistaLocal) && /* @__PURE__ */ jsx77(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
             ] })
           ] }),
-          /* @__PURE__ */ jsx76(
+          /* @__PURE__ */ jsx77(
             "input",
             {
               ref: inputRef,
@@ -6778,12 +7101,12 @@ function SubidaImagen({
         ]
       }
     ),
-    mensaje ? /* @__PURE__ */ jsx76("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx76("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
+    mensaje ? /* @__PURE__ */ jsx77("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx77("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
   ] });
 }
 
 // src/components/ProgresoChecklist.jsx
-import { jsx as jsx77, jsxs as jsxs62 } from "react/jsx-runtime";
+import { jsx as jsx78, jsxs as jsxs63 } from "react/jsx-runtime";
 function progresoChecklist({
   hechas = 0,
   total = 0,
@@ -6839,19 +7162,19 @@ function ProgresoChecklist({
   const avance = progresoChecklist({ hechas, total, vencidas, riesgo, sustantivo, textoVacio });
   const tonoTexto = avance.tono === "ok" ? "text-ok" : avance.tono === "bad" ? "text-bad" : avance.tono === "warn" ? "text-warn" : "text-fore";
   const hayDetalle = avance.vencidas > 0 || avance.riesgo;
-  return /* @__PURE__ */ jsxs62("div", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsxs62("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx77("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
-      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs62("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
+  return /* @__PURE__ */ jsxs63("div", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsxs63("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx78("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
+      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs63("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
         avance.porcentaje,
         "%"
       ] })
     ] }),
-    avance.total > 0 && /* @__PURE__ */ jsx77(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
-    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs62("p", { className: "mt-1 text-[11px] text-mute", children: [
-      avance.riesgo && /* @__PURE__ */ jsx77("span", { className: "text-bad", children: "Sin avance" }),
+    avance.total > 0 && /* @__PURE__ */ jsx78(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
+    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs63("p", { className: "mt-1 text-[11px] text-mute", children: [
+      avance.riesgo && /* @__PURE__ */ jsx78("span", { className: "text-bad", children: "Sin avance" }),
       avance.riesgo && avance.vencidas > 0 && " \xB7 ",
-      avance.vencidas > 0 && /* @__PURE__ */ jsxs62("span", { className: "text-warn", children: [
+      avance.vencidas > 0 && /* @__PURE__ */ jsxs63("span", { className: "text-warn", children: [
         avance.vencidas,
         " vencida",
         avance.vencidas === 1 ? "" : "s"
@@ -7330,102 +7653,6 @@ var GRILLA_DOS_COLUMNAS = "grid gap-3 sm:grid-cols-2";
 var GRILLA_DOS_COLUMNAS_COMPACTA = "grid gap-2 sm:grid-cols-2";
 var PIE_ACCIONES = "flex flex-wrap justify-end gap-2";
 var PIE_ACCIONES_REVERSO = "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end";
-
-// src/catalog/productos.js
-var MODELOS_IPHONE = [
-  // Generación actual y anteriores (del más nuevo al más viejo)
-  "iPhone 17 Pro Max",
-  "iPhone 17 Pro",
-  "iPhone 17 Plus",
-  "iPhone 17",
-  "iPhone 16 Pro Max",
-  "iPhone 16 Pro",
-  "iPhone 16 Plus",
-  "iPhone 16",
-  "iPhone 15 Pro Max",
-  "iPhone 15 Pro",
-  "iPhone 15 Plus",
-  "iPhone 15",
-  "iPhone 14 Pro Max",
-  "iPhone 14 Pro",
-  "iPhone 14 Plus",
-  "iPhone 14",
-  "iPhone 13 Pro Max",
-  "iPhone 13 Pro",
-  "iPhone 13 mini",
-  "iPhone 13",
-  "iPhone 12 Pro Max",
-  "iPhone 12 Pro",
-  "iPhone 12 mini",
-  "iPhone 12",
-  "iPhone 11 Pro Max",
-  "iPhone 11 Pro",
-  "iPhone 11",
-  "iPhone XS Max",
-  "iPhone XS",
-  "iPhone XR",
-  "iPhone X",
-  "iPhone 8 Plus",
-  "iPhone 8",
-  "iPhone 7 Plus",
-  "iPhone 7",
-  "iPhone SE (3.\xAA generaci\xF3n)",
-  "iPhone SE (2.\xAA generaci\xF3n)"
-];
-var CAPACIDADES_IPHONE = ["64 GB", "128 GB", "256 GB", "512 GB", "1 TB"];
-var COLORES_IPHONE = [
-  "Negro",
-  "Blanco",
-  "Plata",
-  "Gris espacial",
-  "Dorado",
-  "Azul",
-  "Verde",
-  "Rojo",
-  "Rosa",
-  "Morado",
-  "Amarillo",
-  "Titanio natural",
-  "Titanio azul",
-  "Titanio blanco",
-  "Titanio negro",
-  "Titanio desierto"
-];
-var CATEGORIAS_ACCESORIOS = [
-  "Fundas",
-  "Vidrios templados",
-  "Cargadores",
-  "Cables",
-  "Auriculares",
-  "Bater\xEDas",
-  "Parlantes",
-  "Relojes y correas",
-  "Soportes",
-  "Power banks",
-  "Adaptadores",
-  "L\xE1pices y stylus",
-  "Memorias y almacenamiento",
-  "C\xE1maras y accesorios",
-  "Repuestos",
-  "Otros accesorios"
-];
-var MARCAS_ACCESORIOS = [
-  "Apple",
-  "Samsung",
-  "Xiaomi",
-  "JBL",
-  "Baseus",
-  "Anker",
-  "Hoco",
-  "Generic",
-  "Otro"
-];
-function buscarEnCatalogo(catalogo = [], texto = "") {
-  const norm2 = (valor) => String(valor || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-  const q = norm2(texto);
-  if (!q) return catalogo;
-  return catalogo.filter((item) => norm2(item).includes(q));
-}
 export {
   ANCHOS_PAPEL,
   AVANCES_FIRMA,
@@ -7443,7 +7670,9 @@ export {
   BarraProgreso,
   BotonDentroCampo,
   BotonImprimir,
+  BuscadorDispositivo,
   Button,
+  CAMPOS_DISPOSITIVO,
   CAPACIDADES_IPHONE,
   CATEGORIAS_ACCESORIOS,
   CATEGORIAS_PRODUCTO,
@@ -7458,6 +7687,7 @@ export {
   COLORES_BANCO_RESPALDO,
   COLORES_IPHONE,
   COLOR_BADGE,
+  CONECTIVIDADES_MOVIL,
   Calendario,
   CampanaAvisos,
   CampoSeriales,
@@ -7475,6 +7705,7 @@ export {
   CurrencySelect,
   DEPARTAMENTOS_PARAGUAY,
   DIAS_SEMANA,
+  DISPOSITIVOS_MOBILE,
   DOMINIOS_EMAIL,
   DataTable,
   DestinoRecepcion,
@@ -7544,6 +7775,7 @@ export {
   Nota,
   NumericKeypad,
   OAuthDivider,
+  PERFILES_DISPOSITIVO,
   PERIODOS_FECHA,
   PIE_ACCIONES,
   PIE_ACCIONES_REVERSO,
@@ -7618,12 +7850,14 @@ export {
   anchoParaLargo,
   bloqueFirma,
   buscarCiudad,
+  buscarDispositivo,
   buscarEnCatalogo,
   categoriaDe,
   chipDeTono,
   claveColorDeNombre,
   claveDia,
   cn,
+  codigoDeDispositivo,
   codigoPais,
   colorBadge,
   colorDeBanco,
@@ -7656,6 +7890,7 @@ export {
   etiquetaDeHito,
   etiquetaDia,
   etiquetaDiaCorta,
+  etiquetaDispositivo,
   etiquetaMes,
   etiquetaPluralRevision,
   etiquetaRevision,
@@ -7686,6 +7921,7 @@ export {
   inicialesDeNombre,
   internationalPhone,
   largoMaximoMonto,
+  limpiarDependientes,
   limpiarPercent,
   logoDeBanco,
   maximoDeBarras,
@@ -7696,6 +7932,7 @@ export {
   montoTexto,
   montoUsd,
   motivoDeDiagnostico,
+  nombreDeDispositivo,
   nombrePartes,
   normalizarBanco,
   normalizarCategoria,
@@ -7704,6 +7941,7 @@ export {
   normalizarSerial,
   normalizarSeriales,
   normalizarTelefono,
+  opcionesDependiente,
   paginaDePrueba,
   paginaDePruebaSimple,
   parseGsInput,

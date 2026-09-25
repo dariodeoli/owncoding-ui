@@ -184,6 +184,30 @@ export function ProductCombobox(props: Record<string, any> & {
   disabled?: boolean
   className?: string
 }): ReactElement
+export function BuscadorDispositivo(props: {
+  valor?: { modelo?: string; capacidad?: string; color?: string; conectividad?: string; marca?: string; categoria?: string; [clave: string]: any }
+  onCambio?: (valor: any, meta?: { campo?: string }) => void
+  tipo?: 'mobile' | 'accesorios' | 'servicio' | (string & {})
+  perfil?: { campos?: string[]; etiquetas?: Record<string, string>; catalogo?: Record<string, any> }
+  catalogo?: Record<string, any>
+  buscarPorCodigo?: boolean
+  permitirLibre?: boolean
+  limite?: number
+  disabled?: boolean
+  etiquetas?: Record<string, string>
+  className?: string
+}): ReactElement
+export const PERFILES_DISPOSITIVO: Record<string, { campos: string[]; etiquetas: Record<string, string>; catalogo: Record<string, any> }>
+export const CAMPOS_DISPOSITIVO: string[]
+export const DISPOSITIVOS_MOBILE: Array<{ nombre: string; codigo?: string }>
+export const CONECTIVIDADES_MOVIL: string[]
+export function buscarDispositivo(modelos?: any[], texto?: string, opciones?: { porCodigo?: boolean; limite?: number }): any[]
+export function opcionesDependiente(modelo: any, campo: string, perfil?: any): string[]
+export function limpiarDependientes(valor?: any, modelo?: any, perfil?: any): any
+export function etiquetaDispositivo(valor?: any, opciones?: { separador?: string }): string
+export function nombreDeDispositivo(modelo?: any): string
+export function codigoDeDispositivo(modelo?: any): string
+export function normalizarBusqueda(texto?: string): string
 export function RucField(props: Record<string, any> & {
   id?: string
   value?: string

@@ -97,9 +97,12 @@ export const MARCAS_ACCESORIOS = [
 
 // Búsqueda tolerante (sin acentos ni mayúsculas) sobre cualquiera de los
 // catálogos; devuelve el valor tal cual está cargado.
+export function normalizarBusqueda(texto = '') {
+  return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+}
+
 export function buscarEnCatalogo(catalogo = [], texto = '') {
-  const norm = (valor) => String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
-  const q = norm(texto)
+  const q = normalizarBusqueda(texto)
   if (!q) return catalogo
-  return catalogo.filter((item) => norm(item).includes(q))
+  return catalogo.filter((item) => normalizarBusqueda(item).includes(q))
 }

@@ -4,6 +4,22 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.24.0 — 2026-09-25
+
+- **Buscador dependiente de dispositivos (#241/#250):** `BuscadorDispositivo`
+  elige el **modelo** (búsqueda por nombre o **código**, tolerante a acentos) y
+  despliega sus dependientes —capacidad, color, conectividad, marca o
+  categoría— según el **tipo de tienda** (`mobile`, `accesorios`, `servicio`) o
+  un perfil propio. El catálogo admite entradas con código y listas propias por
+  modelo; cambiar de modelo limpia las variantes que ya no aplican y
+  `permitirLibre` deja cargar un modelo nuevo.
+  - Helpers: `PERFILES_DISPOSITIVO`, `CAMPOS_DISPOSITIVO`, `buscarDispositivo`,
+    `opcionesDependiente`, `limpiarDependientes`, `etiquetaDispositivo`,
+    `normalizarBusqueda` (compartido con el catálogo de productos).
+  - Guía de adopción: **`docs/DISPOSITIVOS.md`** (quick start, perfiles,
+    catálogo propio, helpers y recetas para asistencia, stock y compras).
+- Docs (REGLAS §1, README) y tests: `test/dispositivos.test.jsx` (9 casos).
+
 ## v0.23.0 — 2026-09-24
 
 - **Taller/rack y servicio/garantías (#241, paso 4 y lote E):**

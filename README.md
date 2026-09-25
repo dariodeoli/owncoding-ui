@@ -13,13 +13,13 @@ leen stores ni conocen el router; reciben props y devuelven interfaz.
 
 ```bash
 # Versión fija (recomendado: se adopta una versión y se sube a propósito)
-npm install github:dariodeoli/owncoding-ui#v0.23.0
+npm install github:dariodeoli/owncoding-ui#v0.24.0
 
 # Rama principal (solo para probar)
 npm install github:dariodeoli/owncoding-ui
 
 # Repo privado por SSH
-npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.23.0
+npm install git+ssh://git@github.com/dariodeoli/owncoding-ui.git#v0.24.0
 ```
 
 `prepare` corre el build al instalar (npm instala las devDependencies de una
@@ -229,6 +229,11 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   y `cups:<cola>`). Guía completa: `docs/IMPRESION.md`.
 - **Bancos de Paraguay:** catálogo `BANCOS_PARAGUAY` como predeterminado,
   `BancoCombobox` y `BancoLogo` (archivo/marca/monograma, sin cuadros rotos).
+- **Buscador de dispositivos (#241/#250):** `BuscadorDispositivo` elige el
+  modelo por nombre o código y despliega sus dependientes (capacidad, color,
+  conectividad, marca o categoría) según el tipo de tienda; con
+  `PERFILES_DISPOSITIVO` y `etiquetaDispositivo`. Guía:
+  `docs/DISPOSITIVOS.md`.
 - **Catálogos por defecto (Paraguay):** `CIUDADES_PARAGUAY` (263 municipios con
   departamento) + `CityAutocomplete` (el departamento se resuelve solo con la
   ciudad), `MODELOS_IPHONE`, `CAPACIDADES_IPHONE`, `COLORES_IPHONE` y
