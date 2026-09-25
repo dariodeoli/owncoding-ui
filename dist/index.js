@@ -5151,6 +5151,7 @@ function PaletaComandos({
   mensajeError = "No pudimos buscar. Reintent\xE1.",
   textoSeguir,
   textoSinResultados = "Sin resultados",
+  descripcionVacio,
   boton = false,
   textoBoton = "Buscar",
   mostrarAtajoEnBoton = true,
@@ -5284,6 +5285,7 @@ function PaletaComandos({
     }
   }
   const textoContinuar = textoSeguir || `Segu\xED escribiendo: buscamos desde ${minimo} caracteres.`;
+  const idOpcion = (posicion) => `${idLista}-opcion-${posicion}`;
   return /* @__PURE__ */ jsxs50(Fragment6, { children: [
     boton && /* @__PURE__ */ jsxs50(
       "button",
@@ -5326,6 +5328,7 @@ function PaletaComandos({
                   ariaLabel: ariaLabel || placeholder,
                   "aria-controls": idLista,
                   "aria-expanded": estado === "listo",
+                  "aria-activedescendant": estado === "listo" ? idOpcion(activo) : void 0,
                   role: "combobox",
                   "aria-autocomplete": "list",
                   autoComplete: "off"
@@ -5348,7 +5351,7 @@ function PaletaComandos({
                     compact: true,
                     icon: "search",
                     title: textoSinResultados,
-                    description: `No encontramos nada para \xAB${termino}\xBB. Prob\xE1 con otro nombre o n\xFAmero.`
+                    description: descripcionVacio || `No encontramos nada para \xAB${termino}\xBB. Prob\xE1 con otro nombre o n\xFAmero.`
                   }
                 ),
                 estado === "listo" && /* @__PURE__ */ jsx63("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs50("section", { role: "group", "aria-label": grupo.etiqueta, children: [
@@ -5359,6 +5362,7 @@ function PaletaComandos({
                     return /* @__PURE__ */ jsxs50(
                       "button",
                       {
+                        id: idOpcion(posicion),
                         type: "button",
                         role: "option",
                         "aria-selected": esActivo,

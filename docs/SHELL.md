@@ -58,7 +58,10 @@ permisos; el shell solo dibuja y navega.
   `aria-expanded`; el contador se oculta con `sr-only` cuando el menú está
   colapsado (el `title` conserva la etiqueta).
 - **Un solo buscador**: la paleta global reemplaza los buscadores duplicados del
-  topbar; el botón visible se activa con `boton`.
+  topbar; el botón visible se activa con `boton`. Adopción real (MobOS, lote
+  33): `buscar` reparte entre los 8 grupos de la API y el elegido navega por
+  `datos`; `conAtajo={false}` deja el Ctrl+K del shell y `className="max-w-3xl"`
+  conserva el ancho «amplio» del estándar de modales (#237).
 
 ## 4. Tokens v2 y contraste AA (shell v2, #241)
 

@@ -4,6 +4,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.27.0 — 2026-09-25
+
+- **Buscador global (`PaletaComandos`), paridad para la adopción (#241):**
+  - El campo usa el patrón combobox completo: `aria-activedescendant` apunta a
+    la opción resaltada (ids por posición) mientras el foco queda en el input.
+  - El vacío acepta `descripcionVacio` (la app conserva su texto: «Probá con
+    otro nombre, SKU, serial o número»).
+  - Los tipos declaran las props de textos (`titulo`, `placeholder`,
+    `ariaLabel`, `mensajeError`, `textoSeguir`, `textoSinResultados`).
+- Tests nuevos `test/paleta-comandos.test.jsx`: agrupación con etiquetas e
+  íconos por props, estados honestos (`seguir`/`cargando`/`error`/`listo`/
+  `vacio`), contrato combobox y botón con atajo.
+- Docs: `docs/SHELL.md` §3 con la adopción real de MobOS como referencia.
+
 ## v0.26.0 — 2026-09-25
 
 - **Retiro del bloque local v2 (#241):** la capa de contenido del shell v2

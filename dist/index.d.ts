@@ -440,13 +440,21 @@ export function PaletaComandos(props: {
   onElegir?: (resultado: any) => void
   etiquetasTipo?: Record<string, string>
   iconosTipo?: Record<string, string>
+  titulo?: string
+  placeholder?: string
+  ariaLabel?: string
   atajo?: string
   atajoTexto?: string
   conAtajo?: boolean
   minimo?: number
   espera?: number
+  mensajeError?: string
+  textoSeguir?: string
+  textoSinResultados?: string
+  descripcionVacio?: string
   boton?: boolean
   textoBoton?: string
+  mostrarAtajoEnBoton?: boolean
   className?: string
 }): ReactElement
 export function agruparResultados(resultados: any[]): Array<{ tipo: string; resultados: any[] }>

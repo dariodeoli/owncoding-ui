@@ -73,6 +73,7 @@ export default function PaletaComandos({
   mensajeError = 'No pudimos buscar. Reintentá.',
   textoSeguir,
   textoSinResultados = 'Sin resultados',
+  descripcionVacio,
   boton = false,
   textoBoton = 'Buscar',
   mostrarAtajoEnBoton = true,
@@ -225,6 +226,9 @@ export default function PaletaComandos({
   }
 
   const textoContinuar = textoSeguir || `Seguí escribiendo: buscamos desde ${minimo} caracteres.`
+  // Patrón combobox: el foco queda en el campo y `aria-activedescendant` apunta
+  // a la opción resaltada (los ids salen de la lista de resultados).
+  const idOpcion = (posicion) => `${idLista}-opcion-${posicion}`
 
   return (
     <>
@@ -269,6 +273,7 @@ export default function PaletaComandos({
                 ariaLabel={ariaLabel || placeholder}
                 aria-controls={idLista}
                 aria-expanded={estado === 'listo'}
+                aria-activedescendant={estado === 'listo' ? idOpcion(activo) : undefined}
                 role="combobox"
                 aria-autocomplete="list"
                 autoComplete="off"
@@ -300,7 +305,7 @@ export default function PaletaComandos({
                   compact
                   icon="search"
                   title={textoSinResultados}
-                  description={`No encontramos nada para «${termino}». Probá con otro nombre o número.`}
+                  description={descripcionVacio || `No encontramos nada para «${termino}». Probá con otro nombre o número.`}
                 />
               )}
 
@@ -315,6 +320,7 @@ export default function PaletaComandos({
                         return (
                           <button
                             key={item.id ?? `${grupo.tipo}-${posicion}`}
+                            id={idOpcion(posicion)}
                             type="button"
                             role="option"
                             aria-selected={esActivo}
