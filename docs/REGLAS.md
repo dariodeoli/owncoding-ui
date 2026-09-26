@@ -217,6 +217,10 @@ compatibilidad).
 - Un solo lugar para cada formato: `moneda.js` (`formatGs`, `formatUsd`,
   `montoGs`/`montoUsd`/`montoTexto`), `fecha.js` (24 h, vacío explícito,
   nunca “Invalid Date”), `telefono.js` (`whatsappUrl` arma el único enlace).
+  El teléfono se guarda y se muestra en el formato canónico agrupado
+  (`+595 981 123 456`) con `componerTelefono`/`normalizarTelefono`; el pegado
+  internacional `00…` se parte solo (`parseTelefono`) y `internationalPhone`
+  devuelve los dígitos para `wa.me`.
 - Listas densas (#2): `fechaLista` (`17 sept 26 · 14:30`, con la hora aparte
   en `{ hora }`) y `fechaListaCorta` (`17-sept`), con la zona de la app
   (`{ timeZone: 'America/Asuncion' }`); un día puro se formatea en UTC y no se

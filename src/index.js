@@ -59,7 +59,7 @@ export { default as PeriodoTabs } from './components/PeriodoTabs.jsx'
 export { default as NumericKeypad } from './components/NumericKeypad.jsx'
 export { default as BarraLote } from './components/BarraLote.jsx'
 export { default as EmailField, DOMINIOS_EMAIL, sugerenciasDe } from './components/EmailField.jsx'
-export { default as PhoneField, parseTelefono, componerTelefono, CODIGOS_PAIS } from './components/PhoneField.jsx'
+export { default as PhoneField } from './components/PhoneField.jsx'
 export { default as SerialField, normalizarSerial } from './components/SerialField.jsx'
 export { imeiValido, separarSeriales, normalizarSeriales } from './utils/serial.js'
 export { default as InstagramField, normalizarInstagram } from './components/InstagramField.jsx'
@@ -381,6 +381,9 @@ export { fechaValida, fechaHora, fechaDia, fechaHoraCorta, fechaCorta, fechaList
 export { ultimos4, partirSerial, serialEnmascarado } from './utils/serial.js'
 export { extractTokenFromUrl, esToken } from './utils/token.js'
 export {
+  CODIGOS_PAIS,
+  parseTelefono,
+  componerTelefono,
   normalizarTelefono,
   internationalPhone,
   whatsappUrl,

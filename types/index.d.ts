@@ -175,10 +175,25 @@ export function ListGridToggle(props: { value: 'list' | 'grid' | (string & {}); 
 export function EmailField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void; dominios?: string[]; sugerir?: boolean }): ReactElement
 export const DOMINIOS_EMAIL: string[]
 export function sugerenciasDe(valor: string, dominios?: string[]): string[]
-export function PhoneField(props: Record<string, any> & { value?: string; onChange?: (valor: string) => void; className?: string }): ReactElement
-export function parseTelefono(valor: string): { codigo: string; numero: string; local?: string }
-export function componerTelefono(codigo: string, numero: string): string
-export const CODIGOS_PAIS: Array<{ codigo: string; pais: string; bandera?: string }>
+export function PhoneField(props: {
+  countryCode?: string
+  phone?: string
+  onChange?: (valor: string) => void
+  onCountryCodeChange?: (codigo: string) => void
+  disabled?: boolean
+  placeholder?: string
+  countryAriaLabel?: string
+  phoneAriaLabel?: string
+  codigos?: string[]
+  mensajeInvalido?: string
+  id?: string
+  className?: string
+}): ReactElement
+/** Parte `+595 981 123 456`, `+595981123456` o el pegado `00595 …`. */
+export function parseTelefono(valor: string, countryCodePorDefecto?: string): { countryCode: string; phone: string }
+/** Arma `+<código> <número>`; sin número devuelve `null`. */
+export function componerTelefono(datos?: { countryCode?: string; phone?: string }): string | null
+export const CODIGOS_PAIS: string[]
 export function SerialField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void; normalizar?: (valor: string) => string }): ReactElement
 export function normalizarSerial(valor: string): string
 export function InstagramField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void }): ReactElement
@@ -963,13 +978,15 @@ export function partirSerial(serial: string): { prefijo: string; ultimos: string
 export function serialEnmascarado(serial: string): string
 export function extractTokenFromUrl(url: string): string
 export function esToken(valor: string): boolean
-export function normalizarTelefono(valor: string): string
-export function internationalPhone(valor: string): string
-export function whatsappUrl(telefono: string, mensaje?: string): string
-export function soloDigitos(valor: string): string
+/** Formato canónico agrupado: `+595 981 123 456`; sin teléfono, `''`. */
+export function normalizarTelefono(telefono: string, countryCode?: string): string
+export function internationalPhone(telefono: string, countryCode?: string): string
+export function whatsappUrl(telefono: string, mensaje?: string, countryCode?: string): string
+export function soloDigitos(valor: string, max?: number): string
 export function codigoPais(telefono: string): string
-export function telefonoVisible(telefono: string): string
-export function telefonoValido(telefono: string): boolean
+export function telefonoVisible(telefono: string, countryCode?: string): string
+/** Móvil PY (9 dígitos tras +595); otros países, 6–12 dígitos. */
+export function telefonoValido(telefono: string, countryCode?: string): boolean
 export const MENSAJE_TELEFONO: string
 
 /** Props de los objetos con superficie abierta (se tipan al adoptarse). */

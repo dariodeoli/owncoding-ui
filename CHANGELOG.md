@@ -98,6 +98,25 @@ integrador. Todas las reglas quedan en `docs/REGLAS.md`.
 - **`useDialogFocusTrap`:** scroll bloqueado, foco inicial, ciclo de Tab, `Esc`
   y devolución del foco en un hook compartido por `Modal` y `Drawer` (antes
   estaba copiado en cada uno).
+## Sin publicar — v0.39.0 propuesta (2026-09-26)
+
+Pendientes de los issues **#4** (`.d.ts` vs runtime, ciudades y entrada de
+utils) y **#3** (cierre del piloto de LedBox). Aditivo: la firma tipada de los
+helpers de teléfono pasa a la del runtime y el resto de los agregados son
+opcionales. El integrador decide el número final.
+
+- **Teléfono — contrato real y formato canónico (#4):**
+  - `parseTelefono` y `componerTelefono` viven en `utils/telefono.js` (con
+    `CODIGOS_PAIS`) y el `.d.ts` publica la firma real del runtime:
+    `{ countryCode, phone }` y el objeto de datos (antes declaraba
+    `{ codigo, numero }` y `(codigo, numero)`, así que TypeScript llamaba mal).
+  - `parseTelefono` parte el pegado internacional `00…` (`00595 981 123 456`
+    → `+595`, `981123456`) contra los códigos conocidos, el más largo primero.
+  - `normalizarTelefono` fija el formato canónico agrupado (`+595 981 000 000`)
+    en vez de devolver dígitos pegados; sin teléfono devuelve `''`.
+  - `PhoneField` tipa sus props reales y `CODIGOS_PAIS` queda como `string[]`
+    (el `.d.ts` declaraba objetos). La política sigue siendo móvil-PY y
+    `docs/REGLAS.md` §7 documenta el formato.
 
 ## v0.38.0 — 2026-09-26
 

@@ -78,9 +78,14 @@ describe('campos ampliados', () => {
     expect(renderToStaticMarkup(<EmailField value="ana@gmail.com" onChange={() => {}} />)).toContain('type="email"')
   })
 
-  test('teléfono separa código y número', () => {
+  test('teléfono separa código y número, incluido el pegado 00…', () => {
     expect(parseTelefono('+595 981 123 456')).toEqual({ countryCode: '+595', phone: '981 123 456' })
     expect(parseTelefono('981123456', '+55')).toEqual({ countryCode: '+55', phone: '981123456' })
+    // El prefijo internacional `00…` se parte contra los códigos conocidos
+    // (el más largo primero: +595, no +59 ni +5).
+    expect(parseTelefono('00595 981 123 456')).toEqual({ countryCode: '+595', phone: '981123456' })
+    expect(parseTelefono('005989123456')).toEqual({ countryCode: '+598', phone: '9123456' })
+    expect(parseTelefono('0055 11 99999-9999')).toEqual({ countryCode: '+55', phone: '11999999999' })
     expect(componerTelefono({ countryCode: '+595', phone: '981 123 456' })).toBe('+595 981 123 456')
     expect(componerTelefono({ phone: '' })).toBe(null)
     expect(renderToStaticMarkup(<PhoneField phone="981123456" onChange={() => {}} />)).toContain('aria-label="Teléfono"')

@@ -26,6 +26,7 @@ import {
   formatMoney,
   formatUsd,
   internationalPhone,
+  normalizarTelefono,
   montoConSigno,
   montoGs,
   montoTexto,
@@ -141,6 +142,15 @@ describe('lógica compartida', () => {
     expect(telefonoValido('981123456')).toBe(true)
     expect(whatsappUrl('0981123456', 'Hola Ana')).toBe('https://wa.me/595981123456?text=Hola%20Ana')
     expect(whatsappUrl('', 'Hola')).toBe('')
+  })
+
+  test('el teléfono normalizado queda en el formato canónico agrupado', () => {
+    // El formato único es `+595 981 123 456`: la normalización no devuelve
+    // dígitos pegados (`+595981000000`) ni textos sin código.
+    expect(normalizarTelefono('+595981000000')).toBe('+595 981 000 000')
+    expect(normalizarTelefono('0981 000 000')).toBe('+595 981 000 000')
+    expect(normalizarTelefono('+595 981 123 456')).toBe('+595 981 123 456')
+    expect(normalizarTelefono('')).toBe('')
   })
 
   test('primer nombre', () => {

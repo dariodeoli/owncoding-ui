@@ -1,15 +1,15 @@
 import { useState } from 'react'
 import { Input } from './ui.jsx'
-import { telefonoValido, MENSAJE_TELEFONO } from '../utils/telefono.js'
+import { CODIGOS_PAIS, telefonoValido, MENSAJE_TELEFONO } from '../utils/telefono.js'
 
 // Teléfono unificado: el código de país es editable (por defecto +595) y el
 // número acepta espacios, guiones y paréntesis. Portable: los códigos
-// sugeridos se pasan por prop y el mensaje de error es configurable.
+// sugeridos se pasan por prop y el mensaje de error es configurable. Los
+// helpers puros (`parseTelefono`, `componerTelefono`, `CODIGOS_PAIS`) viven en
+// `utils/telefono.js` y también salen por `owncoding-ui/utils`.
 
 const MAX_CODIGO = 6
 const MAX_NUMERO = 30
-
-export const CODIGOS_PAIS = ['+595', '+55', '+54', '+56', '+591', '+598', '+1', '+34', '+44', '+351']
 
 function soloDigitos(value) {
   return String(value || '').replace(/\D/g, '').slice(0, MAX_CODIGO)
@@ -17,24 +17,6 @@ function soloDigitos(value) {
 
 function soloNumero(value) {
   return String(value || '').replace(/[^\d\s()-]/g, '').slice(0, MAX_NUMERO)
-}
-
-// Separa un teléfono guardado como string único ("+595 971521111") en código
-// de país y número. Sin "+" inicial se interpreta con el código por defecto.
-export function parseTelefono(value, countryCodePorDefecto = '+595') {
-  const texto = String(value || '').trim()
-  const partes = texto.match(/^\+(\d{1,3})\s*(.*)$/)
-  if (partes) return { countryCode: `+${partes[1]}`, phone: partes[2].trim() }
-  return { countryCode: countryCodePorDefecto, phone: texto }
-}
-
-// Compone el string único que se guarda: "+<código> <número>". Sin número,
-// devuelve null.
-export function componerTelefono({ countryCode = '+595', phone = '' } = {}) {
-  const numero = String(phone || '').trim().replace(/\s+/g, ' ')
-  if (!numero) return null
-  const codigo = String(countryCode || '').replace(/\D/g, '') || '595'
-  return `+${codigo} ${numero}`
 }
 
 export default function PhoneField({

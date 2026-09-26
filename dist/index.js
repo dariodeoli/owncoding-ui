@@ -1727,8 +1727,10 @@ function EmailField({
 import { useState as useState4 } from "react";
 
 // src/utils/telefono.js
-function normalizarTelefono(value) {
-  return String(value || "").replace(/[^\d+]/g, "");
+var CODIGOS_PAIS = ["+595", "+55", "+54", "+56", "+591", "+598", "+1", "+34", "+44", "+351"];
+var CODIGOS_ORDENADOS = CODIGOS_PAIS.map((codigo) => codigo.replace(/\D/g, "")).filter(Boolean).sort((a, b) => b.length - a.length);
+function normalizarTelefono(phone, countryCode = "+595") {
+  return telefonoVisible(phone, countryCode);
 }
 function internationalPhone(value, countryCode = "+595") {
   let digits = String(value || "").replace(/\D/g, "");
@@ -1768,23 +1770,27 @@ function telefonoValido(value, countryCode = "+595") {
   if (code === "595") return /^9\d{8}$/.test(local);
   return local.length >= 6 && local.length <= 12;
 }
-var MENSAJE_TELEFONO = "Tel\xE9fono inv\xE1lido. Para Paraguay us\xE1 un m\xF3vil de 9 d\xEDgitos, ej: 981 123 456 o +595 971 234567.";
-
-// src/components/PhoneField.jsx
-import { jsx as jsx15, jsxs as jsxs10 } from "react/jsx-runtime";
-var MAX_CODIGO = 6;
-var MAX_NUMERO = 30;
-var CODIGOS_PAIS = ["+595", "+55", "+54", "+56", "+591", "+598", "+1", "+34", "+44", "+351"];
-function soloDigitos2(value) {
-  return String(value || "").replace(/\D/g, "").slice(0, MAX_CODIGO);
-}
-function soloNumero(value) {
-  return String(value || "").replace(/[^\d\s()-]/g, "").slice(0, MAX_NUMERO);
+function partirCeroCero(digitos, countryCodePorDefecto) {
+  if (!digitos) return null;
+  for (const codigo of CODIGOS_ORDENADOS) {
+    if (digitos.startsWith(codigo)) return { countryCode: `+${codigo}`, phone: digitos.slice(codigo.length) };
+  }
+  const porDefecto = String(countryCodePorDefecto || "").replace(/\D/g, "");
+  if (porDefecto && digitos.startsWith(porDefecto)) {
+    return { countryCode: `+${porDefecto}`, phone: digitos.slice(porDefecto.length) };
+  }
+  return { countryCode: `+${digitos.slice(0, 3)}`, phone: digitos.slice(3) };
 }
 function parseTelefono(value, countryCodePorDefecto = "+595") {
   const texto = String(value || "").trim();
-  const partes = texto.match(/^\+(\d{1,3})\s*(.*)$/);
-  if (partes) return { countryCode: `+${partes[1]}`, phone: partes[2].trim() };
+  const conMas = texto.match(/^\+(\d{1,3})\s*(.*)$/);
+  if (conMas) return { countryCode: `+${conMas[1]}`, phone: conMas[2].trim() };
+  const conCeroCero = texto.match(/^00[\s.-]*(.*)$/);
+  if (conCeroCero) {
+    const resto = conCeroCero[1].trim();
+    const partes = partirCeroCero(resto.replace(/\D/g, ""), countryCodePorDefecto);
+    if (partes) return partes;
+  }
   return { countryCode: countryCodePorDefecto, phone: texto };
 }
 function componerTelefono({ countryCode = "+595", phone = "" } = {}) {
@@ -1792,6 +1798,18 @@ function componerTelefono({ countryCode = "+595", phone = "" } = {}) {
   if (!numero) return null;
   const codigo = String(countryCode || "").replace(/\D/g, "") || "595";
   return `+${codigo} ${numero}`;
+}
+var MENSAJE_TELEFONO = "Tel\xE9fono inv\xE1lido. Para Paraguay us\xE1 un m\xF3vil de 9 d\xEDgitos, ej: 981 123 456 o +595 971 234567.";
+
+// src/components/PhoneField.jsx
+import { jsx as jsx15, jsxs as jsxs10 } from "react/jsx-runtime";
+var MAX_CODIGO = 6;
+var MAX_NUMERO = 30;
+function soloDigitos2(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, MAX_CODIGO);
+}
+function soloNumero(value) {
+  return String(value || "").replace(/[^\d\s()-]/g, "").slice(0, MAX_NUMERO);
 }
 function PhoneField({
   countryCode = "+595",
