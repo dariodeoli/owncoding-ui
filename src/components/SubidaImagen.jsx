@@ -324,7 +324,7 @@ export default function SubidaImagen({
       </div>
 
       {mensaje ? (
-        <p className="mt-1.5 text-xs text-bad" id={errorId} role="alert">{mensaje}</p>
+        <p className="mt-1.5 text-xs text-bad-text" id={errorId} role="alert">{mensaje}</p>
       ) : descripcion ? (
         <p className="mt-1.5 text-xs text-mute" id={ayudaId}>{descripcion}</p>
       ) : null}

@@ -68,7 +68,7 @@ export default function ProgresoChecklist({
   className,
 }) {
   const avance = progresoChecklist({ hechas, total, vencidas, riesgo, sustantivo, textoVacio })
-  const tonoTexto = avance.tono === 'ok' ? 'text-ok' : avance.tono === 'bad' ? 'text-bad' : avance.tono === 'warn' ? 'text-warn' : 'text-fore'
+  const tonoTexto = avance.tono === 'ok' ? 'text-ok-text' : avance.tono === 'bad' ? 'text-bad-text' : avance.tono === 'warn' ? 'text-warn-text' : 'text-fore'
   const hayDetalle = avance.vencidas > 0 || avance.riesgo
 
   return (
@@ -84,9 +84,9 @@ export default function ProgresoChecklist({
       )}
       {mostrarDetalle && hayDetalle && (
         <p className="mt-1 text-[11px] text-mute">
-          {avance.riesgo && <span className="text-bad">Sin avance</span>}
+          {avance.riesgo && <span className="text-bad-text">Sin avance</span>}
           {avance.riesgo && avance.vencidas > 0 && ' · '}
-          {avance.vencidas > 0 && <span className="text-warn">{avance.vencidas} vencida{avance.vencidas === 1 ? '' : 's'}</span>}
+          {avance.vencidas > 0 && <span className="text-warn-text">{avance.vencidas} vencida{avance.vencidas === 1 ? '' : 's'}</span>}
         </p>
       )}
     </div>

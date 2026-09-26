@@ -27,8 +27,14 @@ export {
   Skeleton,
   EmptyState,
   ErrorState,
+  SectionState,
   Aviso,
   Nota,
+  FormActions,
+  SaveActions,
+  useDialogClose,
+  useDialogPending,
+  conFormulario,
   PageHeader,
   DataTable,
   FormField,
@@ -70,6 +76,19 @@ export { default as SerialTexto } from './components/SerialTexto.jsx'
 export { default as CampoSeriales } from './components/CampoSeriales.jsx'
 export { default as EstadoBadge } from './components/EstadoBadge.jsx'
 export { default as SeccionColapsable } from './components/SeccionColapsable.jsx'
+export { default as TaxIdField } from './components/TaxIdField.jsx'
+export {
+  PATRON_RUC,
+  PATRON_TAX_ID_GENERICO,
+  MENSAJE_RUC,
+  MENSAJE_RUC_SIN_DATOS,
+  MENSAJE_RUC_CONSULTA,
+  taxIdValid,
+  taxIdGenericoValid,
+  taxIdValidoParaPais,
+  normalizeTaxId,
+  limpiarTaxId,
+} from './utils/taxId.js'
 
 // Acceso y shell (sin API: todo por props)
 export { default as GoogleButton, GoogleMark, OAuthDivider } from './components/GoogleButton.jsx'
@@ -79,6 +98,9 @@ export { default as LoadingScreen } from './components/LoadingScreen.jsx'
 export { default as PegarEnlaceToken } from './components/PegarEnlaceToken.jsx'
 export { default as NavLateral } from './components/NavLateral.jsx'
 export { default as MenuDesplegable } from './components/MenuDesplegable.jsx'
+
+// Tema claro/oscuro: la clase `dark` en <html> es el contrato (styles.css)
+export { default as ThemeToggle, aplicarTema, TEMA_CLARO, TEMA_OSCURO } from './components/ThemeToggle.jsx'
 
 // Ajustes (modelo de configuración) e impresión LAN/USB
 export { default as PanelDerecho } from './components/PanelDerecho.jsx'
@@ -278,6 +300,10 @@ export { TONOS, TONOS_ALIAS, tonoCanonico, puntoDeTono, chipDeTono, textoDeTono 
 
 // Lógica compartida
 export { cn, primerNombre } from './utils/cn.js'
+export { default as useDialogFocusTrap, destinoDeTab, SELECTOR_ENFOCABLES } from './hooks/useDialogFocusTrap.js'
+export { crearPilaCapas, crearRegistroPendientes } from './utils/pilaOverlays.js'
+export { useSingleFlightSubmit } from './hooks/useSingleFlightSubmit.js'
+export { completeSave, crearEnvioUnico, AVISO_REFRESCO } from './utils/guardado.js'
 export { normalizarNombre, nombrePartes, esApellidosPrimero, esRazonSocial } from './utils/nombre.js'
 export {
   BANCOS_PARAGUAY,
@@ -336,6 +362,8 @@ export {
   formatUsd,
   formatUsdInput,
   parseUsdInput,
+  normalizarMontoInput,
+  caretTrasDigitos,
   formatMoney,
   montoGs,
   montoUsd,
@@ -349,7 +377,7 @@ export {
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
 } from './utils/moneda.js'
-export { fechaValida, fechaHora, fechaDia, fechaHoraCorta, fechaCorta } from './utils/fecha.js'
+export { fechaValida, fechaHora, fechaDia, fechaHoraCorta, fechaCorta, fechaLista, fechaListaCorta, diasHasta, tonoVencimiento } from './utils/fecha.js'
 export { ultimos4, partirSerial, serialEnmascarado } from './utils/serial.js'
 export { extractTokenFromUrl, esToken } from './utils/token.js'
 export {

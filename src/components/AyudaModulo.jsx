@@ -64,7 +64,7 @@ export default function AyudaModulo({
             <ul className="space-y-2">
               {puntos.map((punto) => (
                 <li key={punto} className="flex items-start gap-2 text-sm leading-5 text-fore">
-                  <Icon name="check" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" />
+                  <Icon name="check" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ok-text" />
                   <span className="min-w-0">{punto}</span>
                 </li>
               ))}

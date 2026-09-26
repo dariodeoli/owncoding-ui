@@ -1,9 +1,13 @@
-import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { Children, cloneElement, createContext, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '../utils/cn.js'
-import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
+import { formatGs, formatGsInput, formatUsdInput, normalizarMontoInput, caretTrasDigitos, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
 import { TAMANOS_CAMPO } from '../utils/tamanos.js'
 import { TAMANO_MODAL_PREDETERMINADO, TAMANOS_MODAL } from '../utils/modal.js'
 import { textoDeTono } from '../utils/tonos.js'
+import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js'
+import { crearRegistroPendientes } from '../utils/pilaOverlays.js'
+import { PIE_ACCIONES } from '../utils/formulario.js'
 import Icon from './Icon.jsx'
 
 // ── Button ──────────────────────────────────────────────────────────
@@ -11,7 +15,7 @@ const VARIANTS = {
   primary: 'bg-fono text-onbrand hover:bg-fono-light',
   success: 'bg-ok text-black hover:brightness-110',
   danger: 'bg-bad text-fore hover:brightness-110',
-  outline: 'bg-transparent text-fore border border-ink-500 hover:border-fono hover:bg-fono/10',
+  outline: 'bg-transparent text-fore border border-interactivo hover:border-fono hover:bg-fono/10',
   ghost: 'bg-transparent text-mute hover:bg-ink-700 hover:text-fore',
 }
 export function Button({ className, variant = 'primary', ...props }) {
@@ -114,14 +118,20 @@ export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = 
 // el tamaño máximo del monto (por defecto el general de #148; las ventas
 // pasan `LIMITE_MONTO_VENTAS`): el campo nunca trunca lo escrito, solo lo
 // marca con `aria-invalid` para que el formulario lo valide.
-export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
-  const isPyg = currency === 'PYG'
+//
+// `integerOnly` (cosecha de ScaleOS, #2) fuerza enteros aunque la moneda
+// admita decimales (transporte entero de previsión/informes). El caret se
+// mantiene tras el dígito que se está editando —también al pegar— con
+// `caretTrasDigitos` y `normalizarMontoInput`.
+export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, integerOnly = false, onKeyDown, ...props }) {
+  const soloEnteros = currency === 'PYG' || integerOnly
   const prefix = String(symbol ?? '').trim() || SIMBOLOS_MONEDA[currency] || currency
-  const display = isPyg ? formatGsInput(value) : formatUsdInput(value)
+  const display = soloEnteros ? formatGsInput(String(value ?? '').split('.')[0]) : formatUsdInput(value)
   const excede = excedeMonto(value, max)
+  const inputRef = useRef(null)
   // Largo máximo del campo: el monto más grande documentado (con separadores)
   // entra completo y no se puede escribir de más; se puede pisar por prop.
-  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !isPyg })
+  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !soloEnteros })
   return (
     <div className="relative">
       <span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-semibold text-mute">
@@ -129,14 +139,31 @@ export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, cla
       </span>
       <Input
         {...props}
+        ref={inputRef}
         aria-invalid={excede || undefined}
         title={excede ? `El monto supera el máximo permitido (${max.toLocaleString('es-PY')})` : props.title}
-        inputMode={isPyg ? 'numeric' : 'decimal'}
+        inputMode={soloEnteros ? 'numeric' : 'decimal'}
         maxLength={topeLargo}
         value={display}
-        onChange={(event) => {
-          const next = event.target.value.replace(/[^\d.,]/g, '')
-          onValueChange?.(isPyg ? (next.trim() ? parseGsInput(next) : '') : parseUsdInput(next))
+        onKeyDown={(evento) => {
+          onKeyDown?.(evento)
+          if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return
+          const permitidos = soloEnteros ? '0123456789' : '0123456789.,'
+          if (evento.key.length === 1 && !permitidos.includes(evento.key)) evento.preventDefault()
+        }}
+        onChange={(evento) => {
+          const input = evento.currentTarget ?? evento.target
+          const antes = input.value.slice(0, input.selectionStart ?? input.value.length)
+          const digitosAntes = (antes.match(/\d/g) || []).length
+          const normalizado = normalizarMontoInput(input.value, currency, { integerOnly })
+          onValueChange?.(soloEnteros ? (normalizado ? Number(normalizado) : '') : normalizado)
+          if (typeof requestAnimationFrame !== 'function') return
+          requestAnimationFrame(() => {
+            const nodo = inputRef.current
+            if (!nodo || document.activeElement !== nodo) return
+            const caret = caretTrasDigitos(nodo.value, digitosAntes)
+            nodo.setSelectionRange?.(caret, caret)
+          })
         }}
         className={cn(TAMANOS_CAMPO.moneda, prefix.length > 3 ? 'pl-14' : 'pl-12', 'tabular-nums', className)}
       />
@@ -225,40 +252,133 @@ export function Card({ className, ...props }) {
   )
 }
 
+// ── Diálogos: contextos compartidos por Modal y Drawer ──────────────
+// El cierre interactivo (Esc, clic afuera, botón ×) pasa por acá y está
+// bloqueado mientras haya un formulario pendiente; el pie de acciones se
+// asocia al `<form>` real aunque viva fuera de él.
+const ContextoDialogo = createContext(null)
+const ContextoPie = createContext(null)
+
+// En el cliente, layout effect (el registro se libera antes de los efectos
+// pasivos); en SSR, `useEffect` para no ensuciar el render del servidor.
+const useEfectoLayout = typeof window === 'undefined' ? useEffect : useLayoutEffect
+
+/** Cierre del diálogo en curso; `undefined` fuera de un Modal/Drawer. */
+export function useDialogClose() {
+  return useContext(ContextoDialogo)?.requestClose
+}
+
+// Cada formulario registra su propio bloqueo mientras `pendiente`: el diálogo
+// no se cierra hasta que TODOS terminen. Uno ocioso no destraba a otro que
+// guarda. Se registra en layout effect para que un form que termina de guardar
+// libere el cierre antes de los efectos pasivos.
+export function useDialogPending(pendiente) {
+  const contexto = useContext(ContextoDialogo)
+  const id = useRef(Symbol('formulario')).current
+  useEfectoLayout(() => {
+    contexto?.registrar(id, Boolean(pendiente))
+    return () => contexto?.registrar(id, false)
+  }, [contexto, id, pendiente])
+}
+
+// Asocia a cada acción con forma de botón el `form` del formulario que la
+// contiene: la validación nativa, el Enter y el estado disabled siguen siendo
+// los del <form>. Los botones con `form` propio no se tocan.
+export function conFormulario(children, formId) {
+  return Children.map(children, (hijo) =>
+    isValidElement(hijo) && !hijo.props?.form && (hijo.type === 'button' || typeof hijo.type === 'function')
+      ? cloneElement(hijo, { form: formId || undefined })
+      : hijo,
+  )
+}
+
+// Pie de acciones del formulario. Si el diálogo expone un pie (Modal/Drawer),
+// las acciones se montan ahí por portal; si no, se dibujan donde van.
+export function FormActions({ children, className }) {
+  const pie = useContext(ContextoPie)
+  const ancla = useRef(null)
+  const id = useId()
+  const [formId, setFormId] = useState('')
+  // El pie se monta después del form: se re-evalúa cuando aparece o cambia,
+  // así un diálogo que cierra y reabre no conserva un form viejo.
+  useEfectoLayout(() => {
+    const formulario = ancla.current?.closest('form')
+    if (!formulario) {
+      setFormId('')
+      return
+    }
+    if (!formulario.id) formulario.id = id
+    setFormId(formulario.id)
+  }, [id, pie])
+  const acciones = <div className={cn(PIE_ACCIONES, className)}>{conFormulario(children, formId)}</div>
+  return (
+    <>
+      <span hidden ref={ancla} />
+      {pie ? createPortal(acciones, pie) : acciones}
+    </>
+  )
+}
+
+// Pie de guardado del ciclo #2: registra el bloqueo del diálogo mientras
+// `pendiente`, deja el cancelar deshabilitado y los children (la acción de
+// guardar) van al `<form>` real. Fuera de un diálogo solo dibuja los children.
+export function SaveActions({ pendiente = false, children, cancelLabel = 'Cancelar', className }) {
+  const requestClose = useDialogClose()
+  useDialogPending(pendiente)
+  return (
+    <FormActions className={className}>
+      {requestClose && cancelLabel ? (
+        <Button type="button" variant="ghost" disabled={pendiente} onClick={() => { if (!pendiente) requestClose() }}>
+          {cancelLabel}
+        </Button>
+      ) : null}
+      {children}
+    </FormActions>
+  )
+}
+
 // Popup estándar: Esc, clic afuera, botón cerrar y cierre opcional al guardar.
 // El ancho se elige con `size` (TAMANOS_MODAL): no se pasa `max-w-*` suelto.
-export function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
+// El foco, el Esc, el scroll bloqueado y la pila de capas son del hook; el
+// pie queda fijo abajo y `SaveActions`/`FormActions` se montan ahí.
+export function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO, busy = false }) {
   const dialog = useRef(null)
-  const close = useRef(onClose)
-  close.current = onClose
   const titleId = useId()
-  useEffect(() => {
-    if (!open) return undefined
-    const previous = document.activeElement
-    const overflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    dialog.current?.focus()
-    const onKey = (e) => {
-      if (e.key === 'Escape') close.current?.()
-      if (e.key !== 'Tab') return
-      const nodes = [...(dialog.current?.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || [])].filter(el => el.getClientRects().length)
-      const first = nodes[0], last = nodes[nodes.length - 1]
-      if (!first) { e.preventDefault(); return }
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog.current)) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = overflow; previous?.focus?.() }
-  }, [open])
+  const [pie, setPie] = useState(null)
+  const pendientes = useRef(crearRegistroPendientes()).current
+  const [hayPendientes, setHayPendientes] = useState(false)
+  const bloqueado = Boolean(busy || hayPendientes)
+  const cerrar = useCallback(() => {
+    if (!busy && !pendientes.bloqueado) onClose?.()
+  }, [busy, onClose, pendientes])
+  const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, dialog, { busy: bloqueado })
+  const registrar = useCallback((id, pendiente) => {
+    pendientes.registrar(id, pendiente)
+    setHayPendientes(pendientes.bloqueado)
+  }, [pendientes])
+  const contexto = useMemo(() => ({ requestClose, registrar }), [requestClose, registrar])
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className={cn('max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6', TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className)}>
-        <div className="mb-4 flex items-center justify-between gap-3">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
+      <div
+        ref={dialog}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal={esSuperior ? 'true' : undefined}
+        aria-labelledby={titleId}
+        aria-busy={bloqueado || undefined}
+        className={cn('flex max-h-[min(90dvh,720px)] w-full flex-col overflow-hidden rounded-2xl border border-ink-600 bg-ink shadow-float', TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className)}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-ink-600 p-4 sm:px-6">
           <h2 id={titleId} className="text-base font-bold text-fore">{title}</h2>
-          <button type="button" onClick={onClose} className="toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
+          <button type="button" onClick={requestClose} disabled={bloqueado} className="toque-44 rounded-lg p-2 text-mute transition hover:bg-ink-700 hover:text-fore disabled:pointer-events-none disabled:opacity-40" aria-label="Cerrar">×</button>
         </div>
-        {children}
+        <ContextoDialogo.Provider value={contexto}>
+          <ContextoPie.Provider value={pie}>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">{children}</div>
+          </ContextoPie.Provider>
+        </ContextoDialogo.Provider>
+        <div ref={setPie} className="border-t border-ink-600 p-4 empty:hidden sm:px-6" />
       </div>
     </div>
   )
@@ -277,9 +397,9 @@ export function ConfirmDialog({
   busy = false,
 }) {
   return (
-    <Modal open={open} onClose={busy ? undefined : onCancel} title={title} size="corto">
+    <Modal open={open} onClose={onCancel} busy={busy} title={title} size="corto">
       <div className="space-y-5">
-        <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl', variant === 'danger' ? 'bg-bad/10 text-bad' : 'bg-fono/10 text-fono-light')}>
+        <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl', variant === 'danger' ? 'bg-bad/10 text-bad-text' : 'bg-fono/10 text-fono-text')}>
           <Icon name={variant === 'danger' ? 'alert' : 'check'} className="h-5 w-5" />
         </div>
         <p className="text-sm leading-6 text-mute">{description}</p>
@@ -294,11 +414,11 @@ export function ConfirmDialog({
 
 // ── Badge ───────────────────────────────────────────────────────────
 const BADGE = {
-  blue: 'bg-fono/15 text-fono-light border-fono/25',
-  green: 'bg-ok/15 text-ok border-ok/25',
-  red: 'bg-bad/15 text-bad border-bad/25',
-  orange: 'bg-warn/15 text-warn border-warn/25',
-  yellow: 'bg-warn/15 text-warn border-warn/25',
+  blue: 'bg-fono/15 text-fono-text border-fono/25',
+  green: 'bg-ok/15 text-ok-text border-ok/25',
+  red: 'bg-bad/15 text-bad-text border-bad/25',
+  orange: 'bg-warn/15 text-warn-text border-warn/25',
+  yellow: 'bg-warn/15 text-warn-text border-warn/25',
   slate: 'bg-ink-600 text-mute border-ink-500',
 }
 export function Badge({ className, color = 'slate', ...props }) {
@@ -339,10 +459,10 @@ export function Dot({ color = 'slate', pulse = false, className }) {
 // firma que las acciones de Inventario para que todas las grillas del
 // módulo de control compartan tamaño, foco y colores.
 const ICON_ACTION_TONE = {
-  ok: 'border-ok/30 text-ok hover:bg-ok/10',
-  warn: 'border-warn/30 text-warn hover:bg-warn/10',
+  ok: 'border-ok/30 text-ok-text hover:bg-ok/10',
+  warn: 'border-warn/30 text-warn-text hover:bg-warn/10',
   fono: 'border-fono/30 text-fono-light hover:bg-fono/10',
-  bad: 'border-bad/30 text-bad hover:bg-bad/10',
+  bad: 'border-bad/30 text-bad-text hover:bg-bad/10',
   mute: 'border-transparent text-mute hover:bg-ink-700 hover:text-fore',
 }
 // `size="touch"` agranda el área táctil (móvil): mismo ícono y tono. En
@@ -367,40 +487,35 @@ export function IconAction({ icon, label, tone = 'mute', onClick, disabled = fal
 }
 
 // ── Drawer ──────────────────────────────────────────────────────────
-// Panel lateral móvil: overlay, foco atrapado, Esc y clic afuera. Mismo
-// nivel de robustez que el Modal; entra deslizándose desde el costado.
-export function Drawer({ open, onClose, title, children, side = 'right', className }) {
+// Panel lateral móvil: overlay y clic afuera; el foco atrapado, Esc y el
+// scroll bloqueado salen del mismo hook que el Modal. Entra deslizándose
+// desde el costado.
+export function Drawer({ open, onClose, title, children, side = 'right', className, busy = false }) {
   const panel = useRef(null)
-  const close = useRef(onClose)
-  close.current = onClose
   const titleId = useId()
-  useEffect(() => {
-    if (!open) return undefined
-    const previous = document.activeElement
-    const overflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    panel.current?.focus()
-    const onKey = (e) => {
-      if (e.key === 'Escape') close.current?.()
-      if (e.key !== 'Tab') return
-      const nodes = [...(panel.current?.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || [])].filter(el => el.getClientRects().length)
-      const first = nodes[0], last = nodes[nodes.length - 1]
-      if (!first) { e.preventDefault(); return }
-      if (e.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) { e.preventDefault(); last.focus() }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
-    }
-    document.addEventListener('keydown', onKey)
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = overflow; previous?.focus?.() }
-  }, [open])
+  const [pie, setPie] = useState(null)
+  const pendientes = useRef(crearRegistroPendientes()).current
+  const [hayPendientes, setHayPendientes] = useState(false)
+  const bloqueado = Boolean(busy || hayPendientes)
+  const cerrar = useCallback(() => {
+    if (!busy && !pendientes.bloqueado) onClose?.()
+  }, [busy, onClose, pendientes])
+  const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, panel, { busy: bloqueado })
+  const registrar = useCallback((id, pendiente) => {
+    pendientes.registrar(id, pendiente)
+    setHayPendientes(pendientes.bloqueado)
+  }, [pendientes])
+  const contexto = useMemo(() => ({ requestClose, registrar }), [requestClose, registrar])
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 bg-black/60" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
+    <div className="fixed inset-0 z-50 bg-black/60" onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
       <div
         ref={panel}
         tabIndex={-1}
         role="dialog"
-        aria-modal="true"
+        aria-modal={esSuperior ? 'true' : undefined}
         aria-labelledby={titleId}
+        aria-busy={bloqueado || undefined}
         className={cn(
           'absolute inset-y-0 flex max-h-full w-full max-w-md flex-col overflow-hidden border-ink-600 bg-ink shadow-float',
           side === 'left' ? 'left-0 border-r' : 'right-0 border-l',
@@ -409,9 +524,14 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
       >
         <div className="flex items-center justify-between gap-3 border-b border-ink-600 p-4">
           <h2 id={titleId} className="text-base font-bold text-fore">{title}</h2>
-          <button type="button" onClick={onClose} className="toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
+          <button type="button" onClick={requestClose} disabled={bloqueado} className="toque-44 rounded-lg p-2 text-mute transition hover:bg-ink-700 hover:text-fore disabled:pointer-events-none disabled:opacity-40" aria-label="Cerrar">×</button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
+        <ContextoDialogo.Provider value={contexto}>
+          <ContextoPie.Provider value={pie}>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
+          </ContextoPie.Provider>
+        </ContextoDialogo.Provider>
+        <div ref={setPie} className="border-t border-ink-600 p-4 empty:hidden" />
       </div>
     </div>
   )
@@ -421,7 +541,7 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
 const ToastContext = createContext(null)
 let toastCounter = 0
 const TOAST_ICON = { success: 'check', error: 'alert', info: 'info' }
-const TOAST_TONE = { success: 'text-ok', error: 'text-bad', info: 'text-fono-light' }
+const TOAST_TONE = { success: 'text-ok-text', error: 'text-bad-text', info: 'text-fono-light' }
 
 export function ToastProvider({ children, demo = false }) {
   const [toasts, setToasts] = useState([])
@@ -502,10 +622,12 @@ export function EmptyState({ icon = 'box', title, description, action, compact =
 }
 
 // ── ErrorState ──────────────────────────────────────────────────────
-export function ErrorState({ title = 'Algo salió mal', description, onRetry }) {
+// `compact` lo usa el estado de sección; `role` se pasa cuando el error vive
+// dentro de una sección (alert) o cuando la pantalla ya lo anuncia.
+export function ErrorState({ title = 'Algo salió mal', description, onRetry, compact = false, role, className }) {
   return (
-    <div className="flex flex-col items-center justify-center px-6 py-12 text-center">
-      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad">
+    <div role={role} className={cn('flex flex-col items-center justify-center px-6 text-center', compact ? 'py-6' : 'py-12', className)}>
+      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad-text">
         <Icon name="alert" className="h-5 w-5" />
       </div>
       <p className="mt-3 text-sm font-semibold text-fore">{title}</p>
@@ -519,15 +641,41 @@ export function ErrorState({ title = 'Algo salió mal', description, onRetry }) 
   )
 }
 
+// ── SectionState ────────────────────────────────────────────────────
+// Estado de sección en un solo objeto: vacío, cargando o error. Compone los
+// objetos que ya existen — EmptyState, Skeleton y ErrorState — en vez de
+// duplicar su markup: `cargando` dibuja placeholders con Skeleton, `error`
+// delega en ErrorState (con role de alerta) y el resto en EmptyState.
+export function SectionState({ estado = 'vacio', title, description, icon = 'box', action, compact = false, onRetry, className }) {
+  if (estado === 'cargando') {
+    return (
+      <div
+        role="status"
+        aria-busy="true"
+        aria-label={title || 'Cargando…'}
+        className={cn('flex flex-col items-center justify-center px-6 text-center', compact ? 'py-6' : 'py-12', className)}
+      >
+        <Skeleton className="h-12 w-12 rounded-2xl" />
+        <Skeleton className="mt-3 h-4 w-36" />
+        {description ? <Skeleton className="mt-2 h-3 w-52" /> : null}
+      </div>
+    )
+  }
+  if (estado === 'error') {
+    return <ErrorState title={title} description={description} onRetry={onRetry} compact={compact} role="alert" className={className} />
+  }
+  return <EmptyState icon={icon} title={title} description={description} action={action} compact={compact} className={className} />
+}
+
 // ── Aviso (banner inline) ───────────────────────────────────────────
 // Mensaje de resultado pegado al flujo: error o confirmación. Es el único
 // objeto para avisos inline (docs/PLANTILLA-OBJETOS.md §4); no se copia el
 // borde y el fondo de color por pantalla. `error` anuncia con role="alert" y
 // el resto con role="status"; el espaciado extra se ajusta con className.
 const AVISOS = {
-  error: 'border-bad/30 bg-bad/10 text-bad',
-  ok: 'border-ok/30 bg-ok/10 text-ok',
-  warn: 'border-warn/30 bg-warn/10 text-warn',
+  error: 'border-bad/30 bg-bad/10 text-bad-text',
+  ok: 'border-ok/30 bg-ok/10 text-ok-text',
+  warn: 'border-warn/30 bg-warn/10 text-warn-text',
 }
 export function Aviso({ tono = 'error', como = 'p', compact = false, className, children, ...props }) {
   // `como="div"` para el aviso con estructura (ícono, botón de reintentar):
@@ -576,7 +724,7 @@ export function PageHeader({ title, subtitle, actions, backTo, eyebrow, migas })
           <button
             type="button"
             onClick={backTo}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-interactivo text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore"
             aria-label="Volver"
           >
             <Icon name="back" className="h-4 w-4" />
@@ -659,12 +807,16 @@ export function DataTable({ columns, rows, emptyLabel = 'Sin datos para mostrar.
 }
 
 // ── FormField ───────────────────────────────────────────────────────
-export function FormField({ label, hint, error, children, htmlFor }) {
+// Envoltorio label + mensaje. El mensaje (error o hint) lleva `id` para que el
+// campo lo declare en `aria-describedby`: por defecto se deriva de `htmlFor` y
+// se puede pisar con `descripcionId` (campos con id generado por `useId`).
+export function FormField({ label, hint, error, children, htmlFor, descripcionId }) {
+  const mensajeId = descripcionId || (htmlFor ? `${htmlFor}-descripcion` : undefined)
   return (
     <div>
       {label && <Label htmlFor={htmlFor}>{label}</Label>}
       {children}
-      {error ? <p role="alert" className="mt-1.5 text-xs text-bad">{error}</p> : hint ? <p className="mt-1.5 text-xs text-mute">{hint}</p> : null}
+      {error ? <p id={mensajeId} role="alert" className="mt-1.5 text-xs text-bad-text">{error}</p> : hint ? <p id={mensajeId} className="mt-1.5 text-xs text-mute">{hint}</p> : null}
     </div>
   )
 }
@@ -692,11 +844,11 @@ export function Stat({ label, valor, delta, sub, nota, tono, destacado = false, 
       </div>
       <div className="mt-1.5 flex items-center gap-2 text-xs">
         {typeof delta === 'number' && (deltaComo === 'chip' ? (
-          <span className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium', sube ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad')}>
+          <span className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium', sube ? 'bg-ok/15 text-ok-text' : 'bg-bad/15 text-bad-text')}>
             {sube ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}%
           </span>
         ) : (
-          <span className={cn('font-medium', sube ? 'text-ok' : 'text-bad')}>
+          <span className={cn('font-medium', sube ? 'text-ok-text' : 'text-bad-text')}>
             {sube ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}%
           </span>
         ))}
@@ -752,7 +904,7 @@ export function Subtabs({ value, onChange, items = [], className }) {
 // etiqueta a la izquierda en `mute`, valor a la derecha en semibold con
 // números tabulares y tono semántico. `etiquetaComo`/`valorComo` permiten
 // mantener `dt`/`dd` dentro de un `<dl>`.
-const TONOS_VALOR = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', mute: 'text-mute' }
+const TONOS_VALOR = { ok: 'text-ok-text', warn: 'text-warn-text', bad: 'text-bad-text', mute: 'text-mute' }
 
 export function FilaDato({ etiqueta, valor, tono = '', etiquetaComo: Etiqueta = 'span', valorComo: Valor = 'span', className, valorClassName, children }) {
   return (

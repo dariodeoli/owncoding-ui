@@ -27,7 +27,7 @@ export default function Stepper({ pasos = [], actual = 0, hechos = [], variante 
               <span
                 className={cn(
                   'grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold',
-                  activo ? 'oc-paso-activo bg-info/15 text-info' : hecho ? 'bg-ok/15 text-ok' : 'bg-ink-700 text-mute',
+                  activo ? 'oc-paso-activo bg-info/15 text-info-text' : hecho ? 'bg-ok/15 text-ok-text' : 'bg-ink-700 text-mute',
                 )}
                 aria-hidden="true"
               >
@@ -35,7 +35,7 @@ export default function Stepper({ pasos = [], actual = 0, hechos = [], variante 
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-xs font-semibold">{etiquetaDe(paso)}</span>
-                {typeof paso === 'object' && paso.detalle ? <span className={cn('block truncate text-[11px]', activo ? 'text-info' : 'text-mute')}>{paso.detalle}</span> : null}
+                {typeof paso === 'object' && paso.detalle ? <span className={cn('block truncate text-[11px]', activo ? 'text-info-text' : 'text-mute')}>{paso.detalle}</span> : null}
               </span>
             </li>
           )
@@ -54,15 +54,15 @@ export default function Stepper({ pasos = [], actual = 0, hechos = [], variante 
             <span
               className={cn(
                 'grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[11px] font-bold',
-                hecho && 'border-pass/40 bg-pass/15 text-pass',
-                !hecho && enCurso && 'oc-paso-activo border-fono bg-fono/10 text-fono-light',
+                hecho && 'border-pass/40 bg-pass/15 text-pass-text',
+                !hecho && enCurso && 'oc-paso-activo border-fono bg-fono/10 text-fono-text',
                 !hecho && !enCurso && 'border-ink-600 bg-ink-800 text-mute',
               )}
               aria-hidden="true"
             >
               {hecho ? <Icon name="check" className="h-3.5 w-3.5" /> : indice + 1}
             </span>
-            <span className={cn('text-xs font-semibold', enCurso ? 'text-fore' : hecho ? 'text-pass' : 'text-mute')}>
+            <span className={cn('text-xs font-semibold', enCurso ? 'text-fore' : hecho ? 'text-pass-text' : 'text-mute')}>
               {etiquetaDe(paso)}
               {typeof paso === 'object' && paso.detalle && <span className="ml-1 font-normal text-mute">· {paso.detalle}</span>}
             </span>

@@ -127,7 +127,7 @@ export default function AjustesImpresion({
               <div className="flex flex-wrap items-center gap-1">
                 {onProbar && <Button type="button" variant="outline" disabled={probando === impresora.id} onClick={() => onProbar(impresora)}>{probando === impresora.id ? 'Probando…' : 'Imprimir prueba'}</Button>}
                 <Button type="button" variant="ghost" onClick={() => setForm(aFormulario(impresora))}>Editar</Button>
-                {onEliminar && <Button type="button" variant="ghost" className="text-bad" onClick={() => onEliminar(impresora.id)}>Eliminar</Button>}
+                {onEliminar && <Button type="button" variant="ghost" className="text-bad-text" onClick={() => onEliminar(impresora.id)}>Eliminar</Button>}
               </div>
             </li>
           )

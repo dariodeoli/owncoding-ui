@@ -6,6 +6,10 @@
 // tabla de contrastes en `docs/SHELL.md`.
 import { describe, expect, test } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { createElement as h } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+
+import { Badge, Button, ChipEstado, PageHeader, ThemeToggle, chipDeTono, puntoDeTono } from '../src/index.js'
 
 const tokens = readFileSync(new URL('../src/styles/tokens.css', import.meta.url), 'utf8')
 const lineas = tokens.split('\n')
@@ -21,7 +25,9 @@ function bloqueDe(apertura) {
     let fin = inicio
     while (fin < lineas.length && !lineas[fin].includes('}')) fin++
     const bloque = lineas.slice(inicio, fin + 1).join('\n')
-    if (bloque.includes('--c-')) return bloque
+    // Solo cuenta como bloque de paleta si *define* tokens de color; las
+    // referencias `rgb(var(--c-…))` (p. ej. dentro del sistema --ds-*) no.
+    if (/--c-[\w-]+:\s*[\d]+\s+[\d]+\s+[\d]+/.test(bloque)) return bloque
   }
   throw new Error(`falta el bloque de tokens que abre con ${apertura}`)
 }
@@ -85,5 +91,110 @@ describe('contraste AA de la paleta global (lenguaje v2)', () => {
     const fondoOscuro = sobre(oscuro.info, 0.2, oscuro['ink-800'])
     const ratioOscuro = contraste(oscuro.fore, fondoOscuro)
     expect(ratioOscuro, `oscuro: texto activo sobre su tinte da ${ratioOscuro.toFixed(2)}:1`).toBeGreaterThanOrEqual(4.5)
+  })
+})
+
+// ── #5: texto de chips sobre relleno tenue ──────────────────────────────────
+// `Badge` y `ChipEstado` pintan TEXTO sobre `bg-*/15` (Badge) y `bg-*/10`
+// (TONOS.chip). El tono base queda para rellenos, puntos y bordes; la familia
+// `--c-*-text` es la que se usa como texto y se mide ≥4.5:1 sobre el tinte en
+// blanco y canvas (claro) y en las superficies oscuras.
+
+const TONOS_TEXTO = ['ok', 'warn', 'bad', 'info', 'pass', 'fono']
+
+const superficiesDeTinte = (tema, paleta) => tema === 'claro'
+  ? { blanco: paleta.ink, canvas: paleta.paper }
+  : { panel: paleta.ink, canvas: paleta.paper, 'ink-800': paleta['ink-800'] }
+
+describe('texto de chips sobre relleno tenue (#5)', () => {
+  test('los seis tonos usan su familia *-text y cumplen AA sobre el tinte', () => {
+    const claro = efectiva(PALETAS.claro)
+    for (const [tema, paleta] of [['claro', claro], ['oscuro', efectiva(PALETAS.oscuro)]]) {
+      for (const tono of TONOS_TEXTO) {
+        const texto = paleta[`${tono}-text`]
+        // `pass` no se redefine por tema: hereda el valor claro.
+        const base = paleta[tono] ?? claro[tono]
+        expect(texto, `falta --c-${tono}-text en ${tema}`).toBeDefined()
+        expect(base, `falta --c-${tono} en ${tema}`).toBeDefined()
+        for (const alfa of [0.15, 0.1]) {
+          for (const [nombre, fondo] of Object.entries(superficiesDeTinte(tema, paleta))) {
+            const ratio = contraste(texto, sobre(base, alfa, fondo))
+            expect(
+              ratio,
+              `${tema}: --c-${tono}-text sobre ${tono}/${alfa * 100} en ${nombre} da ${ratio.toFixed(2)}:1`,
+            ).toBeGreaterThanOrEqual(4.5)
+          }
+        }
+      }
+    }
+  })
+
+  test('el tono base queda intacto: rellenos, puntos y bordes no cambian', () => {
+    const claro = efectiva(PALETAS.claro)
+    expect(claro.ok).toEqual([22, 101, 52])
+    expect(claro.warn).toEqual([146, 64, 14])
+    expect(claro.bad).toEqual([185, 28, 28])
+    expect(claro.info).toEqual([32, 89, 190])
+    expect(claro.pass).toEqual([22, 197, 94])
+    expect(claro['fono-light']).toEqual([4, 120, 87])
+  })
+
+  test('Badge y StateChip emiten la clase de texto, no el tono base', () => {
+    for (const [color, tono] of [
+      ['green', 'ok'], ['red', 'bad'], ['orange', 'warn'], ['yellow', 'warn'], ['blue', 'fono'],
+    ]) {
+      expect(renderToStaticMarkup(h(Badge, { color }, 'Estado')), color).toContain(`text-${tono}-text`)
+    }
+    expect(renderToStaticMarkup(h(ChipEstado, { estado: 'aprobado' }))).toContain('text-ok-text')
+    expect(renderToStaticMarkup(h(ChipEstado, { estado: 'pagado' }))).toContain('text-pass-text')
+    expect(renderToStaticMarkup(h(ChipEstado, { estado: 'vencido' }))).toContain('text-bad-text')
+    expect(chipDeTono('warn')).toContain('text-warn-text')
+    expect(chipDeTono('pass')).toContain('text-pass-text')
+    expect(puntoDeTono('fono')).toContain('text-fono-text')
+  })
+
+  test('ningún mapa de la librería pinta texto con el tono base sobre su tinte', () => {
+    for (const archivo of ['../src/utils/tonos.js', '../src/components/ui.jsx']) {
+      const fuente = readFileSync(new URL(archivo, import.meta.url), 'utf8')
+      const par = /bg-(ok|warn|bad|info|pass|fono)\/\d+ text-\1(?!-)/g
+      expect(fuente.match(par), `${archivo} usa el tono base como texto`).toBeNull()
+    }
+  })
+
+  test('una app con paleta propia mapea su familia de texto (Scale OS AA)', () => {
+    // La paleta AA de Scale OS como TEXTO de chip queda apenas bajo AA (4.26 y
+    // 4.47:1, medido en su QA); mapeando `--c-ok-text`/`--c-warn-text` a un paso
+    // más oscuro el mismo chip pasa sin tocar los rellenos.
+    const ok = [29, 122, 98] // #1D7A62
+    const warn = [138, 98, 7] // #8A6207
+    expect(contraste(ok, sobre(ok, 0.15, [255, 255, 255]))).toBeLessThan(4.5)
+    expect(contraste(warn, sobre(warn, 0.15, [255, 255, 255]))).toBeLessThan(4.5)
+
+    const okTexto = [17, 107, 53] // #116B35
+    const warnTexto = [126, 90, 6] // #7E5A06
+    expect(contraste(okTexto, sobre(ok, 0.15, [255, 255, 255]))).toBeGreaterThanOrEqual(4.5)
+    expect(contraste(warnTexto, sobre(warn, 0.15, [255, 255, 255]))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  test('el borde interactivo cumple 3:1 en los dos temas', () => {
+    const claro = efectiva(PALETAS.claro)
+    const oscuro = efectiva(PALETAS.oscuro)
+    const casos = [
+      ['claro', claro.interactivo, [claro.ink, claro.paper, claro['ink-800']]],
+      ['oscuro', oscuro.interactivo, [oscuro.ink, oscuro.paper, oscuro['ink-800']]],
+    ]
+    for (const [tema, borde, fondos] of casos) {
+      expect(borde, `falta --c-interactivo en ${tema}`).toBeDefined()
+      for (const fondo of fondos) {
+        const ratio = contraste(borde, fondo)
+        expect(ratio, `${tema}: borde interactivo da ${ratio.toFixed(2)}:1`).toBeGreaterThanOrEqual(3)
+      }
+    }
+  })
+
+  test('los controles con borde de affordance emiten border-interactivo', () => {
+    expect(renderToStaticMarkup(h(Button, { variant: 'outline' }, 'Cancelar'))).toContain('border-interactivo')
+    expect(renderToStaticMarkup(h(PageHeader, { title: 'Clientes', backTo: () => {} }))).toContain('border-interactivo')
+    expect(renderToStaticMarkup(h(ThemeToggle, {}))).toContain('border-interactivo')
   })
 })

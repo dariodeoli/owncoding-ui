@@ -45,6 +45,23 @@
   --c-pass-soft: 231 248 238;
   --c-accion: 77 124 254;
 
+  /* Texto de chips sobre relleno tenue (#5): familia de TEXTO para los tonos
+     que se apoyan en tintes `bg-*/10–15` (Badge, ChipEstado, puntos de estado).
+     El tono base queda para rellenos, puntos y bordes; esta familia se mide
+     ≥4.5:1 sobre blanco y sobre el canvas, y una app con paleta propia la pisa
+     (`--c-ok-text`, `--c-warn-text`, …) sin tocar los tonos base. */
+  --c-ok-text: 22 101 52;
+  --c-warn-text: 146 64 14;
+  --c-bad-text: 185 28 28;
+  --c-info-text: 32 89 190;
+  --c-fono-text: 6 95 70;
+  --c-pass-text: 22 101 52;
+
+  /* Borde interactivo (#5): el borde que es la única affordance de un control
+     (variant outline, botones de solo-icono con borde) se mide ≥3:1 sobre las
+     superficies (WCAG 1.4.11). */
+  --c-interactivo: 116 131 154;
+
   /* Tokens de superficie */
   --oc-brand: rgb(var(--c-fono));
   --oc-canvas: rgb(var(--c-paper));
@@ -56,6 +73,74 @@
      `shadow-card` (tarjetas) y `shadow-float` (modales y popovers). */
   --oc-shadow-card: 0 1px 2px rgba(15, 23, 42, .05), 0 2px 6px -2px rgba(15, 23, 42, .09);
   --oc-shadow-float: 0 12px 32px -12px rgba(15, 23, 42, .26), 0 2px 8px -2px rgba(15, 23, 42, .10);
+}
+
+/* ── Sistema --ds-* (geometría, elevación y contrato medido, #1) ────────────
+   Escala portable cosechada de PagaYa (app/tokens.css + docs/ui-kit.md) con la
+   elevación y los halos expresados sobre los tokens de la librería: el halo
+   sigue al acento de la app (--c-fono) y las superficies a --c-ink-800. Es
+   aditivo: ninguna app que no consuma --ds-* cambia su render, y cualquier
+   valor se puede pisar desde el CSS de la app (el último gana). */
+:root {
+  /* Espaciado: 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 */
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 24px;
+  --ds-space-6: 32px;
+  --ds-space-7: 48px;
+  --ds-space-8: 64px;
+  /* Radios */
+  --ds-radius-xs: 8px;
+  --ds-radius-sm: 12px;
+  --ds-radius-md: 16px;
+  --ds-radius-lg: 24px;
+  --ds-radius-xl: 32px;
+  --ds-radius-2xl: 40px;
+  --ds-radius-pill: 999px;
+  /* Tipografía: jerarquía grande (el cuerpo no baja de --ds-text-sm) */
+  --ds-text-xs: 11px;
+  --ds-text-sm: 12px;
+  --ds-text-md: 13px;
+  --ds-text-lg: 15px;
+  --ds-title-sm: 22px;
+  --ds-title-md: 28px;
+  --ds-title-lg: 38px;
+  --ds-title-xl: 48px;
+  --ds-leading-tight: 1.04;
+  --ds-leading-snug: 1.35;
+  --ds-leading-relaxed: 1.6;
+  --ds-tracking-title: -0.045em;
+  /* Elevación, halo de marca y superficies con gradiente (siguen la paleta) */
+  --ds-shadow-1: 0 1px 2px rgb(15 23 42 / 0.1);
+  --ds-shadow-2: 0 22px 50px -30px rgb(15 23 42 / 0.26);
+  --ds-shadow-3: 0 38px 90px -42px rgb(15 23 42 / 0.32);
+  --ds-glow: 0 0 30px -14px rgb(var(--c-fono) / 0.3);
+  --ds-glow-strong: 0 0 40px -12px rgb(var(--c-fono) / 0.34);
+  --ds-gradient-surface: linear-gradient(168deg, rgb(var(--c-ink-800)), rgb(var(--c-ink)) 62%);
+  --ds-gradient-panel: linear-gradient(176deg, rgb(var(--c-ink-800)), rgb(var(--c-ink)) 48%);
+  --ds-gradient-immersive: radial-gradient(circle at 84% 0, rgb(var(--c-fono) / 0.12), transparent 46%), linear-gradient(150deg, rgb(var(--c-ink-800)), rgb(var(--c-ink)) 62%);
+  --ds-gradient-auth: radial-gradient(circle at 12% 12%, rgb(var(--c-fono) / 0.1), transparent 32rem), radial-gradient(circle at 88% 88%, rgb(var(--c-fono) / 0.07), transparent 30rem), rgb(var(--c-paper));
+  /* Ritmo de contenedores */
+  --ds-shell-pad-x: 38px;
+  --ds-shell-pad-y: 24px;
+  --ds-section-gap: 26px;
+  --ds-card-pad: 28px;
+  /* Contrato de densidad: se miden, no se declaran (ver REGLAS.md §8) */
+  --ds-row: 54px;
+  --ds-cell-min: 150px;
+}
+
+/* Halos y elevación del modo oscuro (en oscuro el halo se ve más) */
+html.dark {
+  --ds-shadow-1: 0 1px 2px rgb(0 0 0 / 0.16);
+  --ds-shadow-2: 0 22px 50px -28px rgb(0 0 0 / 0.62);
+  --ds-shadow-3: 0 38px 90px -40px rgb(0 0 0 / 0.72);
+  --ds-glow: 0 0 32px -12px rgb(var(--c-fono) / 0.42);
+  --ds-glow-strong: 0 0 44px -10px rgb(var(--c-fono) / 0.5);
+  --ds-gradient-immersive: radial-gradient(circle at 84% 0, rgb(var(--c-fono) / 0.22), transparent 46%), linear-gradient(150deg, rgb(var(--c-ink-800)), rgb(var(--c-ink)) 62%);
+  --ds-gradient-auth: radial-gradient(circle at 12% 12%, rgb(var(--c-fono) / 0.16), transparent 32rem), radial-gradient(circle at 88% 88%, rgb(var(--c-fono) / 0.1), transparent 30rem), rgb(var(--c-paper));
 }
 
 html.dark {
@@ -82,6 +167,16 @@ html.dark {
   --c-info: 159 184 255;
   --c-reserved: 196 181 253;
   --c-onbrand: 6 30 20;
+
+  /* Texto de chips en oscuro (#5): los mismos tonos claros del tema (todos
+     ≥5:1 sobre el tinte) para que la familia quede definida también acá. */
+  --c-ok-text: 74 222 128;
+  --c-warn-text: 252 211 77;
+  --c-bad-text: 252 165 165;
+  --c-info-text: 159 184 255;
+  --c-fono-text: 124 255 201;
+  --c-pass-text: 34 197 94;
+  --c-interactivo: 124 135 155;
 
   --oc-canvas: rgb(var(--c-paper));
   --oc-surface: rgb(var(--c-ink));
@@ -115,6 +210,7 @@ html.dark {
   --c-fono-glow: 34 197 94;
   --c-fono-soft: 6 46 34;
   --c-onbrand: 6 30 20;
+  --c-interactivo: 124 135 155;
 
   --oc-canvas: rgb(var(--c-paper));
   --oc-surface: rgb(var(--c-ink));

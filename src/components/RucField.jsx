@@ -81,7 +81,7 @@ export default function RucField({
           <button type="button" className="font-semibold text-fono-light" onClick={() => { onAplicar?.(resultado); setResultado(null) }}>Usar estos datos</button>
         </div>
       )}
-      {error && <p role="alert" className="text-sm text-bad">{error}</p>}
+      {error && <p role="alert" className="text-sm text-bad-text">{error}</p>}
     </div>
   )
 }

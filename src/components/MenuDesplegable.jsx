@@ -53,7 +53,7 @@ export default function MenuDesplegable({ trigger, items = [], alineacion = 'rig
                 onClick={() => { setAbierto(false); item.onClick?.() }}
                 className={cn(
                   'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition',
-                  item.peligro ? 'text-bad hover:bg-bad/10' : 'text-fore hover:bg-ink-700',
+                  item.peligro ? 'text-bad-text hover:bg-bad/10' : 'text-fore hover:bg-ink-700',
                   item.disabled && 'cursor-not-allowed opacity-40',
                 )}
               >

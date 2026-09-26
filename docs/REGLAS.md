@@ -33,6 +33,7 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | Serial (lectura) | `SerialTexto` | el serial completo si entra y, si la columna queda corta, se recorta la cabeza y los **últimos 4** siguen visibles; vacío → `—` |
 | Seriales por lote (pegar/escanear) | `CampoSeriales` (+`imeiValido`, `separarSeriales`, `normalizarSeriales`) | textarea que normaliza al vuelo y entrega **solo los válidos únicos** por `onCambio`, con conteos de repetidos e inválidos; para IMEI se pasa `validar={imeiValido}` (15 dígitos + Luhn) |
 | Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el texto libre sigue permitido |
+| RUC/identificación fiscal | `TaxIdField` | RUC PY de 5 a 8 dígitos, con o sin verificador (`taxIdValid`); el resto de los países usa el patrón genérico. Se guarda con `normalizeTaxId`; la consulta de razón social es un callback de la app (`onBuscarRazonSocial`): la librería no consulta nada |
 
 ### Tamaños recomendados (#148, portable)
 
@@ -54,9 +55,14 @@ si hay espacio libre, se lo lleva el layout, no el input.
 
 Transversales: error **o** hint (nunca ambos), `aria-invalid` +
 `aria-describedby`, error con `role="alert"`, teclado móvil correcto y nada de
-máscaras que rompan pegado/autofill. El servidor revalida siempre. El
-interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
-`Toggle` y la librería no expone alias de compatibilidad).
+máscaras que rompan pegado/autofill. El campo de monto mantiene el caret al
+tipear y pegar (`normalizarMontoInput` + `caretTrasDigitos`, #2) y acepta
+`integerOnly` para los montos enteros de previsión/informes. `FormField` dibuja el mensaje con `id`
+(derivado de `htmlFor` o pasado como `descripcionId`) para que el campo lo
+declare en `aria-describedby` incluso cuando el id es generado (`useId`). El
+servidor revalida siempre. El interruptor booleano es **`Switch`** (un solo
+objeto; #186 retiró el alias `Toggle` y la librería no expone alias de
+compatibilidad).
 
 ## 2. Botones y acciones
 
@@ -82,6 +88,22 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - `PegarEnlaceToken` resuelve los enlaces de correo que llegan incompletos.
 - Todos son **sin API**: no leen sesión ni llaman al backend; la app maneja el
   flujo y pasa callbacks.
+
+## 2 ter. Ciclo de guardado (#2)
+
+- **Envío único:** los formularios que validan o guardan con async usan
+  `useSingleFlightSubmit(envio)` (`{ pendiente, onSubmit }`): el bloqueo empieza
+  **antes** de la validación asíncrona, un segundo submit mientras corre se
+  ignora y `pendiente` pertenece al envío original. No se reimplementa con un
+  `useState` suelto ni se limpia el estado desde otro envío.
+- **Cierre después de persistir:** al terminar de escribir se llama
+  `completeSave(cerrar, refrescar, { avisar })`: cierra, refresca y convierte un
+  fallo de refresco en advertencia (`AVISO_REFRESCO`) — «no hace falta guardar
+  otra vez». Nunca se envuelve la mutación con `completeSave`.
+- Mientras el formulario está pendiente, el diálogo no se cierra: el form lo
+  registra con `useDialogPending(pendiente)` o usa el objeto `SaveActions`
+  (§5), que ya trae el botón de cancelar deshabilitado y el pie asociado al
+  `<form>` real.
 
 ## 3. Avisos, estados y vacíos
 
@@ -110,6 +132,10 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - **Estados con badge:** `EstadoBadge` toma el mapa de cada dominio
   (`{ ESTADO: { label, color } }`) y dibuja el `Badge`; un valor fuera del mapa
   se muestra crudo y el vacío es explícito (`vacio`), nunca un badge en blanco.
+- Estados de sección: `SectionState`
+  (`estado="vacio" | "cargando" | "error"`), compacto y con `action`/`onRetry`.
+  **Compone** `EmptyState`, `Skeleton` y `ErrorState` en vez de duplicar su
+  markup: cada estado sigue teniendo su objeto cuando se usa suelto.
 
 ## 4. Datos y tablas
 
@@ -143,6 +169,24 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
   columna angosta con la mitad del modal vacía.
 - `Modal`/`ConfirmDialog` con foco atrapado, `Esc`, scroll bloqueado y retorno
   de foco; el pie de guardado va asociado al formulario y bloquea doble clic.
+- Ese comportamiento vive en `useDialogFocusTrap(open, onClose, ref, opciones)`
+  (`src/hooks/`), compartido por `Modal` y `Drawer`: bloquea el scroll, enfoca
+  al abrir (o lo que devuelva `initialFocus()`), cicla Tab, cierra con `Esc` y
+  devuelve el foco al elemento anterior. Un overlay propio usa el hook en vez de
+  copiar la trampa. El hook además sostiene la **pila de capas** (#2): la capa
+  superior es la única que responde a `Esc`/Tab/foco y la única que lleva
+  `aria-modal`; el scroll se restaura cuando se cierra la última y el foco
+  vuelve a lo que abrió la capa. `busy` bloquea el cierre interactivo.
+- **Pending por formulario (#2):** cada `<form>` del diálogo registra su
+  bloqueo con `useDialogPending(pendiente)` mientras guarda; el diálogo no
+  cierra (Esc, clic afuera, botón ×) hasta que terminan todos. Un formulario
+  ocioso no destraba a otro que está guardando y el registro se libera en
+  layout effect para que un guardado confirmado pueda cerrar.
+- **Pie asociado al `<form>` real (#2):** `FormActions` monta las acciones en
+  el pie del diálogo (fuera del área de scroll) y les pone `form={id}`, así la
+  validación nativa, el Enter y el `disabled` siguen siendo los del
+  formulario. `SaveActions` es el pie completo del ciclo de guardado: registra
+  el pending y deja el cancelar deshabilitado mientras guarda.
 - Eliminación destructiva: confirmación propia; datos críticos con doble
   confirmación y plazo recuperable.
 
@@ -173,6 +217,15 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - Un solo lugar para cada formato: `moneda.js` (`formatGs`, `formatUsd`,
   `montoGs`/`montoUsd`/`montoTexto`), `fecha.js` (24 h, vacío explícito,
   nunca “Invalid Date”), `telefono.js` (`whatsappUrl` arma el único enlace).
+- Listas densas (#2): `fechaLista` (`17 sept 26 · 14:30`, con la hora aparte
+  en `{ hora }`) y `fechaListaCorta` (`17-sept`), con la zona de la app
+  (`{ timeZone: 'America/Asuncion' }`); un día puro se formatea en UTC y no se
+  corre de fecha. El vencimiento se mide por día de calendario con `diasHasta`
+  y su tono sale de `tonoVencimiento` (`bad` vencido, `warn` dentro de
+  `diasAviso`) — el mismo cálculo que usa `Vencimiento`/`estadoVencimiento`.
+- Seriales en listas y fichas (#2): `SerialTexto` mantiene la cola siempre
+  visible y con `enmascarar` deja solo `••••4821` donde el serial completo no
+  aporta (el valor completo queda en el `title`).
 - **Símbolo del guaraní configurable:** el default es `Gs 1.234.567` (sin
   punto); la app que escribe distinto pasa `{ simbolo: 'Gs.' }` (o `'₲'`) por
   llamada a `formatGs`/`montoTexto`/`Money`/`CeldaMoneda`/`MoneyInput`
@@ -211,6 +264,90 @@ interruptor booleano es **`Switch`** (un solo objeto; #186 retiró el alias
 - Modo oscuro con la clase `dark` en `<html>`; toda superficie nueva tiene que
   verse bien en ambos temas.
 - Un solo activo de marca por app; los componentes no traen logos.
+
+### Tema (claro/oscuro, #1)
+
+`ThemeToggle` es el único control de tema: alterna la clase `dark` en `<html>`
+(el contrato de `styles.css`), persiste en `localStorage[clave]` (clave por
+prop; sin clave no persiste) y avisa por `alCambiar(tema)`. La app aplica la
+preferencia guardada antes del primer pintado con `aplicarTema(tema, clave)`;
+el control lee la clase vigente, así varios toggles comparten el mismo estado y
+no hay parpadeo. Iconos sol/luna y etiqueta de la acción accesible
+(`etiquetaClaro`/`etiquetaOscuro`, `aria-label` + `title`, estado con
+`aria-pressed`).
+
+### Iconos (#1)
+
+Set único **`Icon`** (`name` + `className`): no se incrustan SVG sueltos en los
+componentes. Los glifos existentes **no se renombran**; si falta uno, se suma al
+set. La cosecha de PagaYa sumó los glifos de pago y operación: `home`, `arrow`,
+`link`, `building`, `play`, `pause`, `archive`, `backspace`, `call`, `mail`,
+`pin`, `code`, `qr`, `transfer`, `subscription`, `bank`, `card`, `terminal` y
+`nfc`.
+
+Equivalencias con `components/app-icon.tsx` de PagaYa (se usa el glifo de la
+librería; no se agrega un segundo nombre para lo mismo):
+
+- `activity` → `pulse`
+- `trend` → `trending`
+- `person` → `user`
+- `more` → `dots`
+- `products` → `package`
+- `orders` → `report`
+- `company` → `building`
+- `phone` (auricular) → `call` (el `phone` de la librería es el equipo móvil)
+- Nombres que ya coinciden y no se tocan: `close`, `check`, `plus`, `users`,
+  `settings`, `search`, `receipt`, `wallet`, `refresh`, `clock`, `copy`,
+  `external`, `calendar`, `shield`.
+
+Los colores y el grosor del trazo salen del ícono (heredan `currentColor`); no
+se les pasa `stroke` ni `fill` por pantalla.
+
+### Sistema `--ds-*` y contrato medido (#1)
+
+La geometría, la tipografía y el ritmo salen del sistema `--ds-*` de
+`styles.css` (cosechado de PagaYa, aditivo: ningún token existente cambia):
+
+| Grupo | Tokens |
+| --- | --- |
+| Espaciado | `--ds-space-1..8` (4/8/12/16/24/32/48/64) |
+| Radios | `--ds-radius-xs..2xl` (8/12/16/24/32/40) + `--ds-radius-pill` |
+| Tipografía | `--ds-text-xs..lg` (11/12/13/15), `--ds-title-sm..xl` (22/28/38/48), `--ds-leading-tight/snug/relaxed` (1.04/1.35/1.6), `--ds-tracking-title` |
+| Elevación y halo | `--ds-shadow-1..3`, `--ds-glow`, `--ds-glow-strong` |
+| Superficies | `--ds-gradient-surface`, `--ds-gradient-panel`, `--ds-gradient-immersive`, `--ds-gradient-auth` |
+| Ritmo | `--ds-shell-pad-x/y`, `--ds-section-gap`, `--ds-card-pad` |
+
+Reglas de aplicación:
+
+- El halo y los gradientes se derivan de `--c-fono` y `--c-ink-800`: siguen el
+  tema y el acento de cada app. Prohibidas las sombras de color ad hoc; los
+  halos son solo `--ds-glow` y `--ds-glow-strong`.
+- Los títulos van por `--ds-title-*`; el cuerpo no baja de `--ds-text-sm`.
+- Las superficies elevadas usan los gradientes del sistema, no gradientes
+  inventados por pantalla.
+- Cualquier `--ds-*` se puede pisar desde el CSS de la app (el último gana).
+
+**Contrato de densidad:** `--ds-row: 54px` (alto de fila de lista) y
+`--ds-cell-min: 150px` (ancho mínimo de celda de grilla). La regla es «se miden, no se declaran»: el token fija el objetivo y la verificación es la medición sobre el
+render real (el harness de la app); declarar la variable no alcanza.
+
+### Contraste de chips y borde interactivo (#5)
+
+`Badge`, `ChipEstado` y los puntos de estado pintan **texto sobre el relleno
+tenue** (`bg-*/10`–`15`). Para eso existe la familia de texto `--c-ok-text`,
+`--c-warn-text`, `--c-bad-text`, `--c-info-text`, `--c-fono-text` y
+`--c-pass-text` (en el preset: `text-ok-text`, `bg-ok-text/…`, …): es la única
+que se usa como texto sobre tinte y se mide ≥4.5:1 sobre blanco y el canvas en
+claro y sobre las superficies oscuras (`test/contraste-tokens.test.js`). Los
+tonos base `--c-ok`/`--c-warn`/`--c-bad`/`--c-info`/`--c-fono`/`--c-pass`
+quedan para rellenos, puntos y bordes, y no cambian de valor: una app con
+paleta propia (p. ej. la AA de Scale OS) mapea la familia de texto sin tocar
+los rellenos.
+
+El borde que es la **única affordance** de un control (`Button variant="outline"`,
+botones de solo-icono con borde, `ThemeToggle`) usa `--c-interactivo`, medido
+≥3:1 sobre las superficies en ambos temas (WCAG 1.4.11). No se aplica a los
+bordes decorativos ni a los de las tarjetas (`--c-ink-600`).
 
 ## 8 bis. Operación de equipos (#240/#241)
 

@@ -49,21 +49,38 @@ export default {
           DEFAULT: 'rgb(var(--c-fono) / <alpha-value>)',
           dark: 'rgb(var(--c-fono-dark) / <alpha-value>)',
           light: 'rgb(var(--c-fono-light) / <alpha-value>)',
+          text: 'rgb(var(--c-fono-text) / <alpha-value>)',
           glow: 'rgb(var(--c-fono-glow) / <alpha-value>)',
           soft: 'rgb(var(--c-fono) / .12)',
         },
-        ok: 'rgb(var(--c-ok) / <alpha-value>)',
-        bad: 'rgb(var(--c-bad) / <alpha-value>)',
-        warn: 'rgb(var(--c-warn) / <alpha-value>)',
-        info: 'rgb(var(--c-info) / <alpha-value>)',
+        // Los tonos base son para relleno/punto/borde; `.text` es el par de
+        // texto sobre relleno tenue (#5), medido ≥4.5:1 (ver tokens.css).
+        ok: {
+          DEFAULT: 'rgb(var(--c-ok) / <alpha-value>)',
+          text: 'rgb(var(--c-ok-text) / <alpha-value>)',
+        },
+        bad: {
+          DEFAULT: 'rgb(var(--c-bad) / <alpha-value>)',
+          text: 'rgb(var(--c-bad-text) / <alpha-value>)',
+        },
+        warn: {
+          DEFAULT: 'rgb(var(--c-warn) / <alpha-value>)',
+          text: 'rgb(var(--c-warn-text) / <alpha-value>)',
+        },
+        info: {
+          DEFAULT: 'rgb(var(--c-info) / <alpha-value>)',
+          text: 'rgb(var(--c-info-text) / <alpha-value>)',
+        },
         reserved: 'rgb(var(--c-reserved) / <alpha-value>)',
         // Verde pass/certificado y azul acción del tema consola (épica #241)
         pass: {
           DEFAULT: 'rgb(var(--c-pass) / <alpha-value>)',
           dark: 'rgb(var(--c-pass-dark) / <alpha-value>)',
           soft: 'rgb(var(--c-pass-soft) / <alpha-value>)',
+          text: 'rgb(var(--c-pass-text) / <alpha-value>)',
         },
         accion: 'rgb(var(--c-accion) / <alpha-value>)',
+        interactivo: 'rgb(var(--c-interactivo) / <alpha-value>)',
         mute: 'rgb(var(--c-mute) / <alpha-value>)',
         // Texto sobre el color de marca (en ambos temas)
         onbrand: 'rgb(var(--c-onbrand) / <alpha-value>)',

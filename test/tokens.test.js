@@ -17,6 +17,7 @@ const distBase = readFileSync(new URL('../dist/base.css', import.meta.url), 'utf
 const distStyles = readFileSync(new URL('../dist/styles.css', import.meta.url), 'utf8')
 const preset = readFileSync(new URL('../tailwind-preset.js', import.meta.url), 'utf8')
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+const reglas = readFileSync(new URL('../docs/REGLAS.md', import.meta.url), 'utf8')
 
 describe('tokens v2 globales (con alias del piloto)', () => {
   test('la paleta global es la del v2, clara y oscura', () => {
@@ -91,5 +92,67 @@ describe('hojas separadas: tokens.css, base.css y styles.css', () => {
     expect(distStyles).toBe(`${tokens.trimEnd()}\n\n${base}`)
     expect(distStyles).toContain(':root {')
     expect(distStyles).toContain('body {')
+  })
+})
+
+describe('sistema --ds-* y contrato medido (#1, cosecha de PagaYa)', () => {
+  test('la escala, la elevación y los gradientes quedan disponibles', () => {
+    for (const token of [
+      '--ds-space-1: 4px',
+      '--ds-space-8: 64px',
+      '--ds-radius-xs: 8px',
+      '--ds-radius-pill: 999px',
+      '--ds-text-xs: 11px',
+      '--ds-text-lg: 15px',
+      '--ds-title-sm: 22px',
+      '--ds-title-xl: 48px',
+      '--ds-leading-tight: 1.04',
+      '--ds-leading-relaxed: 1.6',
+      '--ds-tracking-title: -0.045em',
+      '--ds-shadow-1:',
+      '--ds-shadow-3:',
+      '--ds-glow:',
+      '--ds-glow-strong:',
+      '--ds-gradient-surface:',
+      '--ds-gradient-panel:',
+      '--ds-gradient-immersive:',
+      '--ds-gradient-auth:',
+      '--ds-shell-pad-x: 38px',
+      '--ds-section-gap: 26px',
+      '--ds-card-pad: 28px',
+    ]) {
+      expect(tokens, token).toContain(token)
+    }
+  })
+
+  test('el contrato de densidad son dos variables y se miden, no se declaran', () => {
+    expect(tokens).toContain('--ds-row: 54px')
+    expect(tokens).toContain('--ds-cell-min: 150px')
+    expect(reglas).toContain('se miden, no se declaran')
+    expect(reglas).toContain('`--ds-row: 54px`')
+    expect(reglas).toContain('`--ds-cell-min: 150px`')
+  })
+
+  test('los halos y gradientes siguen los tokens de la librería, no un hex propio', () => {
+    expect(tokens).toContain('--ds-glow: 0 0 30px -14px rgb(var(--c-fono) / 0.3)')
+    expect(tokens).toContain('--ds-gradient-surface: linear-gradient(168deg, rgb(var(--c-ink-800))')
+    // el verde #00d632 de PagaYa no se cuela en el sistema compartido
+    expect(tokens).not.toContain('0, 214, 50')
+    expect(tokens).not.toContain('#00d632')
+  })
+
+  test('el sistema es aditivo: no se quitó ni pisó ningún token existente', () => {
+    for (const intacto of [
+      '--c-paper: 241 244 248',
+      '--c-ink-600: 213 220 230',
+      '--oc-radius: 1rem',
+      '--c-pass: 22 197 94',
+      '--c-accion: 77 124 254',
+      '.tema-v2,\n.v2-piloto {',
+    ]) {
+      expect(tokens, intacto).toContain(intacto)
+    }
+    const dsNames = [...tokens.matchAll(/--ds-[a-z0-9-]+/g)].map((m) => m[0])
+    expect(new Set(dsNames).size).toBeGreaterThanOrEqual(30)
   })
 })

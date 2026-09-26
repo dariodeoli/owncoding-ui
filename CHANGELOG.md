@@ -4,6 +4,101 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Sin publicar — cosecha de ScaleOS (#2)
+
+Portado de ScaleOS (`app/save-actions.tsx`, `use-single-flight-submit.ts`,
+`save-completion.ts`, `amount-format.ts`, `dialog.tsx`, `overlay-stack.ts`,
+`list-format.tsx` y `due-date.tsx`, repetidos en las verticales). Sin subir
+versión ni tag. Reglas en `docs/REGLAS.md`.
+
+- **Ciclo de guardado:** `useSingleFlightSubmit(envio)` bloquea antes de la
+  validación asíncrona y no solapa envíos; `completeSave(cerrar, refrescar,
+  { avisar })` cierra después de persistir y convierte un fallo de refresco en
+  advertencia («no hace falta guardar otra vez», `AVISO_REFRESCO`);
+  `crearEnvioUnico` es el envoltorio puro que usan los tests.
+- **Caret de montos:** `MoneyInput` conserva el cursor al tipear y pegar en
+  cualquier posición (`normalizarMontoInput` + `caretTrasDigitos`), acepta
+  pegado es-PY (`1.250,50`), en-US (`1,250.50`) o suelto (`1250.50`) y suma
+  `integerOnly` para los enteros de previsión/informes (mismo contrato de
+  `onValueChange`, sin romper el `maxLength`).
+- **Overlays (#2):** `Modal`/`Drawer` sostienen la pila de capas —`aria-modal`
+  solo en la superior, `Esc`/Tab/foco solo en la de arriba, scroll con
+  contador y retorno de foco a la capa anterior—; `busy` bloquea el cierre
+  interactivo. Los formularios registran su bloqueo con
+  `useDialogPending(pendiente)` (uno ocioso no destraba a otro) y
+  `FormActions`/`SaveActions` montan el pie fuera del scroll asociado al
+  `<form>` real (`form={id}`), con el cancelar deshabilitado mientras guarda.
+  `Modal`/`Drawer` suman `busy`; `ConfirmDialog` lo pasa al modal.
+- **Serial y fechas (#2):** `fechaLista` (`17 sept 26 · 14:30`, hora aparte
+  con `{ hora }`) y `fechaListaCorta` (`17-sept`) para las columnas densas, con
+  la zona de la app y h23; `diasHasta` y `tonoVencimiento` miden el vencimiento
+  por día de calendario (el `dueTone` de ScaleOS, ahora el mismo cálculo de
+  `Vencimiento`); `SerialTexto` suma `enmascarar` (`••••4821` con el serial
+  completo en el `title`).
+
+## Sin publicar — contraste de chips y borde interactivo (#5)
+
+Fix de la QA de Scale OS (ola 2): el texto de los chips quedaba por debajo de
+AA en tema claro. La evidencia y los valores medidos quedan en el issue.
+
+- **Familia de texto `--c-*-text`:** `Badge`, `ChipEstado`, los puntos de estado
+  y todo texto sobre relleno tenue (`bg-*/10–15`) usan ahora `--c-ok-text`,
+  `--c-warn-text`, `--c-bad-text`, `--c-info-text`, `--c-fono-text` y
+  `--c-pass-text` (preset: `text-ok-text`, …). Los tonos base
+  `--c-ok`/`--c-warn`/`--c-bad`/`--c-info`/`--c-fono`/`--c-pass` **no cambian
+  de valor**: siguen siendo los de relleno, punto y borde.
+  - Medido (texto sobre tinte al 15, blanco/canvas): `fono` sube de
+    **4.43/4.05 → 6.67/6.11** (la cápsula azul del `Badge`); `pass` pasa de
+    **2.01/1.84 → 6.25/5.73** (chips «Certificado», «Pagada»). Los cuatro tonos
+    que la QA marcó (`ok`, `warn`, `bad`, `info`) ya habían quedado ≥4.5 con la
+    paleta v2 global y se mantienen (5.66/5.17, 5.60/5.11, 5.01/4.56,
+    5.18/4.73); oscuro sin regresión (5.2–9.6).
+  - Una app con paleta propia mapea su familia de texto (p. ej. la AA de Scale
+    OS: `--c-ok-text: #116B35` → 5.39:1 y `--c-warn-text: #7E5A06` → 5.10:1
+    sobre su propio tinte) sin tocar los rellenos.
+- **Borde interactivo `--c-interactivo`:** el borde que es la única affordance
+  (`Button variant="outline"`, botones de solo-icono con borde, `ThemeToggle`)
+  pasa de `--c-ink-500` (2.56:1 en claro / 2.89:1 en oscuro) a un gris medido
+  **3.49–3.85:1 en claro y 4.28–5.22:1 en oscuro** (WCAG 1.4.11).
+- `test/contraste-tokens.test.js` mide la familia completa (dos alfas ×
+  superficies × dos temas) y el borde; ningún mapa de la librería puede volver
+  al tono base como texto (aserción de fuente).
+
+## Sin publicar — cosecha de PagaYa (#1)
+
+Portado de PagaYa (`app/tokens.css`, `docs/ui-kit.md`, `components/app-icon.tsx`,
+`lib/shared/inputs.ts`, `components/fields/tax-id-field.tsx` y
+`lib/hooks/use-dialog.ts`). Sin subir versión ni tag: la versión la decide el
+integrador. Todas las reglas quedan en `docs/REGLAS.md`.
+
+- **`TaxIdField` (RUC paraguayo):** campo de identificación fiscal con
+  `taxIdValid` / `normalizeTaxId` (más `taxIdGenericoValid`,
+  `taxIdValidoParaPais` y `limpiarTaxId`) en `utils/taxId.js`. La consulta de
+  razón social es un callback de la app
+  (`onBuscarRazonSocial` / `onAplicarRazonSocial`): la librería no hace `fetch`.
+  `FormField` ahora dibuja el mensaje con `id` para enlazarlo por
+  `aria-describedby`.
+- **Iconos de pago y operación:** se suman a `Icon` los glifos que faltaban
+  (`home`, `arrow`, `link`, `play`, `pause`, `archive`, `call`, `pin`, `code`,
+  `qr`, `transfer`, `subscription`, `card`, `terminal` y `nfc`) sin renombrar
+  los existentes; `building`, `mail`, `bank` y `backspace` ya estaban en la
+  librería y conservan su glifo (paridad #253). Las equivalencias con `AppIcon`
+  de PagaYa quedan documentadas en `docs/REGLAS.md` §8.
+- **`ThemeToggle`:** único control de tema sobre la clase `dark` de la
+  librería, con persistencia configurable por prop (`clave`), etiquetas
+  accesibles e iconos sol/luna. `aplicarTema(tema, clave)` queda exportada para
+  que la app restaure la preferencia antes del primer pintado.
+- **Sistema `--ds-*`:** espaciado, radios, tipografía, elevación, halos,
+  gradientes y ritmo de contenedores del rediseño de PagaYa, con el contrato de
+  densidad `--ds-row: 54px` / `--ds-cell-min: 150px` y la regla «se miden, no
+  se declaran». Aditivo: ningún token existente cambia de valor.
+- **`SectionState`:** vacío, cargando o error en un solo objeto, compacto y con
+  acción o reintento; compone `EmptyState`, `Skeleton` y `ErrorState` en vez de
+  duplicar su markup.
+- **`useDialogFocusTrap`:** scroll bloqueado, foco inicial, ciclo de Tab, `Esc`
+  y devolución del foco en un hook compartido por `Modal` y `Drawer` (antes
+  estaba copiado en cada uno).
+
 ## v0.38.0 — 2026-09-26
 
 - **Abastecimiento F5 — recepción e incidencias (#250):**
@@ -690,7 +785,6 @@ el README. Sin cambios incompatibles.
   local (como los `dueAt` del API) y no como medianoche UTC, que en Asunción
   mostraba el día anterior; un día inexistente (31/9) sigue siendo inválido.
 - 30 tests nuevos (86 en total) y `dist/` regenerado.
-
 ## v0.12.0 — 2026-09-22
 
 - **Informe público (#240):** `FichaCertificado` — tarjeta del informe de

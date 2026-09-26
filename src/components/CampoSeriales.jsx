@@ -44,9 +44,9 @@ export default function CampoSeriales({
         autoCapitalize="characters"
       />
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs" role="status">
-        <span className={hay ? 'font-semibold text-ok' : 'text-mute'}>{resultado.seriales.length} listo(s) para cargar</span>
-        {resultado.repetidos.length > 0 && <span className="text-warn">{resultado.repetidos.length} repetido(s)</span>}
-        {resultado.invalidos.length > 0 && <span className="text-bad">{resultado.invalidos.length} inválido(s)</span>}
+        <span className={hay ? 'font-semibold text-ok-text' : 'text-mute'}>{resultado.seriales.length} listo(s) para cargar</span>
+        {resultado.repetidos.length > 0 && <span className="text-warn-text">{resultado.repetidos.length} repetido(s)</span>}
+        {resultado.invalidos.length > 0 && <span className="text-bad-text">{resultado.invalidos.length} inválido(s)</span>}
       </p>
       {resultado.invalidos.length > 0 && (
         <p className="break-words text-[11px] text-mute" title={resultado.invalidos.join(' · ')}>Revisá: {resultado.invalidos.slice(0, 5).join(' · ')}{resultado.invalidos.length > 5 ? ' …' : ''}</p>

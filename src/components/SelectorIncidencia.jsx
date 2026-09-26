@@ -8,9 +8,9 @@ import { cn } from '../utils/cn.js'
 //
 //   <SelectorIncidencia valor={tipo} onChange={setTipo} />
 const CHIP = {
-  ok: 'border-ok/40 bg-ok/10 text-ok',
-  warn: 'border-warn/40 bg-warn/10 text-warn',
-  bad: 'border-bad/40 bg-bad/10 text-bad',
+  ok: 'border-ok/40 bg-ok/10 text-ok-text',
+  warn: 'border-warn/40 bg-warn/10 text-warn-text',
+  bad: 'border-bad/40 bg-bad/10 text-bad-text',
   mute: 'border-ink-500 bg-ink-700 text-mute',
 }
 const CHIP_APAGADO = 'border-ink-500 text-mute hover:border-fono hover:text-fore'

@@ -7,12 +7,12 @@
 
 /** Paleta del avatar: fondo suave + texto del mismo tono, legible en claro y oscuro. */
 export const COLORES_AVATAR = {
-  fono: 'bg-fono/15 text-fono-light',
-  ok: 'bg-ok/15 text-ok',
-  info: 'bg-info/15 text-info',
-  warn: 'bg-warn/15 text-warn',
-  bad: 'bg-bad/15 text-bad',
-  pass: 'bg-pass/15 text-pass',
+  fono: 'bg-fono/15 text-fono-text',
+  ok: 'bg-ok/15 text-ok-text',
+  info: 'bg-info/15 text-info-text',
+  warn: 'bg-warn/15 text-warn-text',
+  bad: 'bg-bad/15 text-bad-text',
+  pass: 'bg-pass/15 text-pass-text',
   reserved: 'bg-reserved/15 text-reserved',
   mute: 'bg-ink-600 text-mute',
 }

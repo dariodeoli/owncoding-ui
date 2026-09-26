@@ -74,7 +74,7 @@ export default function IndicadorConexion({
       title={titulo}
       className={cn(
         'inline-flex min-w-0 items-center gap-2 rounded-lg border border-ink-600 bg-ink-800 px-2.5 py-1.5 text-xs',
-        enLinea ? 'text-mute' : 'text-warn',
+        enLinea ? 'text-mute' : 'text-warn-text',
         className,
       )}
     >

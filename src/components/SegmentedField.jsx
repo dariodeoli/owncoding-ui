@@ -21,7 +21,7 @@ export default function SegmentedField({ value, onChange, options = [], ariaLabe
             onClick={() => onChange(id)}
             className={cn(
               'inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition',
-              activo ? 'bg-fono/15 text-fono-light' : 'text-mute hover:bg-fore/5 hover:text-fore',
+              activo ? 'bg-fono/15 text-fono-text' : 'text-mute hover:bg-fore/5 hover:text-fore',
             )}
           >
             {icon && <Icon name={icon} className="h-4 w-4 shrink-0" />}

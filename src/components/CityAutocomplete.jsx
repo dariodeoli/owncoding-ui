@@ -118,7 +118,7 @@ export default function CityAutocomplete({
           ))}
         </ul>
       )}
-      {error ? <p role="alert" className="mt-1 text-xs text-bad">{error}</p> : null}
+      {error ? <p role="alert" className="mt-1 text-xs text-bad-text">{error}</p> : null}
     </div>
   )
 }

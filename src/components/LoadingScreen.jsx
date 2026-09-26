@@ -33,7 +33,7 @@ export default function LoadingScreen({ mensaje = 'Cargando…', logo, tienda = 
             {imagenTienda ? (
               <img src={imagenTienda} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" referrerPolicy="no-referrer" />
             ) : (
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light">{nombreTienda.charAt(0).toUpperCase()}</span>
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-text">{nombreTienda.charAt(0).toUpperCase()}</span>
             )}
             <span className="min-w-0 truncate text-xs font-semibold">{nombreTienda}</span>
             {etiqueta && <span className="shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute">{etiqueta}</span>}

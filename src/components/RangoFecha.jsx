@@ -65,7 +65,7 @@ export default function RangoFecha({
               className={cn(
                 'rounded-lg border px-2.5 py-1.5 text-xs font-medium transition',
                 esActivo
-                  ? 'border-fono/30 bg-fono/15 text-fono-light'
+                  ? 'border-fono/30 bg-fono/15 text-fono-text'
                   : 'border-ink-600 text-mute hover:border-fono/40 hover:text-fore',
               )}
             >

@@ -1,7 +1,10 @@
 import { cn } from '../utils/cn.js'
 
 // Set de íconos de línea (reemplazan a los emojis). Trazo uniforme de 1.75,
-// heredan el color del texto y escalan con la clase que se les pase.
+// heredan el color del texto y escalan con la clase que se les pase. Los
+// glifos no se renombran: si falta uno, se suma acá; las equivalencias con el
+// set de PagaYa (components/app-icon.tsx) están documentadas en
+// docs/REGLAS.md §8 (iconos).
 const PATHS = {
   // Navegación / estructura
   menu: 'M3 6h18M3 12h18M3 18h18',
@@ -9,6 +12,9 @@ const PATHS = {
   chevron: 'M6 9l6 6 6-6',
   close: 'M18 6L6 18M6 6l12 12',
   external: 'M7 17L17 7M8 7h9v9',
+  home: 'M3 11l9-8 9 8M5 10v10h14V10M9 20v-6h6v6',
+  arrow: 'M5 12h14M14 7l5 5-5 5',
+  link: 'M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1',
 
   // Análisis
   chart: 'M3 3v18h18M8 16V9M13 16V5M18 16v-4',
@@ -25,6 +31,10 @@ const PATHS = {
   refresh: 'M21 12a9 9 0 1 1-3-6.7M21 4v5h-5',
   image: 'M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6',
   tag: 'M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8ZM7.5 7.5h.01',
+  play: 'M9 7l8 5-8 5z',
+  pause: 'M9 7v10M15 7v10',
+  archive: 'M4 7h16M6 7v12h12V7M9 11h6M5 4h14v3H5z',
+  call: 'M8.2 3.7 5.7 5.1c-1.1.6-1.5 1.9-1 3.1 2 5 6 9 11 11 1.2.5 2.5.1 3.1-1l1.4-2.5-4.2-2-1.3 1.7c-2.8-1.2-4.9-3.3-6.1-6.1L10.2 8l-2-4.3Z',
 
   // Finanzas
   receipt: 'M6 2h12v20l-3-2-3 2-3-2-3 2V2ZM10 8h4M9 12h6',
@@ -32,6 +42,13 @@ const PATHS = {
   wallet:
     'M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3M21 10h-5a2 2 0 0 0 0 4h5v-4Z',
   money: 'M2 6h20v12H2zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6M5 9h.01M19 15h.01',
+  // Pago y cobro (cosecha de PagaYa)
+  qr: 'M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 20h2',
+  transfer: 'M4 7h15M15 3l4 4-4 4M20 17H5M9 13l-4 4 4 4',
+  subscription: 'M20 7h-7M17 4l3 3-3 3M4 17h7M7 14l-3 3 3 3M6 11a7 7 0 0 1 11-5M18 13a7 7 0 0 1-11 5',
+  card: 'M3 5h18v14H3zM3 10h18M7 15h4',
+  terminal: 'M12 3 3 8v2h18V8l-9-5ZM5 12v6H3v3h18v-3h-2v-6h-2v6h-4v-6h-2v6H7v-6H5Z',
+  nfc: 'M5.25 9a4.5 4.5 0 0 1 0 6M9 6.4a8.25 8.25 0 0 1 0 11.2M13.1 3.75a12 12 0 0 1 0 16.5',
 
   // Equipo
   users:
@@ -58,6 +75,8 @@ const PATHS = {
   calendar:
     'M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z',
   filter: 'M22 3H2l8 9.5V19l4 2v-8.5L22 3Z',
+  pin: 'M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0ZM12 10a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z',
+  code: 'M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14',
   check: 'M20 6L9 17l-5-5',
   alert:
     'M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z',

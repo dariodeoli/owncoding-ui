@@ -105,6 +105,55 @@ export function parseUsdInput(value) {
   return String(Number(normalized))
 }
 
+// ── Edición de montos con caret estable (cosecha de ScaleOS, #2) ────────────
+// El texto del campo (mientras se tipea o pega) se acepta en es-PY
+// (`1.234,56`), en-US (`1,234.56`) o suelto (`1250.50`) y sale como valor de
+// transporte: dígitos para PYG (`integerOnly` incluido), decimal con punto para
+// el resto. Un grupo de miles convencional en cualquier locale (`1.234`,
+// `1,234`, `1.234.567`) es un entero.
+const GRUPO_MILES = /^\d{1,3}([.,])\d{3}(?:\1\d{3})*$/
+const CONTINUACION_MILES = /^\d{1,3}([.,])\d{3,}(?:\1\d+)*$/
+
+export function normalizarMontoInput(texto, moneda = 'PYG', { integerOnly = false } = {}) {
+  const bruto = String(texto ?? '').replace(/[^0-9.,]/g, '')
+  if (!bruto) return ''
+  if (GRUPO_MILES.test(bruto)) return bruto.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
+  if (moneda === 'PYG' || integerOnly) return enteroDeMonto(bruto)
+  // Un punto como último separador con 1-2 dígitos es decimal: se pasa a coma
+  // es-PY y se descarta el resto. Si no, la coma manda.
+  let display = bruto
+  if (bruto.lastIndexOf('.') > bruto.lastIndexOf(',') && /\.\d{0,2}$/.test(bruto)) {
+    const punto = bruto.lastIndexOf('.')
+    display = bruto.slice(0, punto).replace(/[.,]/g, '') + ',' + bruto.slice(punto + 1)
+  }
+  const [entero = '', decimales] = display.replace(/[^0-9,]/g, '').split(',')
+  const limpio = entero.replace(/^0+(?=\d)/, '')
+  return decimales !== undefined ? `${limpio || '0'}.${decimales.slice(0, 2)}` : limpio
+}
+
+// PYG nunca lleva decimales: tipear más allá de un separador continúa el
+// entero (`1.2345` → `12345`) y una cola decimal pegada después de un grupo de
+// miles se descarta en vez de concatenarse.
+function enteroDeMonto(bruto) {
+  if (CONTINUACION_MILES.test(bruto)) return bruto.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
+  const ultimo = Math.max(bruto.lastIndexOf('.'), bruto.lastIndexOf(','))
+  if (ultimo < 0) return bruto.replace(/\D/g, '').replace(/^0+(?=\d)/, '')
+  return enteroDeMonto(bruto.slice(0, ultimo))
+}
+
+// Posición del caret después de N dígitos: se cuentan los dígitos del display
+// nuevo (los separadores no cuentan), así el cursor no salta al final al
+// insertar o borrar en el medio del monto.
+export function caretTrasDigitos(display, digitos) {
+  if (digitos <= 0) return 0
+  let vistos = 0
+  for (let indice = 0; indice < display.length; indice += 1) {
+    if (/\d/.test(display[indice])) vistos += 1
+    if (vistos === digitos) return indice + 1
+  }
+  return display.length
+}
+
 // Solo formatea un monto ya expresado en USD; nunca convierte desde PYG.
 export function formatUsd(value) {
   const amount = Number(value)

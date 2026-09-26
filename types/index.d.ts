@@ -16,6 +16,7 @@ import type {
   ReactNode,
   Ref,
   RefAttributes,
+  RefObject,
   SelectHTMLAttributes,
   SVGProps,
   TextareaHTMLAttributes,
@@ -64,6 +65,8 @@ export const MoneyInput: ForwardRefExoticComponent<
     onValueChange?: (value: number | '' | string) => void
     max?: number
     maxLength?: number
+    /** Fuerza enteros aunque la moneda admita decimales (#2). */
+    integerOnly?: boolean
   } & RefAttributes<HTMLInputElement>
 >
 
@@ -79,7 +82,12 @@ export function Eyebrow(props: HTMLAttributes<HTMLDivElement>): ReactElement
 export function Card(props: HTMLAttributes<HTMLDivElement>): ReactElement
 
 export type TamanoModal = 'corto' | 'formulario' | 'amplio' | 'completo'
-export function Modal(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; size?: TamanoModal; className?: string }): ReactElement | null
+export function Modal(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; size?: TamanoModal; className?: string; busy?: boolean }): ReactElement | null
+export function FormActions(props: { children?: ReactNode; className?: string }): ReactElement
+export function SaveActions(props: { pendiente?: boolean; children?: ReactNode; cancelLabel?: string | false; className?: string }): ReactElement
+export function useDialogClose(): (() => void) | undefined
+export function useDialogPending(pendiente: boolean): void
+export function conFormulario(children: ReactNode, formId?: string): ReactNode
 export function ConfirmDialog(props: {
   open: boolean
   onCancel?: () => void
@@ -94,7 +102,7 @@ export function ConfirmDialog(props: {
 export function Badge(props: HTMLAttributes<HTMLSpanElement> & { color?: 'blue' | 'green' | 'red' | 'orange' | 'yellow' | 'slate' }): ReactElement
 export function Dot(props: { color?: 'green' | 'red' | 'blue' | 'slate' | 'orange'; pulse?: boolean; className?: string }): ReactElement
 export function IconAction(props: { icon: string; label: string; tone?: Tono; onClick?: () => void; disabled?: boolean; size?: 'sm' | 'touch' }): ReactElement
-export function Drawer(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; side?: 'left' | 'right'; className?: string }): ReactElement | null
+export function Drawer(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; side?: 'left' | 'right'; className?: string; busy?: boolean }): ReactElement | null
 export function ToastProvider(props: { children?: ReactNode; demo?: boolean }): ReactElement
 export function useToast(): { success: (title: string, description?: string) => void; error: (title: string, description?: string) => void; info: (title: string, description?: string) => void }
 export function Skeleton(props: { className?: string }): ReactElement
@@ -103,7 +111,8 @@ export function ErrorState(props: { title?: string; description?: ReactNode; onR
 export function Aviso(props: HTMLAttributes<HTMLElement> & { tono?: 'error' | 'ok' | 'warn'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function Nota(props: HTMLAttributes<HTMLElement> & { tono?: 'warn' | 'info' | 'neutro'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function PageHeader(props: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; backTo?: () => void; eyebrow?: ReactNode; migas?: Array<{ etiqueta: ReactNode; href?: string }> }): ReactElement
-export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string }): ReactElement
+export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string; descripcionId?: string }): ReactElement
+export function SectionState(props: { estado?: 'vacio' | 'cargando' | 'error'; title?: ReactNode; description?: ReactNode; icon?: string; action?: ReactNode; compact?: boolean; onRetry?: () => void; className?: string }): ReactElement
 
 export type DataTableColumn<Row = Record<string, unknown>> = {
   key: string
@@ -174,6 +183,42 @@ export function SerialField(props: Omit<InputProps, 'onChange'> & { value?: stri
 export function normalizarSerial(valor: string): string
 export function InstagramField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void }): ReactElement
 export function normalizarInstagram(valor: string): string
+
+// ── Identificación fiscal (cosecha de PagaYa, #1) ─────────────────────────
+
+export type TaxIdFieldProps = Omit<InputProps, 'value' | 'onChange'> & {
+  label?: ReactNode
+  value?: string
+  onChange?: (valor: string) => void
+  pais?: string
+  onBuscarRazonSocial?: (taxId: string) => Promise<string | null | undefined> | string | null | undefined
+  onAplicarRazonSocial?: (razonSocial: string) => void
+  etiquetaConsulta?: string
+  mensajeInvalido?: string
+  mensajeSinDatos?: string
+  mensajeError?: string
+  hint?: ReactNode
+  error?: ReactNode
+}
+export function TaxIdField(props: TaxIdFieldProps): ReactElement
+export const PATRON_RUC: RegExp
+export const PATRON_TAX_ID_GENERICO: RegExp
+export const MENSAJE_RUC: string
+export const MENSAJE_RUC_SIN_DATOS: string
+export const MENSAJE_RUC_CONSULTA: string
+export function taxIdValid(value: unknown): boolean
+export function taxIdGenericoValid(value: unknown): boolean
+export function taxIdValidoParaPais(value: unknown, pais?: string): boolean
+export function normalizeTaxId(value: unknown): string | null
+export function limpiarTaxId(value: unknown, max?: number): string
+
+// ── Tema (cosecha de PagaYa, #1) ──────────────────────────────────────────
+
+export type Tema = 'claro' | 'oscuro'
+export const TEMA_CLARO: 'claro'
+export const TEMA_OSCURO: 'oscuro'
+export function aplicarTema(tema: Tema, clave?: string | null): void
+export function ThemeToggle(props: { clave?: string | null; alCambiar?: (tema: Tema) => void; etiquetaClaro?: string; etiquetaOscuro?: string; className?: string }): ReactElement
 export function ProductCombobox(props: Record<string, any> & {
   products?: Array<{ id: string; nombre?: string; name?: string; sku?: string; model?: string; capacity?: string; color?: string; category?: string; [clave: string]: any }>
   selectedId?: string
@@ -226,7 +271,7 @@ export function RucField(props: Record<string, any> & {
 export function extraerRuc(texto: string): string
 export function esRuc(valor: string): boolean
 export const RUC_RE: RegExp
-export function SerialTexto(props: { serial?: string; className?: string; tonoCola?: string; vacio?: string }): ReactElement
+export function SerialTexto(props: { serial?: string; className?: string; tonoCola?: string; vacio?: string; enmascarar?: boolean }): ReactElement
 export function imeiValido(valor?: string | null): boolean
 export function separarSeriales(texto?: string, opciones?: { maxLargo?: number }): string[]
 export function normalizarSeriales(texto?: string, opciones?: { validar?: (serial: string) => boolean; limite?: number; maxLargo?: number }): { seriales: string[]; repetidos: string[]; invalidos: string[] }
@@ -681,6 +726,15 @@ export function useTableroOptimista(props: { tarjetas?: TarjetaTablero[]; onMove
   moviendo: string | null
   mover: (id: string, destino: string) => Promise<void>
 }
+export const SELECTOR_ENFOCABLES: string
+export function destinoDeTab(opciones: { shiftKey: boolean; activo: Element | null; primero: Element | null; ultimo: Element | null; contenedor: Element | null; fuera?: boolean }): Element | null
+export function useDialogFocusTrap(open: boolean, onClose: (() => void) | undefined, ref: RefObject<HTMLElement>, opciones?: { initialFocus?: () => HTMLElement | null; bloquearScroll?: boolean; busy?: boolean }): { esSuperior: boolean; requestClose: () => void }
+export function crearPilaCapas(): { agregar(id: symbol): void; insertar(id: symbol, indice: number): void; quitar(id: symbol): void; esSuperior(id: symbol): boolean; readonly tamano: number; ids(): symbol[] }
+export function crearRegistroPendientes(): { registrar(id: symbol, pendiente: boolean): number; readonly bloqueado: boolean; readonly cantidad: number }
+export const AVISO_REFRESCO: string
+export function crearEnvioUnico(enviar: (evento?: unknown) => unknown): { readonly enCurso: boolean; ejecutar(evento?: unknown): Promise<unknown> }
+export function completeSave(cerrar?: () => void, refrescar?: () => void | Promise<void>, opciones?: { avisar?: (mensaje: string) => void }): Promise<boolean>
+export function useSingleFlightSubmit(enviar: (evento?: any) => Promise<void> | void): { pendiente: boolean; onSubmit: (evento?: any) => Promise<void> }
 export function columnasDelTablero(columnas: ColumnaTablero[], tarjetas: TarjetaTablero[]): Array<ColumnaTablero & { tarjetas: TarjetaTablero[] }>
 export function agruparTarjetas(columnas: ColumnaTablero[], tarjetas: TarjetaTablero[]): Record<string, TarjetaTablero[]>
 export function destinosDeTarjeta(tarjeta: TarjetaTablero): string[]
@@ -876,6 +930,8 @@ export function parseGsInput(value: unknown): number
 export function formatUsd(value: unknown): string
 export function formatUsdInput(value: unknown): string
 export function parseUsdInput(value: unknown): string
+export function normalizarMontoInput(texto: unknown, moneda?: Moneda, opciones?: { integerOnly?: boolean }): string
+export function caretTrasDigitos(display: string, digitos: number): number
 export function formatMoney(value: unknown, currency?: Moneda, opciones?: OpcionesSimbolo): string
 export function montoGs(value: unknown, vacio?: string | OpcionesMonto, opciones?: OpcionesMonto): string
 export function montoUsd(value: unknown, vacio?: string | OpcionesMonto, opciones?: OpcionesMonto): string
@@ -889,12 +945,16 @@ export function signoDe(value: unknown): '' | '+' | '−'
 // ── Fechas ─────────────────────────────────────────────────────────────────
 
 /** Opciones de formato: vacío y huso horario (`America/Asuncion`). */
-export type OpcionesFecha = { timeZone?: string; vacio?: string }
+export type OpcionesFecha = { timeZone?: string; vacio?: string; hora?: string }
 export function fechaValida(value: unknown): Date | null
 export function fechaHora(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaDia(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaHoraCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+export function fechaLista(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+export function fechaListaCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+export function diasHasta(fecha: unknown, opciones?: { hoy?: unknown; timeZone?: string }): number | null
+export function tonoVencimiento(fecha: unknown, opciones?: { hoy?: unknown; diasAviso?: number }): '' | 'bad' | 'warn'
 
 // ── Seriales, tokens y teléfono ────────────────────────────────────────────
 

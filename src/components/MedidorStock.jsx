@@ -35,7 +35,7 @@ export default function MedidorStock({
     return (
       <span className={cn('block min-w-0 space-y-1', className)}>
         <span className="flex items-baseline justify-between gap-2 text-xs">
-          <span className={cn('font-semibold', tono === 'bad' ? 'text-bad' : tono === 'warn' ? 'text-warn' : 'text-ok')}>{texto}</span>
+          <span className={cn('font-semibold', tono === 'bad' ? 'text-bad-text' : tono === 'warn' ? 'text-warn-text' : 'text-ok-text')}>{texto}</span>
           <span className="tabular-nums text-mute">{detalle}</span>
         </span>
         <span role="progressbar" aria-label={etiqueta ?? `Stock ${detalle}`} aria-valuenow={porcentaje} aria-valuemin={0} aria-valuemax={100} className="block h-1.5 overflow-hidden rounded-full bg-ink-700">
@@ -50,8 +50,8 @@ export default function MedidorStock({
       className={cn(
         'inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold',
         variante === 'chip' && 'rounded-lg border px-2 py-0.5',
-        variante === 'chip' && (tono === 'bad' ? 'border-bad/30 bg-bad/10 text-bad' : tono === 'warn' ? 'border-warn/30 bg-warn/10 text-warn' : 'border-ok/30 bg-ok/10 text-ok'),
-        variante === 'texto' && (tono === 'bad' ? 'text-bad' : tono === 'warn' ? 'text-warn' : 'text-ok'),
+        variante === 'chip' && (tono === 'bad' ? 'border-bad/30 bg-bad/10 text-bad-text' : tono === 'warn' ? 'border-warn/30 bg-warn/10 text-warn-text' : 'border-ok/30 bg-ok/10 text-ok-text'),
+        variante === 'texto' && (tono === 'bad' ? 'text-bad-text' : tono === 'warn' ? 'text-warn-text' : 'text-ok-text'),
         className,
       )}
       title={etiqueta ?? `${texto} · ${detalle}`}

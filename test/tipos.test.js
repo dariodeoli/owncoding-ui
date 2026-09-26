@@ -44,6 +44,14 @@ describe('tipos publicados (.d.ts)', () => {
       // Lote LedBox
       'TableroKanban', 'useTableroOptimista', 'Cronologia', 'PlanPagos',
       'DocumentoImpresion', 'SubidaImagen', 'ProgresoChecklist', 'progresoChecklist',
+      // Cosecha de PagaYa (#1)
+      'TaxIdField', 'taxIdValid', 'normalizeTaxId', 'ThemeToggle', 'aplicarTema',
+      'SectionState', 'useDialogFocusTrap',
+      // Cosecha de ScaleOS (#2)
+      'useSingleFlightSubmit', 'completeSave', 'crearEnvioUnico', 'AVISO_REFRESCO',
+      'normalizarMontoInput', 'caretTrasDigitos', 'FormActions', 'SaveActions',
+      'useDialogPending', 'crearPilaCapas', 'fechaLista', 'fechaListaCorta',
+      'diasHasta', 'tonoVencimiento',
     ]) {
       expect(exporta(nombre), `falta el tipo de ${nombre}`).toBe(true)
     }
