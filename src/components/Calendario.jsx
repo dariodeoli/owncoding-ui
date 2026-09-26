@@ -75,7 +75,7 @@ function ListaDias({ dias, porDia, hoy, onElegir, renderItem, soloConItems }) {
             <header className="flex items-center justify-between gap-2 px-1">
               <span className="text-xs font-semibold text-fore">{etiquetaDia(dia)}</span>
               {dia === hoy && (
-                <span className="rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light">Hoy</span>
+                <span className="rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-text">Hoy</span>
               )}
             </header>
             <div className="mt-1 space-y-1">
@@ -253,7 +253,7 @@ export default function Calendario({
                       title={etiquetaDia(dia)}
                       className={cn(
                         'flex items-center justify-between rounded-md px-1 py-0.5 text-xs transition',
-                        esHoy ? 'bg-fono/15 font-bold text-fono-light' : 'text-mute hover:bg-ink-700 hover:text-fore',
+                        esHoy ? 'bg-fono/15 font-bold text-fono-text' : 'text-mute hover:bg-ink-700 hover:text-fore',
                       )}
                     >
                       <span className="tabular-nums">{Number(dia.slice(8, 10))}</span>

@@ -9,9 +9,9 @@ import { cn } from '../utils/cn.js'
 const ORDEN = ['recibido', 'faltante', 'sobrante', 'danado', 'incorrecto']
 
 const CHIP = {
-  ok: 'border-ok/30 bg-ok/10 text-ok',
-  warn: 'border-warn/30 bg-warn/10 text-warn',
-  bad: 'border-bad/30 bg-bad/10 text-bad',
+  ok: 'border-ok/30 bg-ok/10 text-ok-text',
+  warn: 'border-warn/30 bg-warn/10 text-warn-text',
+  bad: 'border-bad/30 bg-bad/10 text-bad-text',
   mute: 'border-ink-500 bg-ink-700 text-mute',
 }
 

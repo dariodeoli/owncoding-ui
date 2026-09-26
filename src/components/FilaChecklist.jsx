@@ -26,8 +26,8 @@ export function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo =
   const completo = total > 0 && pasan === total
   return (
     <span className={cn('inline-flex flex-wrap items-center gap-2 text-xs font-semibold', className)}>
-      <span className={completo ? 'text-pass' : 'text-mute'}>{pasan} de {total} {sustantivo}</span>
-      {fallas > 0 && <span className="text-bad">{fallas} {fallas === 1 ? 'falla' : 'fallas'}</span>}
+      <span className={completo ? 'text-pass-text' : 'text-mute'}>{pasan} de {total} {sustantivo}</span>
+      {fallas > 0 && <span className="text-bad-text">{fallas} {fallas === 1 ? 'falla' : 'fallas'}</span>}
     </span>
   )
 }

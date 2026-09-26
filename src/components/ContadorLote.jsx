@@ -24,7 +24,7 @@ export default function ContadorLote({ recibidos, total, variante = 'texto', suf
     return (
       <span className={cn('block min-w-0 space-y-1', className)}>
         <span className="flex items-baseline justify-between gap-2 text-xs">
-          <span className={cn('font-semibold', tono === 'ok' ? 'text-ok' : tono === 'warn' ? 'text-warn' : 'text-mute')}>{texto}</span>
+          <span className={cn('font-semibold', tono === 'ok' ? 'text-ok-text' : tono === 'warn' ? 'text-warn-text' : 'text-mute')}>{texto}</span>
           {mostrarFaltan && !completo && <span className="text-mute">faltan {faltan}</span>}
         </span>
         <span
@@ -46,7 +46,7 @@ export default function ContadorLote({ recibidos, total, variante = 'texto', suf
       <span
         className={cn(
           'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold',
-          tono === 'ok' ? 'border-ok/30 bg-ok/10 text-ok' : tono === 'warn' ? 'border-warn/30 bg-warn/10 text-warn' : 'border-ink-500 bg-ink-700 text-mute',
+          tono === 'ok' ? 'border-ok/30 bg-ok/10 text-ok-text' : tono === 'warn' ? 'border-warn/30 bg-warn/10 text-warn-text' : 'border-ink-500 bg-ink-700 text-mute',
           className,
         )}
         title={texto}
@@ -59,7 +59,7 @@ export default function ContadorLote({ recibidos, total, variante = 'texto', suf
 
   return (
     <span className={cn('inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs', className)} title={texto}>
-      <span className={cn('font-semibold tabular-nums', tono === 'ok' ? 'text-ok' : tono === 'warn' ? 'text-warn' : 'text-mute')}>{texto}</span>
+      <span className={cn('font-semibold tabular-nums', tono === 'ok' ? 'text-ok-text' : tono === 'warn' ? 'text-warn-text' : 'text-mute')}>{texto}</span>
       {mostrarFaltan && !completo && <span className="text-mute">faltan {faltan}</span>}
     </span>
   )

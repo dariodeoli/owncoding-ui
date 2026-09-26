@@ -19,7 +19,7 @@ export function tonoDelta(valor, { invertir = false } = {}) {
   return bueno ? 'ok' : 'bad'
 }
 
-const TONO_TEXTO = { ok: 'text-ok', bad: 'text-bad', mute: 'text-mute' }
+const TONO_TEXTO = { ok: 'text-ok-text', bad: 'text-bad-text', mute: 'text-mute' }
 
 export default function ImporteDelta({
   valor,

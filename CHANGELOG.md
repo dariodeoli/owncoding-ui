@@ -4,6 +4,34 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Sin publicar — contraste de chips y borde interactivo (#5)
+
+Fix de la QA de Scale OS (ola 2): el texto de los chips quedaba por debajo de
+AA en tema claro. La evidencia y los valores medidos quedan en el issue.
+
+- **Familia de texto `--c-*-text`:** `Badge`, `ChipEstado`, los puntos de estado
+  y todo texto sobre relleno tenue (`bg-*/10–15`) usan ahora `--c-ok-text`,
+  `--c-warn-text`, `--c-bad-text`, `--c-info-text`, `--c-fono-text` y
+  `--c-pass-text` (preset: `text-ok-text`, …). Los tonos base
+  `--c-ok`/`--c-warn`/`--c-bad`/`--c-info`/`--c-fono`/`--c-pass` **no cambian
+  de valor**: siguen siendo los de relleno, punto y borde.
+  - Medido (texto sobre tinte al 15, blanco/canvas): `fono` sube de
+    **4.43/4.05 → 6.67/6.11** (la cápsula azul del `Badge`); `pass` pasa de
+    **2.01/1.84 → 6.25/5.73** (chips «Certificado», «Pagada»). Los cuatro tonos
+    que la QA marcó (`ok`, `warn`, `bad`, `info`) ya habían quedado ≥4.5 con la
+    paleta v2 global y se mantienen (5.66/5.17, 5.60/5.11, 5.01/4.56,
+    5.18/4.73); oscuro sin regresión (5.2–9.6).
+  - Una app con paleta propia mapea su familia de texto (p. ej. la AA de Scale
+    OS: `--c-ok-text: #116B35` → 5.39:1 y `--c-warn-text: #7E5A06` → 5.10:1
+    sobre su propio tinte) sin tocar los rellenos.
+- **Borde interactivo `--c-interactivo`:** el borde que es la única affordance
+  (`Button variant="outline"`, botones de solo-icono con borde, `ThemeToggle`)
+  pasa de `--c-ink-500` (2.56:1 en claro / 2.89:1 en oscuro) a un gris medido
+  **3.49–3.85:1 en claro y 4.28–5.22:1 en oscuro** (WCAG 1.4.11).
+- `test/contraste-tokens.test.js` mide la familia completa (dos alfas ×
+  superficies × dos temas) y el borde; ningún mapa de la librería puede volver
+  al tono base como texto (aserción de fuente).
+
 ## Sin publicar — cosecha de PagaYa (#1)
 
 Portado de PagaYa (`app/tokens.css`, `docs/ui-kit.md`, `components/app-icon.tsx`,

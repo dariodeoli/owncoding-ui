@@ -12,7 +12,7 @@ const VARIANTS = {
   primary: 'bg-fono text-onbrand hover:bg-fono-light',
   success: 'bg-ok text-black hover:brightness-110',
   danger: 'bg-bad text-fore hover:brightness-110',
-  outline: 'bg-transparent text-fore border border-ink-500 hover:border-fono hover:bg-fono/10',
+  outline: 'bg-transparent text-fore border border-interactivo hover:border-fono hover:bg-fono/10',
   ghost: 'bg-transparent text-mute hover:bg-ink-700 hover:text-fore',
 }
 export function Button({ className, variant = 'primary', ...props }) {
@@ -262,7 +262,7 @@ export function ConfirmDialog({
   return (
     <Modal open={open} onClose={busy ? undefined : onCancel} title={title} size="corto">
       <div className="space-y-5">
-        <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl', variant === 'danger' ? 'bg-bad/10 text-bad' : 'bg-fono/10 text-fono-light')}>
+        <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl', variant === 'danger' ? 'bg-bad/10 text-bad-text' : 'bg-fono/10 text-fono-text')}>
           <Icon name={variant === 'danger' ? 'alert' : 'check'} className="h-5 w-5" />
         </div>
         <p className="text-sm leading-6 text-mute">{description}</p>
@@ -277,11 +277,11 @@ export function ConfirmDialog({
 
 // ── Badge ───────────────────────────────────────────────────────────
 const BADGE = {
-  blue: 'bg-fono/15 text-fono-light border-fono/25',
-  green: 'bg-ok/15 text-ok border-ok/25',
-  red: 'bg-bad/15 text-bad border-bad/25',
-  orange: 'bg-warn/15 text-warn border-warn/25',
-  yellow: 'bg-warn/15 text-warn border-warn/25',
+  blue: 'bg-fono/15 text-fono-text border-fono/25',
+  green: 'bg-ok/15 text-ok-text border-ok/25',
+  red: 'bg-bad/15 text-bad-text border-bad/25',
+  orange: 'bg-warn/15 text-warn-text border-warn/25',
+  yellow: 'bg-warn/15 text-warn-text border-warn/25',
   slate: 'bg-ink-600 text-mute border-ink-500',
 }
 export function Badge({ className, color = 'slate', ...props }) {
@@ -322,10 +322,10 @@ export function Dot({ color = 'slate', pulse = false, className }) {
 // firma que las acciones de Inventario para que todas las grillas del
 // módulo de control compartan tamaño, foco y colores.
 const ICON_ACTION_TONE = {
-  ok: 'border-ok/30 text-ok hover:bg-ok/10',
-  warn: 'border-warn/30 text-warn hover:bg-warn/10',
+  ok: 'border-ok/30 text-ok-text hover:bg-ok/10',
+  warn: 'border-warn/30 text-warn-text hover:bg-warn/10',
   fono: 'border-fono/30 text-fono-light hover:bg-fono/10',
-  bad: 'border-bad/30 text-bad hover:bg-bad/10',
+  bad: 'border-bad/30 text-bad-text hover:bg-bad/10',
   mute: 'border-transparent text-mute hover:bg-ink-700 hover:text-fore',
 }
 // `size="touch"` agranda el área táctil (móvil): mismo ícono y tono. En
@@ -386,7 +386,7 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
 const ToastContext = createContext(null)
 let toastCounter = 0
 const TOAST_ICON = { success: 'check', error: 'alert', info: 'info' }
-const TOAST_TONE = { success: 'text-ok', error: 'text-bad', info: 'text-fono-light' }
+const TOAST_TONE = { success: 'text-ok-text', error: 'text-bad-text', info: 'text-fono-light' }
 
 export function ToastProvider({ children, demo = false }) {
   const [toasts, setToasts] = useState([])
@@ -472,7 +472,7 @@ export function EmptyState({ icon = 'box', title, description, action, compact =
 export function ErrorState({ title = 'Algo salió mal', description, onRetry, compact = false, role, className }) {
   return (
     <div role={role} className={cn('flex flex-col items-center justify-center px-6 text-center', compact ? 'py-6' : 'py-12', className)}>
-      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad">
+      <div className="grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad-text">
         <Icon name="alert" className="h-5 w-5" />
       </div>
       <p className="mt-3 text-sm font-semibold text-fore">{title}</p>
@@ -518,9 +518,9 @@ export function SectionState({ estado = 'vacio', title, description, icon = 'box
 // borde y el fondo de color por pantalla. `error` anuncia con role="alert" y
 // el resto con role="status"; el espaciado extra se ajusta con className.
 const AVISOS = {
-  error: 'border-bad/30 bg-bad/10 text-bad',
-  ok: 'border-ok/30 bg-ok/10 text-ok',
-  warn: 'border-warn/30 bg-warn/10 text-warn',
+  error: 'border-bad/30 bg-bad/10 text-bad-text',
+  ok: 'border-ok/30 bg-ok/10 text-ok-text',
+  warn: 'border-warn/30 bg-warn/10 text-warn-text',
 }
 export function Aviso({ tono = 'error', como = 'p', compact = false, className, children, ...props }) {
   // `como="div"` para el aviso con estructura (ícono, botón de reintentar):
@@ -569,7 +569,7 @@ export function PageHeader({ title, subtitle, actions, backTo, eyebrow, migas })
           <button
             type="button"
             onClick={backTo}
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore"
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-interactivo text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore"
             aria-label="Volver"
           >
             <Icon name="back" className="h-4 w-4" />
@@ -661,7 +661,7 @@ export function FormField({ label, hint, error, children, htmlFor, descripcionId
     <div>
       {label && <Label htmlFor={htmlFor}>{label}</Label>}
       {children}
-      {error ? <p id={mensajeId} role="alert" className="mt-1.5 text-xs text-bad">{error}</p> : hint ? <p id={mensajeId} className="mt-1.5 text-xs text-mute">{hint}</p> : null}
+      {error ? <p id={mensajeId} role="alert" className="mt-1.5 text-xs text-bad-text">{error}</p> : hint ? <p id={mensajeId} className="mt-1.5 text-xs text-mute">{hint}</p> : null}
     </div>
   )
 }
@@ -689,11 +689,11 @@ export function Stat({ label, valor, delta, sub, nota, tono, destacado = false, 
       </div>
       <div className="mt-1.5 flex items-center gap-2 text-xs">
         {typeof delta === 'number' && (deltaComo === 'chip' ? (
-          <span className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium', sube ? 'bg-ok/15 text-ok' : 'bg-bad/15 text-bad')}>
+          <span className={cn('inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium', sube ? 'bg-ok/15 text-ok-text' : 'bg-bad/15 text-bad-text')}>
             {sube ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}%
           </span>
         ) : (
-          <span className={cn('font-medium', sube ? 'text-ok' : 'text-bad')}>
+          <span className={cn('font-medium', sube ? 'text-ok-text' : 'text-bad-text')}>
             {sube ? '↑' : '↓'} {Math.abs(delta).toFixed(1)}%
           </span>
         ))}
@@ -749,7 +749,7 @@ export function Subtabs({ value, onChange, items = [], className }) {
 // etiqueta a la izquierda en `mute`, valor a la derecha en semibold con
 // números tabulares y tono semántico. `etiquetaComo`/`valorComo` permiten
 // mantener `dt`/`dd` dentro de un `<dl>`.
-const TONOS_VALOR = { ok: 'text-ok', warn: 'text-warn', bad: 'text-bad', mute: 'text-mute' }
+const TONOS_VALOR = { ok: 'text-ok-text', warn: 'text-warn-text', bad: 'text-bad-text', mute: 'text-mute' }
 
 export function FilaDato({ etiqueta, valor, tono = '', etiquetaComo: Etiqueta = 'span', valorComo: Valor = 'span', className, valorClassName, children }) {
   return (

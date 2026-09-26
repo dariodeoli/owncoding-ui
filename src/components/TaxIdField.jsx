@@ -126,7 +126,7 @@ export default function TaxIdField({
         </div>
       ) : null}
       {consulta.estado === 'error' ? (
-        <p role="alert" className="mt-1.5 text-xs text-bad">{consulta.mensaje}</p>
+        <p role="alert" className="mt-1.5 text-xs text-bad-text">{consulta.mensaje}</p>
       ) : null}
     </FormField>
   )

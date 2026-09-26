@@ -65,7 +65,7 @@ export default function ThemeToggle({
       title={etiqueta}
       aria-pressed={oscuro}
       className={cn(
-        'grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition',
+        'grid h-9 w-9 place-items-center rounded-lg border border-interactivo text-mute transition',
         'hover:border-fono hover:bg-fono/10 hover:text-fore',
         className,
       )}

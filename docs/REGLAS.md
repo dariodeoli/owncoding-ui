@@ -291,6 +291,24 @@ Reglas de aplicación:
 `--ds-cell-min: 150px` (ancho mínimo de celda de grilla). La regla es «se miden, no se declaran»: el token fija el objetivo y la verificación es la medición sobre el
 render real (el harness de la app); declarar la variable no alcanza.
 
+### Contraste de chips y borde interactivo (#5)
+
+`Badge`, `ChipEstado` y los puntos de estado pintan **texto sobre el relleno
+tenue** (`bg-*/10`–`15`). Para eso existe la familia de texto `--c-ok-text`,
+`--c-warn-text`, `--c-bad-text`, `--c-info-text`, `--c-fono-text` y
+`--c-pass-text` (en el preset: `text-ok-text`, `bg-ok-text/…`, …): es la única
+que se usa como texto sobre tinte y se mide ≥4.5:1 sobre blanco y el canvas en
+claro y sobre las superficies oscuras (`test/contraste-tokens.test.js`). Los
+tonos base `--c-ok`/`--c-warn`/`--c-bad`/`--c-info`/`--c-fono`/`--c-pass`
+quedan para rellenos, puntos y bordes, y no cambian de valor: una app con
+paleta propia (p. ej. la AA de Scale OS) mapea la familia de texto sin tocar
+los rellenos.
+
+El borde que es la **única affordance** de un control (`Button variant="outline"`,
+botones de solo-icono con borde, `ThemeToggle`) usa `--c-interactivo`, medido
+≥3:1 sobre las superficies en ambos temas (WCAG 1.4.11). No se aplica a los
+bordes decorativos ni a los de las tarjetas (`--c-ink-600`).
+
 ## 8 bis. Operación de equipos (#240/#241)
 
 Base del piloto de DSN: checklist/tile/rack de inspección. Todo es portable

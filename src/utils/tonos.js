@@ -8,31 +8,33 @@
 // normalizan con `tonoCanonico`, así el consumidor no tiene que traducirlos.
 
 export const TONOS = {
+  // El texto va por la familia `*-text` (#5): el tono base queda para el
+  // relleno/punto/borde y el par de texto sostiene AA sobre el tinte.
   punto: {
-    ok: 'bg-ok/15 text-ok',
-    warn: 'bg-warn/15 text-warn',
-    bad: 'bg-bad/15 text-bad',
+    ok: 'bg-ok/15 text-ok-text',
+    warn: 'bg-warn/15 text-warn-text',
+    bad: 'bg-bad/15 text-bad-text',
     mute: 'bg-ink-700 text-mute',
-    info: 'bg-info/15 text-info',
-    pass: 'bg-pass/15 text-pass',
-    fono: 'bg-fono/15 text-fono-light',
+    info: 'bg-info/15 text-info-text',
+    pass: 'bg-pass/15 text-pass-text',
+    fono: 'bg-fono/15 text-fono-text',
   },
   chip: {
-    ok: 'border-ok/30 bg-ok/10 text-ok',
-    warn: 'border-warn/30 bg-warn/10 text-warn',
-    bad: 'border-bad/30 bg-bad/10 text-bad',
+    ok: 'border-ok/30 bg-ok/10 text-ok-text',
+    warn: 'border-warn/30 bg-warn/10 text-warn-text',
+    bad: 'border-bad/30 bg-bad/10 text-bad-text',
     mute: 'border-ink-600 bg-ink-800/40 text-mute',
-    info: 'border-info/30 bg-info/10 text-info',
-    pass: 'border-pass/30 bg-pass/10 text-pass',
-    fono: 'border-fono/30 bg-fono/10 text-fono-light',
+    info: 'border-info/30 bg-info/10 text-info-text',
+    pass: 'border-pass/30 bg-pass/10 text-pass-text',
+    fono: 'border-fono/30 bg-fono/10 text-fono-text',
   },
   texto: {
-    ok: 'text-ok',
-    warn: 'text-warn',
-    bad: 'text-bad',
+    ok: 'text-ok-text',
+    warn: 'text-warn-text',
+    bad: 'text-bad-text',
     mute: 'text-mute',
-    info: 'text-info',
-    pass: 'text-pass',
+    info: 'text-info-text',
+    pass: 'text-pass-text',
     fono: 'text-fono-light',
   },
 }

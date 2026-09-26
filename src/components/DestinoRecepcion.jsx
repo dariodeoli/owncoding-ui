@@ -47,7 +47,7 @@ export default function DestinoRecepcion({
         </Button>
       </div>
       {Number(pendientes) > 0 && (
-        <p className="mt-2 flex items-center gap-1.5 text-xs text-warn">
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-warn-text">
           <Icon name="alert" className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           {Number(pendientes)} unidad(es) sin IMEI: se reciben igual y el IMEI se completa después.
         </p>

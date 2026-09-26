@@ -83,7 +83,7 @@ export default function PhoneField({
           className="min-w-0 flex-1"
         />
       </div>
-      {invalido && <span className="block pt-1 text-[11px] text-bad">{mensajeInvalido}</span>}
+      {invalido && <span className="block pt-1 text-[11px] text-bad-text">{mensajeInvalido}</span>}
     </div>
   )
 }

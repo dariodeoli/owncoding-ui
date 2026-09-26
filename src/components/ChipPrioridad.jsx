@@ -8,10 +8,10 @@ export default function ChipPrioridad({ prioridad = 'media', etiqueta, title, cl
   const tono = tonoPrioridad(prioridad)
   const texto = etiqueta || etiquetaPrioridad(prioridad)
   const CLASES = {
-    bad: 'border-bad/30 bg-bad/10 text-bad',
-    warn: 'border-warn/30 bg-warn/10 text-warn',
-    ok: 'border-ok/30 bg-ok/10 text-ok',
-    info: 'border-info/30 bg-info/10 text-info',
+    bad: 'border-bad/30 bg-bad/10 text-bad-text',
+    warn: 'border-warn/30 bg-warn/10 text-warn-text',
+    ok: 'border-ok/30 bg-ok/10 text-ok-text',
+    info: 'border-info/30 bg-info/10 text-info-text',
     mute: 'border-ink-500 bg-ink-700 text-mute',
   }
   return (

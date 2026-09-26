@@ -223,7 +223,7 @@ input::placeholder, textarea::placeholder {
 .v2-piloto .v2-chip.bg-fono\/15 {
   background-color: rgb(var(--c-info) / .1);
   border-color: rgb(var(--c-info) / .3);
-  color: rgb(var(--c-info));
+  color: rgb(var(--c-info-text));
 }
 /* El chip neutro mantiene su gris en claro; en oscuro el mute queda en 4.14:1
    sobre ink-600 y usa el texto de primer nivel (9.8:1). */
@@ -262,15 +262,19 @@ input::placeholder, textarea::placeholder {
   line-height: 2rem;
 }
 .tema-v2 button.bg-fono\/15.text-fono-light,
+.tema-v2 button.bg-fono\/15.text-fono-text,
 .tema-v2 [role="tab"][aria-selected="true"],
 .v2-piloto button.bg-fono\/15.text-fono-light,
+.v2-piloto button.bg-fono\/15.text-fono-text,
 .v2-piloto [role="tab"][aria-selected="true"] {
   background: rgb(var(--c-info) / .14);
   color: rgb(var(--c-info));
 }
 .dark .tema-v2 button.bg-fono\/15.text-fono-light,
+.dark .tema-v2 button.bg-fono\/15.text-fono-text,
 .dark .tema-v2 [role="tab"][aria-selected="true"],
 .dark .v2-piloto button.bg-fono\/15.text-fono-light,
+.dark .v2-piloto button.bg-fono\/15.text-fono-text,
 .dark .v2-piloto [role="tab"][aria-selected="true"] {
   background: rgb(var(--c-info) / .2);
   color: rgb(var(--c-fore));
@@ -310,22 +314,30 @@ input::placeholder, textarea::placeholder {
    verde de texto del scope (en oscuro, el verde claro). */
 .tema-v2 .bg-fono\/15.text-fono-light,
 .tema-v2 .bg-fono\/15.text-fono-dark,
+.tema-v2 .bg-fono\/15.text-fono-text,
 .tema-v2 .bg-fono\/10.text-fono-light,
 .tema-v2 .bg-fono\/10.text-fono-dark,
+.tema-v2 .bg-fono\/10.text-fono-text,
 .v2-piloto .bg-fono\/15.text-fono-light,
 .v2-piloto .bg-fono\/15.text-fono-dark,
+.v2-piloto .bg-fono\/15.text-fono-text,
 .v2-piloto .bg-fono\/10.text-fono-light,
-.v2-piloto .bg-fono\/10.text-fono-dark {
+.v2-piloto .bg-fono\/10.text-fono-dark,
+.v2-piloto .bg-fono\/10.text-fono-text {
   color: rgb(var(--c-ok));
 }
 .dark .tema-v2 .bg-fono\/15.text-fono-light,
 .dark .tema-v2 .bg-fono\/15.text-fono-dark,
+.dark .tema-v2 .bg-fono\/15.text-fono-text,
 .dark .tema-v2 .bg-fono\/10.text-fono-light,
 .dark .tema-v2 .bg-fono\/10.text-fono-dark,
+.dark .tema-v2 .bg-fono\/10.text-fono-text,
 .dark .v2-piloto .bg-fono\/15.text-fono-light,
 .dark .v2-piloto .bg-fono\/15.text-fono-dark,
+.dark .v2-piloto .bg-fono\/15.text-fono-text,
 .dark .v2-piloto .bg-fono\/10.text-fono-light,
-.dark .v2-piloto .bg-fono\/10.text-fono-dark {
+.dark .v2-piloto .bg-fono\/10.text-fono-dark,
+.dark .v2-piloto .bg-fono\/10.text-fono-text {
   color: rgb(var(--c-fono-light));
 }
 /* El tinte estático al 5% del texto de primer nivel deja al mute en 4.49:1 en

@@ -13,7 +13,7 @@ export default function TarjetaAjuste({ titulo, descripcion, accion, icono, tono
     <Card id={id} className={cn('space-y-3', peligro && 'border-bad/30', className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className={cn('flex items-center gap-2 font-semibold', peligro && 'text-bad')}>
+          <h2 className={cn('flex items-center gap-2 font-semibold', peligro && 'text-bad-text')}>
             {icono && <Icon name={icono} className="h-4 w-4 text-mute" />}
             {titulo}
           </h2>

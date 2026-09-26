@@ -56,7 +56,7 @@ export default function FichaCertificado({
             <FilaDato
               etiqueta="Checklist"
               valor={hayChecklist
-                ? <span className={completo ? 'text-pass' : 'text-mute'}>{aprobados} de {total} pass</span>
+                ? <span className={completo ? 'text-pass-text' : 'text-mute'}>{aprobados} de {total} pass</span>
                 : 'Sin verificación física'}
             />
             {puntaje !== null && puntaje !== undefined && puntaje !== '' && (

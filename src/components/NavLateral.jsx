@@ -24,7 +24,7 @@ function ItemNav({ item, activo, colapsado, onSelect }) {
         title={colapsado ? item.label : undefined}
         className={cn(
           'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition',
-          activo ? 'bg-fono/15 text-fono-light' : 'text-mute hover:bg-ink-700 hover:text-fore',
+          activo ? 'bg-fono/15 text-fono-text' : 'text-mute hover:bg-ink-700 hover:text-fore',
           colapsado && 'justify-center px-2',
         )}
       >

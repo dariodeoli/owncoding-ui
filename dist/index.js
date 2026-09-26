@@ -182,31 +182,33 @@ var TAMANO_MODAL_PREDETERMINADO = "formulario";
 
 // src/utils/tonos.js
 var TONOS = {
+  // El texto va por la familia `*-text` (#5): el tono base queda para el
+  // relleno/punto/borde y el par de texto sostiene AA sobre el tinte.
   punto: {
-    ok: "bg-ok/15 text-ok",
-    warn: "bg-warn/15 text-warn",
-    bad: "bg-bad/15 text-bad",
+    ok: "bg-ok/15 text-ok-text",
+    warn: "bg-warn/15 text-warn-text",
+    bad: "bg-bad/15 text-bad-text",
     mute: "bg-ink-700 text-mute",
-    info: "bg-info/15 text-info",
-    pass: "bg-pass/15 text-pass",
-    fono: "bg-fono/15 text-fono-light"
+    info: "bg-info/15 text-info-text",
+    pass: "bg-pass/15 text-pass-text",
+    fono: "bg-fono/15 text-fono-text"
   },
   chip: {
-    ok: "border-ok/30 bg-ok/10 text-ok",
-    warn: "border-warn/30 bg-warn/10 text-warn",
-    bad: "border-bad/30 bg-bad/10 text-bad",
+    ok: "border-ok/30 bg-ok/10 text-ok-text",
+    warn: "border-warn/30 bg-warn/10 text-warn-text",
+    bad: "border-bad/30 bg-bad/10 text-bad-text",
     mute: "border-ink-600 bg-ink-800/40 text-mute",
-    info: "border-info/30 bg-info/10 text-info",
-    pass: "border-pass/30 bg-pass/10 text-pass",
-    fono: "border-fono/30 bg-fono/10 text-fono-light"
+    info: "border-info/30 bg-info/10 text-info-text",
+    pass: "border-pass/30 bg-pass/10 text-pass-text",
+    fono: "border-fono/30 bg-fono/10 text-fono-text"
   },
   texto: {
-    ok: "text-ok",
-    warn: "text-warn",
-    bad: "text-bad",
+    ok: "text-ok-text",
+    warn: "text-warn-text",
+    bad: "text-bad-text",
     mute: "text-mute",
-    info: "text-info",
-    pass: "text-pass",
+    info: "text-info-text",
+    pass: "text-pass-text",
     fono: "text-fono-light"
   }
 };
@@ -438,7 +440,7 @@ var VARIANTS = {
   primary: "bg-fono text-onbrand hover:bg-fono-light",
   success: "bg-ok text-black hover:brightness-110",
   danger: "bg-bad text-fore hover:brightness-110",
-  outline: "bg-transparent text-fore border border-ink-500 hover:border-fono hover:bg-fono/10",
+  outline: "bg-transparent text-fore border border-interactivo hover:border-fono hover:bg-fono/10",
   ghost: "bg-transparent text-mute hover:bg-ink-700 hover:text-fore"
 };
 function Button({ className, variant = "primary", ...props }) {
@@ -632,7 +634,7 @@ function ConfirmDialog({
   busy = false
 }) {
   return /* @__PURE__ */ jsx2(Modal, { open, onClose: busy ? void 0 : onCancel, title, size: "corto", children: /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
-    /* @__PURE__ */ jsx2("div", { className: cn("flex h-11 w-11 items-center justify-center rounded-2xl", variant === "danger" ? "bg-bad/10 text-bad" : "bg-fono/10 text-fono-light"), children: /* @__PURE__ */ jsx2(Icon, { name: variant === "danger" ? "alert" : "check", className: "h-5 w-5" }) }),
+    /* @__PURE__ */ jsx2("div", { className: cn("flex h-11 w-11 items-center justify-center rounded-2xl", variant === "danger" ? "bg-bad/10 text-bad-text" : "bg-fono/10 text-fono-text"), children: /* @__PURE__ */ jsx2(Icon, { name: variant === "danger" ? "alert" : "check", className: "h-5 w-5" }) }),
     /* @__PURE__ */ jsx2("p", { className: "text-sm leading-6 text-mute", children: description }),
     /* @__PURE__ */ jsxs("div", { className: "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", children: [
       /* @__PURE__ */ jsx2(Button, { type: "button", variant: "ghost", onClick: onCancel, disabled: busy, children: "Cancelar" }),
@@ -641,11 +643,11 @@ function ConfirmDialog({
   ] }) });
 }
 var BADGE = {
-  blue: "bg-fono/15 text-fono-light border-fono/25",
-  green: "bg-ok/15 text-ok border-ok/25",
-  red: "bg-bad/15 text-bad border-bad/25",
-  orange: "bg-warn/15 text-warn border-warn/25",
-  yellow: "bg-warn/15 text-warn border-warn/25",
+  blue: "bg-fono/15 text-fono-text border-fono/25",
+  green: "bg-ok/15 text-ok-text border-ok/25",
+  red: "bg-bad/15 text-bad-text border-bad/25",
+  orange: "bg-warn/15 text-warn-text border-warn/25",
+  yellow: "bg-warn/15 text-warn-text border-warn/25",
   slate: "bg-ink-600 text-mute border-ink-500"
 };
 function Badge({ className, color = "slate", ...props }) {
@@ -679,10 +681,10 @@ function Dot({ color = "slate", pulse = false, className }) {
   ] });
 }
 var ICON_ACTION_TONE = {
-  ok: "border-ok/30 text-ok hover:bg-ok/10",
-  warn: "border-warn/30 text-warn hover:bg-warn/10",
+  ok: "border-ok/30 text-ok-text hover:bg-ok/10",
+  warn: "border-warn/30 text-warn-text hover:bg-warn/10",
   fono: "border-fono/30 text-fono-light hover:bg-fono/10",
-  bad: "border-bad/30 text-bad hover:bg-bad/10",
+  bad: "border-bad/30 text-bad-text hover:bg-bad/10",
   mute: "border-transparent text-mute hover:bg-ink-700 hover:text-fore"
 };
 function IconAction({ icon, label, tone = "mute", onClick, disabled = false, size = "sm" }) {
@@ -734,7 +736,7 @@ function Drawer({ open, onClose, title, children, side = "right", className }) {
 var ToastContext = createContext(null);
 var toastCounter = 0;
 var TOAST_ICON = { success: "check", error: "alert", info: "info" };
-var TOAST_TONE = { success: "text-ok", error: "text-bad", info: "text-fono-light" };
+var TOAST_TONE = { success: "text-ok-text", error: "text-bad-text", info: "text-fono-light" };
 function ToastProvider({ children, demo = false }) {
   const [toasts, setToasts] = useState([]);
   const [mounted, setMounted] = useState(false);
@@ -797,7 +799,7 @@ function EmptyState({ icon = "box", title, description, action, compact = false,
 }
 function ErrorState({ title = "Algo sali\xF3 mal", description, onRetry, compact = false, role, className }) {
   return /* @__PURE__ */ jsxs("div", { role, className: cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className), children: [
-    /* @__PURE__ */ jsx2("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad", children: /* @__PURE__ */ jsx2(Icon, { name: "alert", className: "h-5 w-5" }) }),
+    /* @__PURE__ */ jsx2("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad-text", children: /* @__PURE__ */ jsx2(Icon, { name: "alert", className: "h-5 w-5" }) }),
     /* @__PURE__ */ jsx2("p", { className: "mt-3 text-sm font-semibold text-fore", children: title }),
     description && /* @__PURE__ */ jsx2("p", { className: "mt-1 max-w-xs text-xs leading-5 text-mute", children: description }),
     onRetry && /* @__PURE__ */ jsx2(Button, { type: "button", variant: "outline", onClick: onRetry, className: "mt-4", children: "Reintentar" })
@@ -826,9 +828,9 @@ function SectionState({ estado = "vacio", title, description, icon = "box", acti
   return /* @__PURE__ */ jsx2(EmptyState, { icon, title, description, action, compact, className });
 }
 var AVISOS = {
-  error: "border-bad/30 bg-bad/10 text-bad",
-  ok: "border-ok/30 bg-ok/10 text-ok",
-  warn: "border-warn/30 bg-warn/10 text-warn"
+  error: "border-bad/30 bg-bad/10 text-bad-text",
+  ok: "border-ok/30 bg-ok/10 text-ok-text",
+  warn: "border-warn/30 bg-warn/10 text-warn-text"
 };
 function Aviso({ tono = "error", como = "p", compact = false, className, children, ...props }) {
   const Etiqueta = como === "div" ? "div" : "p";
@@ -867,7 +869,7 @@ function PageHeader({ title, subtitle, actions, backTo, eyebrow, migas }) {
         {
           type: "button",
           onClick: backTo,
-          className: "grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
+          className: "grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-interactivo text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
           "aria-label": "Volver",
           children: /* @__PURE__ */ jsx2(Icon, { name: "back", className: "h-4 w-4" })
         }
@@ -911,7 +913,7 @@ function FormField({ label, hint, error, children, htmlFor, descripcionId }) {
   return /* @__PURE__ */ jsxs("div", { children: [
     label && /* @__PURE__ */ jsx2(Label, { htmlFor, children: label }),
     children,
-    error ? /* @__PURE__ */ jsx2("p", { id: mensajeId, role: "alert", className: "mt-1.5 text-xs text-bad", children: error }) : hint ? /* @__PURE__ */ jsx2("p", { id: mensajeId, className: "mt-1.5 text-xs text-mute", children: hint }) : null
+    error ? /* @__PURE__ */ jsx2("p", { id: mensajeId, role: "alert", className: "mt-1.5 text-xs text-bad-text", children: error }) : hint ? /* @__PURE__ */ jsx2("p", { id: mensajeId, className: "mt-1.5 text-xs text-mute", children: hint }) : null
   ] });
 }
 function Stat({ label, valor, delta, sub, nota, tono, destacado = false, deltaComo = "texto", barra, className }) {
@@ -930,12 +932,12 @@ function Stat({ label, valor, delta, sub, nota, tono, destacado = false, deltaCo
         /* @__PURE__ */ jsx2("div", { className: cn("text-[11px] font-medium uppercase tracking-wider", destacado ? "text-onbrand/75" : "text-mute"), children: label }),
         /* @__PURE__ */ jsx2("div", { className: cn("v2-numero mt-1.5 text-2xl font-semibold md:text-3xl", colorValor), children: valor }),
         /* @__PURE__ */ jsxs("div", { className: "mt-1.5 flex items-center gap-2 text-xs", children: [
-          typeof delta === "number" && (deltaComo === "chip" ? /* @__PURE__ */ jsxs("span", { className: cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium", sube ? "bg-ok/15 text-ok" : "bg-bad/15 text-bad"), children: [
+          typeof delta === "number" && (deltaComo === "chip" ? /* @__PURE__ */ jsxs("span", { className: cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium", sube ? "bg-ok/15 text-ok-text" : "bg-bad/15 text-bad-text"), children: [
             sube ? "\u2191" : "\u2193",
             " ",
             Math.abs(delta).toFixed(1),
             "%"
-          ] }) : /* @__PURE__ */ jsxs("span", { className: cn("font-medium", sube ? "text-ok" : "text-bad"), children: [
+          ] }) : /* @__PURE__ */ jsxs("span", { className: cn("font-medium", sube ? "text-ok-text" : "text-bad-text"), children: [
             sube ? "\u2191" : "\u2193",
             " ",
             Math.abs(delta).toFixed(1),
@@ -974,7 +976,7 @@ function Subtabs({ value, onChange, items = [], className }) {
     );
   }) });
 }
-var TONOS_VALOR = { ok: "text-ok", warn: "text-warn", bad: "text-bad", mute: "text-mute" };
+var TONOS_VALOR = { ok: "text-ok-text", warn: "text-warn-text", bad: "text-bad-text", mute: "text-mute" };
 function FilaDato({ etiqueta, valor, tono = "", etiquetaComo: Etiqueta = "span", valorComo: Valor = "span", className, valorClassName, children }) {
   return /* @__PURE__ */ jsxs("div", { className: cn("flex items-center justify-between gap-3", className), children: [
     /* @__PURE__ */ jsx2(Etiqueta, { className: "min-w-0 text-mute", children: etiqueta ?? children }),
@@ -1211,7 +1213,7 @@ function SegmentedField({ value, onChange, options = [], ariaLabel, className })
         onClick: () => onChange(id),
         className: cn(
           "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition",
-          activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-fore/5 hover:text-fore"
+          activo ? "bg-fono/15 text-fono-text" : "text-mute hover:bg-fore/5 hover:text-fore"
         ),
         children: [
           icon && /* @__PURE__ */ jsx7(Icon, { name: icon, className: "h-4 w-4 shrink-0" }),
@@ -1302,7 +1304,7 @@ function ListGridToggle({ value, onChange, className }) {
       "aria-label": option.label,
       "aria-pressed": value === option.key,
       onClick: () => onChange(option.key),
-      className: cn("toque-44 grid h-9 w-9 place-items-center transition", value === option.key ? "bg-fono/15 text-fono-light" : "text-mute hover:text-fore"),
+      className: cn("toque-44 grid h-9 w-9 place-items-center transition", value === option.key ? "bg-fono/15 text-fono-text" : "text-mute hover:text-fore"),
       children: /* @__PURE__ */ jsx10(Icon, { name: option.icon, className: "h-4 w-4" })
     },
     option.key
@@ -1598,7 +1600,7 @@ function PhoneField({
         }
       )
     ] }),
-    invalido && /* @__PURE__ */ jsx15("span", { className: "block pt-1 text-[11px] text-bad", children: mensajeInvalido })
+    invalido && /* @__PURE__ */ jsx15("span", { className: "block pt-1 text-[11px] text-bad-text", children: mensajeInvalido })
   ] });
 }
 
@@ -2355,7 +2357,7 @@ function RucField({
         setResultado(null);
       }, children: "Usar estos datos" })
     ] }),
-    error && /* @__PURE__ */ jsx21("p", { role: "alert", className: "text-sm text-bad", children: error })
+    error && /* @__PURE__ */ jsx21("p", { role: "alert", className: "text-sm text-bad-text", children: error })
   ] });
 }
 
@@ -2418,15 +2420,15 @@ function CampoSeriales({
       }
     ),
     /* @__PURE__ */ jsxs16("p", { className: "flex flex-wrap items-center gap-x-3 gap-y-1 text-xs", role: "status", children: [
-      /* @__PURE__ */ jsxs16("span", { className: hay ? "font-semibold text-ok" : "text-mute", children: [
+      /* @__PURE__ */ jsxs16("span", { className: hay ? "font-semibold text-ok-text" : "text-mute", children: [
         resultado.seriales.length,
         " listo(s) para cargar"
       ] }),
-      resultado.repetidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-warn", children: [
+      resultado.repetidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-warn-text", children: [
         resultado.repetidos.length,
         " repetido(s)"
       ] }),
-      resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-bad", children: [
+      resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-bad-text", children: [
         resultado.invalidos.length,
         " inv\xE1lido(s)"
       ] })
@@ -2644,7 +2646,7 @@ function TaxIdField({
         }
       ) : null
     ] }) : null,
-    consulta.estado === "error" ? /* @__PURE__ */ jsx26("p", { role: "alert", className: "mt-1.5 text-xs text-bad", children: consulta.mensaje }) : null
+    consulta.estado === "error" ? /* @__PURE__ */ jsx26("p", { role: "alert", className: "mt-1.5 text-xs text-bad-text", children: consulta.mensaje }) : null
   ] });
 }
 
@@ -2767,7 +2769,7 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
           /* @__PURE__ */ jsx30("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx30("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
         ] }),
         nombreTienda && /* @__PURE__ */ jsx30("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs22("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
-          imagenTienda ? /* @__PURE__ */ jsx30("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx30("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
+          imagenTienda ? /* @__PURE__ */ jsx30("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx30("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-text", children: nombreTienda.charAt(0).toUpperCase() }),
           /* @__PURE__ */ jsx30("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
           etiqueta && /* @__PURE__ */ jsx30("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
         ] }) })
@@ -2853,7 +2855,7 @@ function ItemNav({ item, activo, colapsado, onSelect }) {
       title: colapsado ? item.label : void 0,
       className: cn(
         "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
-        activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore",
+        activo ? "bg-fono/15 text-fono-text" : "text-mute hover:bg-ink-700 hover:text-fore",
         colapsado && "justify-center px-2"
       ),
       children: [
@@ -2997,7 +2999,7 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
               },
               className: cn(
                 "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
-                item.peligro ? "text-bad hover:bg-bad/10" : "text-fore hover:bg-ink-700",
+                item.peligro ? "text-bad-text hover:bg-bad/10" : "text-fore hover:bg-ink-700",
                 item.disabled && "cursor-not-allowed opacity-40"
               ),
               children: [
@@ -3064,7 +3066,7 @@ function ThemeToggle({
       title: etiqueta,
       "aria-pressed": oscuro,
       className: cn(
-        "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition",
+        "grid h-9 w-9 place-items-center rounded-lg border border-interactivo text-mute transition",
         "hover:border-fono hover:bg-fono/10 hover:text-fore",
         className
       ),
@@ -3089,7 +3091,7 @@ function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, tono = "no
   return /* @__PURE__ */ jsxs27(Card, { id, className: cn("space-y-3", peligro && "border-bad/30", className), children: [
     /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
       /* @__PURE__ */ jsxs27("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs27("h2", { className: cn("flex items-center gap-2 font-semibold", peligro && "text-bad"), children: [
+        /* @__PURE__ */ jsxs27("h2", { className: cn("flex items-center gap-2 font-semibold", peligro && "text-bad-text"), children: [
           icono && /* @__PURE__ */ jsx36(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
           titulo2
         ] }),
@@ -3312,7 +3314,7 @@ function AjustesImpresion({
         /* @__PURE__ */ jsxs28("div", { className: "flex flex-wrap items-center gap-1", children: [
           onProbar && /* @__PURE__ */ jsx38(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
           /* @__PURE__ */ jsx38(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
-          onEliminar && /* @__PURE__ */ jsx38(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
+          onEliminar && /* @__PURE__ */ jsx38(Button, { type: "button", variant: "ghost", className: "text-bad-text", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
         ] })
       ] }, impresora.id);
     }) }),
@@ -4051,7 +4053,7 @@ function CityAutocomplete({
         ]
       }
     ) }, `${fila.city}-${fila.department}`)) }),
-    error ? /* @__PURE__ */ jsx42("p", { role: "alert", className: "mt-1 text-xs text-bad", children: error }) : null
+    error ? /* @__PURE__ */ jsx42("p", { role: "alert", className: "mt-1 text-xs text-bad-text", children: error }) : null
   ] });
 }
 
@@ -4175,14 +4177,14 @@ function FilaChecklist({ etiqueta, estado = "sinVerificar", nota, accion, classN
 function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass", className }) {
   const completo = total > 0 && pasan === total;
   return /* @__PURE__ */ jsxs33("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
-    /* @__PURE__ */ jsxs33("span", { className: completo ? "text-pass" : "text-mute", children: [
+    /* @__PURE__ */ jsxs33("span", { className: completo ? "text-pass-text" : "text-mute", children: [
       pasan,
       " de ",
       total,
       " ",
       sustantivo
     ] }),
-    fallas > 0 && /* @__PURE__ */ jsxs33("span", { className: "text-bad", children: [
+    fallas > 0 && /* @__PURE__ */ jsxs33("span", { className: "text-bad-text", children: [
       fallas,
       " ",
       fallas === 1 ? "falla" : "fallas"
@@ -4283,7 +4285,7 @@ function MedidorStock({
     const porcentaje = techo > 0 ? Math.min(100, Math.round(n / techo * 100)) : 0;
     return /* @__PURE__ */ jsxs37("span", { className: cn("block min-w-0 space-y-1", className), children: [
       /* @__PURE__ */ jsxs37("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx48("span", { className: cn("font-semibold", tono === "bad" ? "text-bad" : tono === "warn" ? "text-warn" : "text-ok"), children: texto }),
+        /* @__PURE__ */ jsx48("span", { className: cn("font-semibold", tono === "bad" ? "text-bad-text" : tono === "warn" ? "text-warn-text" : "text-ok-text"), children: texto }),
         /* @__PURE__ */ jsx48("span", { className: "tabular-nums text-mute", children: detalle })
       ] }),
       /* @__PURE__ */ jsx48("span", { role: "progressbar", "aria-label": etiqueta ?? `Stock ${detalle}`, "aria-valuenow": porcentaje, "aria-valuemin": 0, "aria-valuemax": 100, className: "block h-1.5 overflow-hidden rounded-full bg-ink-700", children: /* @__PURE__ */ jsx48("span", { className: cn("block h-full rounded-full transition-[width]", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), style: { width: `${porcentaje}%` } }) })
@@ -4295,8 +4297,8 @@ function MedidorStock({
       className: cn(
         "inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold",
         variante === "chip" && "rounded-lg border px-2 py-0.5",
-        variante === "chip" && (tono === "bad" ? "border-bad/30 bg-bad/10 text-bad" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn" : "border-ok/30 bg-ok/10 text-ok"),
-        variante === "texto" && (tono === "bad" ? "text-bad" : tono === "warn" ? "text-warn" : "text-ok"),
+        variante === "chip" && (tono === "bad" ? "border-bad/30 bg-bad/10 text-bad-text" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn-text" : "border-ok/30 bg-ok/10 text-ok-text"),
+        variante === "texto" && (tono === "bad" ? "text-bad-text" : tono === "warn" ? "text-warn-text" : "text-ok-text"),
         className
       ),
       title: etiqueta ?? `${texto} \xB7 ${detalle}`,
@@ -4326,7 +4328,7 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
     const porcentaje = Math.round(hechas / t * 100);
     return /* @__PURE__ */ jsxs38("span", { className: cn("block min-w-0 space-y-1", className), children: [
       /* @__PURE__ */ jsxs38("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx49("span", { className: cn("font-semibold", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
+        /* @__PURE__ */ jsx49("span", { className: cn("font-semibold", tono === "ok" ? "text-ok-text" : tono === "warn" ? "text-warn-text" : "text-mute"), children: texto }),
         mostrarFaltan && !completo && /* @__PURE__ */ jsxs38("span", { className: "text-mute", children: [
           "faltan ",
           faltan
@@ -4352,7 +4354,7 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
       {
         className: cn(
           "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold",
-          tono === "ok" ? "border-ok/30 bg-ok/10 text-ok" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn" : "border-ink-500 bg-ink-700 text-mute",
+          tono === "ok" ? "border-ok/30 bg-ok/10 text-ok-text" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn-text" : "border-ink-500 bg-ink-700 text-mute",
           className
         ),
         title: texto,
@@ -4367,7 +4369,7 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
     );
   }
   return /* @__PURE__ */ jsxs38("span", { className: cn("inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs", className), title: texto, children: [
-    /* @__PURE__ */ jsx49("span", { className: cn("font-semibold tabular-nums", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
+    /* @__PURE__ */ jsx49("span", { className: cn("font-semibold tabular-nums", tono === "ok" ? "text-ok-text" : tono === "warn" ? "text-warn-text" : "text-mute"), children: texto }),
     mostrarFaltan && !completo && /* @__PURE__ */ jsxs38("span", { className: "text-mute", children: [
       "faltan ",
       faltan
@@ -4503,10 +4505,10 @@ function ChipPrioridad({ prioridad = "media", etiqueta, title, className }) {
   const tono = tonoPrioridad(prioridad);
   const texto = etiqueta || etiquetaPrioridad(prioridad);
   const CLASES3 = {
-    bad: "border-bad/30 bg-bad/10 text-bad",
-    warn: "border-warn/30 bg-warn/10 text-warn",
-    ok: "border-ok/30 bg-ok/10 text-ok",
-    info: "border-info/30 bg-info/10 text-info",
+    bad: "border-bad/30 bg-bad/10 text-bad-text",
+    warn: "border-warn/30 bg-warn/10 text-warn-text",
+    ok: "border-ok/30 bg-ok/10 text-ok-text",
+    info: "border-info/30 bg-info/10 text-info-text",
     mute: "border-ink-500 bg-ink-700 text-mute"
   };
   return /* @__PURE__ */ jsx50(
@@ -4525,10 +4527,10 @@ function ChipOrigen({ origen, etiqueta, title, className }) {
   const tono = tonoOrigen(origen);
   const texto = etiqueta || etiquetaOrigen(origen);
   const CLASES3 = {
-    bad: "border-bad/30 bg-bad/10 text-bad",
-    warn: "border-warn/30 bg-warn/10 text-warn",
-    ok: "border-ok/30 bg-ok/10 text-ok",
-    info: "border-info/30 bg-info/10 text-info",
+    bad: "border-bad/30 bg-bad/10 text-bad-text",
+    warn: "border-warn/30 bg-warn/10 text-warn-text",
+    ok: "border-ok/30 bg-ok/10 text-ok-text",
+    info: "border-info/30 bg-info/10 text-info-text",
     mute: "border-ink-500 bg-ink-700 text-mute"
   };
   return /* @__PURE__ */ jsxs39(
@@ -4549,9 +4551,9 @@ import { jsx as jsx52, jsxs as jsxs40 } from "react/jsx-runtime";
 function ContadoresCompra({ pendiente = 0, comprado = 0, faltan = 0, variante = "texto", className }) {
   const conteo = (valor) => Math.max(0, Math.trunc(Number(valor) || 0));
   const datos = [
-    { clave: "pendiente", etiqueta: "pendiente", valor: conteo(pendiente), tono: conteo(pendiente) > 0 ? "text-warn" : "text-mute" },
-    { clave: "comprado", etiqueta: "comprado", valor: conteo(comprado), tono: "text-ok" },
-    { clave: "faltan", etiqueta: "faltan", valor: conteo(faltan), tono: conteo(faltan) > 0 ? "text-bad" : "text-mute" }
+    { clave: "pendiente", etiqueta: "pendiente", valor: conteo(pendiente), tono: conteo(pendiente) > 0 ? "text-warn-text" : "text-mute" },
+    { clave: "comprado", etiqueta: "comprado", valor: conteo(comprado), tono: "text-ok-text" },
+    { clave: "faltan", etiqueta: "faltan", valor: conteo(faltan), tono: conteo(faltan) > 0 ? "text-bad-text" : "text-mute" }
   ];
   if (variante === "chips") {
     return /* @__PURE__ */ jsx52("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), children: datos.map((dato) => /* @__PURE__ */ jsxs40("span", { className: "inline-flex items-center gap-1 rounded-lg border border-ink-600 bg-ink-800 px-2 py-0.5 text-[11px] text-mute", children: [
@@ -4676,15 +4678,15 @@ function estadoVencimiento(fecha, { hoy = /* @__PURE__ */ new Date(), diasAviso 
   return { texto: fechaCorta(vence), tono: "mute", vencido: false, dias, titulo: titulo2 };
 }
 var CLASES = {
-  bad: "text-bad",
-  warn: "text-warn",
-  ok: "text-ok",
+  bad: "text-bad-text",
+  warn: "text-warn-text",
+  ok: "text-ok-text",
   mute: "text-mute"
 };
 var CHIP = {
-  bad: "border-bad/30 bg-bad/10 text-bad",
-  warn: "border-warn/30 bg-warn/10 text-warn",
-  ok: "border-ok/30 bg-ok/10 text-ok",
+  bad: "border-bad/30 bg-bad/10 text-bad-text",
+  warn: "border-warn/30 bg-warn/10 text-warn-text",
+  ok: "border-ok/30 bg-ok/10 text-ok-text",
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 function Vencimiento({ fecha, variante = "texto", diasAviso = 7, hoy, texto, vacio = "\u2014", className }) {
@@ -5018,10 +5020,10 @@ var tonoRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]?.tono || 
 // src/components/ResumenIncidencias.jsx
 import { jsx as jsx61, jsxs as jsxs47 } from "react/jsx-runtime";
 var CLASES2 = {
-  bad: "border-bad/30 bg-bad/10 text-bad",
-  warn: "border-warn/30 bg-warn/10 text-warn",
+  bad: "border-bad/30 bg-bad/10 text-bad-text",
+  warn: "border-warn/30 bg-warn/10 text-warn-text",
   mute: "border-ink-500 bg-ink-700 text-mute",
-  ok: "border-ok/30 bg-ok/10 text-ok"
+  ok: "border-ok/30 bg-ok/10 text-ok-text"
 };
 function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencias", className }) {
   const lista = (Array.isArray(incidencias) ? incidencias : []).map((incidencia) => ({ ...incidencia, cantidad: Math.trunc(Number(incidencia?.cantidad) || 0) })).filter((incidencia) => incidencia.cantidad > 0);
@@ -5050,9 +5052,9 @@ function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencia
 import { jsx as jsx62, jsxs as jsxs48 } from "react/jsx-runtime";
 var ORDEN = ["recibido", "faltante", "sobrante", "danado", "incorrecto"];
 var CHIP2 = {
-  ok: "border-ok/30 bg-ok/10 text-ok",
-  warn: "border-warn/30 bg-warn/10 text-warn",
-  bad: "border-bad/30 bg-bad/10 text-bad",
+  ok: "border-ok/30 bg-ok/10 text-ok-text",
+  warn: "border-warn/30 bg-warn/10 text-warn-text",
+  bad: "border-bad/30 bg-bad/10 text-bad-text",
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 function ResumenRecepcion({ resumen, items, className }) {
@@ -5078,9 +5080,9 @@ var TONOS2 = {
   mute: "border-ink-600"
 };
 var CHIP3 = {
-  ok: "border-ok/30 bg-ok/10 text-ok",
-  warn: "border-warn/30 bg-warn/10 text-warn",
-  bad: "border-bad/30 bg-bad/10 text-bad",
+  ok: "border-ok/30 bg-ok/10 text-ok-text",
+  warn: "border-warn/30 bg-warn/10 text-warn-text",
+  bad: "border-bad/30 bg-bad/10 text-bad-text",
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 function FilaRevision({ etiqueta, serial, estado = "ok", detalle, acciones, compact = false, className }) {
@@ -5101,9 +5103,9 @@ function FilaRevision({ etiqueta, serial, estado = "ok", detalle, acciones, comp
 // src/components/SelectorIncidencia.jsx
 import { jsx as jsx64 } from "react/jsx-runtime";
 var CHIP4 = {
-  ok: "border-ok/40 bg-ok/10 text-ok",
-  warn: "border-warn/40 bg-warn/10 text-warn",
-  bad: "border-bad/40 bg-bad/10 text-bad",
+  ok: "border-ok/40 bg-ok/10 text-ok-text",
+  warn: "border-warn/40 bg-warn/10 text-warn-text",
+  bad: "border-bad/40 bg-bad/10 text-bad-text",
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 var CHIP_APAGADO = "border-ink-500 text-mute hover:border-fono hover:text-fore";
@@ -5161,7 +5163,7 @@ function DestinoRecepcion({
       ] }),
       /* @__PURE__ */ jsx65(Button, { type: "button", disabled: recibiendo || !actual?.id || !onRecibir, onClick: () => onRecibir?.(actual.id), children: recibiendo ? "Recibiendo\u2026" : textoRecibir })
     ] }),
-    Number(pendientes) > 0 && /* @__PURE__ */ jsxs50("p", { className: "mt-2 flex items-center gap-1.5 text-xs text-warn", children: [
+    Number(pendientes) > 0 && /* @__PURE__ */ jsxs50("p", { className: "mt-2 flex items-center gap-1.5 text-xs text-warn-text", children: [
       /* @__PURE__ */ jsx65(Icon, { name: "alert", className: "h-3.5 w-3.5 shrink-0", "aria-hidden": "true" }),
       Number(pendientes),
       " unidad(es) sin IMEI: se reciben igual y el IMEI se completa despu\xE9s."
@@ -5317,7 +5319,7 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
           {
             className: cn(
               "grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold",
-              activo ? "oc-paso-activo bg-info/15 text-info" : hecho ? "bg-ok/15 text-ok" : "bg-ink-700 text-mute"
+              activo ? "oc-paso-activo bg-info/15 text-info-text" : hecho ? "bg-ok/15 text-ok-text" : "bg-ink-700 text-mute"
             ),
             "aria-hidden": "true",
             children: hecho ? /* @__PURE__ */ jsx71(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
@@ -5325,7 +5327,7 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
         ),
         /* @__PURE__ */ jsxs56("span", { className: "min-w-0", children: [
           /* @__PURE__ */ jsx71("span", { className: "block truncate text-xs font-semibold", children: etiquetaDe(paso) }),
-          typeof paso === "object" && paso.detalle ? /* @__PURE__ */ jsx71("span", { className: cn("block truncate text-[11px]", activo ? "text-info" : "text-mute"), children: paso.detalle }) : null
+          typeof paso === "object" && paso.detalle ? /* @__PURE__ */ jsx71("span", { className: cn("block truncate text-[11px]", activo ? "text-info-text" : "text-mute"), children: paso.detalle }) : null
         ] })
       ] }, claveDe(paso, indice));
     }) });
@@ -5339,15 +5341,15 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
         {
           className: cn(
             "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[11px] font-bold",
-            hecho && "border-pass/40 bg-pass/15 text-pass",
-            !hecho && enCurso && "oc-paso-activo border-fono bg-fono/10 text-fono-light",
+            hecho && "border-pass/40 bg-pass/15 text-pass-text",
+            !hecho && enCurso && "oc-paso-activo border-fono bg-fono/10 text-fono-text",
             !hecho && !enCurso && "border-ink-600 bg-ink-800 text-mute"
           ),
           "aria-hidden": "true",
           children: hecho ? /* @__PURE__ */ jsx71(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
         }
       ),
-      /* @__PURE__ */ jsxs56("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
+      /* @__PURE__ */ jsxs56("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass-text" : "text-mute"), children: [
         etiquetaDe(paso),
         typeof paso === "object" && paso.detalle && /* @__PURE__ */ jsxs56("span", { className: "ml-1 font-normal text-mute", children: [
           "\xB7 ",
@@ -5403,7 +5405,7 @@ function FichaCertificado({
             FilaDato,
             {
               etiqueta: "Checklist",
-              valor: hayChecklist ? /* @__PURE__ */ jsxs57("span", { className: completo ? "text-pass" : "text-mute", children: [
+              valor: hayChecklist ? /* @__PURE__ */ jsxs57("span", { className: completo ? "text-pass-text" : "text-mute", children: [
                 aprobados,
                 " de ",
                 total,
@@ -5592,7 +5594,7 @@ function ListaDias({ dias, porDia, hoy, onElegir, renderItem, soloConItems }) {
     return /* @__PURE__ */ jsxs58("section", { className: "py-2", children: [
       /* @__PURE__ */ jsxs58("header", { className: "flex items-center justify-between gap-2 px-1", children: [
         /* @__PURE__ */ jsx74("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
-        dia === hoy && /* @__PURE__ */ jsx74("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
+        dia === hoy && /* @__PURE__ */ jsx74("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-text", children: "Hoy" })
       ] }),
       /* @__PURE__ */ jsx74("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx74("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
         (item, indice) => renderItem ? /* @__PURE__ */ jsx74("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx74(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
@@ -5730,7 +5732,7 @@ function Calendario({
                     title: etiquetaDia(dia),
                     className: cn(
                       "flex items-center justify-between rounded-md px-1 py-0.5 text-xs transition",
-                      esHoy ? "bg-fono/15 font-bold text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore"
+                      esHoy ? "bg-fono/15 font-bold text-fono-text" : "text-mute hover:bg-ink-700 hover:text-fore"
                     ),
                     children: [
                       /* @__PURE__ */ jsx74("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
@@ -5892,7 +5894,7 @@ function RangoFecha({
           },
           className: cn(
             "rounded-lg border px-2.5 py-1.5 text-xs font-medium transition",
-            esActivo ? "border-fono/30 bg-fono/15 text-fono-light" : "border-ink-600 text-mute hover:border-fono/40 hover:text-fore"
+            esActivo ? "border-fono/30 bg-fono/15 text-fono-text" : "border-ink-600 text-mute hover:border-fono/40 hover:text-fore"
           ),
           children: ETIQUETA_PERIODO[periodo] || periodo
         },
@@ -6289,7 +6291,7 @@ function AyudaModulo({
     /* @__PURE__ */ jsx77(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs61("div", { className: "space-y-4", children: [
       resumen && /* @__PURE__ */ jsx77("p", { className: "text-sm leading-6 text-mute", children: resumen }),
       puntos.length > 0 && /* @__PURE__ */ jsx77("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs61("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
-        /* @__PURE__ */ jsx77(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
+        /* @__PURE__ */ jsx77(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok-text" }),
         /* @__PURE__ */ jsx77("span", { className: "min-w-0", children: punto })
       ] }, punto)) }),
       enlaces.length > 0 && /* @__PURE__ */ jsx77("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs61(
@@ -6410,12 +6412,12 @@ import { useEffect as useEffect10, useState as useState23 } from "react";
 
 // src/utils/avatar.js
 var COLORES_AVATAR = {
-  fono: "bg-fono/15 text-fono-light",
-  ok: "bg-ok/15 text-ok",
-  info: "bg-info/15 text-info",
-  warn: "bg-warn/15 text-warn",
-  bad: "bg-bad/15 text-bad",
-  pass: "bg-pass/15 text-pass",
+  fono: "bg-fono/15 text-fono-text",
+  ok: "bg-ok/15 text-ok-text",
+  info: "bg-info/15 text-info-text",
+  warn: "bg-warn/15 text-warn-text",
+  bad: "bg-bad/15 text-bad-text",
+  pass: "bg-pass/15 text-pass-text",
   reserved: "bg-reserved/15 text-reserved",
   mute: "bg-ink-600 text-mute"
 };
@@ -6662,7 +6664,7 @@ function tonoDelta(valor, { invertir = false } = {}) {
   const bueno = invertir ? !positivo : positivo;
   return bueno ? "ok" : "bad";
 }
-var TONO_TEXTO = { ok: "text-ok", bad: "text-bad", mute: "text-mute" };
+var TONO_TEXTO = { ok: "text-ok-text", bad: "text-bad-text", mute: "text-mute" };
 function ImporteDelta({
   valor,
   moneda = "PYG",
@@ -6757,7 +6759,7 @@ function IndicadorConexion({
       title: titulo2,
       className: cn(
         "inline-flex min-w-0 items-center gap-2 rounded-lg border border-ink-600 bg-ink-800 px-2.5 py-1.5 text-xs",
-        enLinea ? "text-mute" : "text-warn",
+        enLinea ? "text-mute" : "text-warn-text",
         className
       ),
       children: [
@@ -7938,7 +7940,7 @@ function SubidaImagen({
         ]
       }
     ),
-    mensaje ? /* @__PURE__ */ jsx90("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx90("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
+    mensaje ? /* @__PURE__ */ jsx90("p", { className: "mt-1.5 text-xs text-bad-text", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx90("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
   ] });
 }
 
@@ -7997,7 +7999,7 @@ function ProgresoChecklist({
   className
 }) {
   const avance = progresoChecklist({ hechas, total, vencidas, riesgo, sustantivo, textoVacio });
-  const tonoTexto = avance.tono === "ok" ? "text-ok" : avance.tono === "bad" ? "text-bad" : avance.tono === "warn" ? "text-warn" : "text-fore";
+  const tonoTexto = avance.tono === "ok" ? "text-ok-text" : avance.tono === "bad" ? "text-bad-text" : avance.tono === "warn" ? "text-warn-text" : "text-fore";
   const hayDetalle = avance.vencidas > 0 || avance.riesgo;
   return /* @__PURE__ */ jsxs73("div", { className: cn("min-w-0", className), children: [
     /* @__PURE__ */ jsxs73("div", { className: "flex items-baseline justify-between gap-2", children: [
@@ -8009,9 +8011,9 @@ function ProgresoChecklist({
     ] }),
     avance.total > 0 && /* @__PURE__ */ jsx91(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
     mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs73("p", { className: "mt-1 text-[11px] text-mute", children: [
-      avance.riesgo && /* @__PURE__ */ jsx91("span", { className: "text-bad", children: "Sin avance" }),
+      avance.riesgo && /* @__PURE__ */ jsx91("span", { className: "text-bad-text", children: "Sin avance" }),
       avance.riesgo && avance.vencidas > 0 && " \xB7 ",
-      avance.vencidas > 0 && /* @__PURE__ */ jsxs73("span", { className: "text-warn", children: [
+      avance.vencidas > 0 && /* @__PURE__ */ jsxs73("span", { className: "text-warn-text", children: [
         avance.vencidas,
         " vencida",
         avance.vencidas === 1 ? "" : "s"

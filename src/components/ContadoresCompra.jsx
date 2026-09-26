@@ -7,9 +7,9 @@ import { cn } from '../utils/cn.js'
 export default function ContadoresCompra({ pendiente = 0, comprado = 0, faltan = 0, variante = 'texto', className }) {
   const conteo = (valor) => Math.max(0, Math.trunc(Number(valor) || 0))
   const datos = [
-    { clave: 'pendiente', etiqueta: 'pendiente', valor: conteo(pendiente), tono: conteo(pendiente) > 0 ? 'text-warn' : 'text-mute' },
-    { clave: 'comprado', etiqueta: 'comprado', valor: conteo(comprado), tono: 'text-ok' },
-    { clave: 'faltan', etiqueta: 'faltan', valor: conteo(faltan), tono: conteo(faltan) > 0 ? 'text-bad' : 'text-mute' },
+    { clave: 'pendiente', etiqueta: 'pendiente', valor: conteo(pendiente), tono: conteo(pendiente) > 0 ? 'text-warn-text' : 'text-mute' },
+    { clave: 'comprado', etiqueta: 'comprado', valor: conteo(comprado), tono: 'text-ok-text' },
+    { clave: 'faltan', etiqueta: 'faltan', valor: conteo(faltan), tono: conteo(faltan) > 0 ? 'text-bad-text' : 'text-mute' },
   ]
 
   if (variante === 'chips') {

@@ -45,6 +45,23 @@
   --c-pass-soft: 231 248 238;
   --c-accion: 77 124 254;
 
+  /* Texto de chips sobre relleno tenue (#5): familia de TEXTO para los tonos
+     que se apoyan en tintes `bg-*/10–15` (Badge, ChipEstado, puntos de estado).
+     El tono base queda para rellenos, puntos y bordes; esta familia se mide
+     ≥4.5:1 sobre blanco y sobre el canvas, y una app con paleta propia la pisa
+     (`--c-ok-text`, `--c-warn-text`, …) sin tocar los tonos base. */
+  --c-ok-text: 22 101 52;
+  --c-warn-text: 146 64 14;
+  --c-bad-text: 185 28 28;
+  --c-info-text: 32 89 190;
+  --c-fono-text: 6 95 70;
+  --c-pass-text: 22 101 52;
+
+  /* Borde interactivo (#5): el borde que es la única affordance de un control
+     (variant outline, botones de solo-icono con borde) se mide ≥3:1 sobre las
+     superficies (WCAG 1.4.11). */
+  --c-interactivo: 116 131 154;
+
   /* Tokens de superficie */
   --oc-brand: rgb(var(--c-fono));
   --oc-canvas: rgb(var(--c-paper));
@@ -151,6 +168,16 @@ html.dark {
   --c-reserved: 196 181 253;
   --c-onbrand: 6 30 20;
 
+  /* Texto de chips en oscuro (#5): los mismos tonos claros del tema (todos
+     ≥5:1 sobre el tinte) para que la familia quede definida también acá. */
+  --c-ok-text: 74 222 128;
+  --c-warn-text: 252 211 77;
+  --c-bad-text: 252 165 165;
+  --c-info-text: 159 184 255;
+  --c-fono-text: 124 255 201;
+  --c-pass-text: 34 197 94;
+  --c-interactivo: 124 135 155;
+
   --oc-canvas: rgb(var(--c-paper));
   --oc-surface: rgb(var(--c-ink));
   --oc-border: rgb(var(--c-ink-600));
@@ -183,6 +210,7 @@ html.dark {
   --c-fono-glow: 34 197 94;
   --c-fono-soft: 6 46 34;
   --c-onbrand: 6 30 20;
+  --c-interactivo: 124 135 155;
 
   --oc-canvas: rgb(var(--c-paper));
   --oc-surface: rgb(var(--c-ink));
