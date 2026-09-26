@@ -65,6 +65,8 @@ export const MoneyInput: ForwardRefExoticComponent<
     onValueChange?: (value: number | '' | string) => void
     max?: number
     maxLength?: number
+    /** Fuerza enteros aunque la moneda admita decimales (#2). */
+    integerOnly?: boolean
   } & RefAttributes<HTMLInputElement>
 >
 
@@ -921,6 +923,8 @@ export function parseGsInput(value: unknown): number
 export function formatUsd(value: unknown): string
 export function formatUsdInput(value: unknown): string
 export function parseUsdInput(value: unknown): string
+export function normalizarMontoInput(texto: unknown, moneda?: Moneda, opciones?: { integerOnly?: boolean }): string
+export function caretTrasDigitos(display: string, digitos: number): number
 export function formatMoney(value: unknown, currency?: Moneda, opciones?: OpcionesSimbolo): string
 export function montoGs(value: unknown, vacio?: string | OpcionesMonto, opciones?: OpcionesMonto): string
 export function montoUsd(value: unknown, vacio?: string | OpcionesMonto, opciones?: OpcionesMonto): string

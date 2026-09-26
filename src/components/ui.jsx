@@ -1,6 +1,6 @@
 import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import { cn } from '../utils/cn.js'
-import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
+import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, normalizarMontoInput, caretTrasDigitos, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
 import { TAMANOS_CAMPO } from '../utils/tamanos.js'
 import { TAMANO_MODAL_PREDETERMINADO, TAMANOS_MODAL } from '../utils/modal.js'
 import { textoDeTono } from '../utils/tonos.js'
@@ -115,14 +115,20 @@ export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = 
 // el tamaño máximo del monto (por defecto el general de #148; las ventas
 // pasan `LIMITE_MONTO_VENTAS`): el campo nunca trunca lo escrito, solo lo
 // marca con `aria-invalid` para que el formulario lo valide.
-export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
-  const isPyg = currency === 'PYG'
+//
+// `integerOnly` (cosecha de ScaleOS, #2) fuerza enteros aunque la moneda
+// admita decimales (transporte entero de previsión/informes). El caret se
+// mantiene tras el dígito que se está editando —también al pegar— con
+// `caretTrasDigitos` y `normalizarMontoInput`.
+export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, integerOnly = false, onKeyDown, ...props }) {
+  const soloEnteros = currency === 'PYG' || integerOnly
   const prefix = String(symbol ?? '').trim() || SIMBOLOS_MONEDA[currency] || currency
-  const display = isPyg ? formatGsInput(value) : formatUsdInput(value)
+  const display = soloEnteros ? formatGsInput(String(value ?? '').split('.')[0]) : formatUsdInput(value)
   const excede = excedeMonto(value, max)
+  const inputRef = useRef(null)
   // Largo máximo del campo: el monto más grande documentado (con separadores)
   // entra completo y no se puede escribir de más; se puede pisar por prop.
-  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !isPyg })
+  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !soloEnteros })
   return (
     <div className="relative">
       <span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-semibold text-mute">
@@ -130,14 +136,31 @@ export function MoneyInput({ currency = 'PYG', symbol, value, onValueChange, cla
       </span>
       <Input
         {...props}
+        ref={inputRef}
         aria-invalid={excede || undefined}
         title={excede ? `El monto supera el máximo permitido (${max.toLocaleString('es-PY')})` : props.title}
-        inputMode={isPyg ? 'numeric' : 'decimal'}
+        inputMode={soloEnteros ? 'numeric' : 'decimal'}
         maxLength={topeLargo}
         value={display}
-        onChange={(event) => {
-          const next = event.target.value.replace(/[^\d.,]/g, '')
-          onValueChange?.(isPyg ? (next.trim() ? parseGsInput(next) : '') : parseUsdInput(next))
+        onKeyDown={(evento) => {
+          onKeyDown?.(evento)
+          if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return
+          const permitidos = soloEnteros ? '0123456789' : '0123456789.,'
+          if (evento.key.length === 1 && !permitidos.includes(evento.key)) evento.preventDefault()
+        }}
+        onChange={(evento) => {
+          const input = evento.currentTarget ?? evento.target
+          const antes = input.value.slice(0, input.selectionStart ?? input.value.length)
+          const digitosAntes = (antes.match(/\d/g) || []).length
+          const normalizado = normalizarMontoInput(input.value, currency, { integerOnly })
+          onValueChange?.(soloEnteros ? (normalizado ? Number(normalizado) : '') : normalizado)
+          if (typeof requestAnimationFrame !== 'function') return
+          requestAnimationFrame(() => {
+            const nodo = inputRef.current
+            if (!nodo || document.activeElement !== nodo) return
+            const caret = caretTrasDigitos(nodo.value, digitosAntes)
+            nodo.setSelectionRange?.(caret, caret)
+          })
         }}
         className={cn(TAMANOS_CAMPO.moneda, prefix.length > 3 ? 'pl-14' : 'pl-12', 'tabular-nums', className)}
       />

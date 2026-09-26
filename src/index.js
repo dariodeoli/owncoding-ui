@@ -356,6 +356,8 @@ export {
   formatUsd,
   formatUsdInput,
   parseUsdInput,
+  normalizarMontoInput,
+  caretTrasDigitos,
   formatMoney,
   montoGs,
   montoUsd,

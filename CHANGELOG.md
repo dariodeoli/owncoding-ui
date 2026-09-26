@@ -16,6 +16,11 @@ versión ni tag. Reglas en `docs/REGLAS.md`.
   { avisar })` cierra después de persistir y convierte un fallo de refresco en
   advertencia («no hace falta guardar otra vez», `AVISO_REFRESCO`);
   `crearEnvioUnico` es el envoltorio puro que usan los tests.
+- **Caret de montos:** `MoneyInput` conserva el cursor al tipear y pegar en
+  cualquier posición (`normalizarMontoInput` + `caretTrasDigitos`), acepta
+  pegado es-PY (`1.250,50`), en-US (`1,250.50`) o suelto (`1250.50`) y suma
+  `integerOnly` para los enteros de previsión/informes (mismo contrato de
+  `onValueChange`, sin romper el `maxLength`).
 
 ## Sin publicar — contraste de chips y borde interactivo (#5)
 

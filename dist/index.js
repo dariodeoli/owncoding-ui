@@ -78,6 +78,37 @@ function parseUsdInput(value) {
   if (!/^\d+(\.\d+)?$/.test(normalized)) return "";
   return String(Number(normalized));
 }
+var GRUPO_MILES = /^\d{1,3}([.,])\d{3}(?:\1\d{3})*$/;
+var CONTINUACION_MILES = /^\d{1,3}([.,])\d{3,}(?:\1\d+)*$/;
+function normalizarMontoInput(texto, moneda = "PYG", { integerOnly = false } = {}) {
+  const bruto = String(texto ?? "").replace(/[^0-9.,]/g, "");
+  if (!bruto) return "";
+  if (GRUPO_MILES.test(bruto)) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+  if (moneda === "PYG" || integerOnly) return enteroDeMonto(bruto);
+  let display = bruto;
+  if (bruto.lastIndexOf(".") > bruto.lastIndexOf(",") && /\.\d{0,2}$/.test(bruto)) {
+    const punto = bruto.lastIndexOf(".");
+    display = bruto.slice(0, punto).replace(/[.,]/g, "") + "," + bruto.slice(punto + 1);
+  }
+  const [entero = "", decimales] = display.replace(/[^0-9,]/g, "").split(",");
+  const limpio = entero.replace(/^0+(?=\d)/, "");
+  return decimales !== void 0 ? `${limpio || "0"}.${decimales.slice(0, 2)}` : limpio;
+}
+function enteroDeMonto(bruto) {
+  if (CONTINUACION_MILES.test(bruto)) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+  const ultimo = Math.max(bruto.lastIndexOf("."), bruto.lastIndexOf(","));
+  if (ultimo < 0) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+  return enteroDeMonto(bruto.slice(0, ultimo));
+}
+function caretTrasDigitos(display, digitos) {
+  if (digitos <= 0) return 0;
+  let vistos = 0;
+  for (let indice = 0; indice < display.length; indice += 1) {
+    if (/\d/.test(display[indice])) vistos += 1;
+    if (vistos === digitos) return indice + 1;
+  }
+  return display.length;
+}
 function formatUsd(value) {
   const amount = Number(value);
   return `USD ${USD_FORMATTER.format(Number.isFinite(amount) ? amount : 0)}`;
@@ -525,26 +556,44 @@ function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, 
     )) })
   ] });
 }
-function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
-  const isPyg = currency === "PYG";
+function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, integerOnly = false, onKeyDown, ...props }) {
+  const soloEnteros = currency === "PYG" || integerOnly;
   const prefix = String(symbol ?? "").trim() || SIMBOLOS_MONEDA[currency] || currency;
-  const display = isPyg ? formatGsInput(value) : formatUsdInput(value);
+  const display = soloEnteros ? formatGsInput(String(value ?? "").split(".")[0]) : formatUsdInput(value);
   const excede = excedeMonto(value, max);
-  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !isPyg });
+  const inputRef = useRef2(null);
+  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !soloEnteros });
   return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
     /* @__PURE__ */ jsx2("span", { className: "pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-semibold text-mute", children: prefix }),
     /* @__PURE__ */ jsx2(
       Input,
       {
         ...props,
+        ref: inputRef,
         "aria-invalid": excede || void 0,
         title: excede ? `El monto supera el m\xE1ximo permitido (${max.toLocaleString("es-PY")})` : props.title,
-        inputMode: isPyg ? "numeric" : "decimal",
+        inputMode: soloEnteros ? "numeric" : "decimal",
         maxLength: topeLargo,
         value: display,
-        onChange: (event) => {
-          const next = event.target.value.replace(/[^\d.,]/g, "");
-          onValueChange?.(isPyg ? next.trim() ? parseGsInput(next) : "" : parseUsdInput(next));
+        onKeyDown: (evento) => {
+          onKeyDown?.(evento);
+          if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
+          const permitidos = soloEnteros ? "0123456789" : "0123456789.,";
+          if (evento.key.length === 1 && !permitidos.includes(evento.key)) evento.preventDefault();
+        },
+        onChange: (evento) => {
+          const input = evento.currentTarget ?? evento.target;
+          const antes = input.value.slice(0, input.selectionStart ?? input.value.length);
+          const digitosAntes = (antes.match(/\d/g) || []).length;
+          const normalizado = normalizarMontoInput(input.value, currency, { integerOnly });
+          onValueChange?.(soloEnteros ? normalizado ? Number(normalizado) : "" : normalizado);
+          if (typeof requestAnimationFrame !== "function") return;
+          requestAnimationFrame(() => {
+            const nodo = inputRef.current;
+            if (!nodo || document.activeElement !== nodo) return;
+            const caret = caretTrasDigitos(nodo.value, digitosAntes);
+            nodo.setSelectionRange?.(caret, caret);
+          });
         },
         className: cn(TAMANOS_CAMPO.moneda, prefix.length > 3 ? "pl-14" : "pl-12", "tabular-nums", className)
       }
@@ -8783,6 +8832,7 @@ export {
   buscarCiudad,
   buscarDispositivo,
   buscarEnCatalogo,
+  caretTrasDigitos,
   categoriaDe,
   chipDeTono,
   claveColorDeNombre,
@@ -8897,6 +8947,7 @@ export {
   normalizarBanco,
   normalizarCategoria,
   normalizarInstagram,
+  normalizarMontoInput,
   normalizarNombre,
   normalizarSerial,
   normalizarSeriales,

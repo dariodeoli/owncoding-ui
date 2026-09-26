@@ -55,7 +55,9 @@ si hay espacio libre, se lo lleva el layout, no el input.
 
 Transversales: error **o** hint (nunca ambos), `aria-invalid` +
 `aria-describedby`, error con `role="alert"`, teclado móvil correcto y nada de
-máscaras que rompan pegado/autofill. `FormField` dibuja el mensaje con `id`
+máscaras que rompan pegado/autofill. El campo de monto mantiene el caret al
+tipear y pegar (`normalizarMontoInput` + `caretTrasDigitos`, #2) y acepta
+`integerOnly` para los montos enteros de previsión/informes. `FormField` dibuja el mensaje con `id`
 (derivado de `htmlFor` o pasado como `descripcionId`) para que el campo lo
 declare en `aria-describedby` incluso cuando el id es generado (`useId`). El
 servidor revalida siempre. El interruptor booleano es **`Switch`** (un solo
