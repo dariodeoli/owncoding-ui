@@ -712,25 +712,37 @@ export function Stat({ label, valor, delta, sub, nota, tono, destacado = false, 
 // Pestañas de una sección (subnavegación dentro de una vista). Es la variante
 // ancha del segmentado; una sola fuente para que todas las subpáginas se vean
 // igual. `items` usa la convención del repo: [id, etiqueta].
+// `items` usa la convención `[id, etiqueta]` y acepta un tercer valor opcional
+// con el contador de la cola (`[id, etiqueta, 12]`): las pestañas del panel de
+// abastecimiento muestran cuántas hay en cada estado sin armar el badge aparte.
 export function Subtabs({ value, onChange, items = [], className }) {
   if (!items.length) return null
   return (
     <div className={cn('mb-5 flex flex-wrap gap-2 rounded-2xl border border-fore/10 bg-ink p-2', className)} role="tablist">
-      {items.map(([id, label]) => (
-        <button
-          key={id}
-          type="button"
-          role="tab"
-          aria-selected={value === id}
-          onClick={() => onChange(id)}
-          className={cn(
-            'min-h-11 rounded-xl px-3 py-2 text-sm font-medium transition',
-            value === id ? 'bg-fono text-onbrand' : 'text-mute hover:bg-fore/5 hover:text-fore',
-          )}
-        >
-          {label}
-        </button>
-      ))}
+      {items.map(([id, label, contador]) => {
+        const numero = Number(contador)
+        const tieneContador = contador !== undefined && contador !== null && contador !== '' && Number.isFinite(numero)
+        return (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={value === id}
+            onClick={() => onChange(id)}
+            className={cn(
+              'min-h-11 rounded-xl px-3 py-2 text-sm font-medium transition',
+              value === id ? 'bg-fono text-onbrand' : 'text-mute hover:bg-fore/5 hover:text-fore',
+            )}
+          >
+            {label}
+            {tieneContador && (
+              <span className={cn('ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums', value === id ? 'bg-black/10' : 'bg-ink-700 text-mute')}>
+                {numero}
+              </span>
+            )}
+          </button>
+        )
+      })}
     </div>
   )
 }

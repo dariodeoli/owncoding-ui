@@ -109,7 +109,8 @@ describe('render de los objetos base', () => {
   test('los controles agrupados miden 44 px de alto (#249)', () => {
     const segmentado = renderToStaticMarkup(<SegmentedField value="dia" onChange={() => {}} options={[['dia', 'Día'], ['mes', 'Mes']]} />)
     expect(segmentado).toContain('min-h-11')
-    const solapas = renderToStaticMarkup(<Subtabs value="uno" onChange={() => {}} items={[['uno', 'Uno'], ['dos', 'Dos']]} />)
+    const solapas = renderToStaticMarkup(<Subtabs value="uno" onChange={() => {}} items={[['uno', 'Uno', 12], ['dos', 'Dos']]} />)
+    expect(solapas).toContain('>12<')
     expect(solapas).toContain('min-h-11')
     const lista = renderToStaticMarkup(<ListGridToggle value="list" onChange={() => {}} />)
     expect(lista).toContain('toque-44')

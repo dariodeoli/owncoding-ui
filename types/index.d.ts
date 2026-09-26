@@ -121,7 +121,7 @@ export function DataTable<Row = Record<string, unknown>>(props: {
 }): ReactElement
 
 export function Stat(props: { label?: ReactNode; valor?: ReactNode; delta?: number; sub?: ReactNode; nota?: ReactNode; tono?: Tono; destacado?: boolean; deltaComo?: 'texto' | 'chip'; barra?: 'fono' | 'ok' | 'bad' | 'warn' | 'info'; className?: string }): ReactElement
-export function Subtabs(props: { value: string; onChange: (id: string) => void; items?: Array<[string, ReactNode]>; className?: string }): ReactElement | null
+export function Subtabs(props: { value: string; onChange: (id: string) => void; items?: Array<[string, ReactNode, number?]>; className?: string }): ReactElement | null
 export function FilaDato(props: {
   etiqueta?: ReactNode
   valor?: ReactNode
@@ -359,6 +359,8 @@ export const ESTADOS_CHIP: Record<string, EstadoChipConfig>
 export const ESTADOS_LOCK: Record<string, EstadoChipConfig>
 export const LOCKS_DISPOSITIVO: Record<string, string>
 export const GRADOS_CONDICION: Record<string, { etiqueta: string; tono: TonoCanonico; descripcion: string }>
+export const CONDICION_UNIDAD: Record<'NEW' | 'USED' | 'REFURBISHED', string>
+export function etiquetaCondicion(clave?: string): string
 export const COLOR_BADGE: Record<string, string>
 export const UMBRAL_BATERIA_OK: number
 export const UMBRAL_BATERIA_ATENCION: number

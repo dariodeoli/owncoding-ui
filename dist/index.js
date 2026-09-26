@@ -910,21 +910,28 @@ function Stat({ label, valor, delta, sub, nota, tono, destacado = false, deltaCo
 }
 function Subtabs({ value, onChange, items = [], className }) {
   if (!items.length) return null;
-  return /* @__PURE__ */ jsx2("div", { className: cn("mb-5 flex flex-wrap gap-2 rounded-2xl border border-fore/10 bg-ink p-2", className), role: "tablist", children: items.map(([id, label]) => /* @__PURE__ */ jsx2(
-    "button",
-    {
-      type: "button",
-      role: "tab",
-      "aria-selected": value === id,
-      onClick: () => onChange(id),
-      className: cn(
-        "min-h-11 rounded-xl px-3 py-2 text-sm font-medium transition",
-        value === id ? "bg-fono text-onbrand" : "text-mute hover:bg-fore/5 hover:text-fore"
-      ),
-      children: label
-    },
-    id
-  )) });
+  return /* @__PURE__ */ jsx2("div", { className: cn("mb-5 flex flex-wrap gap-2 rounded-2xl border border-fore/10 bg-ink p-2", className), role: "tablist", children: items.map(([id, label, contador]) => {
+    const numero = Number(contador);
+    const tieneContador = contador !== void 0 && contador !== null && contador !== "" && Number.isFinite(numero);
+    return /* @__PURE__ */ jsxs(
+      "button",
+      {
+        type: "button",
+        role: "tab",
+        "aria-selected": value === id,
+        onClick: () => onChange(id),
+        className: cn(
+          "min-h-11 rounded-xl px-3 py-2 text-sm font-medium transition",
+          value === id ? "bg-fono text-onbrand" : "text-mute hover:bg-fore/5 hover:text-fore"
+        ),
+        children: [
+          label,
+          tieneContador && /* @__PURE__ */ jsx2("span", { className: cn("ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-bold tabular-nums", value === id ? "bg-black/10" : "bg-ink-700 text-mute"), children: numero })
+        ]
+      },
+      id
+    );
+  }) });
 }
 var TONOS_VALOR = { ok: "text-ok", warn: "text-warn", bad: "text-bad", mute: "text-mute" };
 function FilaDato({ etiqueta, valor, tono = "", etiquetaComo: Etiqueta = "span", valorComo: Valor = "span", className, valorClassName, children }) {
@@ -3884,6 +3891,11 @@ var GRADOS_CONDICION = {
 var gradoCondicion = (clave) => GRADOS_CONDICION[String(clave || "").trim().toUpperCase()] || null;
 var COLOR_BADGE = { ok: "green", warn: "orange", bad: "red", mute: "slate", info: "blue", pass: "green" };
 var colorBadge = (tono) => COLOR_BADGE[tono] || "slate";
+var CONDICION_UNIDAD = { NEW: "Nuevo", USED: "Seminuevo", REFURBISHED: "Reacondicionado" };
+var etiquetaCondicion = (clave) => {
+  const texto = String(clave ?? "").trim();
+  return CONDICION_UNIDAD[texto.toUpperCase()] || texto || "\u2014";
+};
 
 // src/components/SemaforoItem.jsx
 import { jsx as jsx41, jsxs as jsxs31 } from "react/jsx-runtime";
@@ -7987,6 +7999,7 @@ export {
   COLORES_IPHONE,
   COLOR_BADGE,
   COLOR_DE_TONO,
+  CONDICION_UNIDAD,
   CONECTIVIDADES_MOVIL,
   Calendario,
   CampanaAvisos,
@@ -8202,6 +8215,7 @@ export {
   estadoNecesidad,
   estadoPaleta,
   estadoVencimiento,
+  etiquetaCondicion,
   etiquetaDeCategoria,
   etiquetaDeHito,
   etiquetaDia,

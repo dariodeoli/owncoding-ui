@@ -151,6 +151,7 @@ export {
   ESTADOS_LOCK,
   LOCKS_DISPOSITIVO,
   GRADOS_CONDICION,
+  CONDICION_UNIDAD,
   COLOR_BADGE,
   UMBRAL_BATERIA_OK,
   UMBRAL_BATERIA_ATENCION,
@@ -158,6 +159,7 @@ export {
   estadoChip,
   estadoLock,
   gradoCondicion,
+  etiquetaCondicion,
   colorBadge,
   tonoBateria,
 } from './utils/estadoEquipo.js'

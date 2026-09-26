@@ -119,6 +119,15 @@ export const gradoCondicion = (clave) => GRADOS_CONDICION[String(clave || '').tr
 export const COLOR_BADGE = { ok: 'green', warn: 'orange', bad: 'red', mute: 'slate', info: 'blue', pass: 'green' }
 export const colorBadge = (tono) => COLOR_BADGE[tono] || 'slate'
 
+// Condición física de una unidad (NEW/USED/REFURBISHED): la etiqueta se comparte
+// con listas, tarjetas y el panel de abastecimiento; una clave libre se muestra
+// tal cual y el vacío es explícito.
+export const CONDICION_UNIDAD = { NEW: 'Nuevo', USED: 'Seminuevo', REFURBISHED: 'Reacondicionado' }
+export const etiquetaCondicion = (clave) => {
+  const texto = String(clave ?? '').trim()
+  return CONDICION_UNIDAD[texto.toUpperCase()] || texto || '—'
+}
+
 // Clases de los tonos por uso (el mismo tono en punto, chip y texto). El mapa
 // vive en `utils/tonos.js` porque lo comparten todos los objetos que muestran
 // estados; acá se re-exporta para no romper a los consumidores del checklist.

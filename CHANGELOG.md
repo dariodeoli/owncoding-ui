@@ -4,6 +4,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.36.0 — 2026-09-26
+
+- **Abastecimiento F1 · lo que pedía el panel (#254):**
+  - **`Subtabs` acepta contador**: `items=[['pendientes', 'Por comprar', 12]]`
+    muestra la cantidad en la pestaña (tabular, tono según activo) para las
+    colas del panel.
+  - **`CONDICION_UNIDAD` + `etiquetaCondicion`** en `utils/estadoEquipo.js`:
+    «Nuevo / Seminuevo / Reacondicionado» en un solo lugar (listas, tarjetas y
+    panel), con la clave libre tal cual y vacío «—».
+- Docs: `REGLAS.md` §12 y README al día.
+
 ## v0.35.0 — 2026-09-26
 
 - **Abastecimiento F1 · contrato real (#254):** los mapas se alinean al

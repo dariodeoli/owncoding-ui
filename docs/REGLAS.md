@@ -450,7 +450,12 @@ pantalla repite los mapas ni los contadores:
   (`ABIERTA` · `ASIGNADA` · `COMPRADA` · `RECIBIDA` · `CANCELADA`) más las de
   las fases siguientes (preparar envío · en tránsito · recepción · incidencia);
   los alias de la UI (`por_comprar`, `comprado`…) siguen andando y
-  `PASOS_NECESIDAD` marca el recorrido lineal.
+  `PASOS_NECESIDAD` marca el recorrido lineal. Las colas del panel usan
+  **`Subtabs` con contador** (`items=[['pendientes', 'Por comprar', n]]`), con
+  `contadores.porEstado` de la API.
+- **Condición**: `CONDICION_UNIDAD` + `etiquetaCondicion` (Nuevo / Seminuevo /
+  Reacondicionado) para listas, tarjetas y panel; una clave libre se muestra tal
+  cual y el vacío es «—».
 - **Contadores**: `ContadoresCompra` (pendiente/comprado/faltan) con números
   tabulares; «faltan» solo se pinta en rojo cuando hay diferencia y nunca hay
   negativos.

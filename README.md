@@ -305,8 +305,9 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   **F1 — Demanda y tablero:** `ChipPrioridad` (URGENTE/ALTA/NORMAL/BAJA),
   `ChipOrigen` (venta sin stock, reserva sin unidad, …), `ContadoresCompra`
   (pendiente/comprado/faltan), `TarjetaNecesidad` (la tarjeta compacta del panel
-  «Por comprar», con origen y centro) y los mapas `PRIORIDADES_COMPRA`/
-  `ORIGENES_NECESIDAD`/`ESTADOS_NECESIDAD` con `ordenarPorPrioridad` en
+  «Por comprar», con origen y centro), `Subtabs` con contador para las colas y
+  `CONDICION_UNIDAD`/`etiquetaCondicion`; los mapas `PRIORIDADES_COMPRA`/
+  `ORIGENES_NECESIDAD`/`ESTADOS_NECESIDAD` con `ordenarPorPrioridad` viven en
   `utils/abastecimiento.js` (REGLAS §12).
 - **Tablero (lote 2, sin publicar):** `ImporteDelta` (monto con signo y color),
   `IndicadorConexion` (en línea / pendientes de subir), `CampanaAvisos`
