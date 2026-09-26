@@ -4,6 +4,13 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.34.0 — 2026-09-26
+
+- **`CityAutocomplete` (#253):** si `buscar` falla, el campo muestra el aviso en
+  línea (`role="alert"`, `mensajeError`) en lugar de ocultar la lista en
+  silencio; al volver a tipear se limpia. Paridad con el campo de MobOS, que ya
+  avisaba (el adaptador de la app se apoya en esto).
+
 ## v0.33.0 — 2026-09-26
 
 - **Abastecimiento F1 — demanda y tablero (#250/#254):**

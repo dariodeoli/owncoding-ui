@@ -21,9 +21,11 @@ export default function CityAutocomplete({
   limite = 8,
   maxLength = 100,
   inputProps,
+  mensajeError = 'No se pudieron cargar las sugerencias.',
 }) {
   const [sugerencias, setSugerencias] = useState([])
   const [abierto, setAbierto] = useState(false)
+  const [error, setError] = useState('')
   const timer = useRef(null)
   const raiz = useRef(null)
 
@@ -40,10 +42,11 @@ export default function CityAutocomplete({
 
   function resolver(texto) {
     const q = String(texto || '').trim()
-    if (q.length < 2) { setSugerencias([]); setAbierto(false); return }
+    if (q.length < 2) { setSugerencias([]); setAbierto(false); setError(''); return }
     if (!buscar) {
       setSugerencias(buscarCiudad(q, limite))
       setAbierto(true)
+      setError('')
       return
     }
     if (timer.current) clearTimeout(timer.current)
@@ -52,9 +55,11 @@ export default function CityAutocomplete({
         const filas = await buscar(q)
         setSugerencias(Array.isArray(filas) ? filas.slice(0, limite) : [])
         setAbierto(true)
+        setError('')
       } catch {
         setSugerencias([])
         setAbierto(false)
+        setError(mensajeError)
       }
     }, 250)
   }
@@ -113,6 +118,7 @@ export default function CityAutocomplete({
           ))}
         </ul>
       )}
+      {error ? <p role="alert" className="mt-1 text-xs text-bad">{error}</p> : null}
     </div>
   )
 }

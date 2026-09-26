@@ -3711,10 +3711,12 @@ function CityAutocomplete({
   buscar,
   limite = 8,
   maxLength = 100,
-  inputProps
+  inputProps,
+  mensajeError = "No se pudieron cargar las sugerencias."
 }) {
   const [sugerencias, setSugerencias] = useState15([]);
   const [abierto, setAbierto] = useState15(false);
+  const [error, setError] = useState15("");
   const timer = useRef7(null);
   const raiz = useRef7(null);
   useEffect6(() => {
@@ -3733,11 +3735,13 @@ function CityAutocomplete({
     if (q.length < 2) {
       setSugerencias([]);
       setAbierto(false);
+      setError("");
       return;
     }
     if (!buscar) {
       setSugerencias(buscarCiudad(q, limite));
       setAbierto(true);
+      setError("");
       return;
     }
     if (timer.current) clearTimeout(timer.current);
@@ -3746,9 +3750,11 @@ function CityAutocomplete({
         const filas = await buscar(q);
         setSugerencias(Array.isArray(filas) ? filas.slice(0, limite) : []);
         setAbierto(true);
+        setError("");
       } catch {
         setSugerencias([]);
         setAbierto(false);
+        setError(mensajeError);
       }
     }, 250);
   }
@@ -3798,7 +3804,8 @@ function CityAutocomplete({
           /* @__PURE__ */ jsx40("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
         ]
       }
-    ) }, `${fila.city}-${fila.department}`)) })
+    ) }, `${fila.city}-${fila.department}`)) }),
+    error ? /* @__PURE__ */ jsx40("p", { role: "alert", className: "mt-1 text-xs text-bad", children: error }) : null
   ] });
 }
 
