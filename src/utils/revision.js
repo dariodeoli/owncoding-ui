@@ -3,6 +3,8 @@
 // suman al resumen; `ok` y `pendiente` no.
 export const ESTADOS_REVISION = {
   ok: { etiqueta: 'OK', etiquetaPlural: 'OK', tono: 'ok' },
+  // Resultado del contrato de recepción (F5): `RECIBIDO` entra como estado ok.
+  recibido: { etiqueta: 'Recibido', etiquetaPlural: 'Recibidos', tono: 'ok' },
   pendiente: { etiqueta: 'Pendiente', etiquetaPlural: 'Pendientes', tono: 'mute' },
   faltante: { etiqueta: 'Falta', etiquetaPlural: 'Faltan', tono: 'bad' },
   sobrante: { etiqueta: 'Sobra', etiquetaPlural: 'Sobran', tono: 'warn' },

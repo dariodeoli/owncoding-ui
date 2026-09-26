@@ -472,4 +472,26 @@ pantalla repite los mapas ni los contadores:
   recepción de la épica. Los vínculos con la venta/reserva y la auditoría los
   maneja la app.
 
+## 13. Abastecimiento F2–F5: compra, lote, etiqueta y recepción (#250)
+
+- **Estados**: `ESTADOS_COMPRA` (comprada · preparando · en tránsito · recibida
+  · cancelada), `ESTADOS_ENVIO` (borrador → preparando → despachado → en
+  tránsito, más recepción parcial/recibido/con incidencia/cancelado),
+  `ESTADOS_RECEPCION` (borrador · confirmada · cancelada) y `PASOS_ENVIO`.
+  Todos aceptan las claves del backend (mayúsculas, guiones) y exponen
+  `etiqueta…`/`tono…`; el estado de la compra y el del lote no se escriben
+  sueltos.
+- **Método**: `METODOS_ENVIO` (bus · transportadora · AEX · importación) con
+  etiqueta e ícono (`etiquetaMetodoEnvio`/`iconoMetodoEnvio`).
+- **Tarjeta de compra**: `TarjetaCompra` (código `COM-…`, proveedor, estado,
+  «N de M con IMEI», costo/moneda y referencia del proveedor).
+- **Tarjeta de lote**: `TarjetaLote` (código `ENV-…`, origen → destino, método,
+  empresa/guía, responsable, ETA con `Vencimiento` y «N de M con IMEI»).
+- **Etiqueta de preparación**: `EtiquetaLote` («ENV-… · PRODUCTO n DE N»,
+  modelo/variante, IMEI o «IMEI pendiente», pedido/destino y QR del manifiesto);
+  se imprime en papel claro y se envuelve con `DocumentoImpresion`.
+- **Recepción**: los resultados de unidad usan `ESTADOS_REVISION`/`FilaRevision`
+  (`RECIBIDO` entra como estado ok) y los conteos, `ContadorLote` +
+  `ResumenIncidencias`; el stock nace recién al confirmar (regla de la épica).
+
 

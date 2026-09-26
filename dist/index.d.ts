@@ -267,6 +267,76 @@ export function TarjetaNecesidad(props: {
   acciones?: ReactNode
   className?: string
 }): ReactElement
+export function TarjetaCompra(props: {
+  codigo?: string
+  proveedor?: ReactNode
+  referencia?: ReactNode
+  moneda?: string
+  simbolo?: string
+  costo?: number | string | null
+  estado?: string
+  unidades?: number
+  conImei?: number
+  origen?: ReactNode
+  destino?: ReactNode
+  notas?: ReactNode
+  onAbrir?: () => void
+  acciones?: ReactNode
+  className?: string
+}): ReactElement
+export function TarjetaLote(props: {
+  codigo?: string
+  estado?: string
+  origen?: ReactNode
+  destino?: ReactNode
+  metodo?: string
+  empresa?: ReactNode
+  guia?: ReactNode
+  responsable?: ReactNode
+  eta?: string | number | Date | null
+  unidades?: number
+  conImei?: number
+  notas?: ReactNode
+  onAbrir?: () => void
+  acciones?: ReactNode
+  className?: string
+}): ReactElement
+export function EtiquetaLote(props: {
+  codigo?: string
+  numero?: number
+  total?: number
+  producto?: ReactNode
+  variante?: ReactNode
+  serial?: string | null
+  pendienteImei?: boolean
+  pedido?: ReactNode
+  destino?: ReactNode
+  qr?: string
+  qrValor?: string
+  nota?: ReactNode
+  className?: string
+}): ReactElement
+export const ESTADOS_COMPRA: Record<string, { etiqueta: string; tono: string; icono: string }>
+export function claveDeEstadoCompra(clave?: string): string
+export function estadoCompra(clave?: string): { etiqueta: string; tono: string; icono: string }
+export function etiquetaCompra(clave?: string): string
+export function tonoCompra(clave?: string): string
+export const ESTADOS_ENVIO: Record<string, { etiqueta: string; tono: string; icono: string }>
+export function claveDeEstadoEnvio(clave?: string): string
+export function estadoEnvio(clave?: string): { etiqueta: string; tono: string; icono: string }
+export function etiquetaEnvio(clave?: string): string
+export function tonoEnvio(clave?: string): string
+export const PASOS_ENVIO: string[]
+export const METODOS_ENVIO: Record<string, { etiqueta: string; icono: string }>
+export function claveDeMetodoEnvio(clave?: string): string
+export function metodoEnvio(clave?: string): { etiqueta: string; icono: string }
+export function etiquetaMetodoEnvio(clave?: string): string
+export function iconoMetodoEnvio(clave?: string): string
+export const ESTADOS_RECEPCION: Record<string, { etiqueta: string; tono: string; icono: string }>
+export function claveDeEstadoRecepcion(clave?: string): string
+export function estadoRecepcion(clave?: string): { etiqueta: string; tono: string; icono: string }
+export function etiquetaRecepcion(clave?: string): string
+export function tonoRecepcion(clave?: string): string
 export const PRIORIDADES_COMPRA: Record<string, { etiqueta: string; tono: string; orden: number }>
 export function claveDePrioridad(clave?: string): string
 export function prioridadDe(clave?: string): { etiqueta: string; tono: string; orden: number }

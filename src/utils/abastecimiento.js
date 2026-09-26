@@ -96,6 +96,73 @@ export const tonoNecesidad = (clave) => estadoNecesidad(clave).tono
 /** Recorrido lineal de una necesidad (sin incidencia ni cancelada). */
 export const PASOS_NECESIDAD = ['abierta', 'asignada', 'comprada', 'preparar_envio', 'en_transito', 'recepcion', 'recibida']
 
+// ── F2–F5: compra, envío, método y recepción ────────────────────────────────
+// Un lookup tolerante (mayúsculas, espacios y guiones) con clave canónica:
+// evita repetir el mismo normalizador por mapa.
+
+function conClaves(mapa, defecto) {
+  const porClave = new Map(Object.keys(mapa).map((clave) => [normalizarClave(clave), clave]))
+  const canonica = (valor) => porClave.get(normalizarClave(valor)) || defecto
+  return { canonica, de: (valor) => mapa[canonica(valor)] }
+}
+
+// Compra (F2 + lo que suman F4/F5).
+export const ESTADOS_COMPRA = {
+  comprada: { etiqueta: 'Comprada', tono: 'info', icono: 'check' },
+  preparando: { etiqueta: 'Preparando', tono: 'info', icono: 'package' },
+  en_transito: { etiqueta: 'En tránsito', tono: 'info', icono: 'truck' },
+  recibida: { etiqueta: 'Recibida', tono: 'ok', icono: 'box' },
+  cancelada: { etiqueta: 'Cancelada', tono: 'mute', icono: 'close' },
+}
+const COMPRA = conClaves(ESTADOS_COMPRA, 'comprada')
+export const claveDeEstadoCompra = COMPRA.canonica
+export const estadoCompra = COMPRA.de
+export const etiquetaCompra = (clave) => estadoCompra(clave).etiqueta
+export const tonoCompra = (clave) => estadoCompra(clave).tono
+
+// Lote/envío (F4): la recepción (F5) resuelve `recepcion_parcial`/`recibido`.
+export const ESTADOS_ENVIO = {
+  borrador: { etiqueta: 'Borrador', tono: 'mute', icono: 'edit' },
+  preparando: { etiqueta: 'Preparando', tono: 'info', icono: 'package' },
+  despachado: { etiqueta: 'Despachado', tono: 'info', icono: 'truck' },
+  en_transito: { etiqueta: 'En tránsito', tono: 'info', icono: 'truck' },
+  recepcion_parcial: { etiqueta: 'Recepción parcial', tono: 'warn', icono: 'box' },
+  recibido: { etiqueta: 'Recibido', tono: 'ok', icono: 'check' },
+  con_incidencia: { etiqueta: 'Con incidencia', tono: 'bad', icono: 'alert' },
+  cancelado: { etiqueta: 'Cancelado', tono: 'mute', icono: 'close' },
+}
+const ENVIO = conClaves(ESTADOS_ENVIO, 'borrador')
+export const claveDeEstadoEnvio = ENVIO.canonica
+export const estadoEnvio = ENVIO.de
+export const etiquetaEnvio = (clave) => estadoEnvio(clave).etiqueta
+export const tonoEnvio = (clave) => estadoEnvio(clave).tono
+export const PASOS_ENVIO = ['borrador', 'preparando', 'despachado', 'en_transito', 'recibido']
+
+// Método del envío (F4).
+export const METODOS_ENVIO = {
+  bus: { etiqueta: 'Bus', icono: 'truck' },
+  transportadora: { etiqueta: 'Transportadora', icono: 'truck' },
+  aex: { etiqueta: 'AEX', icono: 'send' },
+  importacion: { etiqueta: 'Importación', icono: 'globe' },
+}
+const METODO = conClaves(METODOS_ENVIO, 'bus')
+export const claveDeMetodoEnvio = METODO.canonica
+export const metodoEnvio = METODO.de
+export const etiquetaMetodoEnvio = (clave) => metodoEnvio(clave).etiqueta
+export const iconoMetodoEnvio = (clave) => metodoEnvio(clave).icono
+
+// Recepción (F5).
+export const ESTADOS_RECEPCION = {
+  borrador: { etiqueta: 'Borrador', tono: 'mute', icono: 'edit' },
+  confirmada: { etiqueta: 'Confirmada', tono: 'ok', icono: 'check' },
+  cancelada: { etiqueta: 'Cancelada', tono: 'mute', icono: 'close' },
+}
+const RECEPCION = conClaves(ESTADOS_RECEPCION, 'borrador')
+export const claveDeEstadoRecepcion = RECEPCION.canonica
+export const estadoRecepcion = RECEPCION.de
+export const etiquetaRecepcion = (clave) => estadoRecepcion(clave).etiqueta
+export const tonoRecepcion = (clave) => estadoRecepcion(clave).tono
+
 // Tono semántico → color del `Badge` y clases de chip del tono, para no repetir
 // el mapa en cada pantalla del abastecimiento.
 export const COLOR_DE_TONO = { ok: 'green', bad: 'red', warn: 'orange', info: 'blue', mute: 'slate' }

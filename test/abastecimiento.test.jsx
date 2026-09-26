@@ -8,21 +8,34 @@ import {
   ChipPrioridad,
   ContadoresCompra,
   ESTADOS_NECESIDAD,
+  EtiquetaLote,
   ORIGENES_NECESIDAD,
+  PASOS_ENVIO,
   PASOS_NECESIDAD,
   PRIORIDADES_COMPRA,
+  TarjetaCompra,
+  TarjetaLote,
   TarjetaNecesidad,
   claveDeEstado,
+  claveDeEstadoCompra,
+  claveDeEstadoEnvio,
   claveDePrioridad,
   colorDeTono,
+  estadoEnvio,
+  etiquetaCompra,
+  etiquetaEnvio,
+  etiquetaMetodoEnvio,
   etiquetaNecesidad,
   etiquetaOrigen,
   etiquetaPrioridad,
+  etiquetaRecepcion,
+  iconoMetodoEnvio,
   iconoOrigen,
   ordenarPorPrioridad,
   tonoNecesidad,
   tonoOrigen,
   tonoPrioridad,
+  tonoRecepcion,
 } from '../src/index.js'
 
 describe('abastecimiento F1', () => {
@@ -58,6 +71,56 @@ describe('abastecimiento F1', () => {
     expect(PASOS_NECESIDAD[0]).toBe('abierta')
     expect(colorDeTono('ok')).toBe('green')
     expect(colorDeTono('x')).toBe('slate')
+  })
+
+  test('estados de compra, envío, método y recepción (contrato F2–F5)', () => {
+    expect(etiquetaCompra('RECIBIDA')).toBe('Recibida')
+    expect(etiquetaCompra('CANCELADA')).toBe('Cancelada')
+    expect(claveDeEstadoCompra('EN_TRANSITO')).toBe('en_transito')
+    expect(etiquetaEnvio('CON_INCIDENCIA')).toBe('Con incidencia')
+    expect(claveDeEstadoEnvio('RECEPCION_PARCIAL')).toBe('recepcion_parcial')
+    expect(estadoEnvio('desconocido').etiqueta).toBe('Borrador')
+    expect(PASOS_ENVIO[0]).toBe('borrador')
+    expect(etiquetaMetodoEnvio('IMPORTACION')).toBe('Importación')
+    expect(iconoMetodoEnvio('aex')).toBe('send')
+    expect(etiquetaRecepcion('CONFIRMADA')).toBe('Confirmada')
+    expect(tonoRecepcion('cancelada')).toBe('mute')
+  })
+
+  test('TarjetaCompra y TarjetaLote muestran el contrato', () => {
+    const compra = renderToStaticMarkup(
+      <TarjetaCompra codigo="COM-CDE-0048" proveedor="Importadora XYZ" estado="COMPRADA" unidades={12} conImei={9} costo={1500} moneda="USD" referencia="Factura 001-123" />,
+    )
+    expect(compra).toContain('COM-CDE-0048')
+    expect(compra).toContain('Importadora XYZ')
+    expect(compra).toContain('Comprada')
+    expect(compra).toContain('9 de 12')
+    expect(compra).toContain('US$')
+    expect(compra).toContain('Factura 001-123')
+
+    const lote = renderToStaticMarkup(
+      <TarjetaLote codigo="ENV-CDE-ASU-0021" estado="EN_TRANSITO" origen="CDE" destino="Asunción" metodo="BUS" empresa="Nsa" guia="123" unidades={12} conImei={9} eta="2026-10-02" />,
+    )
+    expect(lote).toContain('ENV-CDE-ASU-0021')
+    expect(lote).toContain('CDE → Asunción')
+    expect(lote).toContain('En tránsito')
+    expect(lote).toContain('Bus')
+    expect(lote).toContain('Nsa · Guía 123')
+  })
+
+  test('EtiquetaLote: PRODUCTO n DE N, IMEI o pendiente y QR', () => {
+    const etiqueta = renderToStaticMarkup(
+      <EtiquetaLote codigo="ENV-CDE-ASU-0021" numero={3} total={12} producto="iPhone 15" variante="128 GB · Negro · Nuevo" serial="356789104523178" pedido="MOB-0042" destino="Asunción" />,
+    )
+    expect(etiqueta).toContain('Producto 3 de 12')
+    expect(etiqueta).toContain('iPhone 15')
+    expect(etiqueta).toContain('356789104523178')
+    expect(etiqueta).toContain('MOB-0042')
+    expect(etiqueta).toContain('Asunción')
+
+    const pendiente = renderToStaticMarkup(<EtiquetaLote producto="X" pendienteImei qr="data:image/png;base64,AAA" />)
+    expect(pendiente).toContain('IMEI pendiente')
+    expect(pendiente).toContain('src="data:image/png;base64,AAA"')
   })
 
   test('ChipOrigen pinta el ícono y el tono del origen', () => {

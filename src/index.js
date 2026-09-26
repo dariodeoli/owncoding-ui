@@ -106,6 +106,9 @@ export { default as ChipPrioridad } from './components/ChipPrioridad.jsx'
 export { default as ChipOrigen } from './components/ChipOrigen.jsx'
 export { default as ContadoresCompra } from './components/ContadoresCompra.jsx'
 export { default as TarjetaNecesidad } from './components/TarjetaNecesidad.jsx'
+export { default as TarjetaCompra } from './components/TarjetaCompra.jsx'
+export { default as TarjetaLote } from './components/TarjetaLote.jsx'
+export { default as EtiquetaLote } from './components/EtiquetaLote.jsx'
 export {
   PRIORIDADES_COMPRA,
   claveDePrioridad,
@@ -125,6 +128,27 @@ export {
   etiquetaNecesidad,
   tonoNecesidad,
   PASOS_NECESIDAD,
+  ESTADOS_COMPRA,
+  claveDeEstadoCompra,
+  estadoCompra,
+  etiquetaCompra,
+  tonoCompra,
+  ESTADOS_ENVIO,
+  claveDeEstadoEnvio,
+  estadoEnvio,
+  etiquetaEnvio,
+  tonoEnvio,
+  PASOS_ENVIO,
+  METODOS_ENVIO,
+  claveDeMetodoEnvio,
+  metodoEnvio,
+  etiquetaMetodoEnvio,
+  iconoMetodoEnvio,
+  ESTADOS_RECEPCION,
+  claveDeEstadoRecepcion,
+  estadoRecepcion,
+  etiquetaRecepcion,
+  tonoRecepcion,
   COLOR_DE_TONO,
   colorDeTono,
 } from './utils/abastecimiento.js'

@@ -4,6 +4,22 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.37.0 — 2026-09-26
+
+- **Abastecimiento F2–F5 (#250):** objetos para la compra, el lote y la
+  recepción, alineados a los contratos ya implementados:
+  - **Estados** `ESTADOS_COMPRA`, `ESTADOS_ENVIO` y `ESTADOS_RECEPCION` (con
+    `PASOS_ENVIO`), tolerantes a las claves del backend y con etiqueta/tono.
+  - **`METODOS_ENVIO`** (bus · transportadora · AEX · importación) con etiqueta
+    e ícono.
+  - **`TarjetaCompra`** (`COM-…`: proveedor, estado, «N de M con IMEI»,
+    costo/moneda y referencia) y **`TarjetaLote`** (`ENV-…`: origen → destino,
+    método, empresa/guía, responsable, ETA y conteo).
+  - **`EtiquetaLote`**: la etiqueta de preparación «ENV-… · PRODUCTO n DE N»
+    con modelo/variante, IMEI o «IMEI pendiente», pedido/destino y QR.
+  - `ESTADOS_REVISION` suma `recibido` (resultado de unidad de F5).
+- Docs: `REGLAS.md` §13 y README.
+
 ## v0.36.0 — 2026-09-26
 
 - **Abastecimiento F1 · lo que pedía el panel (#254):**
