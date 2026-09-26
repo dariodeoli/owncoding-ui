@@ -128,6 +128,14 @@ opcionales. El integrador decide el número final.
     históricos y no se sugiere.
   - `'ueno bank'` pasa a `'Ueno Bank'` (el alias `ueno` sigue andando) y
     `coberturaBancos` no cambia.
+- **Ciudades — catálogo bilingüe y campo tolerante (#4):**
+  - Cada fila de `CIUDADES_PARAGUAY` expone las claves en español
+    (`ciudad`/`departamento`) y en inglés (`city`/`department`), el mismo dato.
+    Antes el catálogo era solo español y `buscarCiudad` devolvía solo inglés.
+  - `buscarCiudad` devuelve las filas bilingües y `CityAutocomplete` acepta un
+    `buscar` propio con las claves en español o en inglés.
+  - El `.d.ts` publica `CiudadParaguay` (fila bilingüe) y `departamentoDe`
+    devuelve `string` (nunca `null`): se acaban los shims de las apps.
 
 ## v0.38.0 — 2026-09-26
 

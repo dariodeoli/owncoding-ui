@@ -1,8 +1,7 @@
 "use client"
 
 // src/components/ui.jsx
-import { Children, cloneElement, createContext, forwardRef, isValidElement, useCallback as useCallback2, useContext, useEffect as useEffect2, useId, useLayoutEffect, useMemo, useRef as useRef2, useState as useState2 } from "react";
-import { createPortal } from "react-dom";
+import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from "react";
 
 // src/utils/cn.js
 import { clsx } from "clsx";
@@ -78,37 +77,6 @@ function parseUsdInput(value) {
   const normalized = text.replace(/\./g, "").replace(",", ".");
   if (!/^\d+(\.\d+)?$/.test(normalized)) return "";
   return String(Number(normalized));
-}
-var GRUPO_MILES = /^\d{1,3}([.,])\d{3}(?:\1\d{3})*$/;
-var CONTINUACION_MILES = /^\d{1,3}([.,])\d{3,}(?:\1\d+)*$/;
-function normalizarMontoInput(texto, moneda = "PYG", { integerOnly = false } = {}) {
-  const bruto = String(texto ?? "").replace(/[^0-9.,]/g, "");
-  if (!bruto) return "";
-  if (GRUPO_MILES.test(bruto)) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-  if (moneda === "PYG" || integerOnly) return enteroDeMonto(bruto);
-  let display = bruto;
-  if (bruto.lastIndexOf(".") > bruto.lastIndexOf(",") && /\.\d{0,2}$/.test(bruto)) {
-    const punto = bruto.lastIndexOf(".");
-    display = bruto.slice(0, punto).replace(/[.,]/g, "") + "," + bruto.slice(punto + 1);
-  }
-  const [entero = "", decimales] = display.replace(/[^0-9,]/g, "").split(",");
-  const limpio = entero.replace(/^0+(?=\d)/, "");
-  return decimales !== void 0 ? `${limpio || "0"}.${decimales.slice(0, 2)}` : limpio;
-}
-function enteroDeMonto(bruto) {
-  if (CONTINUACION_MILES.test(bruto)) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-  const ultimo = Math.max(bruto.lastIndexOf("."), bruto.lastIndexOf(","));
-  if (ultimo < 0) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
-  return enteroDeMonto(bruto.slice(0, ultimo));
-}
-function caretTrasDigitos(display, digitos) {
-  if (digitos <= 0) return 0;
-  let vistos = 0;
-  for (let indice = 0; indice < display.length; indice += 1) {
-    if (/\d/.test(display[indice])) vistos += 1;
-    if (vistos === digitos) return indice + 1;
-  }
-  return display.length;
 }
 function formatUsd(value) {
   const amount = Number(value);
@@ -214,33 +182,31 @@ var TAMANO_MODAL_PREDETERMINADO = "formulario";
 
 // src/utils/tonos.js
 var TONOS = {
-  // El texto va por la familia `*-text` (#5): el tono base queda para el
-  // relleno/punto/borde y el par de texto sostiene AA sobre el tinte.
   punto: {
-    ok: "bg-ok/15 text-ok-text",
-    warn: "bg-warn/15 text-warn-text",
-    bad: "bg-bad/15 text-bad-text",
+    ok: "bg-ok/15 text-ok",
+    warn: "bg-warn/15 text-warn",
+    bad: "bg-bad/15 text-bad",
     mute: "bg-ink-700 text-mute",
-    info: "bg-info/15 text-info-text",
-    pass: "bg-pass/15 text-pass-text",
-    fono: "bg-fono/15 text-fono-text"
+    info: "bg-info/15 text-info",
+    pass: "bg-pass/15 text-pass",
+    fono: "bg-fono/15 text-fono-light"
   },
   chip: {
-    ok: "border-ok/30 bg-ok/10 text-ok-text",
-    warn: "border-warn/30 bg-warn/10 text-warn-text",
-    bad: "border-bad/30 bg-bad/10 text-bad-text",
+    ok: "border-ok/30 bg-ok/10 text-ok",
+    warn: "border-warn/30 bg-warn/10 text-warn",
+    bad: "border-bad/30 bg-bad/10 text-bad",
     mute: "border-ink-600 bg-ink-800/40 text-mute",
-    info: "border-info/30 bg-info/10 text-info-text",
-    pass: "border-pass/30 bg-pass/10 text-pass-text",
-    fono: "border-fono/30 bg-fono/10 text-fono-text"
+    info: "border-info/30 bg-info/10 text-info",
+    pass: "border-pass/30 bg-pass/10 text-pass",
+    fono: "border-fono/30 bg-fono/10 text-fono-light"
   },
   texto: {
-    ok: "text-ok-text",
-    warn: "text-warn-text",
-    bad: "text-bad-text",
+    ok: "text-ok",
+    warn: "text-warn",
+    bad: "text-bad",
     mute: "text-mute",
-    info: "text-info-text",
-    pass: "text-pass-text",
+    info: "text-info",
+    pass: "text-pass",
     fono: "text-fono-light"
   }
 };
@@ -270,171 +236,6 @@ function textoDeTono(valor) {
   return TONOS.texto[tonoCanonico(valor)];
 }
 
-// src/hooks/useDialogFocusTrap.js
-import { useCallback, useEffect, useRef, useState } from "react";
-
-// src/utils/pilaOverlays.js
-function crearPilaCapas() {
-  const capas = [];
-  return {
-    agregar(id) {
-      if (!capas.includes(id)) capas.push(id);
-    },
-    insertar(id, indice) {
-      if (capas.includes(id)) return;
-      capas.splice(Math.max(0, Math.min(indice, capas.length)), 0, id);
-    },
-    quitar(id) {
-      const indice = capas.indexOf(id);
-      if (indice >= 0) capas.splice(indice, 1);
-    },
-    esSuperior(id) {
-      return capas[capas.length - 1] === id;
-    },
-    get tamano() {
-      return capas.length;
-    },
-    ids() {
-      return [...capas];
-    }
-  };
-}
-function crearRegistroPendientes() {
-  const pendientes = /* @__PURE__ */ new Set();
-  return {
-    registrar(id, pendiente) {
-      if (pendiente) pendientes.add(id);
-      else pendientes.delete(id);
-      return pendientes.size;
-    },
-    get bloqueado() {
-      return pendientes.size > 0;
-    },
-    get cantidad() {
-      return pendientes.size;
-    }
-  };
-}
-
-// src/hooks/useDialogFocusTrap.js
-var SELECTOR_ENFOCABLES = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]';
-function destinoDeTab({ shiftKey, activo, primero, ultimo, contenedor, fuera = false }) {
-  if (!primero) return null;
-  const enPrimero = activo === primero || activo === contenedor;
-  const enUltimo = activo === ultimo;
-  if (shiftKey && (enPrimero || fuera)) return ultimo;
-  if (!shiftKey && (enUltimo || fuera)) return primero;
-  return null;
-}
-var pila = crearPilaCapas();
-var paneles = /* @__PURE__ */ new Map();
-var oyentes = /* @__PURE__ */ new Set();
-var bloqueosScroll = 0;
-var overflowOriginal = "";
-function avisar() {
-  for (const oyente of oyentes) oyente();
-}
-function useDialogFocusTrap(open, onClose, ref, { initialFocus, bloquearScroll = true, busy = false } = {}) {
-  const id = useRef(Symbol("capa")).current;
-  const [esSuperior, setEsSuperior] = useState(true);
-  const cerrar = useRef(onClose);
-  const opciones = useRef({ initialFocus, bloquearScroll, busy });
-  useEffect(() => {
-    cerrar.current = onClose;
-  }, [onClose]);
-  useEffect(() => {
-    opciones.current = { initialFocus, bloquearScroll, busy };
-  }, [initialFocus, bloquearScroll, busy]);
-  const requestClose = useCallback(() => {
-    if (pila.esSuperior(id) && !opciones.current.busy) cerrar.current?.();
-  }, [id]);
-  useEffect(() => {
-    if (!open) return void 0;
-    const contenedor = ref.current;
-    const bloquear = opciones.current.bloquearScroll;
-    const anterior = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    paneles.set(id, ref);
-    const indice = pila.ids().findIndex((otra) => {
-      const panelOtra = paneles.get(otra)?.current;
-      return contenedor && panelOtra && contenedor.contains(panelOtra);
-    });
-    if (indice >= 0) pila.insertar(id, indice);
-    else pila.agregar(id);
-    if (bloquear) {
-      bloqueosScroll += 1;
-      if (bloqueosScroll === 1) overflowOriginal = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-    }
-    const actualizar = () => setEsSuperior(pila.esSuperior(id));
-    oyentes.add(actualizar);
-    actualizar();
-    const inicial = opciones.current.initialFocus?.() ?? contenedor;
-    if (pila.esSuperior(id)) inicial?.focus?.();
-    const alTeclear = (evento) => {
-      if (!pila.esSuperior(id)) return;
-      if (evento.key === "Escape") {
-        if (evento.isComposing || evento.repeat || evento.target?.tagName === "SELECT") return;
-        evento.preventDefault();
-        if (!opciones.current.busy) cerrar.current?.();
-        return;
-      }
-      if (evento.key !== "Tab" || !contenedor) return;
-      const nodos = [...contenedor.querySelectorAll(SELECTOR_ENFOCABLES)].filter((el) => el.getClientRects().length);
-      if (!nodos.length) {
-        evento.preventDefault();
-        contenedor.focus?.();
-        return;
-      }
-      const destino = destinoDeTab({
-        shiftKey: evento.shiftKey,
-        activo: document.activeElement,
-        primero: nodos[0],
-        ultimo: nodos[nodos.length - 1],
-        contenedor,
-        fuera: !contenedor.contains(document.activeElement)
-      });
-      if (destino) {
-        evento.preventDefault();
-        destino.focus();
-      }
-    };
-    const alEnfocar = (evento) => {
-      if (!pila.esSuperior(id) || !contenedor) return;
-      if (evento.target instanceof Node && contenedor.contains(evento.target)) return;
-      const primero = opciones.current.initialFocus?.() ?? contenedor;
-      primero?.focus?.();
-    };
-    document.addEventListener("keydown", alTeclear);
-    document.addEventListener("focusin", alEnfocar);
-    return () => {
-      document.removeEventListener("keydown", alTeclear);
-      document.removeEventListener("focusin", alEnfocar);
-      oyentes.delete(actualizar);
-      const eraSuperior = pila.esSuperior(id);
-      pila.quitar(id);
-      paneles.delete(id);
-      avisar();
-      if (bloquear) {
-        bloqueosScroll = Math.max(0, bloqueosScroll - 1);
-        if (bloqueosScroll === 0) document.body.style.overflow = overflowOriginal;
-      }
-      if (eraSuperior) {
-        const superior = pila.ids().at(-1);
-        const panelSuperior = superior ? paneles.get(superior)?.current : null;
-        if (anterior?.isConnected) anterior.focus();
-        else panelSuperior?.focus?.();
-      }
-    };
-  }, [open, ref, id]);
-  return { esSuperior, requestClose };
-}
-
-// src/utils/formulario.js
-var GRILLA_DOS_COLUMNAS = "grid gap-3 sm:grid-cols-2";
-var GRILLA_DOS_COLUMNAS_COMPACTA = "grid gap-2 sm:grid-cols-2";
-var PIE_ACCIONES = "flex flex-wrap justify-end gap-2";
-var PIE_ACCIONES_REVERSO = "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end";
-
 // src/components/Icon.jsx
 import { jsx } from "react/jsx-runtime";
 var PATHS = {
@@ -444,9 +245,6 @@ var PATHS = {
   chevron: "M6 9l6 6 6-6",
   close: "M18 6L6 18M6 6l12 12",
   external: "M7 17L17 7M8 7h9v9",
-  home: "M3 11l9-8 9 8M5 10v10h14V10M9 20v-6h6v6",
-  arrow: "M5 12h14M14 7l5 5-5 5",
-  link: "M10 13a5 5 0 0 0 7.5.5l2-2a5 5 0 0 0-7-7l-1.1 1.1M14 11a5 5 0 0 0-7.5-.5l-2 2a5 5 0 0 0 7 7l1.1-1.1",
   // Análisis
   chart: "M3 3v18h18M8 16V9M13 16V5M18 16v-4",
   trending: "M22 7l-8.5 8.5-5-5L2 17M16 7h6v6",
@@ -460,22 +258,11 @@ var PATHS = {
   refresh: "M21 12a9 9 0 1 1-3-6.7M21 4v5h-5",
   image: "M3 5h18v14H3zM3 16l5-5 4 4 3-3 6 6",
   tag: "M20.6 13.4 12 22l-9-9V3h10l7.6 7.6a2 2 0 0 1 0 2.8ZM7.5 7.5h.01",
-  play: "M9 7l8 5-8 5z",
-  pause: "M9 7v10M15 7v10",
-  archive: "M4 7h16M6 7v12h12V7M9 11h6M5 4h14v3H5z",
-  call: "M8.2 3.7 5.7 5.1c-1.1.6-1.5 1.9-1 3.1 2 5 6 9 11 11 1.2.5 2.5.1 3.1-1l1.4-2.5-4.2-2-1.3 1.7c-2.8-1.2-4.9-3.3-6.1-6.1L10.2 8l-2-4.3Z",
   // Finanzas
   receipt: "M6 2h12v20l-3-2-3 2-3-2-3 2V2ZM10 8h4M9 12h6",
   megaphone: "M3 11v2a1 1 0 0 0 1 1h3l7 4V6L7 10H4a1 1 0 0 0-1 1ZM18 9a3 3 0 0 1 0 6",
   wallet: "M3 7a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v3M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3M21 10h-5a2 2 0 0 0 0 4h5v-4Z",
   money: "M2 6h20v12H2zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6M5 9h.01M19 15h.01",
-  // Pago y cobro (cosecha de PagaYa)
-  qr: "M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM18 18h3v3h-3zM18 14h3M14 20h2",
-  transfer: "M4 7h15M15 3l4 4-4 4M20 17H5M9 13l-4 4 4 4",
-  subscription: "M20 7h-7M17 4l3 3-3 3M4 17h7M7 14l-3 3 3 3M6 11a7 7 0 0 1 11-5M18 13a7 7 0 0 1-11 5",
-  card: "M3 5h18v14H3zM3 10h18M7 15h4",
-  terminal: "M12 3 3 8v2h18V8l-9-5ZM5 12v6H3v3h18v-3h-2v-6h-2v6h-4v-6h-2v6H7v-6H5Z",
-  nfc: "M5.25 9a4.5 4.5 0 0 1 0 6M9 6.4a8.25 8.25 0 0 1 0 11.2M13.1 3.75a12 12 0 0 1 0 16.5",
   // Equipo
   users: "M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8M22 21v-2a4 4 0 0 0-3-3.9M16 3.1a4 4 0 0 1 0 7.8",
   user: "M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8",
@@ -496,8 +283,6 @@ var PATHS = {
   download: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
   calendar: "M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z",
   filter: "M22 3H2l8 9.5V19l4 2v-8.5L22 3Z",
-  pin: "M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0ZM12 10a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z",
-  code: "M8 9l-4 3 4 3M16 9l4 3-4 3M14 5l-4 14",
   check: "M20 6L9 17l-5-5",
   alert: "M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z",
   info: "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20ZM12 16v-4M12 8h.01",
@@ -568,12 +353,12 @@ function Icon({ name, className, ...props }) {
 }
 
 // src/components/ui.jsx
-import { Fragment, jsx as jsx2, jsxs } from "react/jsx-runtime";
+import { jsx as jsx2, jsxs } from "react/jsx-runtime";
 var VARIANTS = {
   primary: "bg-fono text-onbrand hover:bg-fono-light",
   success: "bg-ok text-black hover:brightness-110",
   danger: "bg-bad text-fore hover:brightness-110",
-  outline: "bg-transparent text-fore border border-interactivo hover:border-fono hover:bg-fono/10",
+  outline: "bg-transparent text-fore border border-ink-500 hover:border-fono hover:bg-fono/10",
   ghost: "bg-transparent text-mute hover:bg-ink-700 hover:text-fore"
 };
 function Button({ className, variant = "primary", ...props }) {
@@ -606,7 +391,7 @@ var Input = forwardRef(function Input2({ className, ...props }, ref) {
   );
 });
 function PasswordInput({ className, ...props }) {
-  const [visible, setVisible] = useState2(false);
+  const [visible, setVisible] = useState(false);
   return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
     /* @__PURE__ */ jsx2(Input, { ...props, type: visible ? "text" : "password", className: cn("pr-11", className) }),
     /* @__PURE__ */ jsx2(
@@ -658,44 +443,26 @@ function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, 
     )) })
   ] });
 }
-function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, integerOnly = false, onKeyDown, ...props }) {
-  const soloEnteros = currency === "PYG" || integerOnly;
+function MoneyInput({ currency = "PYG", symbol, value, onValueChange, className, max = LIMITE_MONTO_GENERAL, maxLength, ...props }) {
+  const isPyg = currency === "PYG";
   const prefix = String(symbol ?? "").trim() || SIMBOLOS_MONEDA[currency] || currency;
-  const display = soloEnteros ? formatGsInput(String(value ?? "").split(".")[0]) : formatUsdInput(value);
+  const display = isPyg ? formatGsInput(value) : formatUsdInput(value);
   const excede = excedeMonto(value, max);
-  const inputRef = useRef2(null);
-  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !soloEnteros });
+  const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !isPyg });
   return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
     /* @__PURE__ */ jsx2("span", { className: "pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-semibold text-mute", children: prefix }),
     /* @__PURE__ */ jsx2(
       Input,
       {
         ...props,
-        ref: inputRef,
         "aria-invalid": excede || void 0,
         title: excede ? `El monto supera el m\xE1ximo permitido (${max.toLocaleString("es-PY")})` : props.title,
-        inputMode: soloEnteros ? "numeric" : "decimal",
+        inputMode: isPyg ? "numeric" : "decimal",
         maxLength: topeLargo,
         value: display,
-        onKeyDown: (evento) => {
-          onKeyDown?.(evento);
-          if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return;
-          const permitidos = soloEnteros ? "0123456789" : "0123456789.,";
-          if (evento.key.length === 1 && !permitidos.includes(evento.key)) evento.preventDefault();
-        },
-        onChange: (evento) => {
-          const input = evento.currentTarget ?? evento.target;
-          const antes = input.value.slice(0, input.selectionStart ?? input.value.length);
-          const digitosAntes = (antes.match(/\d/g) || []).length;
-          const normalizado = normalizarMontoInput(input.value, currency, { integerOnly });
-          onValueChange?.(soloEnteros ? normalizado ? Number(normalizado) : "" : normalizado);
-          if (typeof requestAnimationFrame !== "function") return;
-          requestAnimationFrame(() => {
-            const nodo = inputRef.current;
-            if (!nodo || document.activeElement !== nodo) return;
-            const caret = caretTrasDigitos(nodo.value, digitosAntes);
-            nodo.setSelectionRange?.(caret, caret);
-          });
+        onChange: (event) => {
+          const next = event.target.value.replace(/[^\d.,]/g, "");
+          onValueChange?.(isPyg ? next.trim() ? parseGsInput(next) : "" : parseUsdInput(next));
         },
         className: cn(TAMANOS_CAMPO.moneda, prefix.length > 3 ? "pl-14" : "pl-12", "tabular-nums", className)
       }
@@ -761,93 +528,49 @@ function Eyebrow({ className, ...props }) {
 function Card({ className, ...props }) {
   return /* @__PURE__ */ jsx2("div", { className: cn("rounded-2xl border border-ink-600 bg-ink p-5 shadow-card", className), ...props });
 }
-var ContextoDialogo = createContext(null);
-var ContextoPie = createContext(null);
-var useEfectoLayout = typeof window === "undefined" ? useEffect2 : useLayoutEffect;
-function useDialogClose() {
-  return useContext(ContextoDialogo)?.requestClose;
-}
-function useDialogPending(pendiente) {
-  const contexto = useContext(ContextoDialogo);
-  const id = useRef2(Symbol("formulario")).current;
-  useEfectoLayout(() => {
-    contexto?.registrar(id, Boolean(pendiente));
-    return () => contexto?.registrar(id, false);
-  }, [contexto, id, pendiente]);
-}
-function conFormulario(children, formId) {
-  return Children.map(
-    children,
-    (hijo) => isValidElement(hijo) && !hijo.props?.form && (hijo.type === "button" || typeof hijo.type === "function") ? cloneElement(hijo, { form: formId || void 0 }) : hijo
-  );
-}
-function FormActions({ children, className }) {
-  const pie = useContext(ContextoPie);
-  const ancla = useRef2(null);
-  const id = useId();
-  const [formId, setFormId] = useState2("");
-  useEfectoLayout(() => {
-    const formulario = ancla.current?.closest("form");
-    if (!formulario) {
-      setFormId("");
-      return;
-    }
-    if (!formulario.id) formulario.id = id;
-    setFormId(formulario.id);
-  }, [id, pie]);
-  const acciones = /* @__PURE__ */ jsx2("div", { className: cn(PIE_ACCIONES, className), children: conFormulario(children, formId) });
-  return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx2("span", { hidden: true, ref: ancla }),
-    pie ? createPortal(acciones, pie) : acciones
-  ] });
-}
-function SaveActions({ pendiente = false, children, cancelLabel = "Cancelar", className }) {
-  const requestClose = useDialogClose();
-  useDialogPending(pendiente);
-  return /* @__PURE__ */ jsxs(FormActions, { className, children: [
-    requestClose && cancelLabel ? /* @__PURE__ */ jsx2(Button, { type: "button", variant: "ghost", disabled: pendiente, onClick: () => {
-      if (!pendiente) requestClose();
-    }, children: cancelLabel }) : null,
-    children
-  ] });
-}
-function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO, busy = false }) {
-  const dialog = useRef2(null);
+function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
+  const dialog = useRef(null);
+  const close = useRef(onClose);
+  close.current = onClose;
   const titleId = useId();
-  const [pie, setPie] = useState2(null);
-  const pendientes = useRef2(crearRegistroPendientes()).current;
-  const [hayPendientes, setHayPendientes] = useState2(false);
-  const bloqueado = Boolean(busy || hayPendientes);
-  const cerrar = useCallback2(() => {
-    if (!busy && !pendientes.bloqueado) onClose?.();
-  }, [busy, onClose, pendientes]);
-  const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, dialog, { busy: bloqueado });
-  const registrar = useCallback2((id, pendiente) => {
-    pendientes.registrar(id, pendiente);
-    setHayPendientes(pendientes.bloqueado);
-  }, [pendientes]);
-  const contexto = useMemo(() => ({ requestClose, registrar }), [requestClose, registrar]);
+  useEffect(() => {
+    if (!open) return void 0;
+    const previous = document.activeElement;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    dialog.current?.focus();
+    const onKey = (e) => {
+      if (e.key === "Escape") close.current?.();
+      if (e.key !== "Tab") return;
+      const nodes = [...dialog.current?.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || []].filter((el) => el.getClientRects().length);
+      const first = nodes[0], last = nodes[nodes.length - 1];
+      if (!first) {
+        e.preventDefault();
+        return;
+      }
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === dialog.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+      previous?.focus?.();
+    };
+  }, [open]);
   if (!open) return null;
-  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && requestClose(), children: /* @__PURE__ */ jsxs(
-    "div",
-    {
-      ref: dialog,
-      tabIndex: -1,
-      role: "dialog",
-      "aria-modal": esSuperior ? "true" : void 0,
-      "aria-labelledby": titleId,
-      "aria-busy": bloqueado || void 0,
-      className: cn("flex max-h-[min(90dvh,720px)] w-full flex-col overflow-hidden rounded-2xl border border-ink-600 bg-ink shadow-float", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className),
-      children: [
-        /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3 border-b border-ink-600 p-4 sm:px-6", children: [
-          /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-          /* @__PURE__ */ jsx2("button", { type: "button", onClick: requestClose, disabled: bloqueado, className: "toque-44 rounded-lg p-2 text-mute transition hover:bg-ink-700 hover:text-fore disabled:pointer-events-none disabled:opacity-40", "aria-label": "Cerrar", children: "\xD7" })
-        ] }),
-        /* @__PURE__ */ jsx2(ContextoDialogo.Provider, { value: contexto, children: /* @__PURE__ */ jsx2(ContextoPie.Provider, { value: pie, children: /* @__PURE__ */ jsx2("div", { className: "min-h-0 flex-1 overflow-y-auto p-4 sm:p-6", children }) }) }),
-        /* @__PURE__ */ jsx2("div", { ref: setPie, className: "border-t border-ink-600 p-4 empty:hidden sm:px-6" })
-      ]
-    }
-  ) });
+  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className), children: [
+    /* @__PURE__ */ jsxs("div", { className: "mb-4 flex items-center justify-between gap-3", children: [
+      /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
+      /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
+    ] }),
+    children
+  ] }) });
 }
 function ConfirmDialog({
   open,
@@ -859,8 +582,8 @@ function ConfirmDialog({
   variant = "primary",
   busy = false
 }) {
-  return /* @__PURE__ */ jsx2(Modal, { open, onClose: onCancel, busy, title, size: "corto", children: /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
-    /* @__PURE__ */ jsx2("div", { className: cn("flex h-11 w-11 items-center justify-center rounded-2xl", variant === "danger" ? "bg-bad/10 text-bad-text" : "bg-fono/10 text-fono-text"), children: /* @__PURE__ */ jsx2(Icon, { name: variant === "danger" ? "alert" : "check", className: "h-5 w-5" }) }),
+  return /* @__PURE__ */ jsx2(Modal, { open, onClose: busy ? void 0 : onCancel, title, size: "corto", children: /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
+    /* @__PURE__ */ jsx2("div", { className: cn("flex h-11 w-11 items-center justify-center rounded-2xl", variant === "danger" ? "bg-bad/10 text-bad" : "bg-fono/10 text-fono-light"), children: /* @__PURE__ */ jsx2(Icon, { name: variant === "danger" ? "alert" : "check", className: "h-5 w-5" }) }),
     /* @__PURE__ */ jsx2("p", { className: "text-sm leading-6 text-mute", children: description }),
     /* @__PURE__ */ jsxs("div", { className: "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", children: [
       /* @__PURE__ */ jsx2(Button, { type: "button", variant: "ghost", onClick: onCancel, disabled: busy, children: "Cancelar" }),
@@ -869,11 +592,11 @@ function ConfirmDialog({
   ] }) });
 }
 var BADGE = {
-  blue: "bg-fono/15 text-fono-text border-fono/25",
-  green: "bg-ok/15 text-ok-text border-ok/25",
-  red: "bg-bad/15 text-bad-text border-bad/25",
-  orange: "bg-warn/15 text-warn-text border-warn/25",
-  yellow: "bg-warn/15 text-warn-text border-warn/25",
+  blue: "bg-fono/15 text-fono-light border-fono/25",
+  green: "bg-ok/15 text-ok border-ok/25",
+  red: "bg-bad/15 text-bad border-bad/25",
+  orange: "bg-warn/15 text-warn border-warn/25",
+  yellow: "bg-warn/15 text-warn border-warn/25",
   slate: "bg-ink-600 text-mute border-ink-500"
 };
 function Badge({ className, color = "slate", ...props }) {
@@ -907,10 +630,10 @@ function Dot({ color = "slate", pulse = false, className }) {
   ] });
 }
 var ICON_ACTION_TONE = {
-  ok: "border-ok/30 text-ok-text hover:bg-ok/10",
-  warn: "border-warn/30 text-warn-text hover:bg-warn/10",
+  ok: "border-ok/30 text-ok hover:bg-ok/10",
+  warn: "border-warn/30 text-warn hover:bg-warn/10",
   fono: "border-fono/30 text-fono-light hover:bg-fono/10",
-  bad: "border-bad/30 text-bad-text hover:bg-bad/10",
+  bad: "border-bad/30 text-bad hover:bg-bad/10",
   mute: "border-transparent text-mute hover:bg-ink-700 hover:text-fore"
 };
 function IconAction({ icon, label, tone = "mute", onClick, disabled = false, size = "sm" }) {
@@ -931,32 +654,50 @@ function IconAction({ icon, label, tone = "mute", onClick, disabled = false, siz
     }
   );
 }
-function Drawer({ open, onClose, title, children, side = "right", className, busy = false }) {
-  const panel = useRef2(null);
+function Drawer({ open, onClose, title, children, side = "right", className }) {
+  const panel = useRef(null);
+  const close = useRef(onClose);
+  close.current = onClose;
   const titleId = useId();
-  const [pie, setPie] = useState2(null);
-  const pendientes = useRef2(crearRegistroPendientes()).current;
-  const [hayPendientes, setHayPendientes] = useState2(false);
-  const bloqueado = Boolean(busy || hayPendientes);
-  const cerrar = useCallback2(() => {
-    if (!busy && !pendientes.bloqueado) onClose?.();
-  }, [busy, onClose, pendientes]);
-  const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, panel, { busy: bloqueado });
-  const registrar = useCallback2((id, pendiente) => {
-    pendientes.registrar(id, pendiente);
-    setHayPendientes(pendientes.bloqueado);
-  }, [pendientes]);
-  const contexto = useMemo(() => ({ requestClose, registrar }), [requestClose, registrar]);
+  useEffect(() => {
+    if (!open) return void 0;
+    const previous = document.activeElement;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    panel.current?.focus();
+    const onKey = (e) => {
+      if (e.key === "Escape") close.current?.();
+      if (e.key !== "Tab") return;
+      const nodes = [...panel.current?.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]') || []].filter((el) => el.getClientRects().length);
+      const first = nodes[0], last = nodes[nodes.length - 1];
+      if (!first) {
+        e.preventDefault();
+        return;
+      }
+      if (e.shiftKey && (document.activeElement === first || document.activeElement === panel.current)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = overflow;
+      previous?.focus?.();
+    };
+  }, [open]);
   if (!open) return null;
-  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 bg-black/60", onMouseDown: (e) => e.target === e.currentTarget && requestClose(), children: /* @__PURE__ */ jsxs(
+  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 bg-black/60", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs(
     "div",
     {
       ref: panel,
       tabIndex: -1,
       role: "dialog",
-      "aria-modal": esSuperior ? "true" : void 0,
+      "aria-modal": "true",
       "aria-labelledby": titleId,
-      "aria-busy": bloqueado || void 0,
       className: cn(
         "absolute inset-y-0 flex max-h-full w-full max-w-md flex-col overflow-hidden border-ink-600 bg-ink shadow-float",
         side === "left" ? "left-0 border-r" : "right-0 border-l",
@@ -965,10 +706,9 @@ function Drawer({ open, onClose, title, children, side = "right", className, bus
       children: [
         /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
           /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-          /* @__PURE__ */ jsx2("button", { type: "button", onClick: requestClose, disabled: bloqueado, className: "toque-44 rounded-lg p-2 text-mute transition hover:bg-ink-700 hover:text-fore disabled:pointer-events-none disabled:opacity-40", "aria-label": "Cerrar", children: "\xD7" })
+          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
         ] }),
-        /* @__PURE__ */ jsx2(ContextoDialogo.Provider, { value: contexto, children: /* @__PURE__ */ jsx2(ContextoPie.Provider, { value: pie, children: /* @__PURE__ */ jsx2("div", { className: "flex-1 overflow-y-auto p-4 sm:p-5", children }) }) }),
-        /* @__PURE__ */ jsx2("div", { ref: setPie, className: "border-t border-ink-600 p-4 empty:hidden" })
+        /* @__PURE__ */ jsx2("div", { className: "flex-1 overflow-y-auto p-4 sm:p-5", children })
       ]
     }
   ) });
@@ -976,18 +716,18 @@ function Drawer({ open, onClose, title, children, side = "right", className, bus
 var ToastContext = createContext(null);
 var toastCounter = 0;
 var TOAST_ICON = { success: "check", error: "alert", info: "info" };
-var TOAST_TONE = { success: "text-ok-text", error: "text-bad-text", info: "text-fono-light" };
+var TOAST_TONE = { success: "text-ok", error: "text-bad", info: "text-fono-light" };
 function ToastProvider({ children, demo = false }) {
-  const [toasts, setToasts] = useState2([]);
-  const [mounted, setMounted] = useState2(false);
-  useEffect2(() => setMounted(true), []);
-  const dismiss = useCallback2((id) => setToasts((current) => current.filter((toast2) => toast2.id !== id)), []);
-  const toast = useCallback2((variant, title, description) => {
+  const [toasts, setToasts] = useState([]);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const dismiss = useCallback((id) => setToasts((current) => current.filter((toast2) => toast2.id !== id)), []);
+  const toast = useCallback((variant, title, description) => {
     const id = `toast-${++toastCounter}`;
     setToasts((current) => [...current, { id, variant: TOAST_ICON[variant] ? variant : "info", title, description }]);
     setTimeout(() => dismiss(id), 4e3);
   }, [dismiss]);
-  useEffect2(() => {
+  useEffect(() => {
     if (!demo) return void 0;
     let ultimo = 0;
     const aviso = () => {
@@ -1037,40 +777,18 @@ function EmptyState({ icon = "box", title, description, action, compact = false,
     action && /* @__PURE__ */ jsx2("div", { className: "mt-4", children: action })
   ] });
 }
-function ErrorState({ title = "Algo sali\xF3 mal", description, onRetry, compact = false, role, className }) {
-  return /* @__PURE__ */ jsxs("div", { role, className: cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className), children: [
-    /* @__PURE__ */ jsx2("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad-text", children: /* @__PURE__ */ jsx2(Icon, { name: "alert", className: "h-5 w-5" }) }),
+function ErrorState({ title = "Algo sali\xF3 mal", description, onRetry }) {
+  return /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center justify-center px-6 py-12 text-center", children: [
+    /* @__PURE__ */ jsx2("div", { className: "grid h-12 w-12 place-items-center rounded-2xl border border-bad/25 bg-bad/10 text-bad", children: /* @__PURE__ */ jsx2(Icon, { name: "alert", className: "h-5 w-5" }) }),
     /* @__PURE__ */ jsx2("p", { className: "mt-3 text-sm font-semibold text-fore", children: title }),
     description && /* @__PURE__ */ jsx2("p", { className: "mt-1 max-w-xs text-xs leading-5 text-mute", children: description }),
     onRetry && /* @__PURE__ */ jsx2(Button, { type: "button", variant: "outline", onClick: onRetry, className: "mt-4", children: "Reintentar" })
   ] });
 }
-function SectionState({ estado = "vacio", title, description, icon = "box", action, compact = false, onRetry, className }) {
-  if (estado === "cargando") {
-    return /* @__PURE__ */ jsxs(
-      "div",
-      {
-        role: "status",
-        "aria-busy": "true",
-        "aria-label": title || "Cargando\u2026",
-        className: cn("flex flex-col items-center justify-center px-6 text-center", compact ? "py-6" : "py-12", className),
-        children: [
-          /* @__PURE__ */ jsx2(Skeleton, { className: "h-12 w-12 rounded-2xl" }),
-          /* @__PURE__ */ jsx2(Skeleton, { className: "mt-3 h-4 w-36" }),
-          description ? /* @__PURE__ */ jsx2(Skeleton, { className: "mt-2 h-3 w-52" }) : null
-        ]
-      }
-    );
-  }
-  if (estado === "error") {
-    return /* @__PURE__ */ jsx2(ErrorState, { title, description, onRetry, compact, role: "alert", className });
-  }
-  return /* @__PURE__ */ jsx2(EmptyState, { icon, title, description, action, compact, className });
-}
 var AVISOS = {
-  error: "border-bad/30 bg-bad/10 text-bad-text",
-  ok: "border-ok/30 bg-ok/10 text-ok-text",
-  warn: "border-warn/30 bg-warn/10 text-warn-text"
+  error: "border-bad/30 bg-bad/10 text-bad",
+  ok: "border-ok/30 bg-ok/10 text-ok",
+  warn: "border-warn/30 bg-warn/10 text-warn"
 };
 function Aviso({ tono = "error", como = "p", compact = false, className, children, ...props }) {
   const Etiqueta = como === "div" ? "div" : "p";
@@ -1109,7 +827,7 @@ function PageHeader({ title, subtitle, actions, backTo, eyebrow, migas }) {
         {
           type: "button",
           onClick: backTo,
-          className: "grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-interactivo text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
+          className: "grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
           "aria-label": "Volver",
           children: /* @__PURE__ */ jsx2(Icon, { name: "back", className: "h-4 w-4" })
         }
@@ -1148,12 +866,11 @@ function DataTable({ columns, rows, emptyLabel = "Sin datos para mostrar.", load
     /* @__PURE__ */ jsx2("div", { className: "grid grid-cols-1 gap-2 p-2.5 md:hidden", children: mobileCard ? rows.map((row) => /* @__PURE__ */ jsx2("div", { children: mobileCard(row) }, row.id ?? row.key ?? JSON.stringify(row))) : /* @__PURE__ */ jsx2(EmptyState, { icon: "filter", title: emptyLabel }) })
   ] });
 }
-function FormField({ label, hint, error, children, htmlFor, descripcionId }) {
-  const mensajeId = descripcionId || (htmlFor ? `${htmlFor}-descripcion` : void 0);
+function FormField({ label, hint, error, children, htmlFor }) {
   return /* @__PURE__ */ jsxs("div", { children: [
     label && /* @__PURE__ */ jsx2(Label, { htmlFor, children: label }),
     children,
-    error ? /* @__PURE__ */ jsx2("p", { id: mensajeId, role: "alert", className: "mt-1.5 text-xs text-bad-text", children: error }) : hint ? /* @__PURE__ */ jsx2("p", { id: mensajeId, className: "mt-1.5 text-xs text-mute", children: hint }) : null
+    error ? /* @__PURE__ */ jsx2("p", { role: "alert", className: "mt-1.5 text-xs text-bad", children: error }) : hint ? /* @__PURE__ */ jsx2("p", { className: "mt-1.5 text-xs text-mute", children: hint }) : null
   ] });
 }
 function Stat({ label, valor, delta, sub, nota, tono, destacado = false, deltaComo = "texto", barra, className }) {
@@ -1172,12 +889,12 @@ function Stat({ label, valor, delta, sub, nota, tono, destacado = false, deltaCo
         /* @__PURE__ */ jsx2("div", { className: cn("text-[11px] font-medium uppercase tracking-wider", destacado ? "text-onbrand/75" : "text-mute"), children: label }),
         /* @__PURE__ */ jsx2("div", { className: cn("v2-numero mt-1.5 text-2xl font-semibold md:text-3xl", colorValor), children: valor }),
         /* @__PURE__ */ jsxs("div", { className: "mt-1.5 flex items-center gap-2 text-xs", children: [
-          typeof delta === "number" && (deltaComo === "chip" ? /* @__PURE__ */ jsxs("span", { className: cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium", sube ? "bg-ok/15 text-ok-text" : "bg-bad/15 text-bad-text"), children: [
+          typeof delta === "number" && (deltaComo === "chip" ? /* @__PURE__ */ jsxs("span", { className: cn("inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium", sube ? "bg-ok/15 text-ok" : "bg-bad/15 text-bad"), children: [
             sube ? "\u2191" : "\u2193",
             " ",
             Math.abs(delta).toFixed(1),
             "%"
-          ] }) : /* @__PURE__ */ jsxs("span", { className: cn("font-medium", sube ? "text-ok-text" : "text-bad-text"), children: [
+          ] }) : /* @__PURE__ */ jsxs("span", { className: cn("font-medium", sube ? "text-ok" : "text-bad"), children: [
             sube ? "\u2191" : "\u2193",
             " ",
             Math.abs(delta).toFixed(1),
@@ -1216,7 +933,7 @@ function Subtabs({ value, onChange, items = [], className }) {
     );
   }) });
 }
-var TONOS_VALOR = { ok: "text-ok-text", warn: "text-warn-text", bad: "text-bad-text", mute: "text-mute" };
+var TONOS_VALOR = { ok: "text-ok", warn: "text-warn", bad: "text-bad", mute: "text-mute" };
 function FilaDato({ etiqueta, valor, tono = "", etiquetaComo: Etiqueta = "span", valorComo: Valor = "span", className, valorClassName, children }) {
   return /* @__PURE__ */ jsxs("div", { className: cn("flex items-center justify-between gap-3", className), children: [
     /* @__PURE__ */ jsx2(Etiqueta, { className: "min-w-0 text-mute", children: etiqueta ?? children }),
@@ -1403,7 +1120,7 @@ var SearchField = forwardRef2(function SearchField2({ value = "", onChange, onCl
 var SearchField_default = SearchField;
 
 // src/components/BotonDentroCampo.jsx
-import { Fragment as Fragment2, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
+import { Fragment, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
 function BotonDentroCampo({
   etiqueta,
   titulo: titulo2,
@@ -1429,7 +1146,7 @@ function BotonDentroCampo({
         ocupado ? "gap-2 bg-ink-700 px-3 text-xs font-semibold text-fono-light" : "w-11 justify-center",
         className
       ),
-      children: ocupado ? /* @__PURE__ */ jsxs5(Fragment2, { children: [
+      children: ocupado ? /* @__PURE__ */ jsxs5(Fragment, { children: [
         /* @__PURE__ */ jsx6("span", { "aria-hidden": "true", className: "h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink-500 border-t-fono-light" }),
         etiquetaOcupada
       ] }) : /* @__PURE__ */ jsx6(Icon, { name: icono, className: "h-4 w-4" })
@@ -1453,7 +1170,7 @@ function SegmentedField({ value, onChange, options = [], ariaLabel, className })
         onClick: () => onChange(id),
         className: cn(
           "inline-flex min-h-11 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-sm font-medium transition",
-          activo ? "bg-fono/15 text-fono-text" : "text-mute hover:bg-fore/5 hover:text-fore"
+          activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-fore/5 hover:text-fore"
         ),
         children: [
           icon && /* @__PURE__ */ jsx7(Icon, { name: icon, className: "h-4 w-4 shrink-0" }),
@@ -1544,7 +1261,7 @@ function ListGridToggle({ value, onChange, className }) {
       "aria-label": option.label,
       "aria-pressed": value === option.key,
       onClick: () => onChange(option.key),
-      className: cn("toque-44 grid h-9 w-9 place-items-center transition", value === option.key ? "bg-fono/15 text-fono-text" : "text-mute hover:text-fore"),
+      className: cn("toque-44 grid h-9 w-9 place-items-center transition", value === option.key ? "bg-fono/15 text-fono-light" : "text-mute hover:text-fore"),
       children: /* @__PURE__ */ jsx10(Icon, { name: option.icon, className: "h-4 w-4" })
     },
     option.key
@@ -1610,7 +1327,7 @@ function BarraLote({ cantidad = 0, onLimpiar, children, etiqueta, className }) {
 }
 
 // src/components/EmailField.jsx
-import { useRef as useRef3, useState as useState3 } from "react";
+import { useRef as useRef2, useState as useState2 } from "react";
 import { jsx as jsx14, jsxs as jsxs9 } from "react/jsx-runtime";
 var DOMINIOS_EMAIL = [
   "gmail.com",
@@ -1645,10 +1362,10 @@ function EmailField({
   onBlur,
   ...props
 }) {
-  const [open, setOpen] = useState3(false);
-  const tecleando = useRef3(false);
-  const tipeoReciente = useRef3(false);
-  const inputRef = useRef3(null);
+  const [open, setOpen] = useState2(false);
+  const tecleando = useRef2(false);
+  const tipeoReciente = useRef2(false);
+  const inputRef = useRef2(null);
   const sugerencias = sugerenciasDe(value, dominios);
   function manejarKeyDown(event) {
     onKeyDown?.(event);
@@ -1724,7 +1441,7 @@ function EmailField({
 }
 
 // src/components/PhoneField.jsx
-import { useState as useState4 } from "react";
+import { useState as useState3 } from "react";
 
 // src/utils/telefono.js
 var CODIGOS_PAIS = ["+595", "+55", "+54", "+56", "+591", "+598", "+1", "+34", "+44", "+351"];
@@ -1825,7 +1542,7 @@ function PhoneField({
   id = "telefono-codigos",
   className
 }) {
-  const [tocado, setTocado] = useState4(false);
+  const [tocado, setTocado] = useState3(false);
   const invalido = tocado && Boolean(String(phone).trim()) && !telefonoValido(phone, countryCode);
   return /* @__PURE__ */ jsxs10("div", { className, children: [
     /* @__PURE__ */ jsxs10("div", { className: "flex gap-2", children: [
@@ -1858,7 +1575,7 @@ function PhoneField({
         }
       )
     ] }),
-    invalido && /* @__PURE__ */ jsx15("span", { className: "block pt-1 text-[11px] text-bad-text", children: mensajeInvalido })
+    invalido && /* @__PURE__ */ jsx15("span", { className: "block pt-1 text-[11px] text-bad", children: mensajeInvalido })
   ] });
 }
 
@@ -1978,7 +1695,7 @@ function InstagramField({ value = "", onChange, disabled = false, placeholder = 
 }
 
 // src/components/ProductCombobox.jsx
-import { useCallback as useCallback3, useEffect as useEffect3, useId as useId3, useMemo as useMemo2, useRef as useRef4, useState as useState5 } from "react";
+import { useCallback as useCallback2, useEffect as useEffect2, useId as useId3, useMemo as useMemo2, useRef as useRef3, useState as useState4 } from "react";
 
 // src/utils/categorias.js
 var CATEGORIAS_PRODUCTO = [
@@ -2052,13 +1769,13 @@ function productName(product) {
   return product?.nombre || product?.name || "";
 }
 function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, onQueryChange, placeholder = "Buscar producto\u2026", disabled = false, className }) {
-  const [query, setQuery] = useState5("");
-  const [open, setOpen] = useState5(false);
-  const [highlight, setHighlight] = useState5(0);
-  const [creating, setCreating] = useState5(false);
+  const [query, setQuery] = useState4("");
+  const [open, setOpen] = useState4(false);
+  const [highlight, setHighlight] = useState4(0);
+  const [creating, setCreating] = useState4(false);
   const listId = useId3();
-  const rootRef = useRef4(null);
-  useEffect3(() => {
+  const rootRef = useRef3(null);
+  useEffect2(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && rootRef.current?.contains(event.target)) return;
       close();
@@ -2066,11 +1783,11 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
     document.addEventListener("click", cerrarFuera);
     return () => document.removeEventListener("click", cerrarFuera);
   }, []);
-  const setearQuery = useCallback3((next) => {
+  const setearQuery = useCallback2((next) => {
     setQuery(next);
     onQueryChange?.(next);
   }, [onQueryChange]);
-  useEffect3(() => {
+  useEffect2(() => {
     if (!selectedId) return;
     const selected = products.find((product) => product.id === selectedId);
     if (selected) setearQuery(productName(selected));
@@ -2204,7 +1921,7 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
 }
 
 // src/components/BuscadorDispositivo.jsx
-import { useEffect as useEffect4, useId as useId4, useMemo as useMemo3, useRef as useRef5, useState as useState6 } from "react";
+import { useEffect as useEffect3, useId as useId4, useMemo as useMemo3, useRef as useRef4, useState as useState5 } from "react";
 
 // src/catalog/productos.js
 var MODELOS_IPHONE = [
@@ -2393,15 +2110,15 @@ function BuscadorDispositivo({
   const modelos = config.catalogo.modelos || [];
   const campos = config.campos || [];
   const etiqueta = (campo) => config.etiquetas?.[campo] || campo.charAt(0).toUpperCase() + campo.slice(1);
-  const [texto, setTexto] = useState6(() => valor.modelo || "");
-  const [abierto, setAbierto] = useState6(false);
-  const [resaltado, setResaltado] = useState6(0);
+  const [texto, setTexto] = useState5(() => valor.modelo || "");
+  const [abierto, setAbierto] = useState5(false);
+  const [resaltado, setResaltado] = useState5(0);
   const listaId = useId4();
-  const raiz = useRef5(null);
-  useEffect4(() => {
+  const raiz = useRef4(null);
+  useEffect3(() => {
     setTexto(valor.modelo || "");
   }, [valor.modelo]);
-  useEffect4(() => {
+  useEffect3(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -2527,7 +2244,7 @@ function BuscadorDispositivo({
 }
 
 // src/components/RucField.jsx
-import { useState as useState7 } from "react";
+import { useState as useState6 } from "react";
 import { jsx as jsx21, jsxs as jsxs14 } from "react/jsx-runtime";
 function RucField({
   id,
@@ -2544,9 +2261,9 @@ function RucField({
   ariaLabel,
   textoAyuda = "La raz\xF3n social se aplica solo si la confirm\xE1s."
 }) {
-  const [resultado, setResultado] = useState7(null);
-  const [consultando, setConsultando] = useState7(false);
-  const [error, setError] = useState7("");
+  const [resultado, setResultado] = useState6(null);
+  const [consultando, setConsultando] = useState6(false);
+  const [error, setError] = useState6("");
   const hayRuc = Boolean(String(value || "").trim());
   const puedeExtraer = mostrarExtractor && typeof consultar === "function";
   async function extraer() {
@@ -2615,7 +2332,7 @@ function RucField({
         setResultado(null);
       }, children: "Usar estos datos" })
     ] }),
-    error && /* @__PURE__ */ jsx21("p", { role: "alert", className: "text-sm text-bad-text", children: error })
+    error && /* @__PURE__ */ jsx21("p", { role: "alert", className: "text-sm text-bad", children: error })
   ] });
 }
 
@@ -2631,12 +2348,7 @@ function esRuc(valor) {
 
 // src/components/SerialTexto.jsx
 import { jsx as jsx22, jsxs as jsxs15 } from "react/jsx-runtime";
-function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u2014", enmascarar = false }) {
-  if (enmascarar) {
-    const mascara = serialEnmascarado(serial);
-    if (!mascara) return /* @__PURE__ */ jsx22("span", { className: cn("font-mono", className), children: vacio });
-    return /* @__PURE__ */ jsx22("span", { className: cn("font-mono", className), title: String(serial), children: mascara });
-  }
+function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u2014" }) {
   const { cabeza, cola } = partirSerial(serial);
   if (!cola) return /* @__PURE__ */ jsx22("span", { className: cn("font-mono", className), children: vacio });
   return /* @__PURE__ */ jsxs15("span", { className: cn("flex min-w-0 font-mono", className), title: String(serial), children: [
@@ -2646,7 +2358,7 @@ function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u201
 }
 
 // src/components/CampoSeriales.jsx
-import { useMemo as useMemo4, useState as useState8 } from "react";
+import { useMemo as useMemo4, useState as useState7 } from "react";
 import { jsx as jsx23, jsxs as jsxs16 } from "react/jsx-runtime";
 function CampoSeriales({
   valor,
@@ -2660,7 +2372,7 @@ function CampoSeriales({
   disabled = false,
   className
 }) {
-  const [texto, setTexto] = useState8(() => Array.isArray(valor) ? valor.join("\n") : valor || "");
+  const [texto, setTexto] = useState7(() => Array.isArray(valor) ? valor.join("\n") : valor || "");
   const resultado = useMemo4(() => normalizarSeriales(texto, { validar, limite, maxLargo }), [texto, validar, limite, maxLargo]);
   function cambiar(siguiente) {
     setTexto(siguiente);
@@ -2683,15 +2395,15 @@ function CampoSeriales({
       }
     ),
     /* @__PURE__ */ jsxs16("p", { className: "flex flex-wrap items-center gap-x-3 gap-y-1 text-xs", role: "status", children: [
-      /* @__PURE__ */ jsxs16("span", { className: hay ? "font-semibold text-ok-text" : "text-mute", children: [
+      /* @__PURE__ */ jsxs16("span", { className: hay ? "font-semibold text-ok" : "text-mute", children: [
         resultado.seriales.length,
         " listo(s) para cargar"
       ] }),
-      resultado.repetidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-warn-text", children: [
+      resultado.repetidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-warn", children: [
         resultado.repetidos.length,
         " repetido(s)"
       ] }),
-      resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-bad-text", children: [
+      resultado.invalidos.length > 0 && /* @__PURE__ */ jsxs16("span", { className: "text-bad", children: [
         resultado.invalidos.length,
         " inv\xE1lido(s)"
       ] })
@@ -2714,7 +2426,7 @@ function EstadoBadge({ mapa, valor, vacio = "Sin estado" }) {
 }
 
 // src/components/SeccionColapsable.jsx
-import { useId as useId5, useState as useState9 } from "react";
+import { useId as useId5, useState as useState8 } from "react";
 
 // src/utils/tabla.js
 var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
@@ -2730,7 +2442,7 @@ import { jsx as jsx25, jsxs as jsxs17 } from "react/jsx-runtime";
 function SeccionColapsable({ id, titulo: titulo2, resumen, icono, abierta = false, clave = id, className = "", children }) {
   const autoId = useId5();
   const panelId = `seccion-panel-${autoId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const [expandida, setExpandida] = useState9(() => {
+  const [expandida, setExpandida] = useState8(() => {
     if (!clave) return abierta;
     try {
       const guardado = window.sessionStorage.getItem(clave);
@@ -2774,160 +2486,21 @@ function SeccionColapsable({ id, titulo: titulo2, resumen, icono, abierta = fals
   ] });
 }
 
-// src/components/TaxIdField.jsx
-import { useId as useId6, useState as useState10 } from "react";
-
-// src/utils/taxId.js
-var PATRON_RUC = /^\d{5,8}(-\d)?$/;
-var PATRON_TAX_ID_GENERICO = /^[\p{L}\p{N}./-]{3,32}$/u;
-var MENSAJE_RUC = "RUC inv\xE1lido: us\xE1 5 a 8 d\xEDgitos, con o sin d\xEDgito verificador (ej: 80012345-6).";
-var MENSAJE_RUC_SIN_DATOS = "No encontramos la raz\xF3n social de este RUC.";
-var MENSAJE_RUC_CONSULTA = "No pudimos consultar el RUC. Intent\xE1 nuevamente.";
-function taxIdValid(value) {
-  return PATRON_RUC.test(String(value ?? "").trim());
-}
-function taxIdGenericoValid(value) {
-  return PATRON_TAX_ID_GENERICO.test(String(value ?? "").trim());
-}
-function taxIdValidoParaPais(value, pais = "PY") {
-  return String(pais).trim().toUpperCase() === "PY" ? taxIdValid(value) : taxIdGenericoValid(value);
-}
-function normalizeTaxId(value) {
-  if (typeof value !== "string") return null;
-  const taxId = value.replace(/[.\s]/g, "").trim();
-  return taxId || null;
-}
-function limpiarTaxId(value, max = 32) {
-  return String(value ?? "").replace(/[^\p{L}\p{N}./-]/gu, "").slice(0, max);
-}
-
-// src/components/TaxIdField.jsx
-import { jsx as jsx26, jsxs as jsxs18 } from "react/jsx-runtime";
-function TaxIdField({
-  label = "RUC / identificaci\xF3n fiscal",
-  value = "",
-  onChange,
-  pais = "PY",
-  onBuscarRazonSocial,
-  onAplicarRazonSocial,
-  etiquetaConsulta = "Consultar RUC",
-  mensajeInvalido = MENSAJE_RUC,
-  mensajeSinDatos = MENSAJE_RUC_SIN_DATOS,
-  mensajeError = MENSAJE_RUC_CONSULTA,
-  hint,
-  error,
-  required = false,
-  disabled = false,
-  maxLength = 32,
-  id,
-  name,
-  className,
-  ...props
-}) {
-  const generado = useId6();
-  const inputId = id || generado;
-  const descripcionId = `${inputId}-descripcion`;
-  const [tocado, setTocado] = useState10(false);
-  const [consulta, setConsulta] = useState10({ estado: "inicial" });
-  const esRucPy = String(pais).trim().toUpperCase() === "PY";
-  const normalizado = normalizeTaxId(value);
-  const invalido = normalizado !== null && !taxIdValidoParaPais(normalizado, pais);
-  const errorVisible = error ?? (tocado && invalido ? mensajeInvalido : null);
-  const consultando = consulta.estado === "consultando";
-  const consultable = Boolean(normalizado) && !invalido;
-  async function consultar() {
-    const taxId = normalizeTaxId(value);
-    if (!taxId || !taxIdValidoParaPais(taxId, pais)) {
-      setConsulta({ estado: "error", mensaje: mensajeInvalido });
-      return;
-    }
-    setConsulta({ estado: "consultando" });
-    try {
-      const razonSocial = await onBuscarRazonSocial(taxId);
-      const texto = typeof razonSocial === "string" ? razonSocial.trim() : "";
-      if (!texto) {
-        setConsulta({ estado: "error", mensaje: mensajeSinDatos });
-        return;
-      }
-      setConsulta({ estado: "encontrada", razonSocial: texto });
-    } catch {
-      setConsulta({ estado: "error", mensaje: mensajeError });
-    }
-  }
-  function aplicar() {
-    onAplicarRazonSocial?.(consulta.razonSocial);
-    setConsulta({ estado: "inicial" });
-  }
-  return /* @__PURE__ */ jsxs18(FormField, { label, hint, error: errorVisible, htmlFor: inputId, descripcionId, children: [
-    /* @__PURE__ */ jsxs18("div", { className: "relative", children: [
-      /* @__PURE__ */ jsx26(
-        Input,
-        {
-          id: inputId,
-          name,
-          value,
-          disabled,
-          required,
-          inputMode: esRucPy ? "numeric" : "text",
-          autoComplete: "off",
-          spellCheck: false,
-          placeholder: esRucPy ? "80012345-6" : "",
-          onBlur: () => setTocado(true),
-          "aria-invalid": errorVisible ? true : void 0,
-          "aria-describedby": errorVisible || hint ? descripcionId : void 0,
-          onChange: (event) => {
-            setConsulta({ estado: "inicial" });
-            onChange?.(limpiarTaxId(event.target.value, maxLength));
-          },
-          className: cn(onBuscarRazonSocial && (consultando ? "pr-32" : "pr-11"), className),
-          ...props
-        }
-      ),
-      onBuscarRazonSocial ? /* @__PURE__ */ jsx26(
-        BotonDentroCampo,
-        {
-          etiqueta: etiquetaConsulta,
-          titulo: etiquetaConsulta,
-          ocupado: consultando,
-          disabled: disabled || !consultable,
-          onClick: () => void consultar()
-        }
-      ) : null
-    ] }),
-    consulta.estado === "encontrada" ? /* @__PURE__ */ jsxs18("div", { role: "status", className: "mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-600 bg-ink-800/60 px-3 py-2 text-xs", children: [
-      /* @__PURE__ */ jsxs18("span", { className: "text-mute", children: [
-        "Raz\xF3n social: ",
-        /* @__PURE__ */ jsx26("b", { className: "font-semibold text-fore", children: consulta.razonSocial })
-      ] }),
-      onAplicarRazonSocial ? /* @__PURE__ */ jsx26(
-        "button",
-        {
-          type: "button",
-          onClick: aplicar,
-          className: "rounded-md px-2 py-1 text-xs font-semibold text-fono-light transition hover:bg-fono/10",
-          children: "Usar raz\xF3n social"
-        }
-      ) : null
-    ] }) : null,
-    consulta.estado === "error" ? /* @__PURE__ */ jsx26("p", { role: "alert", className: "mt-1.5 text-xs text-bad-text", children: consulta.mensaje }) : null
-  ] });
-}
-
 // src/components/GoogleButton.jsx
-import { jsx as jsx27, jsxs as jsxs19 } from "react/jsx-runtime";
+import { jsx as jsx26, jsxs as jsxs18 } from "react/jsx-runtime";
 function GoogleMark({ className }) {
-  return /* @__PURE__ */ jsxs19("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
-    /* @__PURE__ */ jsx27("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
-    /* @__PURE__ */ jsx27("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
-    /* @__PURE__ */ jsx27("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
-    /* @__PURE__ */ jsx27("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
+  return /* @__PURE__ */ jsxs18("svg", { "aria-hidden": "true", viewBox: "0 0 18 18", className: cn("h-[18px] w-[18px] shrink-0", className), children: [
+    /* @__PURE__ */ jsx26("path", { fill: "#EA4335", d: "M17.64 9.205c0-.638-.057-1.252-.164-1.841H9v3.482h4.844a4.14 4.14 0 0 1-1.796 2.716v2.258h2.909c1.703-1.568 2.683-3.878 2.683-6.615Z" }),
+    /* @__PURE__ */ jsx26("path", { fill: "#4285F4", d: "M9 18c2.43 0 4.467-.806 5.957-2.18l-2.91-2.258c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.037-3.71H.956v2.331A9 9 0 0 0 9 18Z" }),
+    /* @__PURE__ */ jsx26("path", { fill: "#FBBC05", d: "M3.963 10.712A5.412 5.412 0 0 1 3.681 9c0-.594.102-1.171.282-1.712V4.957H.956A9 9 0 0 0 0 9c0 1.452.348 2.827.956 4.043l3.007-2.331Z" }),
+    /* @__PURE__ */ jsx26("path", { fill: "#34A853", d: "M9 3.578c1.322 0 2.508.454 3.441 1.345l2.581-2.582C13.463.891 11.426 0 9 0A9 9 0 0 0 .956 4.957l3.007 2.331C4.672 5.162 6.656 3.578 9 3.578Z" })
   ] });
 }
 function OAuthDivider({ texto = "o", className }) {
-  return /* @__PURE__ */ jsxs19("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
-    /* @__PURE__ */ jsx27("span", { className: "h-px flex-1 bg-fore/10" }),
+  return /* @__PURE__ */ jsxs18("div", { className: cn("flex items-center gap-4 py-1 text-sm font-medium text-mute", className), children: [
+    /* @__PURE__ */ jsx26("span", { className: "h-px flex-1 bg-fore/10" }),
     texto,
-    /* @__PURE__ */ jsx27("span", { className: "h-px flex-1 bg-fore/10" })
+    /* @__PURE__ */ jsx26("span", { className: "h-px flex-1 bg-fore/10" })
   ] });
 }
 function GoogleButton({
@@ -2939,7 +2512,7 @@ function GoogleButton({
   etiquetaBusy = "Conectando con Google\u2026",
   className
 }) {
-  return /* @__PURE__ */ jsxs19(
+  return /* @__PURE__ */ jsxs18(
     "button",
     {
       type: "button",
@@ -2954,32 +2527,32 @@ function GoogleButton({
         className
       ),
       children: [
-        busy ? /* @__PURE__ */ jsx27("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx27(GoogleMark, {}),
-        /* @__PURE__ */ jsx27("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
+        busy ? /* @__PURE__ */ jsx26("span", { className: "h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-[#4285F4]" }) : /* @__PURE__ */ jsx26(GoogleMark, {}),
+        /* @__PURE__ */ jsx26("span", { className: "ml-3", children: busy ? etiquetaBusy : crear ? etiquetaCrear : etiquetaContinuar })
       ]
     }
   );
 }
 
 // src/components/AuthLayout.jsx
-import { jsx as jsx28, jsxs as jsxs20 } from "react/jsx-runtime";
+import { jsx as jsx27, jsxs as jsxs19 } from "react/jsx-runtime";
 function AuthLayout({ logo, aside, acciones, pie, children, className }) {
-  return /* @__PURE__ */ jsxs20("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
-    acciones && /* @__PURE__ */ jsx28("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
-    /* @__PURE__ */ jsx28("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
-    /* @__PURE__ */ jsxs20("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
-      /* @__PURE__ */ jsxs20("section", { className: "hidden lg:block", children: [
+  return /* @__PURE__ */ jsxs19("main", { className: cn("relative flex min-h-dvh flex-col overflow-x-hidden bg-paper text-fore", className), children: [
+    acciones && /* @__PURE__ */ jsx27("div", { className: "absolute right-4 top-4 z-20", children: acciones }),
+    /* @__PURE__ */ jsx27("div", { "aria-hidden": true, className: "pointer-events-none absolute -left-40 -top-40 h-96 w-96 rounded-full bg-fono/15 blur-3xl" }),
+    /* @__PURE__ */ jsxs19("div", { className: "mx-auto grid w-full max-w-[1380px] flex-1 items-center gap-12 px-5 py-6 lg:grid-cols-[minmax(0,1fr)_520px] lg:px-12", children: [
+      /* @__PURE__ */ jsxs19("section", { className: "hidden lg:block", children: [
         logo,
         aside
       ] }),
       children
     ] }),
-    pie && /* @__PURE__ */ jsx28("div", { className: "shrink-0", children: pie })
+    pie && /* @__PURE__ */ jsx27("div", { className: "shrink-0", children: pie })
   ] });
 }
 
 // src/components/ProductFooter.jsx
-import { Fragment as Fragment3, jsx as jsx29, jsxs as jsxs21 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx28, jsxs as jsxs20 } from "react/jsx-runtime";
 function ProductFooter({
   nombre = "",
   version = "",
@@ -2990,9 +2563,9 @@ function ProductFooter({
   children,
   className
 }) {
-  return /* @__PURE__ */ jsxs21("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
+  return /* @__PURE__ */ jsxs20("footer", { className: cn("border-t border-fore/10 bg-transparent px-4 py-3 text-center text-[11px] text-mute", className), children: [
     leading,
-    /* @__PURE__ */ jsxs21("span", { children: [
+    /* @__PURE__ */ jsxs20("span", { children: [
       "\xA9 ",
       anio,
       " ",
@@ -3000,23 +2573,23 @@ function ProductFooter({
       ". Todos los derechos reservados.",
       version ? ` \xB7 ${version}` : ""
     ] }),
-    children && /* @__PURE__ */ jsxs21(Fragment3, { children: [
+    children && /* @__PURE__ */ jsxs20(Fragment2, { children: [
       " \xB7 ",
       children
     ] }),
-    credito && /* @__PURE__ */ jsxs21(Fragment3, { children: [
+    credito && /* @__PURE__ */ jsxs20(Fragment2, { children: [
       " \xB7 ",
-      /* @__PURE__ */ jsx29("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
+      /* @__PURE__ */ jsx28("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
     ] })
   ] });
 }
 
 // src/components/LoadingScreen.jsx
-import { jsx as jsx30, jsxs as jsxs22 } from "react/jsx-runtime";
+import { jsx as jsx29, jsxs as jsxs21 } from "react/jsx-runtime";
 function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etiqueta = "", className }) {
   const nombreTienda = tienda?.nombre || "";
   const imagenTienda = tienda?.logo || "";
-  return /* @__PURE__ */ jsxs22(
+  return /* @__PURE__ */ jsxs21(
     "div",
     {
       className: cn("relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-paper px-6 text-fore", className),
@@ -3024,17 +2597,17 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
       "aria-busy": "true",
       "aria-label": mensaje,
       children: [
-        /* @__PURE__ */ jsx30("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
-        /* @__PURE__ */ jsx30("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
-        /* @__PURE__ */ jsxs22("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
-          /* @__PURE__ */ jsx30("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
-          /* @__PURE__ */ jsx30("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
-          /* @__PURE__ */ jsx30("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx30("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
+        /* @__PURE__ */ jsx29("div", { "aria-hidden": true, className: "pointer-events-none absolute left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-[62%] rounded-full bg-fono/20 blur-3xl" }),
+        /* @__PURE__ */ jsx29("div", { "aria-hidden": true, className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fono/50 to-transparent" }),
+        /* @__PURE__ */ jsxs21("div", { className: "relative flex w-full max-w-xs flex-col items-center", children: [
+          /* @__PURE__ */ jsx29("div", { className: "drop-shadow-[0_10px_30px_rgba(12,136,118,0.25)] motion-safe:animate-[oc-respira_2.6s_ease-in-out_infinite]", children: logo }),
+          /* @__PURE__ */ jsx29("p", { className: "mt-7 text-[11px] font-semibold uppercase tracking-[.22em] text-mute", children: mensaje }),
+          /* @__PURE__ */ jsx29("div", { className: "mt-4 h-[3px] w-44 overflow-hidden rounded-full bg-ink-600/70", "aria-hidden": true, children: /* @__PURE__ */ jsx29("span", { className: "block h-full w-1/3 rounded-full bg-gradient-to-r from-fono/40 via-fono to-fono-light motion-safe:animate-[oc-carga_1.25s_ease-in-out_infinite]" }) })
         ] }),
-        nombreTienda && /* @__PURE__ */ jsx30("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs22("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
-          imagenTienda ? /* @__PURE__ */ jsx30("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx30("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-text", children: nombreTienda.charAt(0).toUpperCase() }),
-          /* @__PURE__ */ jsx30("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
-          etiqueta && /* @__PURE__ */ jsx30("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
+        nombreTienda && /* @__PURE__ */ jsx29("div", { className: "absolute inset-x-0 bottom-8 flex justify-center px-6", children: /* @__PURE__ */ jsxs21("span", { className: "flex max-w-[22rem] items-center gap-2.5 rounded-full border border-fore/10 bg-ink-800/70 px-3 py-1.5 shadow-card backdrop-blur", children: [
+          imagenTienda ? /* @__PURE__ */ jsx29("img", { src: imagenTienda, alt: "", className: "h-6 w-6 shrink-0 rounded-full object-cover", referrerPolicy: "no-referrer" }) : /* @__PURE__ */ jsx29("span", { className: "grid h-6 w-6 shrink-0 place-items-center rounded-full bg-fono/15 text-[10px] font-bold text-fono-light", children: nombreTienda.charAt(0).toUpperCase() }),
+          /* @__PURE__ */ jsx29("span", { className: "min-w-0 truncate text-xs font-semibold", children: nombreTienda }),
+          etiqueta && /* @__PURE__ */ jsx29("span", { className: "shrink-0 rounded-full border border-ink-500 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-mute", children: etiqueta })
         ] }) })
       ]
     }
@@ -3042,7 +2615,7 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { useState as useState11 } from "react";
+import { useState as useState9 } from "react";
 
 // src/utils/token.js
 var RUTA_CON_TOKEN = /(?:^|\/)([^/?#]+)\/([a-f0-9]{64})(?:[/?#]|$)/i;
@@ -3064,7 +2637,7 @@ function esToken(value) {
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { jsx as jsx31, jsxs as jsxs23 } from "react/jsx-runtime";
+import { jsx as jsx30, jsxs as jsxs22 } from "react/jsx-runtime";
 function PegarEnlaceToken({
   onToken,
   etiqueta = "Peg\xE1 tu enlace completo",
@@ -3073,8 +2646,8 @@ function PegarEnlaceToken({
   id = "pegar-enlace",
   className
 }) {
-  const [enlace, setEnlace] = useState11("");
-  const [error, setError] = useState11("");
+  const [enlace, setEnlace] = useState9("");
+  const [error, setError] = useState9("");
   function aplicar(event) {
     event.preventDefault();
     setError("");
@@ -3082,10 +2655,10 @@ function PegarEnlaceToken({
     if (!token) return setError(errorMensaje);
     onToken?.(token);
   }
-  return /* @__PURE__ */ jsxs23("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
-    /* @__PURE__ */ jsxs23("div", { children: [
-      /* @__PURE__ */ jsx31(Label, { htmlFor: id, children: etiqueta }),
-      /* @__PURE__ */ jsx31(
+  return /* @__PURE__ */ jsxs22("form", { onSubmit: aplicar, className: className ?? "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-4", children: [
+    /* @__PURE__ */ jsxs22("div", { children: [
+      /* @__PURE__ */ jsx30(Label, { htmlFor: id, children: etiqueta }),
+      /* @__PURE__ */ jsx30(
         Input,
         {
           id,
@@ -3100,16 +2673,16 @@ function PegarEnlaceToken({
         }
       )
     ] }),
-    error && /* @__PURE__ */ jsx31(Aviso, { tono: "error", children: error }),
-    /* @__PURE__ */ jsx31(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
+    error && /* @__PURE__ */ jsx30(Aviso, { tono: "error", children: error }),
+    /* @__PURE__ */ jsx30(Button, { type: "submit", disabled: !enlace.trim(), children: textoBoton })
   ] });
 }
 
 // src/components/NavLateral.jsx
-import { useState as useState12 } from "react";
-import { jsx as jsx32, jsxs as jsxs24 } from "react/jsx-runtime";
+import { useState as useState10 } from "react";
+import { jsx as jsx31, jsxs as jsxs23 } from "react/jsx-runtime";
 function ItemNav({ item, activo, colapsado, onSelect }) {
-  return /* @__PURE__ */ jsx32("li", { children: /* @__PURE__ */ jsxs24(
+  return /* @__PURE__ */ jsx31("li", { children: /* @__PURE__ */ jsxs23(
     "button",
     {
       type: "button",
@@ -3118,14 +2691,14 @@ function ItemNav({ item, activo, colapsado, onSelect }) {
       title: colapsado ? item.label : void 0,
       className: cn(
         "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition",
-        activo ? "bg-fono/15 text-fono-text" : "text-mute hover:bg-ink-700 hover:text-fore",
+        activo ? "bg-fono/15 text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore",
         colapsado && "justify-center px-2"
       ),
       children: [
-        item.icono && /* @__PURE__ */ jsx32(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-        !colapsado && /* @__PURE__ */ jsx32("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
-        !colapsado && item.contador != null && /* @__PURE__ */ jsx32("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
-        colapsado && item.contador != null && /* @__PURE__ */ jsx32("span", { className: "sr-only", children: item.contador })
+        item.icono && /* @__PURE__ */ jsx31(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+        !colapsado && /* @__PURE__ */ jsx31("span", { className: "min-w-0 flex-1 truncate text-left", children: item.label }),
+        !colapsado && item.contador != null && /* @__PURE__ */ jsx31("span", { className: "shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute", children: item.contador }),
+        colapsado && item.contador != null && /* @__PURE__ */ jsx31("span", { className: "sr-only", children: item.contador })
       ]
     }
   ) });
@@ -3145,22 +2718,22 @@ function NavLateral({
   ariaLabel = "Navegaci\xF3n principal",
   className
 }) {
-  const [plegadosInterno, setPlegadosInterno] = useState12({});
+  const [plegadosInterno, setPlegadosInterno] = useState10({});
   const plegados = gruposPlegados ?? plegadosInterno;
   const alternarGrupo = (titulo2) => {
     if (onToggleGrupo) onToggleGrupo(titulo2);
     else setPlegadosInterno((previos) => ({ ...previos, [titulo2]: !previos[titulo2] }));
   };
-  const lista = (listaItems) => /* @__PURE__ */ jsx32("ul", { className: "space-y-1", children: listaItems.map((item) => /* @__PURE__ */ jsx32(ItemNav, { item, activo: item.id === activeId, colapsado, onSelect }, item.id)) });
-  return /* @__PURE__ */ jsxs24(
+  const lista = (listaItems) => /* @__PURE__ */ jsx31("ul", { className: "space-y-1", children: listaItems.map((item) => /* @__PURE__ */ jsx31(ItemNav, { item, activo: item.id === activeId, colapsado, onSelect }, item.id)) });
+  return /* @__PURE__ */ jsxs23(
     "nav",
     {
       "aria-label": ariaLabel,
       className: cn("flex h-dvh flex-col border-r border-ink-600 bg-ink-900 transition-[width] duration-200", colapsado ? "w-[4.5rem]" : ancho, className),
       children: [
-        /* @__PURE__ */ jsxs24("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
-          cabecera && /* @__PURE__ */ jsx32("div", { className: "min-w-0 flex-1", children: cabecera }),
-          onToggle && /* @__PURE__ */ jsx32(
+        /* @__PURE__ */ jsxs23("div", { className: cn("flex items-center gap-2 px-3 py-3", colapsado && "justify-center"), children: [
+          cabecera && /* @__PURE__ */ jsx31("div", { className: "min-w-0 flex-1", children: cabecera }),
+          onToggle && /* @__PURE__ */ jsx31(
             "button",
             {
               type: "button",
@@ -3168,15 +2741,15 @@ function NavLateral({
               "aria-label": colapsado ? "Expandir men\xFA" : "Contraer men\xFA",
               "aria-expanded": !colapsado,
               className: cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg text-mute transition hover:bg-ink-700 hover:text-fore", colapsado && "w-full"),
-              children: /* @__PURE__ */ jsx32(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
+              children: /* @__PURE__ */ jsx31(Icon, { name: "back", className: cn("h-4 w-4 transition-transform", colapsado && "rotate-180") })
             }
           )
         ] }),
-        /* @__PURE__ */ jsx32("div", { className: "min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2", children: grupos ? grupos.map(({ titulo: titulo2, items: itemsGrupo = [] }) => {
+        /* @__PURE__ */ jsx31("div", { className: "min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2", children: grupos ? grupos.map(({ titulo: titulo2, items: itemsGrupo = [] }) => {
           const plegado = Boolean(plegados[titulo2]);
           const tieneActivo = itemsGrupo.some((item) => item.id === activeId);
-          return /* @__PURE__ */ jsxs24("div", { className: "flex flex-col", children: [
-            !colapsado && /* @__PURE__ */ jsxs24(
+          return /* @__PURE__ */ jsxs23("div", { className: "flex flex-col", children: [
+            !colapsado && /* @__PURE__ */ jsxs23(
               "button",
               {
                 type: "button",
@@ -3185,11 +2758,11 @@ function NavLateral({
                 title: plegado ? `Mostrar ${titulo2}` : `Ocultar ${titulo2}`,
                 className: "mb-0.5 flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-0.5 text-left transition hover:bg-fore/5",
                 children: [
-                  /* @__PURE__ */ jsxs24("span", { className: "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute", children: [
+                  /* @__PURE__ */ jsxs23("span", { className: "flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute", children: [
                     titulo2,
-                    plegado && tieneActivo && /* @__PURE__ */ jsx32("span", { className: "h-1.5 w-1.5 rounded-full bg-fono", "aria-hidden": true })
+                    plegado && tieneActivo && /* @__PURE__ */ jsx31("span", { className: "h-1.5 w-1.5 rounded-full bg-fono", "aria-hidden": true })
                   ] }),
-                  /* @__PURE__ */ jsx32(
+                  /* @__PURE__ */ jsx31(
                     Icon,
                     {
                       name: "chevron",
@@ -3202,19 +2775,19 @@ function NavLateral({
             (!plegado || colapsado) && lista(itemsGrupo)
           ] }, titulo2);
         }) : lista(items) }),
-        pie && /* @__PURE__ */ jsx32("div", { className: "border-t border-ink-600 p-2", children: pie })
+        pie && /* @__PURE__ */ jsx31("div", { className: "border-t border-ink-600 p-2", children: pie })
       ]
     }
   );
 }
 
 // src/components/MenuDesplegable.jsx
-import { useEffect as useEffect5, useRef as useRef6, useState as useState13 } from "react";
-import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
+import { useEffect as useEffect4, useRef as useRef5, useState as useState11 } from "react";
+import { jsx as jsx32, jsxs as jsxs24 } from "react/jsx-runtime";
 function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel = "Men\xFA", className }) {
-  const [abierto, setAbierto] = useState13(false);
-  const raiz = useRef6(null);
-  useEffect5(() => {
+  const [abierto, setAbierto] = useState11(false);
+  const raiz = useRef5(null);
+  useEffect4(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -3230,8 +2803,8 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
       document.removeEventListener("keydown", cerrarEsc);
     };
   }, [abierto]);
-  return /* @__PURE__ */ jsxs25("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx33(
+  return /* @__PURE__ */ jsxs24("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx32(
       "button",
       {
         type: "button",
@@ -3242,15 +2815,15 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
         children: trigger
       }
     ),
-    abierto && /* @__PURE__ */ jsx33(
+    abierto && /* @__PURE__ */ jsx32(
       "div",
       {
         role: "menu",
         "aria-label": ariaLabel,
         className: cn("absolute z-30 mt-1 min-w-48 rounded-xl border border-ink-500 bg-ink p-1 shadow-float", alineacion === "right" ? "right-0" : "left-0"),
         children: items.map((item, indice) => {
-          if (item.separador) return /* @__PURE__ */ jsx33("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
-          return /* @__PURE__ */ jsxs25(
+          if (item.separador) return /* @__PURE__ */ jsx32("div", { className: "my-1 h-px bg-ink-600" }, `sep-${indice}`);
+          return /* @__PURE__ */ jsxs24(
             "button",
             {
               type: "button",
@@ -3262,12 +2835,12 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
               },
               className: cn(
                 "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm transition",
-                item.peligro ? "text-bad-text hover:bg-bad/10" : "text-fore hover:bg-ink-700",
+                item.peligro ? "text-bad hover:bg-bad/10" : "text-fore hover:bg-ink-700",
                 item.disabled && "cursor-not-allowed opacity-40"
               ),
               children: [
-                item.icono && /* @__PURE__ */ jsx33(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
-                /* @__PURE__ */ jsx33("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
+                item.icono && /* @__PURE__ */ jsx32(Icon, { name: item.icono, className: "h-4 w-4 shrink-0" }),
+                /* @__PURE__ */ jsx32("span", { className: "min-w-0 flex-1 truncate", children: item.label }),
                 item.extra
               ]
             },
@@ -3279,101 +2852,42 @@ function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel 
   ] });
 }
 
-// src/components/ThemeToggle.jsx
-import { useSyncExternalStore } from "react";
-import { jsx as jsx34 } from "react/jsx-runtime";
-var TEMA_CLARO = "claro";
-var TEMA_OSCURO = "oscuro";
-var CLAVE_PREDETERMINADA = "owncoding-theme";
-var suscriptores = /* @__PURE__ */ new Set();
-function suscribir(listener) {
-  suscriptores.add(listener);
-  return () => {
-    suscriptores.delete(listener);
-  };
-}
-function leerTema() {
-  return document.documentElement.classList.contains("dark") ? TEMA_OSCURO : TEMA_CLARO;
-}
-function aplicarTema(tema, clave = CLAVE_PREDETERMINADA) {
-  const oscuro = tema === TEMA_OSCURO;
-  document.documentElement.classList.toggle("dark", oscuro);
-  if (clave) {
-    try {
-      window.localStorage.setItem(clave, oscuro ? TEMA_OSCURO : TEMA_CLARO);
-    } catch {
-    }
-  }
-  for (const listener of suscriptores) listener();
-}
-function ThemeToggle({
-  clave = CLAVE_PREDETERMINADA,
-  alCambiar,
-  etiquetaClaro = "Cambiar a modo claro",
-  etiquetaOscuro = "Cambiar a modo oscuro",
-  className
-}) {
-  const tema = useSyncExternalStore(suscribir, leerTema, () => TEMA_CLARO);
-  const oscuro = tema === TEMA_OSCURO;
-  const etiqueta = oscuro ? etiquetaClaro : etiquetaOscuro;
-  return /* @__PURE__ */ jsx34(
-    "button",
-    {
-      type: "button",
-      onClick: () => {
-        const siguiente = oscuro ? TEMA_CLARO : TEMA_OSCURO;
-        aplicarTema(siguiente, clave);
-        alCambiar?.(siguiente);
-      },
-      "aria-label": etiqueta,
-      title: etiqueta,
-      "aria-pressed": oscuro,
-      className: cn(
-        "grid h-9 w-9 place-items-center rounded-lg border border-interactivo text-mute transition",
-        "hover:border-fono hover:bg-fono/10 hover:text-fore",
-        className
-      ),
-      children: /* @__PURE__ */ jsx34(Icon, { name: oscuro ? "sun" : "moon", className: "h-4 w-4" })
-    }
-  );
-}
-
 // src/components/PanelDerecho.jsx
-import { jsx as jsx35, jsxs as jsxs26 } from "react/jsx-runtime";
+import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
 function PanelDerecho({ children, panel, id, className, classNamePanel }) {
-  return /* @__PURE__ */ jsxs26("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
-    /* @__PURE__ */ jsx35("div", { className: "min-w-0 space-y-4", children }),
-    /* @__PURE__ */ jsx35("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
+  return /* @__PURE__ */ jsxs25("div", { className: cn("grid min-w-0 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]", className), children: [
+    /* @__PURE__ */ jsx33("div", { className: "min-w-0 space-y-4", children }),
+    /* @__PURE__ */ jsx33("aside", { id, className: cn("min-w-0 lg:sticky lg:top-24", classNamePanel), children: panel })
   ] });
 }
 
 // src/components/TarjetaAjuste.jsx
-import { jsx as jsx36, jsxs as jsxs27 } from "react/jsx-runtime";
+import { jsx as jsx34, jsxs as jsxs26 } from "react/jsx-runtime";
 function TarjetaAjuste({ titulo: titulo2, descripcion, accion, icono, tono = "normal", children, className, id }) {
   const peligro = tono === "peligro";
-  return /* @__PURE__ */ jsxs27(Card, { id, className: cn("space-y-3", peligro && "border-bad/30", className), children: [
-    /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs27("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs27("h2", { className: cn("flex items-center gap-2 font-semibold", peligro && "text-bad-text"), children: [
-          icono && /* @__PURE__ */ jsx36(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
+  return /* @__PURE__ */ jsxs26(Card, { id, className: cn("space-y-3", peligro && "border-bad/30", className), children: [
+    /* @__PURE__ */ jsxs26("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs26("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs26("h2", { className: cn("flex items-center gap-2 font-semibold", peligro && "text-bad"), children: [
+          icono && /* @__PURE__ */ jsx34(Icon, { name: icono, className: "h-4 w-4 text-mute" }),
           titulo2
         ] }),
-        descripcion && /* @__PURE__ */ jsx36("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        descripcion && /* @__PURE__ */ jsx34("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      accion && /* @__PURE__ */ jsx36("div", { className: "shrink-0", children: accion })
+      accion && /* @__PURE__ */ jsx34("div", { className: "shrink-0", children: accion })
     ] }),
     children
   ] });
 }
 
 // src/components/EstadoGuardado.jsx
-import { jsx as jsx37 } from "react/jsx-runtime";
+import { jsx as jsx35 } from "react/jsx-runtime";
 function EstadoGuardado({ testId, estado, className }) {
-  return /* @__PURE__ */ jsx37("div", { "data-testid": testId, "aria-live": "polite", className: cn("min-w-0", className), children: estado && (estado.ok ? /* @__PURE__ */ jsx37(Badge, { color: "green", children: estado.texto }) : /* @__PURE__ */ jsx37(Aviso, { tono: "error", compact: true, className: "max-w-xl", children: estado.texto })) });
+  return /* @__PURE__ */ jsx35("div", { "data-testid": testId, "aria-live": "polite", className: cn("min-w-0", className), children: estado && (estado.ok ? /* @__PURE__ */ jsx35(Badge, { color: "green", children: estado.texto }) : /* @__PURE__ */ jsx35(Aviso, { tono: "error", compact: true, className: "max-w-xl", children: estado.texto })) });
 }
 
 // src/components/AjustesImpresion.jsx
-import { useState as useState14 } from "react";
+import { useState as useState12 } from "react";
 
 // src/printing/estadoImpresoras.js
 var ESTADO_IMPRESORA = Object.freeze({
@@ -3470,7 +2984,7 @@ function agregarEstado(impresoras = [], estados = {}) {
 }
 
 // src/components/AjustesImpresion.jsx
-import { jsx as jsx38, jsxs as jsxs28 } from "react/jsx-runtime";
+import { jsx as jsx36, jsxs as jsxs27 } from "react/jsx-runtime";
 var VACIO = () => ({
   id: null,
   nombre: "",
@@ -3518,7 +3032,7 @@ function AjustesImpresion({
   descripcion = "Eleg\xED c\xF3mo sale el papel: por red (LAN) o por una cola local (USB). La app verifica cada impresora antes de usarla.",
   className
 }) {
-  const [form, setForm] = useState14(null);
+  const [form, setForm] = useState12(null);
   const resumen = agregarEstado(impresoras, estado);
   function cambiar(campo, valor) {
     setForm((actual) => ({ ...actual, [campo]: valor }));
@@ -3531,40 +3045,40 @@ function AjustesImpresion({
     onGuardar?.({ ...form, destino, copias: Number(form.copias) || 1 });
     setForm(null);
   }
-  return /* @__PURE__ */ jsxs28(Card, { className: cn("space-y-4", className), children: [
-    /* @__PURE__ */ jsxs28("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
-      /* @__PURE__ */ jsxs28("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsxs28("h2", { className: "flex items-center gap-2 font-semibold", children: [
-          /* @__PURE__ */ jsx38(Icon, { name: "printer", className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs27(Card, { className: cn("space-y-4", className), children: [
+    /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap items-start justify-between gap-3", children: [
+      /* @__PURE__ */ jsxs27("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsxs27("h2", { className: "flex items-center gap-2 font-semibold", children: [
+          /* @__PURE__ */ jsx36(Icon, { name: "printer", className: "h-4 w-4" }),
           titulo2
         ] }),
-        /* @__PURE__ */ jsx38("p", { className: "mt-1 text-sm text-mute", children: descripcion })
+        /* @__PURE__ */ jsx36("p", { className: "mt-1 text-sm text-mute", children: descripcion })
       ] }),
-      /* @__PURE__ */ jsxs28("div", { className: "flex flex-wrap items-center gap-2", children: [
-        /* @__PURE__ */ jsx38(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
-        onVerificar && /* @__PURE__ */ jsxs28(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
-          /* @__PURE__ */ jsx38(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
+      /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap items-center gap-2", children: [
+        /* @__PURE__ */ jsx36(Badge, { color: resumen.tono, className: "w-fit whitespace-nowrap", title: resumen.detalle, children: resumen.label }),
+        onVerificar && /* @__PURE__ */ jsxs27(Button, { type: "button", variant: "outline", onClick: onVerificar, children: [
+          /* @__PURE__ */ jsx36(Icon, { name: "refresh", className: "h-3.5 w-3.5" }),
           "Verificar"
         ] }),
-        /* @__PURE__ */ jsxs28(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
-          /* @__PURE__ */ jsx38(Icon, { name: "plus", className: "h-4 w-4" }),
+        /* @__PURE__ */ jsxs27(Button, { type: "button", onClick: () => setForm(VACIO()), children: [
+          /* @__PURE__ */ jsx36(Icon, { name: "plus", className: "h-4 w-4" }),
           "Agregar impresora"
         ] })
       ] })
     ] }),
-    impresoras.length === 0 && /* @__PURE__ */ jsx38("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
-    /* @__PURE__ */ jsx38("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
+    impresoras.length === 0 && /* @__PURE__ */ jsx36("p", { className: "rounded-xl border border-ink-600 p-4 text-sm text-mute", children: "Todav\xEDa no hay impresoras configuradas." }),
+    /* @__PURE__ */ jsx36("ul", { className: "space-y-2", children: impresoras.map((impresora) => {
       const registro = estado?.[impresora.id];
       const tono = TONO_ESTADO[registro?.estado] || "slate";
-      return /* @__PURE__ */ jsxs28("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
-        /* @__PURE__ */ jsxs28("div", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsxs28("p", { className: "flex items-center gap-2 font-medium", children: [
-            /* @__PURE__ */ jsx38(Dot, { color: tono }),
+      return /* @__PURE__ */ jsxs27("li", { className: "flex flex-wrap items-center justify-between gap-2 rounded-xl border border-ink-600 p-3", children: [
+        /* @__PURE__ */ jsxs27("div", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsxs27("p", { className: "flex items-center gap-2 font-medium", children: [
+            /* @__PURE__ */ jsx36(Dot, { color: tono }),
             impresora.nombre || "Impresora",
-            impresora.predeterminada && /* @__PURE__ */ jsx38(Badge, { color: "fono", children: "Predeterminada" }),
-            impresora.activa === false && /* @__PURE__ */ jsx38(Badge, { color: "slate", children: "Inactiva" })
+            impresora.predeterminada && /* @__PURE__ */ jsx36(Badge, { color: "fono", children: "Predeterminada" }),
+            impresora.activa === false && /* @__PURE__ */ jsx36(Badge, { color: "slate", children: "Inactiva" })
           ] }),
-          /* @__PURE__ */ jsxs28("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
+          /* @__PURE__ */ jsxs27("p", { className: "mt-0.5 truncate text-xs text-mute", title: impresora.destino, children: [
             conexionDeDestino(impresora.destino) === "cups" ? "USB / cola local" : "LAN",
             " \xB7 ",
             impresora.destino || "sin destino",
@@ -3574,79 +3088,79 @@ function AjustesImpresion({
             registro ? ` \xB7 ${textoVerificacion(registro)}` : ""
           ] })
         ] }),
-        /* @__PURE__ */ jsxs28("div", { className: "flex flex-wrap items-center gap-1", children: [
-          onProbar && /* @__PURE__ */ jsx38(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
-          /* @__PURE__ */ jsx38(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
-          onEliminar && /* @__PURE__ */ jsx38(Button, { type: "button", variant: "ghost", className: "text-bad-text", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
+        /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap items-center gap-1", children: [
+          onProbar && /* @__PURE__ */ jsx36(Button, { type: "button", variant: "outline", disabled: probando === impresora.id, onClick: () => onProbar(impresora), children: probando === impresora.id ? "Probando\u2026" : "Imprimir prueba" }),
+          /* @__PURE__ */ jsx36(Button, { type: "button", variant: "ghost", onClick: () => setForm(aFormulario(impresora)), children: "Editar" }),
+          onEliminar && /* @__PURE__ */ jsx36(Button, { type: "button", variant: "ghost", className: "text-bad", onClick: () => onEliminar(impresora.id), children: "Eliminar" })
         ] })
       ] }, impresora.id);
     }) }),
-    form && /* @__PURE__ */ jsxs28("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
-      /* @__PURE__ */ jsxs28("div", { className: "grid gap-3 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsxs28("div", { children: [
-          /* @__PURE__ */ jsx38(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
-          /* @__PURE__ */ jsx38(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
+    form && /* @__PURE__ */ jsxs27("form", { onSubmit: enviar, className: "space-y-3 rounded-xl border border-fono/25 bg-fono/5 p-3", children: [
+      /* @__PURE__ */ jsxs27("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs27("div", { children: [
+          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-nombre", children: "Nombre" }),
+          /* @__PURE__ */ jsx36(Input, { id: "imp-nombre", required: true, value: form.nombre, onChange: (event) => cambiar("nombre", event.target.value), placeholder: "Mostrador" })
         ] }),
-        /* @__PURE__ */ jsxs28("div", { children: [
-          /* @__PURE__ */ jsx38(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
-          /* @__PURE__ */ jsx38(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
+        /* @__PURE__ */ jsxs27("div", { children: [
+          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-ubicacion", children: "Ubicaci\xF3n (opcional)" }),
+          /* @__PURE__ */ jsx36(Input, { id: "imp-ubicacion", value: form.ubicacion, onChange: (event) => cambiar("ubicacion", event.target.value), placeholder: "Caja 1" })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs28("div", { className: "grid gap-3 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsxs28("div", { children: [
-          /* @__PURE__ */ jsx38(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
-          /* @__PURE__ */ jsxs28(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
-            /* @__PURE__ */ jsx38("option", { value: "lan", children: "LAN (impresora de red)" }),
-            /* @__PURE__ */ jsx38("option", { value: "cups", children: "USB / cola local (CUPS)" })
+      /* @__PURE__ */ jsxs27("div", { className: "grid gap-3 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsxs27("div", { children: [
+          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-conexion", children: "Conexi\xF3n" }),
+          /* @__PURE__ */ jsxs27(Select, { id: "imp-conexion", value: form.conexion, onChange: (event) => cambiar("conexion", event.target.value), children: [
+            /* @__PURE__ */ jsx36("option", { value: "lan", children: "LAN (impresora de red)" }),
+            /* @__PURE__ */ jsx36("option", { value: "cups", children: "USB / cola local (CUPS)" })
           ] })
         ] }),
-        form.conexion === "lan" ? /* @__PURE__ */ jsxs28("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
-          /* @__PURE__ */ jsxs28("div", { children: [
-            /* @__PURE__ */ jsx38(Label, { htmlFor: "imp-ip", children: "IP" }),
-            /* @__PURE__ */ jsx38(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
+        form.conexion === "lan" ? /* @__PURE__ */ jsxs27("div", { className: "grid grid-cols-[minmax(0,1fr)_6rem] gap-2", children: [
+          /* @__PURE__ */ jsxs27("div", { children: [
+            /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-ip", children: "IP" }),
+            /* @__PURE__ */ jsx36(Input, { id: "imp-ip", required: true, value: form.ip, onChange: (event) => cambiar("ip", event.target.value), placeholder: "192.168.1.50", inputMode: "decimal" })
           ] }),
-          /* @__PURE__ */ jsxs28("div", { children: [
-            /* @__PURE__ */ jsx38(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
-            /* @__PURE__ */ jsx38(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
+          /* @__PURE__ */ jsxs27("div", { children: [
+            /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-puerto", children: "Puerto" }),
+            /* @__PURE__ */ jsx36(Input, { id: "imp-puerto", value: form.puerto, onChange: (event) => cambiar("puerto", event.target.value.replace(/\D/g, "")), placeholder: "9100", inputMode: "numeric" })
           ] })
-        ] }) : /* @__PURE__ */ jsxs28("div", { children: [
-          /* @__PURE__ */ jsx38(Label, { htmlFor: "imp-cola", children: "Cola local" }),
-          /* @__PURE__ */ jsx38(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
-          /* @__PURE__ */ jsx38("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
+        ] }) : /* @__PURE__ */ jsxs27("div", { children: [
+          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-cola", children: "Cola local" }),
+          /* @__PURE__ */ jsx36(Input, { id: "imp-cola", required: true, value: form.cola, onChange: (event) => cambiar("cola", event.target.value), placeholder: "Nombre exacto en el sistema" }),
+          /* @__PURE__ */ jsx36("p", { className: "mt-1 text-xs text-mute", children: "En Windows/macOS el nombre de la cola es el que ves en Impresoras del sistema." })
         ] })
       ] }),
-      /* @__PURE__ */ jsxs28("div", { className: "grid gap-3 sm:grid-cols-3", children: [
-        /* @__PURE__ */ jsxs28("div", { children: [
-          /* @__PURE__ */ jsx38(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
-          /* @__PURE__ */ jsx38(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx38("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
+      /* @__PURE__ */ jsxs27("div", { className: "grid gap-3 sm:grid-cols-3", children: [
+        /* @__PURE__ */ jsxs27("div", { children: [
+          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-ancho", children: "Ancho de papel" }),
+          /* @__PURE__ */ jsx36(Select, { id: "imp-ancho", value: form.ancho, onChange: (event) => cambiar("ancho", event.target.value), children: anchoOpciones.map((opcion) => /* @__PURE__ */ jsx36("option", { value: opcion.id, children: opcion.label }, opcion.id)) })
         ] }),
-        /* @__PURE__ */ jsxs28("div", { children: [
-          /* @__PURE__ */ jsx38(Label, { htmlFor: "imp-copias", children: "Copias" }),
-          /* @__PURE__ */ jsx38(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
+        /* @__PURE__ */ jsxs27("div", { children: [
+          /* @__PURE__ */ jsx36(Label, { htmlFor: "imp-copias", children: "Copias" }),
+          /* @__PURE__ */ jsx36(Input, { id: "imp-copias", value: form.copias, onChange: (event) => cambiar("copias", event.target.value.replace(/\D/g, "")), inputMode: "numeric", maxLength: 2 })
         ] }),
-        /* @__PURE__ */ jsxs28("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
-          /* @__PURE__ */ jsx38("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
+        /* @__PURE__ */ jsxs27("label", { className: "flex items-end gap-2 pb-2 text-sm", children: [
+          /* @__PURE__ */ jsx36("input", { type: "checkbox", className: "h-4 w-4 accent-fono", checked: form.predeterminada, onChange: (event) => cambiar("predeterminada", event.target.checked) }),
           "Predeterminada"
         ] })
       ] }),
-      /* @__PURE__ */ jsx38("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
-      /* @__PURE__ */ jsxs28("div", { className: "flex flex-wrap justify-end gap-2", children: [
-        /* @__PURE__ */ jsx38(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
-        /* @__PURE__ */ jsx38(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
+      /* @__PURE__ */ jsx36("p", { className: "text-xs text-mute", children: form.conexion === "lan" ? `Se guardar\xE1 como lan:${form.ip || "<ip>"}:${form.puerto || "9100"}` : `Se guardar\xE1 como cups:${form.cola || "<cola>"}` }),
+      /* @__PURE__ */ jsxs27("div", { className: "flex flex-wrap justify-end gap-2", children: [
+        /* @__PURE__ */ jsx36(Button, { type: "button", variant: "ghost", onClick: () => setForm(null), children: "Cancelar" }),
+        /* @__PURE__ */ jsx36(Button, { type: "submit", disabled: guardando, children: guardando ? "Guardando\u2026" : "Guardar impresora" })
       ] })
     ] }),
-    /* @__PURE__ */ jsxs28("p", { className: "text-xs text-mute", children: [
+    /* @__PURE__ */ jsxs27("p", { className: "text-xs text-mute", children: [
       "La impresi\xF3n sale por el ",
-      /* @__PURE__ */ jsx38("b", { className: "text-fore", children: "agente local" }),
+      /* @__PURE__ */ jsx36("b", { className: "text-fore", children: "agente local" }),
       ": instalalo en la computadora que tiene la impresora (LAN o USB conectada) y vinculala con el c\xF3digo. Con el agente ca\xEDdo, los trabajos quedan en cola; nunca se pierden. Ver ",
-      /* @__PURE__ */ jsx38("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
+      /* @__PURE__ */ jsx36("b", { className: "text-fore", children: "docs/IMPRESION.md" }),
       "."
     ] })
   ] });
 }
 
 // src/components/BotonImprimir.jsx
-import { jsx as jsx39, jsxs as jsxs29 } from "react/jsx-runtime";
+import { jsx as jsx37, jsxs as jsxs28 } from "react/jsx-runtime";
 function BotonImprimir({
   onImprimir,
   estado = null,
@@ -3658,17 +3172,17 @@ function BotonImprimir({
 }) {
   const enCurso = estado === "pendiente" || estado === "reclamado";
   const texto = enCurso ? etiquetaTrabajo(estado) : etiqueta;
-  return /* @__PURE__ */ jsxs29("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsxs29(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
-      /* @__PURE__ */ jsx39(Icon, { name: icono, className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs28("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsxs28(Button, { type: "button", variant, disabled: disabled || enCurso, onClick: onImprimir, "aria-busy": enCurso, children: [
+      /* @__PURE__ */ jsx37(Icon, { name: icono, className: "h-4 w-4" }),
       texto
     ] }),
-    estado && !enCurso && /* @__PURE__ */ jsx39(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
+    estado && !enCurso && /* @__PURE__ */ jsx37(Badge, { color: colorTrabajo(estado), className: "whitespace-nowrap", children: etiquetaTrabajo(estado) })
   ] });
 }
 
 // src/components/BancoCombobox.jsx
-import { useEffect as useEffect6, useId as useId7, useMemo as useMemo5, useRef as useRef7, useState as useState16 } from "react";
+import { useEffect as useEffect5, useId as useId6, useMemo as useMemo5, useRef as useRef6, useState as useState14 } from "react";
 
 // src/utils/bancos.js
 var BANCOS_PARAGUAY = [
@@ -3765,21 +3279,21 @@ function sugerenciasDeBanco(texto, catalogo = BANCOS_PARAGUAY) {
 }
 
 // src/components/BancoLogo.jsx
-import { useState as useState15 } from "react";
-import { jsx as jsx40 } from "react/jsx-runtime";
+import { useState as useState13 } from "react";
+import { jsx as jsx38 } from "react/jsx-runtime";
 function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseAssets = "/bancos", marcas = {} }) {
-  const [fallo, setFallo] = useState15(false);
+  const [fallo, setFallo] = useState13(false);
   const texto = String(banco || "").trim();
   const registro = logoDeBanco(texto);
   if (!registro) return null;
   const marca = registro.tipo === "marca" ? registro.marca : null;
   if (marca && marcas[marca]) {
     const Logo = marcas[marca];
-    return /* @__PURE__ */ jsx40("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx40(Logo, {}) });
+    return /* @__PURE__ */ jsx38("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx38(Logo, {}) });
   }
   if (soloCatalogo && registro.generico) return null;
   if (registro.tipo === "archivo" && !fallo) {
-    return /* @__PURE__ */ jsx40("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx40(
+    return /* @__PURE__ */ jsx38("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx38(
       "img",
       {
         src: baseAssets ? `${baseAssets.replace(/\/$/, "")}/${registro.archivo}` : registro.archivo,
@@ -3792,7 +3306,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
   }
   const iniciales = registro.iniciales || inicialesDeBanco(texto);
   const color = registro.color || colorDeBanco(texto);
-  return /* @__PURE__ */ jsx40("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx40(
+  return /* @__PURE__ */ jsx38("span", { className: cn("inline-flex items-center", alto, className), title: texto, children: /* @__PURE__ */ jsx38(
     "span",
     {
       "aria-hidden": "true",
@@ -3804,7 +3318,7 @@ function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseA
 }
 
 // src/components/BancoCombobox.jsx
-import { jsx as jsx41, jsxs as jsxs30 } from "react/jsx-runtime";
+import { jsx as jsx39, jsxs as jsxs29 } from "react/jsx-runtime";
 function BancoCombobox({
   id,
   value = "",
@@ -3816,12 +3330,12 @@ function BancoCombobox({
   catalogo = BANCOS_PARAGUAY,
   logoProps
 }) {
-  const [abierto, setAbierto] = useState16(false);
-  const [resaltado, setResaltado] = useState16(0);
-  const listaId = useId7();
-  const raiz = useRef7(null);
-  const lista = useRef7(null);
-  useEffect6(() => {
+  const [abierto, setAbierto] = useState14(false);
+  const [resaltado, setResaltado] = useState14(0);
+  const listaId = useId6();
+  const raiz = useRef6(null);
+  const lista = useRef6(null);
+  useEffect5(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -3830,7 +3344,7 @@ function BancoCombobox({
     return () => document.removeEventListener("click", cerrarFuera);
   }, []);
   const sugerencias = useMemo5(() => sugerenciasDeBanco(value, catalogo), [value, catalogo]);
-  useEffect6(() => {
+  useEffect5(() => {
     if (!abierto) return;
     lista.current?.querySelector(`#${CSS.escape(`${listaId}-${resaltado}`)}`)?.scrollIntoView({ block: "nearest" });
   }, [abierto, resaltado, listaId]);
@@ -3861,8 +3375,8 @@ function BancoCombobox({
     }
   }
   const listaVisible = abierto && sugerencias.length > 0;
-  return /* @__PURE__ */ jsxs30("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx41(
+  return /* @__PURE__ */ jsxs29("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx39(
       Input,
       {
         id,
@@ -3885,7 +3399,7 @@ function BancoCombobox({
         onKeyDown: alTeclear
       }
     ),
-    listaVisible && /* @__PURE__ */ jsx41(
+    listaVisible && /* @__PURE__ */ jsx39(
       "ul",
       {
         id: listaId,
@@ -3893,7 +3407,7 @@ function BancoCombobox({
         role: "listbox",
         "aria-label": "Bancos",
         className: "absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-xl border border-ink-500 bg-ink p-1 shadow-float",
-        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx41("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs30(
+        children: sugerencias.map((banco, indice) => /* @__PURE__ */ jsx39("li", { id: `${listaId}-${indice}`, role: "option", "aria-selected": indice === resaltado, children: /* @__PURE__ */ jsxs29(
           "button",
           {
             type: "button",
@@ -3902,8 +3416,8 @@ function BancoCombobox({
             onMouseDown: (event) => event.preventDefault(),
             onClick: () => elegir(banco),
             children: [
-              /* @__PURE__ */ jsx41(BancoLogo, { banco, alto: "h-4", ...logoProps }),
-              /* @__PURE__ */ jsx41("span", { className: "min-w-0 flex-1 truncate", children: banco })
+              /* @__PURE__ */ jsx39(BancoLogo, { banco, alto: "h-4", ...logoProps }),
+              /* @__PURE__ */ jsx39("span", { className: "min-w-0 flex-1 truncate", children: banco })
             ]
           }
         ) }, banco))
@@ -3913,10 +3427,10 @@ function BancoCombobox({
 }
 
 // src/components/CityAutocomplete.jsx
-import { useEffect as useEffect7, useRef as useRef8, useState as useState17 } from "react";
+import { useEffect as useEffect6, useRef as useRef7, useState as useState15 } from "react";
 
 // src/catalog/ciudades.js
-var CIUDADES_PARAGUAY = [
+var MUNICIPIOS = [
   { ciudad: "Bah\xEDa Negra", departamento: "Alto Paraguay" },
   { ciudad: "Capit\xE1n Carmelo Peralta", departamento: "Alto Paraguay" },
   { ciudad: "Fuerte Olimpo", departamento: "Alto Paraguay" },
@@ -4181,6 +3695,12 @@ var CIUDADES_PARAGUAY = [
   { ciudad: "Yataity del Norte", departamento: "San Pedro" },
   { ciudad: "Yrybucu\xE1", departamento: "San Pedro" }
 ];
+var CIUDADES_PARAGUAY = MUNICIPIOS.map(({ ciudad, departamento }) => ({
+  ciudad,
+  departamento,
+  city: ciudad,
+  department: departamento
+}));
 var DEPARTAMENTOS_PARAGUAY = [
   "Alto Paraguay",
   "Alto Paran\xE1",
@@ -4215,11 +3735,17 @@ function buscarCiudad(texto, limite = 8) {
     const aInicio = norm(a.ciudad).startsWith(q) ? 0 : 1;
     const bInicio = norm(b.ciudad).startsWith(q) ? 0 : 1;
     return aInicio - bInicio || a.ciudad.localeCompare(b.ciudad, "es");
-  }).slice(0, limite).map(({ ciudad, departamento }) => ({ city: ciudad, department: departamento }));
+  }).slice(0, limite).map(({ ciudad, departamento, city, department }) => ({ ciudad, departamento, city, department }));
 }
 
 // src/components/CityAutocomplete.jsx
-import { jsx as jsx42, jsxs as jsxs31 } from "react/jsx-runtime";
+import { jsx as jsx40, jsxs as jsxs30 } from "react/jsx-runtime";
+function ciudadDe(fila) {
+  return fila?.city ?? fila?.ciudad ?? "";
+}
+function departamentoDeFila(fila) {
+  return fila?.department ?? fila?.departamento ?? "";
+}
 function CityAutocomplete({
   value = "",
   onSelect,
@@ -4232,12 +3758,12 @@ function CityAutocomplete({
   inputProps,
   mensajeError = "No se pudieron cargar las sugerencias."
 }) {
-  const [sugerencias, setSugerencias] = useState17([]);
-  const [abierto, setAbierto] = useState17(false);
-  const [error, setError] = useState17("");
-  const timer = useRef8(null);
-  const raiz = useRef8(null);
-  useEffect7(() => {
+  const [sugerencias, setSugerencias] = useState15([]);
+  const [abierto, setAbierto] = useState15(false);
+  const [error, setError] = useState15("");
+  const timer = useRef7(null);
+  const raiz = useRef7(null);
+  useEffect6(() => {
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
       setAbierto(false);
@@ -4245,7 +3771,7 @@ function CityAutocomplete({
     document.addEventListener("mousedown", cerrarFuera);
     return () => document.removeEventListener("mousedown", cerrarFuera);
   }, []);
-  useEffect7(() => () => {
+  useEffect6(() => () => {
     if (timer.current) clearTimeout(timer.current);
   }, []);
   function resolver(texto) {
@@ -4282,7 +3808,9 @@ function CityAutocomplete({
   }
   function elegir(fila) {
     if (timer.current) clearTimeout(timer.current);
-    onSelect?.(fila.city, fila.department || departamentoDe(fila.city));
+    const ciudad = ciudadDe(fila);
+    const departamento = departamentoDeFila(fila) || departamentoDe(ciudad);
+    onSelect?.(ciudad, departamento);
     setSugerencias([]);
     setAbierto(false);
   }
@@ -4290,8 +3818,8 @@ function CityAutocomplete({
     const departamento = departamentoDe(value);
     if (departamento) onSelect?.(value, departamento);
   }
-  return /* @__PURE__ */ jsxs31("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsx42(
+  return /* @__PURE__ */ jsxs30("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsx40(
       Input,
       {
         maxLength,
@@ -4310,7 +3838,7 @@ function CityAutocomplete({
         ...inputProps
       }
     ),
-    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx42("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-ink shadow-float", children: sugerencias.map((fila) => /* @__PURE__ */ jsx42("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs31(
+    abierto && sugerencias.length > 0 && /* @__PURE__ */ jsx40("ul", { role: "listbox", "aria-label": "Ciudades", className: "absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-ink shadow-float", children: sugerencias.map((fila) => /* @__PURE__ */ jsx40("li", { role: "option", "aria-selected": false, children: /* @__PURE__ */ jsxs30(
       "button",
       {
         type: "button",
@@ -4318,12 +3846,12 @@ function CityAutocomplete({
         onMouseDown: (event) => event.preventDefault(),
         onClick: () => elegir(fila),
         children: [
-          /* @__PURE__ */ jsx42("span", { className: "truncate font-medium text-fore", children: fila.city }),
-          /* @__PURE__ */ jsx42("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
+          /* @__PURE__ */ jsx40("span", { className: "truncate font-medium text-fore", children: ciudadDe(fila) }),
+          /* @__PURE__ */ jsx40("span", { className: "shrink-0 text-xs text-mute", children: departamentoDeFila(fila) })
         ]
       }
-    ) }, `${fila.city}-${fila.department}`)) }),
-    error ? /* @__PURE__ */ jsx42("p", { role: "alert", className: "mt-1 text-xs text-bad-text", children: error }) : null
+    ) }, `${ciudadDe(fila)}-${departamentoDeFila(fila)}`)) }),
+    error ? /* @__PURE__ */ jsx40("p", { role: "alert", className: "mt-1 text-xs text-bad", children: error }) : null
   ] });
 }
 
@@ -4409,21 +3937,21 @@ var etiquetaCondicion = (clave) => {
 };
 
 // src/components/SemaforoItem.jsx
-import { jsx as jsx43, jsxs as jsxs32 } from "react/jsx-runtime";
+import { jsx as jsx41, jsxs as jsxs31 } from "react/jsx-runtime";
 function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li", className, ...props }) {
   const config = estadoItem(estado);
   const Etiqueta = como === "div" ? "div" : "li";
-  return /* @__PURE__ */ jsxs32(
+  return /* @__PURE__ */ jsxs31(
     Etiqueta,
     {
       className: cn("flex items-center gap-2.5", className),
       "aria-label": etiqueta ? `${etiqueta}: ${config.etiqueta}` : config.etiqueta,
       ...props,
       children: [
-        /* @__PURE__ */ jsx43("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx43(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
-        /* @__PURE__ */ jsxs32("span", { className: "min-w-0 flex-1", children: [
-          /* @__PURE__ */ jsx43("span", { className: "block truncate text-sm", children: etiqueta }),
-          detalle && /* @__PURE__ */ jsx43("span", { className: "block truncate text-xs text-mute", children: detalle })
+        /* @__PURE__ */ jsx41("span", { className: cn("grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx41(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+        /* @__PURE__ */ jsxs31("span", { className: "min-w-0 flex-1", children: [
+          /* @__PURE__ */ jsx41("span", { className: "block truncate text-sm", children: etiqueta }),
+          detalle && /* @__PURE__ */ jsx41("span", { className: "block truncate text-xs text-mute", children: detalle })
         ] })
       ]
     }
@@ -4431,30 +3959,30 @@ function SemaforoItem({ estado = "sinVerificar", etiqueta, detalle, como = "li",
 }
 
 // src/components/FilaChecklist.jsx
-import { jsx as jsx44, jsxs as jsxs33 } from "react/jsx-runtime";
+import { jsx as jsx42, jsxs as jsxs32 } from "react/jsx-runtime";
 function FilaChecklist({ etiqueta, estado = "sinVerificar", nota, accion, className }) {
   const config = estadoItem(estado);
-  return /* @__PURE__ */ jsxs33("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
-    /* @__PURE__ */ jsx44("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx44(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs33("div", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx44("p", { className: "truncate text-sm", children: etiqueta }),
-      nota && /* @__PURE__ */ jsx44("p", { className: "mt-0.5 text-xs text-mute", children: nota })
+  return /* @__PURE__ */ jsxs32("div", { className: cn("flex items-start gap-2.5 rounded-xl border border-ink-600 p-2.5", className), children: [
+    /* @__PURE__ */ jsx42("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", TONOS.punto[config.tono]), title: config.etiqueta, "aria-hidden": "true", children: /* @__PURE__ */ jsx42(Icon, { name: config.icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs32("div", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx42("p", { className: "truncate text-sm", children: etiqueta }),
+      nota && /* @__PURE__ */ jsx42("p", { className: "mt-0.5 text-xs text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx44("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
+    /* @__PURE__ */ jsx42("span", { className: "shrink-0 text-[11px] font-semibold text-mute", title: config.etiqueta, children: config.etiqueta }),
     accion
   ] });
 }
 function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass", className }) {
   const completo = total > 0 && pasan === total;
-  return /* @__PURE__ */ jsxs33("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
-    /* @__PURE__ */ jsxs33("span", { className: completo ? "text-pass-text" : "text-mute", children: [
+  return /* @__PURE__ */ jsxs32("span", { className: cn("inline-flex flex-wrap items-center gap-2 text-xs font-semibold", className), children: [
+    /* @__PURE__ */ jsxs32("span", { className: completo ? "text-pass" : "text-mute", children: [
       pasan,
       " de ",
       total,
       " ",
       sustantivo
     ] }),
-    fallas > 0 && /* @__PURE__ */ jsxs33("span", { className: "text-bad-text", children: [
+    fallas > 0 && /* @__PURE__ */ jsxs32("span", { className: "text-bad", children: [
       fallas,
       " ",
       fallas === 1 ? "falla" : "fallas"
@@ -4463,18 +3991,18 @@ function ConteoChecklist({ pasan = 0, total = 0, fallas = 0, sustantivo = "pass"
 }
 
 // src/components/ChipEstado.jsx
-import { jsx as jsx45, jsxs as jsxs34 } from "react/jsx-runtime";
+import { jsx as jsx43, jsxs as jsxs33 } from "react/jsx-runtime";
 function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, title, className }) {
   const config = estadoChip(estado);
   const texto = etiqueta || config.etiqueta;
-  return /* @__PURE__ */ jsxs34(
+  return /* @__PURE__ */ jsxs33(
     "span",
     {
       "data-estado": estado,
       title: title ?? texto,
       className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[tonoCanonico(tono || config.tono)], className),
       children: [
-        /* @__PURE__ */ jsx45(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+        /* @__PURE__ */ jsx43(Icon, { name: icono || config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
         texto
       ]
     }
@@ -4482,19 +4010,19 @@ function ChipEstado({ estado = "pendiente", etiqueta, icono, tono, title, classN
 }
 
 // src/components/ChipsLocks.jsx
-import { jsx as jsx46, jsxs as jsxs35 } from "react/jsx-runtime";
+import { jsx as jsx44, jsxs as jsxs34 } from "react/jsx-runtime";
 function ChipsLocks({ locks = [], conEstado = false, className }) {
   if (!locks.length) return null;
-  return /* @__PURE__ */ jsx46("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
+  return /* @__PURE__ */ jsx44("ul", { className: cn("flex flex-wrap items-center gap-1.5", className), children: locks.map((lock) => {
     const config = estadoLock(lock.estado);
     const etiqueta = lock.etiqueta || LOCKS_DISPOSITIVO[lock.clave] || lock.clave;
-    return /* @__PURE__ */ jsxs35(
+    return /* @__PURE__ */ jsxs34(
       "li",
       {
         className: cn("inline-flex items-center gap-1.5 rounded-lg border px-2 py-0.5 text-[11px] font-semibold", TONOS.chip[config.tono]),
         title: lock.detalle || `${etiqueta}: ${config.etiqueta}`,
         children: [
-          /* @__PURE__ */ jsx46(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsx44(Icon, { name: config.icono, className: "h-3 w-3", "aria-hidden": "true" }),
           etiqueta,
           conEstado ? ` \xB7 ${config.etiqueta}` : ""
         ]
@@ -4505,7 +4033,7 @@ function ChipsLocks({ locks = [], conEstado = false, className }) {
 }
 
 // src/components/MedidorBateria.jsx
-import { jsx as jsx47, jsxs as jsxs36 } from "react/jsx-runtime";
+import { jsx as jsx45, jsxs as jsxs35 } from "react/jsx-runtime";
 function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante = "barra", compact = false, mostrarEtiqueta = false, className }) {
   const hay = porcentaje !== null && porcentaje !== void 0 && porcentaje !== "" && Number.isFinite(Number(porcentaje));
   const valor = hay ? Number(porcentaje) : null;
@@ -4513,22 +4041,22 @@ function MedidorBateria({ porcentaje, ciclos, etiqueta = "Bater\xEDa", variante 
   const texto = hay ? `${valor}%` : "\u2014";
   const title = hay ? `${etiqueta}: ${valor}%${ciclos ? ` \xB7 ${ciclos} ciclos` : ""}` : `${etiqueta}: sin dato`;
   if (variante === "chip") {
-    return /* @__PURE__ */ jsxs36("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: [
+    return /* @__PURE__ */ jsxs35("span", { className: cn("inline-flex shrink-0 items-center rounded border border-ink-600 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums", TONOS.texto[tono], className), title, children: [
       texto,
       mostrarEtiqueta ? ` ${etiqueta.toLowerCase()}` : ""
     ] });
   }
-  return /* @__PURE__ */ jsxs36("div", { className: cn("space-y-1", className), title, children: [
-    /* @__PURE__ */ jsxs36("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx47("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
-      /* @__PURE__ */ jsx47("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
+  return /* @__PURE__ */ jsxs35("div", { className: cn("space-y-1", className), title, children: [
+    /* @__PURE__ */ jsxs35("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx45("span", { className: cn("text-xs text-mute", compact && "text-[11px]"), children: etiqueta }),
+      /* @__PURE__ */ jsx45("span", { className: cn("font-semibold tabular-nums", TONOS.texto[tono], compact && "text-xs"), children: texto })
     ] }),
-    hay ? /* @__PURE__ */ jsx47(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx47(Badge, { color: "slate", children: "Sin dato" })
+    hay ? /* @__PURE__ */ jsx45(BarraProgreso, { valor, tono, alto: compact ? "sm" : "md", pista: "bg-ink-700", etiqueta: `${etiqueta} ${valor}%` }) : /* @__PURE__ */ jsx45(Badge, { color: "slate", children: "Sin dato" })
   ] });
 }
 
 // src/components/MedidorStock.jsx
-import { jsx as jsx48, jsxs as jsxs37 } from "react/jsx-runtime";
+import { jsx as jsx46, jsxs as jsxs36 } from "react/jsx-runtime";
 function MedidorStock({
   stock,
   umbral,
@@ -4542,7 +4070,7 @@ function MedidorStock({
   const n = Number(stock);
   const u = Number(umbral);
   if (sinDato || !Number.isFinite(n)) {
-    return /* @__PURE__ */ jsx48("span", { className: cn("text-xs text-mute", className), children: vacio });
+    return /* @__PURE__ */ jsx46("span", { className: cn("text-xs text-mute", className), children: vacio });
   }
   const tieneUmbral = Number.isFinite(u);
   const agotado = n <= 0;
@@ -4553,41 +4081,41 @@ function MedidorStock({
   if (variante === "barra") {
     const techo = tieneUmbral ? Math.max(u, n) : n;
     const porcentaje = techo > 0 ? Math.min(100, Math.round(n / techo * 100)) : 0;
-    return /* @__PURE__ */ jsxs37("span", { className: cn("block min-w-0 space-y-1", className), children: [
-      /* @__PURE__ */ jsxs37("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx48("span", { className: cn("font-semibold", tono === "bad" ? "text-bad-text" : tono === "warn" ? "text-warn-text" : "text-ok-text"), children: texto }),
-        /* @__PURE__ */ jsx48("span", { className: "tabular-nums text-mute", children: detalle })
+    return /* @__PURE__ */ jsxs36("span", { className: cn("block min-w-0 space-y-1", className), children: [
+      /* @__PURE__ */ jsxs36("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx46("span", { className: cn("font-semibold", tono === "bad" ? "text-bad" : tono === "warn" ? "text-warn" : "text-ok"), children: texto }),
+        /* @__PURE__ */ jsx46("span", { className: "tabular-nums text-mute", children: detalle })
       ] }),
-      /* @__PURE__ */ jsx48("span", { role: "progressbar", "aria-label": etiqueta ?? `Stock ${detalle}`, "aria-valuenow": porcentaje, "aria-valuemin": 0, "aria-valuemax": 100, className: "block h-1.5 overflow-hidden rounded-full bg-ink-700", children: /* @__PURE__ */ jsx48("span", { className: cn("block h-full rounded-full transition-[width]", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), style: { width: `${porcentaje}%` } }) })
+      /* @__PURE__ */ jsx46("span", { role: "progressbar", "aria-label": etiqueta ?? `Stock ${detalle}`, "aria-valuenow": porcentaje, "aria-valuemin": 0, "aria-valuemax": 100, className: "block h-1.5 overflow-hidden rounded-full bg-ink-700", children: /* @__PURE__ */ jsx46("span", { className: cn("block h-full rounded-full transition-[width]", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), style: { width: `${porcentaje}%` } }) })
     ] });
   }
-  return /* @__PURE__ */ jsxs37(
+  return /* @__PURE__ */ jsxs36(
     "span",
     {
       className: cn(
         "inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-semibold",
         variante === "chip" && "rounded-lg border px-2 py-0.5",
-        variante === "chip" && (tono === "bad" ? "border-bad/30 bg-bad/10 text-bad-text" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn-text" : "border-ok/30 bg-ok/10 text-ok-text"),
-        variante === "texto" && (tono === "bad" ? "text-bad-text" : tono === "warn" ? "text-warn-text" : "text-ok-text"),
+        variante === "chip" && (tono === "bad" ? "border-bad/30 bg-bad/10 text-bad" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn" : "border-ok/30 bg-ok/10 text-ok"),
+        variante === "texto" && (tono === "bad" ? "text-bad" : tono === "warn" ? "text-warn" : "text-ok"),
         className
       ),
       title: etiqueta ?? `${texto} \xB7 ${detalle}`,
       children: [
-        variante !== "chip" && /* @__PURE__ */ jsx48("span", { className: cn("h-1.5 w-1.5 rounded-full", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), "aria-hidden": "true" }),
-        /* @__PURE__ */ jsx48("span", { className: "tabular-nums", children: detalle }),
-        mostrarUmbral && /* @__PURE__ */ jsx48("span", { className: "font-normal text-mute", children: texto })
+        variante !== "chip" && /* @__PURE__ */ jsx46("span", { className: cn("h-1.5 w-1.5 rounded-full", tono === "bad" ? "bg-bad" : tono === "warn" ? "bg-warn" : "bg-ok"), "aria-hidden": "true" }),
+        /* @__PURE__ */ jsx46("span", { className: "tabular-nums", children: detalle }),
+        mostrarUmbral && /* @__PURE__ */ jsx46("span", { className: "font-normal text-mute", children: texto })
       ]
     }
   );
 }
 
 // src/components/ContadorLote.jsx
-import { jsx as jsx49, jsxs as jsxs38 } from "react/jsx-runtime";
+import { jsx as jsx47, jsxs as jsxs37 } from "react/jsx-runtime";
 function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFaltan = false, vacio = "Sin dato", className }) {
   const r = Number(recibidos);
   const t = Number(total);
   if (recibidos === null || recibidos === void 0 || !Number.isFinite(t) || t <= 0 || !Number.isFinite(r)) {
-    return /* @__PURE__ */ jsx49("span", { className: cn("text-xs text-mute", className), children: vacio });
+    return /* @__PURE__ */ jsx47("span", { className: cn("text-xs text-mute", className), children: vacio });
   }
   const hechas = Math.max(0, Math.min(t, Math.trunc(r)));
   const completo = hechas >= t;
@@ -4596,15 +4124,15 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
   const texto = sufijo ? `${hechas} de ${t} ${sufijo}` : `${hechas} de ${t}`;
   if (variante === "barra") {
     const porcentaje = Math.round(hechas / t * 100);
-    return /* @__PURE__ */ jsxs38("span", { className: cn("block min-w-0 space-y-1", className), children: [
-      /* @__PURE__ */ jsxs38("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx49("span", { className: cn("font-semibold", tono === "ok" ? "text-ok-text" : tono === "warn" ? "text-warn-text" : "text-mute"), children: texto }),
-        mostrarFaltan && !completo && /* @__PURE__ */ jsxs38("span", { className: "text-mute", children: [
+    return /* @__PURE__ */ jsxs37("span", { className: cn("block min-w-0 space-y-1", className), children: [
+      /* @__PURE__ */ jsxs37("span", { className: "flex items-baseline justify-between gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx47("span", { className: cn("font-semibold", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
+        mostrarFaltan && !completo && /* @__PURE__ */ jsxs37("span", { className: "text-mute", children: [
           "faltan ",
           faltan
         ] })
       ] }),
-      /* @__PURE__ */ jsx49(
+      /* @__PURE__ */ jsx47(
         "span",
         {
           role: "progressbar",
@@ -4613,24 +4141,24 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
           "aria-valuemin": 0,
           "aria-valuemax": t,
           className: "block h-1.5 overflow-hidden rounded-full bg-ink-700",
-          children: /* @__PURE__ */ jsx49("span", { className: cn("block h-full rounded-full transition-[width]", tono === "ok" ? "bg-ok" : tono === "warn" ? "bg-warn" : "bg-mute"), style: { width: `${porcentaje}%` } })
+          children: /* @__PURE__ */ jsx47("span", { className: cn("block h-full rounded-full transition-[width]", tono === "ok" ? "bg-ok" : tono === "warn" ? "bg-warn" : "bg-mute"), style: { width: `${porcentaje}%` } })
         }
       )
     ] });
   }
   if (variante === "chip") {
-    return /* @__PURE__ */ jsxs38(
+    return /* @__PURE__ */ jsxs37(
       "span",
       {
         className: cn(
           "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold",
-          tono === "ok" ? "border-ok/30 bg-ok/10 text-ok-text" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn-text" : "border-ink-500 bg-ink-700 text-mute",
+          tono === "ok" ? "border-ok/30 bg-ok/10 text-ok" : tono === "warn" ? "border-warn/30 bg-warn/10 text-warn" : "border-ink-500 bg-ink-700 text-mute",
           className
         ),
         title: texto,
         children: [
-          /* @__PURE__ */ jsx49("span", { className: "tabular-nums", children: texto }),
-          mostrarFaltan && !completo && /* @__PURE__ */ jsxs38("span", { className: "font-normal", children: [
+          /* @__PURE__ */ jsx47("span", { className: "tabular-nums", children: texto }),
+          mostrarFaltan && !completo && /* @__PURE__ */ jsxs37("span", { className: "font-normal", children: [
             "\xB7 faltan ",
             faltan
           ] })
@@ -4638,9 +4166,9 @@ function ContadorLote({ recibidos, total, variante = "texto", sufijo, mostrarFal
       }
     );
   }
-  return /* @__PURE__ */ jsxs38("span", { className: cn("inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs", className), title: texto, children: [
-    /* @__PURE__ */ jsx49("span", { className: cn("font-semibold tabular-nums", tono === "ok" ? "text-ok-text" : tono === "warn" ? "text-warn-text" : "text-mute"), children: texto }),
-    mostrarFaltan && !completo && /* @__PURE__ */ jsxs38("span", { className: "text-mute", children: [
+  return /* @__PURE__ */ jsxs37("span", { className: cn("inline-flex items-baseline gap-1.5 whitespace-nowrap text-xs", className), title: texto, children: [
+    /* @__PURE__ */ jsx47("span", { className: cn("font-semibold tabular-nums", tono === "ok" ? "text-ok" : tono === "warn" ? "text-warn" : "text-mute"), children: texto }),
+    mostrarFaltan && !completo && /* @__PURE__ */ jsxs37("span", { className: "text-mute", children: [
       "faltan ",
       faltan
     ] })
@@ -4770,18 +4298,18 @@ var COLOR_DE_TONO = { ok: "green", bad: "red", warn: "orange", info: "blue", mut
 var colorDeTono = (tono) => COLOR_DE_TONO[tono] || "slate";
 
 // src/components/ChipPrioridad.jsx
-import { jsx as jsx50 } from "react/jsx-runtime";
+import { jsx as jsx48 } from "react/jsx-runtime";
 function ChipPrioridad({ prioridad = "media", etiqueta, title, className }) {
   const tono = tonoPrioridad(prioridad);
   const texto = etiqueta || etiquetaPrioridad(prioridad);
   const CLASES3 = {
-    bad: "border-bad/30 bg-bad/10 text-bad-text",
-    warn: "border-warn/30 bg-warn/10 text-warn-text",
-    ok: "border-ok/30 bg-ok/10 text-ok-text",
-    info: "border-info/30 bg-info/10 text-info-text",
+    bad: "border-bad/30 bg-bad/10 text-bad",
+    warn: "border-warn/30 bg-warn/10 text-warn",
+    ok: "border-ok/30 bg-ok/10 text-ok",
+    info: "border-info/30 bg-info/10 text-info",
     mute: "border-ink-500 bg-ink-700 text-mute"
   };
-  return /* @__PURE__ */ jsx50(
+  return /* @__PURE__ */ jsx48(
     "span",
     {
       className: cn("inline-flex items-center whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES3[tono] || CLASES3.mute, className),
@@ -4792,60 +4320,60 @@ function ChipPrioridad({ prioridad = "media", etiqueta, title, className }) {
 }
 
 // src/components/ChipOrigen.jsx
-import { jsx as jsx51, jsxs as jsxs39 } from "react/jsx-runtime";
+import { jsx as jsx49, jsxs as jsxs38 } from "react/jsx-runtime";
 function ChipOrigen({ origen, etiqueta, title, className }) {
   const tono = tonoOrigen(origen);
   const texto = etiqueta || etiquetaOrigen(origen);
   const CLASES3 = {
-    bad: "border-bad/30 bg-bad/10 text-bad-text",
-    warn: "border-warn/30 bg-warn/10 text-warn-text",
-    ok: "border-ok/30 bg-ok/10 text-ok-text",
-    info: "border-info/30 bg-info/10 text-info-text",
+    bad: "border-bad/30 bg-bad/10 text-bad",
+    warn: "border-warn/30 bg-warn/10 text-warn",
+    ok: "border-ok/30 bg-ok/10 text-ok",
+    info: "border-info/30 bg-info/10 text-info",
     mute: "border-ink-500 bg-ink-700 text-mute"
   };
-  return /* @__PURE__ */ jsxs39(
+  return /* @__PURE__ */ jsxs38(
     "span",
     {
       className: cn("inline-flex min-w-0 items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES3[tono] || CLASES3.mute, className),
       title: title || texto,
       children: [
-        /* @__PURE__ */ jsx51(Icon, { name: iconoOrigen(origen), className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx51("span", { className: "truncate", children: texto })
+        /* @__PURE__ */ jsx49(Icon, { name: iconoOrigen(origen), className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx49("span", { className: "truncate", children: texto })
       ]
     }
   );
 }
 
 // src/components/ContadoresCompra.jsx
-import { jsx as jsx52, jsxs as jsxs40 } from "react/jsx-runtime";
+import { jsx as jsx50, jsxs as jsxs39 } from "react/jsx-runtime";
 function ContadoresCompra({ pendiente = 0, comprado = 0, faltan = 0, variante = "texto", className }) {
   const conteo = (valor) => Math.max(0, Math.trunc(Number(valor) || 0));
   const datos = [
-    { clave: "pendiente", etiqueta: "pendiente", valor: conteo(pendiente), tono: conteo(pendiente) > 0 ? "text-warn-text" : "text-mute" },
-    { clave: "comprado", etiqueta: "comprado", valor: conteo(comprado), tono: "text-ok-text" },
-    { clave: "faltan", etiqueta: "faltan", valor: conteo(faltan), tono: conteo(faltan) > 0 ? "text-bad-text" : "text-mute" }
+    { clave: "pendiente", etiqueta: "pendiente", valor: conteo(pendiente), tono: conteo(pendiente) > 0 ? "text-warn" : "text-mute" },
+    { clave: "comprado", etiqueta: "comprado", valor: conteo(comprado), tono: "text-ok" },
+    { clave: "faltan", etiqueta: "faltan", valor: conteo(faltan), tono: conteo(faltan) > 0 ? "text-bad" : "text-mute" }
   ];
   if (variante === "chips") {
-    return /* @__PURE__ */ jsx52("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), children: datos.map((dato) => /* @__PURE__ */ jsxs40("span", { className: "inline-flex items-center gap-1 rounded-lg border border-ink-600 bg-ink-800 px-2 py-0.5 text-[11px] text-mute", children: [
-      /* @__PURE__ */ jsx52("b", { className: cn("tabular-nums", dato.tono), children: dato.valor }),
+    return /* @__PURE__ */ jsx50("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), children: datos.map((dato) => /* @__PURE__ */ jsxs39("span", { className: "inline-flex items-center gap-1 rounded-lg border border-ink-600 bg-ink-800 px-2 py-0.5 text-[11px] text-mute", children: [
+      /* @__PURE__ */ jsx50("b", { className: cn("tabular-nums", dato.tono), children: dato.valor }),
       dato.etiqueta
     ] }, dato.clave)) });
   }
-  return /* @__PURE__ */ jsx52("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", className), "aria-label": "Conteo de la necesidad", children: datos.map((dato) => /* @__PURE__ */ jsxs40("span", { children: [
-    /* @__PURE__ */ jsx52("b", { className: cn("tabular-nums", dato.tono), children: dato.valor }),
+  return /* @__PURE__ */ jsx50("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", className), "aria-label": "Conteo de la necesidad", children: datos.map((dato) => /* @__PURE__ */ jsxs39("span", { children: [
+    /* @__PURE__ */ jsx50("b", { className: cn("tabular-nums", dato.tono), children: dato.valor }),
     " ",
     dato.etiqueta
   ] }, dato.clave)) });
 }
 
 // src/components/ResumenDestinos.jsx
-import { jsx as jsx53, jsxs as jsxs41 } from "react/jsx-runtime";
+import { jsx as jsx51, jsxs as jsxs40 } from "react/jsx-runtime";
 function ResumenDestinos({ destinos = [], ariaLabel = "Destinos", onElegir, className }) {
   const lista = (Array.isArray(destinos) ? destinos : []).filter((destino) => destino && Number(destino.cantidad) > 0);
   if (!lista.length) return null;
-  return /* @__PURE__ */ jsx53("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-mute", className), "aria-label": ariaLabel, children: lista.map((destino, indice) => /* @__PURE__ */ jsxs41("span", { className: "flex min-w-0 items-center gap-1.5", children: [
-    indice > 0 && /* @__PURE__ */ jsx53("span", { "aria-hidden": "true", children: "\xB7" }),
-    onElegir ? /* @__PURE__ */ jsxs41(
+  return /* @__PURE__ */ jsx51("span", { className: cn("flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-mute", className), "aria-label": ariaLabel, children: lista.map((destino, indice) => /* @__PURE__ */ jsxs40("span", { className: "flex min-w-0 items-center gap-1.5", children: [
+    indice > 0 && /* @__PURE__ */ jsx51("span", { "aria-hidden": "true", children: "\xB7" }),
+    onElegir ? /* @__PURE__ */ jsxs40(
       "button",
       {
         type: "button",
@@ -4853,13 +4381,13 @@ function ResumenDestinos({ destinos = [], ariaLabel = "Destinos", onElegir, clas
         title: destino.detalle || void 0,
         className: "min-w-0 truncate transition hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx53("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
+          /* @__PURE__ */ jsx51("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
           " ",
           destino.etiqueta
         ]
       }
-    ) : /* @__PURE__ */ jsxs41("span", { className: "min-w-0 truncate", title: destino.detalle || void 0, children: [
-      /* @__PURE__ */ jsx53("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
+    ) : /* @__PURE__ */ jsxs40("span", { className: "min-w-0 truncate", title: destino.detalle || void 0, children: [
+      /* @__PURE__ */ jsx51("b", { className: "tabular-nums text-fore", children: Number(destino.cantidad) }),
       " ",
       destino.etiqueta
     ] })
@@ -4899,8 +4427,8 @@ function fechaValida(value) {
   return Number.isNaN(fecha.getTime()) ? null : fecha;
 }
 function opcionesDe(vacio, opciones) {
-  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio, timeZone: vacio.timeZone, hora: vacio.hora };
-  return { vacio, timeZone: opciones?.timeZone, hora: opciones?.hora };
+  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio, timeZone: vacio.timeZone };
+  return { vacio, timeZone: opciones?.timeZone };
 }
 function formateador(formato, timeZone) {
   return new Intl.DateTimeFormat(ES_PY, timeZone ? { ...formato, timeZone } : formato);
@@ -4935,90 +4463,42 @@ function fechaCorta(value, vacio = "\u2014", opciones) {
   const parteHora = formateador({ hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, zona).format(fecha);
   return `${parteDia} \xB7 ${parteHora}`;
 }
-function fechaLista(value, vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal, timeZone, hora } = opcionesDe(vacio, opciones);
-  const vacioReal = vacioFinal ?? "\u2014";
-  const dia = diaDeCalendario(value);
-  const fecha = dia || fechaValida(value);
-  if (!fecha) return vacioReal;
-  const zona = dia ? "UTC" : timeZone;
-  const parteDia = formateador({ day: "2-digit", month: "short", year: "2-digit" }, zona).format(fecha).replace(/\./g, "");
-  const reloj = String(
-    hora ?? (dia ? "" : formateador({ hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, zona).format(fecha))
-  ).slice(0, 5);
-  return reloj ? `${parteDia} \xB7 ${reloj}` : parteDia;
-}
-function fechaListaCorta(value, vacio = "\u2014", opciones) {
-  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
-  const vacioReal = vacioFinal ?? "\u2014";
-  const dia = diaDeCalendario(value);
-  const fecha = dia || fechaValida(value);
-  if (!fecha) return vacioReal;
-  return formateador({ day: "2-digit", month: "short" }, dia ? "UTC" : timeZone).format(fecha).replace(/\./g, "").replace(/\s+/g, "-");
-}
-function claveDeDia(fecha, timeZone) {
-  const dia = diaDeCalendario(fecha);
-  if (dia) return dia.toISOString().slice(0, 10);
-  const instante = fechaValida(fecha);
-  if (!instante) return null;
-  if (timeZone) {
-    return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(instante);
-  }
-  const mes = String(instante.getMonth() + 1).padStart(2, "0");
-  const diaMes = String(instante.getDate()).padStart(2, "0");
-  return `${instante.getFullYear()}-${mes}-${diaMes}`;
-}
-function diasHasta(fecha, { hoy = /* @__PURE__ */ new Date(), timeZone } = {}) {
-  const objetivo = claveDeDia(fecha, timeZone);
-  const base = claveDeDia(hoy, timeZone);
-  if (!objetivo || !base) return null;
-  return Math.round((Date.parse(`${objetivo}T00:00:00Z`) - Date.parse(`${base}T00:00:00Z`)) / 864e5);
-}
-function tonoVencimiento(fecha, { hoy, diasAviso = 7 } = {}) {
-  const dias = diasHasta(fecha, { hoy });
-  if (dias === null) return "";
-  if (dias < 0) return "bad";
-  return dias <= diasAviso ? "warn" : "";
-}
 
 // src/components/Vencimiento.jsx
-import { jsx as jsx54 } from "react/jsx-runtime";
-var SOLO_DIA2 = /^\d{4}-\d{2}-\d{2}$/;
+import { jsx as jsx52 } from "react/jsx-runtime";
 function estadoVencimiento(fecha, { hoy = /* @__PURE__ */ new Date(), diasAviso = 7 } = {}) {
-  const vence = fechaValida(fecha);
-  if (!vence) return { texto: "\u2014", tono: "mute", vencido: false, dias: null, titulo: "Sin vencimiento cargado" };
-  const dias = diasHasta(fecha, { hoy });
-  const tono = tonoVencimiento(fecha, { hoy, diasAviso }) || "mute";
+  const vence = fecha ? new Date(fecha) : null;
+  if (!vence || Number.isNaN(vence.getTime())) return { texto: "\u2014", tono: "mute", vencido: false, dias: null, titulo: "Sin vencimiento cargado" };
   const titulo2 = `Vence el ${vence.toLocaleDateString("es-PY")}`;
+  const dias = Math.ceil((vence.getTime() - hoy.getTime()) / 864e5);
   if (dias < 0) return { texto: "venci\xF3", tono: "bad", vencido: true, dias, titulo: titulo2 };
-  if (dias <= diasAviso) return { texto: dias === 0 ? "hoy" : `en ${dias} d`, tono: "warn", vencido: false, dias, titulo: titulo2 };
-  const pura = typeof fecha === "string" && SOLO_DIA2.test(fecha.trim());
-  return { texto: pura ? fechaDia(fecha) : fechaCorta(vence), tono: "mute", vencido: false, dias, titulo: titulo2 };
+  if (dias <= diasAviso) return { texto: `en ${dias} d`, tono: "warn", vencido: false, dias, titulo: titulo2 };
+  return { texto: fechaCorta(vence), tono: "mute", vencido: false, dias, titulo: titulo2 };
 }
 var CLASES = {
-  bad: "text-bad-text",
-  warn: "text-warn-text",
-  ok: "text-ok-text",
+  bad: "text-bad",
+  warn: "text-warn",
+  ok: "text-ok",
   mute: "text-mute"
 };
 var CHIP = {
-  bad: "border-bad/30 bg-bad/10 text-bad-text",
-  warn: "border-warn/30 bg-warn/10 text-warn-text",
-  ok: "border-ok/30 bg-ok/10 text-ok-text",
+  bad: "border-bad/30 bg-bad/10 text-bad",
+  warn: "border-warn/30 bg-warn/10 text-warn",
+  ok: "border-ok/30 bg-ok/10 text-ok",
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 function Vencimiento({ fecha, variante = "texto", diasAviso = 7, hoy, texto, vacio = "\u2014", className }) {
-  if (!fecha) return /* @__PURE__ */ jsx54("span", { className: cn("text-xs text-mute", className), children: vacio });
+  if (!fecha) return /* @__PURE__ */ jsx52("span", { className: cn("text-xs text-mute", className), children: vacio });
   const estado = estadoVencimiento(fecha, { hoy, diasAviso });
   const contenido = texto || estado.texto;
   if (variante === "chip") {
-    return /* @__PURE__ */ jsx54("span", { className: cn("inline-flex items-center whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold tabular-nums", CHIP[estado.tono] || CHIP.mute, className), title: estado.titulo, children: contenido });
+    return /* @__PURE__ */ jsx52("span", { className: cn("inline-flex items-center whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold tabular-nums", CHIP[estado.tono] || CHIP.mute, className), title: estado.titulo, children: contenido });
   }
-  return /* @__PURE__ */ jsx54("span", { className: cn("whitespace-nowrap text-xs font-medium tabular-nums", CLASES[estado.tono] || CLASES.mute, className), title: estado.titulo, children: contenido });
+  return /* @__PURE__ */ jsx52("span", { className: cn("whitespace-nowrap text-xs font-medium tabular-nums", CLASES[estado.tono] || CLASES.mute, className), title: estado.titulo, children: contenido });
 }
 
 // src/components/TarjetaNecesidad.jsx
-import { Fragment as Fragment4, jsx as jsx55, jsxs as jsxs42 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx53, jsxs as jsxs41 } from "react/jsx-runtime";
 function TarjetaNecesidad({
   producto,
   variante,
@@ -5040,43 +4520,43 @@ function TarjetaNecesidad({
   className
 }) {
   const est = estadoNecesidad(estado);
-  const titulo2 = /* @__PURE__ */ jsxs42(Fragment4, { children: [
-    /* @__PURE__ */ jsx55("span", { className: "block truncate font-semibold", children: producto || "Sin producto" }),
-    variante ? /* @__PURE__ */ jsx55("span", { className: "block truncate text-xs text-mute", children: variante }) : null
+  const titulo2 = /* @__PURE__ */ jsxs41(Fragment3, { children: [
+    /* @__PURE__ */ jsx53("span", { className: "block truncate font-semibold", children: producto || "Sin producto" }),
+    variante ? /* @__PURE__ */ jsx53("span", { className: "block truncate text-xs text-mute", children: variante }) : null
   ] });
-  return /* @__PURE__ */ jsxs42("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
-    /* @__PURE__ */ jsxs42("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsx55("div", { className: "min-w-0", children: onAbrir ? /* @__PURE__ */ jsx55("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2 }),
-      /* @__PURE__ */ jsx55(ChipPrioridad, { prioridad, className: "shrink-0" })
+  return /* @__PURE__ */ jsxs41("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
+    /* @__PURE__ */ jsxs41("div", { className: "flex items-start justify-between gap-2", children: [
+      /* @__PURE__ */ jsx53("div", { className: "min-w-0", children: onAbrir ? /* @__PURE__ */ jsx53("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2 }),
+      /* @__PURE__ */ jsx53(ChipPrioridad, { prioridad, className: "shrink-0" })
     ] }),
-    /* @__PURE__ */ jsxs42("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
-      /* @__PURE__ */ jsx55(Badge, { color: colorDeTono(est.tono), children: est.etiqueta }),
-      origen ? /* @__PURE__ */ jsx55(ChipOrigen, { origen }) : null,
-      centro ? /* @__PURE__ */ jsxs42("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx55(Icon, { name: "building", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx55("span", { className: "truncate", children: centro })
+    /* @__PURE__ */ jsxs41("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
+      /* @__PURE__ */ jsx53(Badge, { color: colorDeTono(est.tono), children: est.etiqueta }),
+      origen ? /* @__PURE__ */ jsx53(ChipOrigen, { origen }) : null,
+      centro ? /* @__PURE__ */ jsxs41("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
+        /* @__PURE__ */ jsx53(Icon, { name: "building", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx53("span", { className: "truncate", children: centro })
       ] }) : null,
-      fechaPrometida ? /* @__PURE__ */ jsxs42("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx55(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx55(Vencimiento, { fecha: fechaPrometida, diasAviso })
+      fechaPrometida ? /* @__PURE__ */ jsxs41("span", { className: "inline-flex items-center gap-1", children: [
+        /* @__PURE__ */ jsx53(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx53(Vencimiento, { fecha: fechaPrometida, diasAviso })
       ] }) : null,
-      vinculo?.etiqueta ? vinculo.onClick ? /* @__PURE__ */ jsxs42("button", { type: "button", onClick: vinculo.onClick, className: "inline-flex min-w-0 items-center gap-1 transition hover:text-fore", children: [
-        /* @__PURE__ */ jsx55(Icon, { name: "receipt", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx55("span", { className: "truncate", children: vinculo.etiqueta })
-      ] }) : /* @__PURE__ */ jsxs42("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx55(Icon, { name: "receipt", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx55("span", { className: "truncate", children: vinculo.etiqueta })
+      vinculo?.etiqueta ? vinculo.onClick ? /* @__PURE__ */ jsxs41("button", { type: "button", onClick: vinculo.onClick, className: "inline-flex min-w-0 items-center gap-1 transition hover:text-fore", children: [
+        /* @__PURE__ */ jsx53(Icon, { name: "receipt", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx53("span", { className: "truncate", children: vinculo.etiqueta })
+      ] }) : /* @__PURE__ */ jsxs41("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
+        /* @__PURE__ */ jsx53(Icon, { name: "receipt", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx53("span", { className: "truncate", children: vinculo.etiqueta })
       ] }) : null
     ] }),
-    /* @__PURE__ */ jsx55(ContadoresCompra, { className: "mt-2", pendiente, comprado, faltan }),
-    Array.isArray(destinos) && destinos.length > 0 ? /* @__PURE__ */ jsx55("div", { className: "mt-1.5", children: /* @__PURE__ */ jsx55(ResumenDestinos, { destinos, onElegir: onElegirDestino }) }) : null,
-    observaciones ? /* @__PURE__ */ jsx55("p", { className: "mt-1.5 text-xs text-mute", children: observaciones }) : null,
-    acciones ? /* @__PURE__ */ jsx55("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
+    /* @__PURE__ */ jsx53(ContadoresCompra, { className: "mt-2", pendiente, comprado, faltan }),
+    Array.isArray(destinos) && destinos.length > 0 ? /* @__PURE__ */ jsx53("div", { className: "mt-1.5", children: /* @__PURE__ */ jsx53(ResumenDestinos, { destinos, onElegir: onElegirDestino }) }) : null,
+    observaciones ? /* @__PURE__ */ jsx53("p", { className: "mt-1.5 text-xs text-mute", children: observaciones }) : null,
+    acciones ? /* @__PURE__ */ jsx53("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
   ] });
 }
 
 // src/components/TarjetaCompra.jsx
-import { Fragment as Fragment5, jsx as jsx56, jsxs as jsxs43 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx54, jsxs as jsxs42 } from "react/jsx-runtime";
 function TarjetaCompra({
   codigo,
   proveedor,
@@ -5095,43 +4575,43 @@ function TarjetaCompra({
   className
 }) {
   const est = estadoCompra(estado);
-  const titulo2 = /* @__PURE__ */ jsxs43(Fragment5, { children: [
-    /* @__PURE__ */ jsx56("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
-    /* @__PURE__ */ jsx56("span", { className: "block truncate font-semibold", children: proveedor || "Sin proveedor" })
+  const titulo2 = /* @__PURE__ */ jsxs42(Fragment4, { children: [
+    /* @__PURE__ */ jsx54("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
+    /* @__PURE__ */ jsx54("span", { className: "block truncate font-semibold", children: proveedor || "Sin proveedor" })
   ] });
-  return /* @__PURE__ */ jsxs43("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
-    /* @__PURE__ */ jsxs43("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs43("div", { className: "min-w-0", children: [
-        onAbrir ? /* @__PURE__ */ jsx56("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
-        referencia ? /* @__PURE__ */ jsxs43("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [
+  return /* @__PURE__ */ jsxs42("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
+    /* @__PURE__ */ jsxs42("div", { className: "flex items-start justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs42("div", { className: "min-w-0", children: [
+        onAbrir ? /* @__PURE__ */ jsx54("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
+        referencia ? /* @__PURE__ */ jsxs42("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [
           "Ref. ",
           referencia
         ] }) : null
       ] }),
-      /* @__PURE__ */ jsx56(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
+      /* @__PURE__ */ jsx54(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
     ] }),
-    /* @__PURE__ */ jsxs43("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
-      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx56(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null,
-      costo !== null && costo !== void 0 && costo !== "" ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx56(Icon, { name: "money", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx56(Money, { value: costo, currency: moneda, simbolo })
+    /* @__PURE__ */ jsxs42("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
+      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx54(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null,
+      costo !== null && costo !== void 0 && costo !== "" ? /* @__PURE__ */ jsxs42("span", { className: "inline-flex items-center gap-1", children: [
+        /* @__PURE__ */ jsx54(Icon, { name: "money", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx54(Money, { value: costo, currency: moneda, simbolo })
       ] }) : null,
-      origen ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx56(Icon, { name: "building", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx56("span", { className: "truncate", children: origen })
+      origen ? /* @__PURE__ */ jsxs42("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
+        /* @__PURE__ */ jsx54(Icon, { name: "building", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx54("span", { className: "truncate", children: origen })
       ] }) : null,
-      destino ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx56(Icon, { name: "arrowRight", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx56("span", { className: "truncate", children: destino })
+      destino ? /* @__PURE__ */ jsxs42("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
+        /* @__PURE__ */ jsx54(Icon, { name: "arrowRight", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx54("span", { className: "truncate", children: destino })
       ] }) : null
     ] }),
-    notas ? /* @__PURE__ */ jsx56("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
-    acciones ? /* @__PURE__ */ jsx56("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
+    notas ? /* @__PURE__ */ jsx54("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
+    acciones ? /* @__PURE__ */ jsx54("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
   ] });
 }
 
 // src/components/TarjetaLote.jsx
-import { Fragment as Fragment6, jsx as jsx57, jsxs as jsxs44 } from "react/jsx-runtime";
+import { Fragment as Fragment5, jsx as jsx55, jsxs as jsxs43 } from "react/jsx-runtime";
 function TarjetaLote({
   codigo,
   estado,
@@ -5151,40 +4631,40 @@ function TarjetaLote({
 }) {
   const est = estadoEnvio(estado);
   const ruta = [origen, destino].filter(Boolean).join(" \u2192 ");
-  const titulo2 = /* @__PURE__ */ jsxs44(Fragment6, { children: [
-    /* @__PURE__ */ jsx57("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
-    /* @__PURE__ */ jsx57("span", { className: "block truncate font-semibold", children: ruta || "Sin origen ni destino" })
+  const titulo2 = /* @__PURE__ */ jsxs43(Fragment5, { children: [
+    /* @__PURE__ */ jsx55("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
+    /* @__PURE__ */ jsx55("span", { className: "block truncate font-semibold", children: ruta || "Sin origen ni destino" })
   ] });
-  return /* @__PURE__ */ jsxs44("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
-    /* @__PURE__ */ jsxs44("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs44("div", { className: "min-w-0", children: [
-        onAbrir ? /* @__PURE__ */ jsx57("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
-        empresa || guia ? /* @__PURE__ */ jsx57("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [empresa, guia ? `Gu\xEDa ${guia}` : null].filter(Boolean).join(" \xB7 ") }) : null
+  return /* @__PURE__ */ jsxs43("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
+    /* @__PURE__ */ jsxs43("div", { className: "flex items-start justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs43("div", { className: "min-w-0", children: [
+        onAbrir ? /* @__PURE__ */ jsx55("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
+        empresa || guia ? /* @__PURE__ */ jsx55("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [empresa, guia ? `Gu\xEDa ${guia}` : null].filter(Boolean).join(" \xB7 ") }) : null
       ] }),
-      /* @__PURE__ */ jsx57(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
+      /* @__PURE__ */ jsx55(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
     ] }),
-    /* @__PURE__ */ jsxs44("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
-      metodo ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx57(Icon, { name: iconoMetodoEnvio(metodo), className: "h-3.5 w-3.5 shrink-0" }),
+    /* @__PURE__ */ jsxs43("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
+      metodo ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex items-center gap-1", children: [
+        /* @__PURE__ */ jsx55(Icon, { name: iconoMetodoEnvio(metodo), className: "h-3.5 w-3.5 shrink-0" }),
         etiquetaMetodoEnvio(metodo)
       ] }) : null,
-      responsable ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx57(Icon, { name: "user", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx57("span", { className: "truncate", children: responsable })
+      responsable ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
+        /* @__PURE__ */ jsx55(Icon, { name: "user", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx55("span", { className: "truncate", children: responsable })
       ] }) : null,
-      eta ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx57(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx57(Vencimiento, { fecha: eta })
+      eta ? /* @__PURE__ */ jsxs43("span", { className: "inline-flex items-center gap-1", children: [
+        /* @__PURE__ */ jsx55(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx55(Vencimiento, { fecha: eta })
       ] }) : null,
-      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx57(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null
+      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx55(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null
     ] }),
-    notas ? /* @__PURE__ */ jsx57("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
-    acciones ? /* @__PURE__ */ jsx57("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
+    notas ? /* @__PURE__ */ jsx55("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
+    acciones ? /* @__PURE__ */ jsx55("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
   ] });
 }
 
 // src/components/TarjetaRecepcion.jsx
-import { Fragment as Fragment7, jsx as jsx58, jsxs as jsxs45 } from "react/jsx-runtime";
+import { Fragment as Fragment6, jsx as jsx56, jsxs as jsxs44 } from "react/jsx-runtime";
 function TarjetaRecepcion({
   codigo,
   estado,
@@ -5205,43 +4685,43 @@ function TarjetaRecepcion({
   const est = estadoEnvio(estado);
   const ruta = [origen, destino].filter(Boolean).join(" \u2192 ");
   const depositoTexto = deposito ?? depositoSugerido;
-  const titulo2 = /* @__PURE__ */ jsxs45(Fragment7, { children: [
-    /* @__PURE__ */ jsx58("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
-    /* @__PURE__ */ jsx58("span", { className: "block truncate font-semibold", children: ruta || "Sin origen ni destino" })
+  const titulo2 = /* @__PURE__ */ jsxs44(Fragment6, { children: [
+    /* @__PURE__ */ jsx56("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
+    /* @__PURE__ */ jsx56("span", { className: "block truncate font-semibold", children: ruta || "Sin origen ni destino" })
   ] });
-  return /* @__PURE__ */ jsxs45("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
-    /* @__PURE__ */ jsxs45("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs45("div", { className: "min-w-0", children: [
-        onAbrir ? /* @__PURE__ */ jsx58("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
-        llegada ? /* @__PURE__ */ jsxs45("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [
+  return /* @__PURE__ */ jsxs44("article", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3 text-sm", className), "data-estado": estado, children: [
+    /* @__PURE__ */ jsxs44("div", { className: "flex items-start justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs44("div", { className: "min-w-0", children: [
+        onAbrir ? /* @__PURE__ */ jsx56("button", { type: "button", onClick: () => onAbrir(), className: "block max-w-full text-left", children: titulo2 }) : titulo2,
+        llegada ? /* @__PURE__ */ jsxs44("span", { className: "mt-0.5 block truncate text-xs text-mute", children: [
           "Lleg\xF3 ",
           llegada
         ] }) : null
       ] }),
-      /* @__PURE__ */ jsx58(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
+      /* @__PURE__ */ jsx56(Badge, { color: colorDeTono(est.tono), className: "shrink-0", children: est.etiqueta })
     ] }),
-    /* @__PURE__ */ jsxs45("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
-      metodo ? /* @__PURE__ */ jsxs45("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx58(Icon, { name: iconoMetodoEnvio(metodo), className: "h-3.5 w-3.5 shrink-0" }),
+    /* @__PURE__ */ jsxs44("div", { className: "mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute", children: [
+      metodo ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex items-center gap-1", children: [
+        /* @__PURE__ */ jsx56(Icon, { name: iconoMetodoEnvio(metodo), className: "h-3.5 w-3.5 shrink-0" }),
         etiquetaMetodoEnvio(metodo)
       ] }) : null,
-      eta ? /* @__PURE__ */ jsxs45("span", { className: "inline-flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx58(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx58(Vencimiento, { fecha: eta })
+      eta ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex items-center gap-1", children: [
+        /* @__PURE__ */ jsx56(Icon, { name: "calendar", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx56(Vencimiento, { fecha: eta })
       ] }) : null,
-      depositoTexto ? /* @__PURE__ */ jsxs45("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
-        /* @__PURE__ */ jsx58(Icon, { name: "box", className: "h-3.5 w-3.5 shrink-0" }),
-        /* @__PURE__ */ jsx58("span", { className: "truncate", children: depositoTexto })
+      depositoTexto ? /* @__PURE__ */ jsxs44("span", { className: "inline-flex min-w-0 items-center gap-1", children: [
+        /* @__PURE__ */ jsx56(Icon, { name: "box", className: "h-3.5 w-3.5 shrink-0" }),
+        /* @__PURE__ */ jsx56("span", { className: "truncate", children: depositoTexto })
       ] }) : null,
-      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx58(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null
+      Number.isFinite(Number(unidades)) ? /* @__PURE__ */ jsx56(ContadorLote, { recibidos: conImei, total: unidades, variante: "chip", sufijo: "con IMEI", mostrarFaltan: true }) : null
     ] }),
-    notas ? /* @__PURE__ */ jsx58("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
-    acciones ? /* @__PURE__ */ jsx58("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
+    notas ? /* @__PURE__ */ jsx56("p", { className: "mt-1.5 text-xs text-mute", children: notas }) : null,
+    acciones ? /* @__PURE__ */ jsx56("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: acciones }) : null
   ] });
 }
 
 // src/components/CodigoQr.jsx
-import { useEffect as useEffect8, useState as useState18 } from "react";
+import { useEffect as useEffect7, useState as useState16 } from "react";
 
 // src/utils/qr.js
 var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
@@ -5257,10 +4737,10 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 }
 
 // src/components/CodigoQr.jsx
-import { jsx as jsx59 } from "react/jsx-runtime";
+import { jsx as jsx57 } from "react/jsx-runtime";
 function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
-  const [imagen, setImagen] = useState18("");
-  useEffect8(() => {
+  const [imagen, setImagen] = useState16("");
+  useEffect7(() => {
     let activo = true;
     qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
       if (activo) setImagen(data);
@@ -5270,11 +4750,11 @@ function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3dig
     };
   }, [valor, ancho, nivel, margen]);
   if (!imagen) return null;
-  return /* @__PURE__ */ jsx59("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
+  return /* @__PURE__ */ jsx57("img", { src: imagen, alt, title: alt, className: cn("rounded-xl bg-white p-2", className), ...props });
 }
 
 // src/components/EtiquetaLote.jsx
-import { jsx as jsx60, jsxs as jsxs46 } from "react/jsx-runtime";
+import { jsx as jsx58, jsxs as jsxs45 } from "react/jsx-runtime";
 function EtiquetaLote({
   codigo,
   numero,
@@ -5290,26 +4770,26 @@ function EtiquetaLote({
   nota,
   className
 }) {
-  return /* @__PURE__ */ jsxs46("div", { className: cn("w-full max-w-[320px] rounded-xl border-2 border-[#10161a] bg-white p-3 text-[#10161a]", className), children: [
-    /* @__PURE__ */ jsxs46("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsx60("b", { className: "font-mono text-sm", children: codigo || "ENV-\u2026" }),
-      qr ? /* @__PURE__ */ jsx60("img", { src: qr, alt: "QR del lote", className: "h-16 w-16" }) : null,
-      !qr && qrValor ? /* @__PURE__ */ jsx60(CodigoQr, { valor: qrValor, ancho: 96, alt: "QR del lote", className: "h-16 w-16 rounded-md bg-white p-0" }) : null
+  return /* @__PURE__ */ jsxs45("div", { className: cn("w-full max-w-[320px] rounded-xl border-2 border-[#10161a] bg-white p-3 text-[#10161a]", className), children: [
+    /* @__PURE__ */ jsxs45("div", { className: "flex items-start justify-between gap-2", children: [
+      /* @__PURE__ */ jsx58("b", { className: "font-mono text-sm", children: codigo || "ENV-\u2026" }),
+      qr ? /* @__PURE__ */ jsx58("img", { src: qr, alt: "QR del lote", className: "h-16 w-16" }) : null,
+      !qr && qrValor ? /* @__PURE__ */ jsx58(CodigoQr, { valor: qrValor, ancho: 96, alt: "QR del lote", className: "h-16 w-16 rounded-md bg-white p-0" }) : null
     ] }),
-    total ? /* @__PURE__ */ jsxs46("p", { className: "mt-1 text-center text-xs font-bold uppercase tracking-wider", children: [
+    total ? /* @__PURE__ */ jsxs45("p", { className: "mt-1 text-center text-xs font-bold uppercase tracking-wider", children: [
       "Producto ",
       numero,
       " de ",
       total
     ] }) : null,
-    /* @__PURE__ */ jsx60("p", { className: "mt-1 text-center text-base font-bold leading-tight", children: producto || "Producto" }),
-    variante ? /* @__PURE__ */ jsx60("p", { className: "text-center text-[11px]", children: variante }) : null,
-    /* @__PURE__ */ jsx60("p", { className: "mt-1 text-center font-mono text-sm", children: serial || (pendienteImei ? "IMEI pendiente" : "\u2014") }),
-    pedido || destino ? /* @__PURE__ */ jsxs46("div", { className: "mt-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide", children: [
-      /* @__PURE__ */ jsx60("span", { className: "min-w-0 truncate", children: pedido || "" }),
-      /* @__PURE__ */ jsx60("span", { className: "min-w-0 truncate text-right", children: destino || "" })
+    /* @__PURE__ */ jsx58("p", { className: "mt-1 text-center text-base font-bold leading-tight", children: producto || "Producto" }),
+    variante ? /* @__PURE__ */ jsx58("p", { className: "text-center text-[11px]", children: variante }) : null,
+    /* @__PURE__ */ jsx58("p", { className: "mt-1 text-center font-mono text-sm", children: serial || (pendienteImei ? "IMEI pendiente" : "\u2014") }),
+    pedido || destino ? /* @__PURE__ */ jsxs45("div", { className: "mt-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide", children: [
+      /* @__PURE__ */ jsx58("span", { className: "min-w-0 truncate", children: pedido || "" }),
+      /* @__PURE__ */ jsx58("span", { className: "min-w-0 truncate text-right", children: destino || "" })
     ] }) : null,
-    nota ? /* @__PURE__ */ jsx60("p", { className: "mt-1 text-[10px]", children: nota }) : null
+    nota ? /* @__PURE__ */ jsx58("p", { className: "mt-1 text-[10px]", children: nota }) : null
   ] });
 }
 
@@ -5336,21 +4816,21 @@ var etiquetaPluralRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]
 var tonoRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]?.tono || "mute";
 
 // src/components/ResumenIncidencias.jsx
-import { jsx as jsx61, jsxs as jsxs47 } from "react/jsx-runtime";
+import { jsx as jsx59, jsxs as jsxs46 } from "react/jsx-runtime";
 var CLASES2 = {
-  bad: "border-bad/30 bg-bad/10 text-bad-text",
-  warn: "border-warn/30 bg-warn/10 text-warn-text",
+  bad: "border-bad/30 bg-bad/10 text-bad",
+  warn: "border-warn/30 bg-warn/10 text-warn",
   mute: "border-ink-500 bg-ink-700 text-mute",
-  ok: "border-ok/30 bg-ok/10 text-ok-text"
+  ok: "border-ok/30 bg-ok/10 text-ok"
 };
 function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencias", className }) {
   const lista = (Array.isArray(incidencias) ? incidencias : []).map((incidencia) => ({ ...incidencia, cantidad: Math.trunc(Number(incidencia?.cantidad) || 0) })).filter((incidencia) => incidencia.cantidad > 0);
   if (!lista.length) {
-    return /* @__PURE__ */ jsx61("span", { className: cn("inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES2.ok, className), children: sinIncidencias });
+    return /* @__PURE__ */ jsx59("span", { className: cn("inline-flex items-center rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES2.ok, className), children: sinIncidencias });
   }
-  return /* @__PURE__ */ jsx61("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), role: "list", "aria-label": "Incidencias de la recepci\xF3n", children: lista.map((incidencia, indice) => {
+  return /* @__PURE__ */ jsx59("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), role: "list", "aria-label": "Incidencias de la recepci\xF3n", children: lista.map((incidencia, indice) => {
     const tono = incidencia.tono || tonoRevision(incidencia.tipo);
-    return /* @__PURE__ */ jsxs47(
+    return /* @__PURE__ */ jsxs46(
       "span",
       {
         role: "listitem",
@@ -5358,7 +4838,7 @@ function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencia
         className: cn("inline-flex items-center gap-1 whitespace-nowrap rounded-lg border px-2 py-0.5 text-xs font-semibold", CLASES2[tono] || CLASES2.mute),
         children: [
           incidencia.etiqueta || etiquetaPluralRevision(incidencia.tipo),
-          /* @__PURE__ */ jsx61("span", { className: "tabular-nums", children: incidencia.cantidad })
+          /* @__PURE__ */ jsx59("span", { className: "tabular-nums", children: incidencia.cantidad })
         ]
       },
       `${incidencia.tipo}-${indice}`
@@ -5367,12 +4847,12 @@ function ResumenIncidencias({ incidencias = [], sinIncidencias = "Sin incidencia
 }
 
 // src/components/ResumenRecepcion.jsx
-import { jsx as jsx62, jsxs as jsxs48 } from "react/jsx-runtime";
+import { jsx as jsx60, jsxs as jsxs47 } from "react/jsx-runtime";
 var ORDEN = ["recibido", "faltante", "sobrante", "danado", "incorrecto"];
 var CHIP2 = {
-  ok: "border-ok/30 bg-ok/10 text-ok-text",
-  warn: "border-warn/30 bg-warn/10 text-warn-text",
-  bad: "border-bad/30 bg-bad/10 text-bad-text",
+  ok: "border-ok/30 bg-ok/10 text-ok",
+  warn: "border-warn/30 bg-warn/10 text-warn",
+  bad: "border-bad/30 bg-bad/10 text-bad",
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 function ResumenRecepcion({ resumen, items, className }) {
@@ -5383,14 +4863,14 @@ function ResumenRecepcion({ resumen, items, className }) {
   }, {}) : {};
   const filas = ORDEN.filter((clave) => (conteos[clave] || 0) > 0);
   if (!filas.length) return null;
-  return /* @__PURE__ */ jsx62("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), "aria-label": "Resumen de la recepci\xF3n", children: filas.map((clave) => /* @__PURE__ */ jsxs48("span", { className: cn("inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-semibold", CHIP2[tonoRevision(clave)] || CHIP2.mute), children: [
-    /* @__PURE__ */ jsx62("b", { className: "tabular-nums", children: conteos[clave] }),
+  return /* @__PURE__ */ jsx60("span", { className: cn("flex min-w-0 flex-wrap items-center gap-1.5", className), "aria-label": "Resumen de la recepci\xF3n", children: filas.map((clave) => /* @__PURE__ */ jsxs47("span", { className: cn("inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-semibold", CHIP2[tonoRevision(clave)] || CHIP2.mute), children: [
+    /* @__PURE__ */ jsx60("b", { className: "tabular-nums", children: conteos[clave] }),
     etiquetaPluralRevision(clave).toLowerCase()
   ] }, clave)) });
 }
 
 // src/components/FilaRevision.jsx
-import { jsx as jsx63, jsxs as jsxs49 } from "react/jsx-runtime";
+import { jsx as jsx61, jsxs as jsxs48 } from "react/jsx-runtime";
 var TONOS2 = {
   ok: "border-ok/30 bg-ok/5",
   warn: "border-warn/25 bg-warn/5",
@@ -5398,40 +4878,40 @@ var TONOS2 = {
   mute: "border-ink-600"
 };
 var CHIP3 = {
-  ok: "border-ok/30 bg-ok/10 text-ok-text",
-  warn: "border-warn/30 bg-warn/10 text-warn-text",
-  bad: "border-bad/30 bg-bad/10 text-bad-text",
+  ok: "border-ok/30 bg-ok/10 text-ok",
+  warn: "border-warn/30 bg-warn/10 text-warn",
+  bad: "border-bad/30 bg-bad/10 text-bad",
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 function FilaRevision({ etiqueta, serial, estado = "ok", detalle, acciones, compact = false, className }) {
   const tono = tonoRevision(estado);
-  return /* @__PURE__ */ jsxs49("div", { className: cn("flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-3", compact ? "py-1.5" : "py-2.5", TONOS2[tono] || TONOS2.mute, className), children: [
-    /* @__PURE__ */ jsxs49("span", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx63("span", { className: "block truncate text-sm font-semibold", children: etiqueta }),
-      /* @__PURE__ */ jsxs49("span", { className: "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-mute", children: [
-        serial ? /* @__PURE__ */ jsx63(SerialTexto, { serial, className: "text-[11px]" }) : /* @__PURE__ */ jsx63("span", { children: "IMEI pendiente" }),
-        detalle ? /* @__PURE__ */ jsx63("span", { className: CELDA_DATO, title: String(detalle), children: detalle }) : null
+  return /* @__PURE__ */ jsxs48("div", { className: cn("flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-xl border px-3", compact ? "py-1.5" : "py-2.5", TONOS2[tono] || TONOS2.mute, className), children: [
+    /* @__PURE__ */ jsxs48("span", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx61("span", { className: "block truncate text-sm font-semibold", children: etiqueta }),
+      /* @__PURE__ */ jsxs48("span", { className: "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-mute", children: [
+        serial ? /* @__PURE__ */ jsx61(SerialTexto, { serial, className: "text-[11px]" }) : /* @__PURE__ */ jsx61("span", { children: "IMEI pendiente" }),
+        detalle ? /* @__PURE__ */ jsx61("span", { className: CELDA_DATO, title: String(detalle), children: detalle }) : null
       ] })
     ] }),
-    /* @__PURE__ */ jsx63("span", { className: cn("shrink-0 rounded-lg border px-2 py-0.5 text-xs font-semibold", CHIP3[tono] || CHIP3.mute), "data-estado": estado, children: etiquetaRevision(estado) }),
-    acciones ? /* @__PURE__ */ jsx63("span", { className: "flex shrink-0 flex-wrap items-center gap-2", children: acciones }) : null
+    /* @__PURE__ */ jsx61("span", { className: cn("shrink-0 rounded-lg border px-2 py-0.5 text-xs font-semibold", CHIP3[tono] || CHIP3.mute), "data-estado": estado, children: etiquetaRevision(estado) }),
+    acciones ? /* @__PURE__ */ jsx61("span", { className: "flex shrink-0 flex-wrap items-center gap-2", children: acciones }) : null
   ] });
 }
 
 // src/components/SelectorIncidencia.jsx
-import { jsx as jsx64 } from "react/jsx-runtime";
+import { jsx as jsx62 } from "react/jsx-runtime";
 var CHIP4 = {
-  ok: "border-ok/40 bg-ok/10 text-ok-text",
-  warn: "border-warn/40 bg-warn/10 text-warn-text",
-  bad: "border-bad/40 bg-bad/10 text-bad-text",
+  ok: "border-ok/40 bg-ok/10 text-ok",
+  warn: "border-warn/40 bg-warn/10 text-warn",
+  bad: "border-bad/40 bg-bad/10 text-bad",
   mute: "border-ink-500 bg-ink-700 text-mute"
 };
 var CHIP_APAGADO = "border-ink-500 text-mute hover:border-fono hover:text-fore";
 function SelectorIncidencia({ valor, onChange, tipos = INCIDENCIAS, permitirQuitar = true, disabled = false, ariaLabel = "Incidencia de la unidad", className }) {
-  return /* @__PURE__ */ jsx64("span", { role: "group", "aria-label": ariaLabel, className: cn("flex flex-wrap items-center gap-1.5", className), children: tipos.map((tipo) => {
+  return /* @__PURE__ */ jsx62("span", { role: "group", "aria-label": ariaLabel, className: cn("flex flex-wrap items-center gap-1.5", className), children: tipos.map((tipo) => {
     const activo = valor === tipo;
     const tono = tonoRevision(tipo);
-    return /* @__PURE__ */ jsx64(
+    return /* @__PURE__ */ jsx62(
       "button",
       {
         type: "button",
@@ -5451,8 +4931,8 @@ function SelectorIncidencia({ valor, onChange, tipos = INCIDENCIAS, permitirQuit
 }
 
 // src/components/DestinoRecepcion.jsx
-import { useId as useId8, useState as useState19 } from "react";
-import { jsx as jsx65, jsxs as jsxs50 } from "react/jsx-runtime";
+import { useId as useId7, useState as useState17 } from "react";
+import { jsx as jsx63, jsxs as jsxs49 } from "react/jsx-runtime";
 function DestinoRecepcion({
   destino,
   depositos = [],
@@ -5463,26 +4943,26 @@ function DestinoRecepcion({
   textoRecibir = "Recibir todo",
   className
 }) {
-  const [elegido, setElegido] = useState19(destino?.id ?? depositos[0]?.id ?? "");
-  const id = useId8();
+  const [elegido, setElegido] = useState17(destino?.id ?? depositos[0]?.id ?? "");
+  const id = useId7();
   const actual = depositos.find((deposito) => deposito.id === elegido) || destino || null;
   const alternativas = depositos.filter((deposito) => deposito.id !== actual?.id);
-  return /* @__PURE__ */ jsxs50("section", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3", className), "aria-label": "Cierre de la recepci\xF3n", children: [
-    /* @__PURE__ */ jsxs50("div", { className: "flex flex-wrap items-end gap-3", children: [
-      /* @__PURE__ */ jsxs50("label", { htmlFor: id, className: "min-w-0 flex-1 space-y-1 text-xs text-mute", children: [
-        /* @__PURE__ */ jsx65("span", { className: "block font-semibold", children: etiqueta }),
-        alternativas.length > 0 ? /* @__PURE__ */ jsxs50(Select, { id, value: elegido, onChange: (event) => setElegido(event.target.value), className: "w-full", children: [
-          actual ? /* @__PURE__ */ jsx65("option", { value: actual.id, children: actual.nombre }) : null,
-          alternativas.map((deposito) => /* @__PURE__ */ jsx65("option", { value: deposito.id, children: deposito.nombre }, deposito.id))
-        ] }) : /* @__PURE__ */ jsxs50("span", { className: "flex h-9 items-center gap-2 rounded-lg border border-ink-600 px-3 text-sm font-semibold text-fore", children: [
-          /* @__PURE__ */ jsx65(Icon, { name: "box", className: "h-4 w-4 text-mute" }),
+  return /* @__PURE__ */ jsxs49("section", { className: cn("rounded-xl border border-ink-600 bg-ink-800 p-3", className), "aria-label": "Cierre de la recepci\xF3n", children: [
+    /* @__PURE__ */ jsxs49("div", { className: "flex flex-wrap items-end gap-3", children: [
+      /* @__PURE__ */ jsxs49("label", { htmlFor: id, className: "min-w-0 flex-1 space-y-1 text-xs text-mute", children: [
+        /* @__PURE__ */ jsx63("span", { className: "block font-semibold", children: etiqueta }),
+        alternativas.length > 0 ? /* @__PURE__ */ jsxs49(Select, { id, value: elegido, onChange: (event) => setElegido(event.target.value), className: "w-full", children: [
+          actual ? /* @__PURE__ */ jsx63("option", { value: actual.id, children: actual.nombre }) : null,
+          alternativas.map((deposito) => /* @__PURE__ */ jsx63("option", { value: deposito.id, children: deposito.nombre }, deposito.id))
+        ] }) : /* @__PURE__ */ jsxs49("span", { className: "flex h-9 items-center gap-2 rounded-lg border border-ink-600 px-3 text-sm font-semibold text-fore", children: [
+          /* @__PURE__ */ jsx63(Icon, { name: "box", className: "h-4 w-4 text-mute" }),
           actual?.nombre || "Sin dep\xF3sito"
         ] })
       ] }),
-      /* @__PURE__ */ jsx65(Button, { type: "button", disabled: recibiendo || !actual?.id || !onRecibir, onClick: () => onRecibir?.(actual.id), children: recibiendo ? "Recibiendo\u2026" : textoRecibir })
+      /* @__PURE__ */ jsx63(Button, { type: "button", disabled: recibiendo || !actual?.id || !onRecibir, onClick: () => onRecibir?.(actual.id), children: recibiendo ? "Recibiendo\u2026" : textoRecibir })
     ] }),
-    Number(pendientes) > 0 && /* @__PURE__ */ jsxs50("p", { className: "mt-2 flex items-center gap-1.5 text-xs text-warn-text", children: [
-      /* @__PURE__ */ jsx65(Icon, { name: "alert", className: "h-3.5 w-3.5 shrink-0", "aria-hidden": "true" }),
+    Number(pendientes) > 0 && /* @__PURE__ */ jsxs49("p", { className: "mt-2 flex items-center gap-1.5 text-xs text-warn", children: [
+      /* @__PURE__ */ jsx63(Icon, { name: "alert", className: "h-3.5 w-3.5 shrink-0", "aria-hidden": "true" }),
       Number(pendientes),
       " unidad(es) sin IMEI: se reciben igual y el IMEI se completa despu\xE9s."
     ] })
@@ -5490,18 +4970,18 @@ function DestinoRecepcion({
 }
 
 // src/components/GradoBadge.jsx
-import { jsx as jsx66, jsxs as jsxs51 } from "react/jsx-runtime";
+import { jsx as jsx64, jsxs as jsxs50 } from "react/jsx-runtime";
 function GradoBadge({ grado, conDescripcion = false, className }) {
   const config = gradoCondicion(grado);
-  if (!config) return /* @__PURE__ */ jsx66(Badge, { className, children: grado || "Sin grado" });
-  return /* @__PURE__ */ jsxs51("span", { className: cn("inline-flex items-center gap-2", className), children: [
-    /* @__PURE__ */ jsx66(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
-    conDescripcion && /* @__PURE__ */ jsx66("span", { className: "text-xs text-mute", children: config.descripcion })
+  if (!config) return /* @__PURE__ */ jsx64(Badge, { className, children: grado || "Sin grado" });
+  return /* @__PURE__ */ jsxs50("span", { className: cn("inline-flex items-center gap-2", className), children: [
+    /* @__PURE__ */ jsx64(Badge, { color: colorBadge(config.tono), className: "whitespace-nowrap", title: config.descripcion, children: config.etiqueta }),
+    conDescripcion && /* @__PURE__ */ jsx64("span", { className: "text-xs text-mute", children: config.descripcion })
   ] });
 }
 
 // src/components/TileEquipo.jsx
-import { Fragment as Fragment8, jsx as jsx67, jsxs as jsxs52 } from "react/jsx-runtime";
+import { Fragment as Fragment7, jsx as jsx65, jsxs as jsxs51 } from "react/jsx-runtime";
 function TileEquipo({
   modelo,
   imei,
@@ -5517,31 +4997,31 @@ function TileEquipo({
   className
 }) {
   const raiz = cn("w-full space-y-2.5 rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left", onOpen && "transition hover:border-fono active:scale-[.995]", className);
-  const contenido = /* @__PURE__ */ jsxs52(Fragment8, { children: [
-    /* @__PURE__ */ jsxs52("div", { className: "flex items-start gap-3", children: [
-      foto ? /* @__PURE__ */ jsx67("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx67("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx67(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
-      /* @__PURE__ */ jsxs52("div", { className: "min-w-0 flex-1", children: [
-        /* @__PURE__ */ jsx67("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
-        imei && /* @__PURE__ */ jsx67("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
-        detalle && /* @__PURE__ */ jsx67("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
+  const contenido = /* @__PURE__ */ jsxs51(Fragment7, { children: [
+    /* @__PURE__ */ jsxs51("div", { className: "flex items-start gap-3", children: [
+      foto ? /* @__PURE__ */ jsx65("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx65("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx65(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
+      /* @__PURE__ */ jsxs51("div", { className: "min-w-0 flex-1", children: [
+        /* @__PURE__ */ jsx65("p", { className: "truncate text-sm font-semibold", children: modelo || "Equipo" }),
+        imei && /* @__PURE__ */ jsx65("p", { className: "mt-0.5 truncate font-mono text-[11px] text-mute", "data-serial": true, children: imei }),
+        detalle && /* @__PURE__ */ jsx65("p", { className: "mt-0.5 truncate text-[11px] text-mute", children: detalle })
       ] }),
-      estado && /* @__PURE__ */ jsx67(ChipEstado, { estado })
+      estado && /* @__PURE__ */ jsx65(ChipEstado, { estado })
     ] }),
-    /* @__PURE__ */ jsxs52("div", { className: "flex flex-wrap items-center gap-2", children: [
-      grado && /* @__PURE__ */ jsx67(GradoBadge, { grado }),
-      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx67(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
-      locks?.length ? /* @__PURE__ */ jsx67(ChipsLocks, { locks }) : null
+    /* @__PURE__ */ jsxs51("div", { className: "flex flex-wrap items-center gap-2", children: [
+      grado && /* @__PURE__ */ jsx65(GradoBadge, { grado }),
+      bateria !== void 0 && bateria !== null && /* @__PURE__ */ jsx65(MedidorBateria, { porcentaje: bateria, ciclos, variante: "chip" }),
+      locks?.length ? /* @__PURE__ */ jsx65(ChipsLocks, { locks }) : null
     ] }),
-    acciones && /* @__PURE__ */ jsx67("div", { className: "flex flex-wrap gap-2", children: acciones })
+    acciones && /* @__PURE__ */ jsx65("div", { className: "flex flex-wrap gap-2", children: acciones })
   ] });
   if (onOpen) {
-    return /* @__PURE__ */ jsx67("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
+    return /* @__PURE__ */ jsx65("button", { type: "button", onClick: onOpen, className: raiz, children: contenido });
   }
-  return /* @__PURE__ */ jsx67("article", { className: raiz, children: contenido });
+  return /* @__PURE__ */ jsx65("article", { className: raiz, children: contenido });
 }
 
 // src/components/PasosEquipo.jsx
-import { jsx as jsx68, jsxs as jsxs53 } from "react/jsx-runtime";
+import { jsx as jsx66, jsxs as jsxs52 } from "react/jsx-runtime";
 function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
   if (!pasos.length) return null;
   const etiquetaDe = (paso) => typeof paso === "string" ? paso : paso.etiqueta ?? paso.label ?? "";
@@ -5553,7 +5033,7 @@ function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
     return Number.isInteger(numero) ? Math.min(Math.max(0, numero), pasos.length - 1) : 0;
   })();
   const texto = etiqueta || etiquetaDe(pasos[indiceActual]) || String(actual);
-  return /* @__PURE__ */ jsxs53(
+  return /* @__PURE__ */ jsxs52(
     "span",
     {
       className: cn("flex items-center gap-1", className),
@@ -5561,7 +5041,7 @@ function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
       "data-paso": indiceActual + 1,
       "aria-label": `Paso ${indiceActual + 1} de ${pasos.length}: ${texto}`,
       children: [
-        pasos.map((paso, orden) => /* @__PURE__ */ jsx68(
+        pasos.map((paso, orden) => /* @__PURE__ */ jsx66(
           "span",
           {
             "aria-hidden": "true",
@@ -5572,55 +5052,55 @@ function PasosEquipo({ pasos = [], actual = 0, etiqueta, testId, className }) {
           },
           claveDe(paso, orden)
         )),
-        /* @__PURE__ */ jsx68("span", { className: "text-[10px] font-semibold text-mute", children: texto })
+        /* @__PURE__ */ jsx66("span", { className: "text-[10px] font-semibold text-mute", children: texto })
       ]
     }
   );
 }
 
 // src/components/ColumnaLote.jsx
-import { jsx as jsx69, jsxs as jsxs54 } from "react/jsx-runtime";
+import { jsx as jsx67, jsxs as jsxs53 } from "react/jsx-runtime";
 function ColumnaLote({ etiqueta, tono = "slate", contador, acciones, children, vacio = "Sin equipos", testId, className }) {
   const lista = Array.isArray(children) ? children.filter(Boolean) : children;
   const vacia = !lista || Array.isArray(lista) && lista.length === 0;
-  return /* @__PURE__ */ jsxs54("section", { "data-testid": testId, className: cn("rounded-2xl border border-ink-600 bg-ink-800/40 p-3", className), children: [
-    /* @__PURE__ */ jsxs54("header", { className: "flex items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs54("span", { className: "flex min-w-0 items-center gap-2", children: [
-        /* @__PURE__ */ jsx69(Badge, { color: tono, children: etiqueta }),
-        contador !== void 0 && contador !== null && /* @__PURE__ */ jsx69("span", { className: "text-xs tabular-nums text-mute", children: contador })
+  return /* @__PURE__ */ jsxs53("section", { "data-testid": testId, className: cn("rounded-2xl border border-ink-600 bg-ink-800/40 p-3", className), children: [
+    /* @__PURE__ */ jsxs53("header", { className: "flex items-center justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs53("span", { className: "flex min-w-0 items-center gap-2", children: [
+        /* @__PURE__ */ jsx67(Badge, { color: tono, children: etiqueta }),
+        contador !== void 0 && contador !== null && /* @__PURE__ */ jsx67("span", { className: "text-xs tabular-nums text-mute", children: contador })
       ] }),
-      acciones ? /* @__PURE__ */ jsx69("span", { className: "flex flex-wrap items-center gap-2", children: acciones }) : null
+      acciones ? /* @__PURE__ */ jsx67("span", { className: "flex flex-wrap items-center gap-2", children: acciones }) : null
     ] }),
-    /* @__PURE__ */ jsx69("div", { className: "mt-3 space-y-2", children: vacia ? /* @__PURE__ */ jsx69(EmptyState, { compact: true, title: vacio }) : lista })
+    /* @__PURE__ */ jsx67("div", { className: "mt-3 space-y-2", children: vacia ? /* @__PURE__ */ jsx67(EmptyState, { compact: true, title: vacio }) : lista })
   ] });
 }
 
 // src/components/TileRol.jsx
-import { Fragment as Fragment9, jsx as jsx70, jsxs as jsxs55 } from "react/jsx-runtime";
+import { Fragment as Fragment8, jsx as jsx68, jsxs as jsxs54 } from "react/jsx-runtime";
 function TileRol({ titulo: titulo2, descripcion, cantidad, total, dominios = [], onAbrir, className }) {
-  const contenido = /* @__PURE__ */ jsxs55(Fragment9, { children: [
-    /* @__PURE__ */ jsxs55("div", { className: "flex items-start justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs55("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx70("b", { className: "block truncate text-sm", children: titulo2 }),
-        descripcion ? /* @__PURE__ */ jsx70("p", { className: "mt-0.5 text-[11px] leading-4 text-mute", children: descripcion }) : null
+  const contenido = /* @__PURE__ */ jsxs54(Fragment8, { children: [
+    /* @__PURE__ */ jsxs54("div", { className: "flex items-start justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs54("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsx68("b", { className: "block truncate text-sm", children: titulo2 }),
+        descripcion ? /* @__PURE__ */ jsx68("p", { className: "mt-0.5 text-[11px] leading-4 text-mute", children: descripcion }) : null
       ] }),
-      Number.isFinite(Number(total)) && Number(total) > 0 ? /* @__PURE__ */ jsxs55("span", { className: "v2-numero shrink-0 text-2xl font-bold tabular-nums", children: [
+      Number.isFinite(Number(total)) && Number(total) > 0 ? /* @__PURE__ */ jsxs54("span", { className: "v2-numero shrink-0 text-2xl font-bold tabular-nums", children: [
         Number(cantidad) || 0,
-        /* @__PURE__ */ jsxs55("span", { className: "text-sm font-semibold text-mute", children: [
+        /* @__PURE__ */ jsxs54("span", { className: "text-sm font-semibold text-mute", children: [
           "/",
           Number(total)
         ] })
       ] }) : null
     ] }),
-    dominios.length > 0 && /* @__PURE__ */ jsx70("div", { className: "mt-2 flex flex-wrap gap-1", children: dominios.map((dominio, indice) => /* @__PURE__ */ jsx70(Badge, { color: dominio.activo ? "green" : "slate", children: dominio.etiqueta }, dominio.id ?? `${dominio.etiqueta}-${indice}`)) })
+    dominios.length > 0 && /* @__PURE__ */ jsx68("div", { className: "mt-2 flex flex-wrap gap-1", children: dominios.map((dominio, indice) => /* @__PURE__ */ jsx68(Badge, { color: dominio.activo ? "green" : "slate", children: dominio.etiqueta }, dominio.id ?? `${dominio.etiqueta}-${indice}`)) })
   ] });
   const clases = "block w-full rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left";
-  if (!onAbrir) return /* @__PURE__ */ jsx70("div", { className: cn(clases, className), children: contenido });
-  return /* @__PURE__ */ jsx70("button", { type: "button", onClick: onAbrir, className: cn(clases, "transition hover:border-fono/60", className), children: contenido });
+  if (!onAbrir) return /* @__PURE__ */ jsx68("div", { className: cn(clases, className), children: contenido });
+  return /* @__PURE__ */ jsx68("button", { type: "button", onClick: onAbrir, className: cn(clases, "transition hover:border-fono/60", className), children: contenido });
 }
 
 // src/components/Stepper.jsx
-import { jsx as jsx71, jsxs as jsxs56 } from "react/jsx-runtime";
+import { jsx as jsx69, jsxs as jsxs55 } from "react/jsx-runtime";
 function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", ariaLabel = "Flujo", className }) {
   if (!pasos.length) return null;
   const etiquetaDe = (paso) => typeof paso === "string" ? paso : paso.etiqueta ?? paso.label ?? "";
@@ -5628,59 +5108,59 @@ function Stepper({ pasos = [], actual = 0, hechos = [], variante = "linea", aria
   const esHecho = (paso, indice) => hechos.includes(claveDe(paso, indice)) || typeof actual === "number" && indice < actual;
   const esActual = (paso, indice) => typeof paso === "string" || paso.id === void 0 ? indice === actual : paso.id === actual;
   if (variante === "tarjetas") {
-    return /* @__PURE__ */ jsx71("ol", { className: cn("grid grid-cols-2 gap-2 sm:grid-flow-col sm:auto-cols-fr", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
+    return /* @__PURE__ */ jsx69("ol", { className: cn("grid grid-cols-2 gap-2 sm:grid-flow-col sm:auto-cols-fr", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
       const hecho = esHecho(paso, indice);
       const activo = !hecho && esActual(paso, indice);
-      return /* @__PURE__ */ jsxs56("li", { className: cn("flex items-center gap-2.5 rounded-xl border p-2.5", activo ? "border-info/40 bg-info/5" : "border-ink-600"), children: [
-        /* @__PURE__ */ jsx71(
+      return /* @__PURE__ */ jsxs55("li", { className: cn("flex items-center gap-2.5 rounded-xl border p-2.5", activo ? "border-info/40 bg-info/5" : "border-ink-600"), children: [
+        /* @__PURE__ */ jsx69(
           "span",
           {
             className: cn(
               "grid h-6 w-6 shrink-0 place-items-center rounded-full text-[11px] font-bold",
-              activo ? "oc-paso-activo bg-info/15 text-info-text" : hecho ? "bg-ok/15 text-ok-text" : "bg-ink-700 text-mute"
+              activo ? "oc-paso-activo bg-info/15 text-info" : hecho ? "bg-ok/15 text-ok" : "bg-ink-700 text-mute"
             ),
             "aria-hidden": "true",
-            children: hecho ? /* @__PURE__ */ jsx71(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+            children: hecho ? /* @__PURE__ */ jsx69(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
           }
         ),
-        /* @__PURE__ */ jsxs56("span", { className: "min-w-0", children: [
-          /* @__PURE__ */ jsx71("span", { className: "block truncate text-xs font-semibold", children: etiquetaDe(paso) }),
-          typeof paso === "object" && paso.detalle ? /* @__PURE__ */ jsx71("span", { className: cn("block truncate text-[11px]", activo ? "text-info-text" : "text-mute"), children: paso.detalle }) : null
+        /* @__PURE__ */ jsxs55("span", { className: "min-w-0", children: [
+          /* @__PURE__ */ jsx69("span", { className: "block truncate text-xs font-semibold", children: etiquetaDe(paso) }),
+          typeof paso === "object" && paso.detalle ? /* @__PURE__ */ jsx69("span", { className: cn("block truncate text-[11px]", activo ? "text-info" : "text-mute"), children: paso.detalle }) : null
         ] })
       ] }, claveDe(paso, indice));
     }) });
   }
-  return /* @__PURE__ */ jsx71("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
+  return /* @__PURE__ */ jsx69("ol", { className: cn("flex flex-wrap items-center gap-x-2 gap-y-2", className), "aria-label": ariaLabel, children: pasos.map((paso, indice) => {
     const hecho = esHecho(paso, indice);
     const enCurso = esActual(paso, indice);
-    return /* @__PURE__ */ jsxs56("li", { className: "flex items-center gap-2", children: [
-      /* @__PURE__ */ jsx71(
+    return /* @__PURE__ */ jsxs55("li", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsx69(
         "span",
         {
           className: cn(
             "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[11px] font-bold",
-            hecho && "border-pass/40 bg-pass/15 text-pass-text",
-            !hecho && enCurso && "oc-paso-activo border-fono bg-fono/10 text-fono-text",
+            hecho && "border-pass/40 bg-pass/15 text-pass",
+            !hecho && enCurso && "oc-paso-activo border-fono bg-fono/10 text-fono-light",
             !hecho && !enCurso && "border-ink-600 bg-ink-800 text-mute"
           ),
           "aria-hidden": "true",
-          children: hecho ? /* @__PURE__ */ jsx71(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
+          children: hecho ? /* @__PURE__ */ jsx69(Icon, { name: "check", className: "h-3.5 w-3.5" }) : indice + 1
         }
       ),
-      /* @__PURE__ */ jsxs56("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass-text" : "text-mute"), children: [
+      /* @__PURE__ */ jsxs55("span", { className: cn("text-xs font-semibold", enCurso ? "text-fore" : hecho ? "text-pass" : "text-mute"), children: [
         etiquetaDe(paso),
-        typeof paso === "object" && paso.detalle && /* @__PURE__ */ jsxs56("span", { className: "ml-1 font-normal text-mute", children: [
+        typeof paso === "object" && paso.detalle && /* @__PURE__ */ jsxs55("span", { className: "ml-1 font-normal text-mute", children: [
           "\xB7 ",
           paso.detalle
         ] })
       ] }),
-      indice < pasos.length - 1 && /* @__PURE__ */ jsx71("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
+      indice < pasos.length - 1 && /* @__PURE__ */ jsx69("span", { className: "mx-1 h-px w-6 bg-ink-600", "aria-hidden": "true" })
     ] }, claveDe(paso, indice));
   }) });
 }
 
 // src/components/FichaCertificado.jsx
-import { jsx as jsx72, jsxs as jsxs57 } from "react/jsx-runtime";
+import { jsx as jsx70, jsxs as jsxs56 } from "react/jsx-runtime";
 function FichaCertificado({
   empresa,
   modelo,
@@ -5705,25 +5185,25 @@ function FichaCertificado({
 }) {
   const hayChecklist = Number(total) > 0;
   const completo = hayChecklist && Number(aprobados) === Number(total);
-  return /* @__PURE__ */ jsxs57("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
-    /* @__PURE__ */ jsxs57("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
-      /* @__PURE__ */ jsxs57("div", { className: "min-w-0", children: [
-        /* @__PURE__ */ jsx72("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
-        /* @__PURE__ */ jsx72("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
+  return /* @__PURE__ */ jsxs56("article", { className: cn("overflow-hidden rounded-2xl border border-ink-600 bg-ink-800", className), children: [
+    /* @__PURE__ */ jsxs56("header", { className: "flex flex-wrap items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
+      /* @__PURE__ */ jsxs56("div", { className: "min-w-0", children: [
+        /* @__PURE__ */ jsx70("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: empresa || "Informe de dispositivo" }),
+        /* @__PURE__ */ jsx70("h2", { className: "truncate text-lg font-bold", children: modelo || "Equipo" })
       ] }),
-      /* @__PURE__ */ jsx72(ChipEstado, { estado })
+      /* @__PURE__ */ jsx70(ChipEstado, { estado })
     ] }),
-    /* @__PURE__ */ jsxs57("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
-      /* @__PURE__ */ jsxs57("div", { className: "min-w-0 space-y-3", children: [
-        /* @__PURE__ */ jsxs57("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
-          /* @__PURE__ */ jsx72(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
-          /* @__PURE__ */ jsx72(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx72(GradoBadge, { grado }) : "Sin grado asignado" }),
-          /* @__PURE__ */ jsx72(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx72(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
-          /* @__PURE__ */ jsx72(
+    /* @__PURE__ */ jsxs56("div", { className: "grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto]", children: [
+      /* @__PURE__ */ jsxs56("div", { className: "min-w-0 space-y-3", children: [
+        /* @__PURE__ */ jsxs56("dl", { className: "grid gap-x-4 gap-y-2 sm:grid-cols-2", children: [
+          /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "IMEI / serial", valor: imei || "\u2014", valorClassName: "font-mono text-xs" }),
+          /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "Grado", valor: grado ? /* @__PURE__ */ jsx70(GradoBadge, { grado }) : "Sin grado asignado" }),
+          /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "Bater\xEDa", valor: /* @__PURE__ */ jsx70(MedidorBateria, { porcentaje: bateria, ciclos, variante: "barra", compact: true }), className: "items-end" }),
+          /* @__PURE__ */ jsx70(
             FilaDato,
             {
               etiqueta: "Checklist",
-              valor: hayChecklist ? /* @__PURE__ */ jsxs57("span", { className: completo ? "text-pass-text" : "text-mute", children: [
+              valor: hayChecklist ? /* @__PURE__ */ jsxs56("span", { className: completo ? "text-pass" : "text-mute", children: [
                 aprobados,
                 " de ",
                 total,
@@ -5731,31 +5211,31 @@ function FichaCertificado({
               ] }) : "Sin verificaci\xF3n f\xEDsica"
             }
           ),
-          puntaje !== null && puntaje !== void 0 && puntaje !== "" && /* @__PURE__ */ jsx72(FilaDato, { etiqueta: "Puntaje", valor: /* @__PURE__ */ jsx72("span", { className: "tabular-nums", children: Number.isFinite(Number(puntaje)) ? `${Number(puntaje)}%` : puntaje }) }),
-          condicion ? /* @__PURE__ */ jsx72(FilaDato, { etiqueta: "Condici\xF3n", valor: condicion }) : null
+          puntaje !== null && puntaje !== void 0 && puntaje !== "" && /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "Puntaje", valor: /* @__PURE__ */ jsx70("span", { className: "tabular-nums", children: Number.isFinite(Number(puntaje)) ? `${Number(puntaje)}%` : puntaje }) }),
+          condicion ? /* @__PURE__ */ jsx70(FilaDato, { etiqueta: "Condici\xF3n", valor: condicion }) : null
         ] }),
-        locks.length ? /* @__PURE__ */ jsx72(ChipsLocks, { locks, conEstado: true }) : null,
-        repuestosNoOem ? /* @__PURE__ */ jsxs57("div", { className: "rounded-xl border border-warn/25 bg-warn/5 p-3 text-sm", children: [
-          /* @__PURE__ */ jsx72("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: "Repuestos no OEM" }),
-          /* @__PURE__ */ jsx72("p", { className: "mt-0.5 break-words", children: repuestosNoOem }),
-          repuestosNoOemNota ? /* @__PURE__ */ jsx72("p", { className: "mt-0.5 text-xs text-mute", children: repuestosNoOemNota }) : null
+        locks.length ? /* @__PURE__ */ jsx70(ChipsLocks, { locks, conEstado: true }) : null,
+        repuestosNoOem ? /* @__PURE__ */ jsxs56("div", { className: "rounded-xl border border-warn/25 bg-warn/5 p-3 text-sm", children: [
+          /* @__PURE__ */ jsx70("p", { className: "text-[11px] font-bold uppercase tracking-wider text-mute", children: "Repuestos no OEM" }),
+          /* @__PURE__ */ jsx70("p", { className: "mt-0.5 break-words", children: repuestosNoOem }),
+          repuestosNoOemNota ? /* @__PURE__ */ jsx70("p", { className: "mt-0.5 text-xs text-mute", children: repuestosNoOemNota }) : null
         ] }) : null,
-        /* @__PURE__ */ jsxs57("p", { className: "text-xs text-mute", children: [
+        /* @__PURE__ */ jsxs56("p", { className: "text-xs text-mute", children: [
           verificadoPor ? `Verificado por ${verificadoPor}` : "Verificaci\xF3n pendiente",
           verificadoAt ? ` \xB7 ${verificadoAt}` : ""
         ] })
       ] }),
-      enlace ? /* @__PURE__ */ jsxs57("div", { className: "flex flex-col items-center gap-2", children: [
-        /* @__PURE__ */ jsx72(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
-        /* @__PURE__ */ jsx72("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
+      enlace ? /* @__PURE__ */ jsxs56("div", { className: "flex flex-col items-center gap-2", children: [
+        /* @__PURE__ */ jsx70(CodigoQr, { valor: enlace, ancho: 180, alt: "QR del informe del dispositivo" }),
+        /* @__PURE__ */ jsx70("p", { className: "max-w-[12rem] break-all text-center text-[11px] text-mute", children: etiquetaQr })
       ] }) : null
     ] }),
-    acciones ? /* @__PURE__ */ jsx72("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
+    acciones ? /* @__PURE__ */ jsx70("footer", { className: "flex flex-wrap gap-2 border-t border-ink-600 p-4", children: acciones }) : null
   ] });
 }
 
 // src/components/VistaPreviaPapel.jsx
-import { jsx as jsx73 } from "react/jsx-runtime";
+import { jsx as jsx71 } from "react/jsx-runtime";
 var ANCHOS_PAPEL = {
   "thermal-80": "max-w-[302px]",
   "thermal-58": "max-w-[219px]",
@@ -5765,7 +5245,7 @@ var ANCHOS_PAPEL = {
 };
 function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 = "Vista previa del documento", alto = "h-[60vh]", className, ...props }) {
   const ancho = ANCHOS_PAPEL[formato];
-  return /* @__PURE__ */ jsx73(
+  return /* @__PURE__ */ jsx71(
     "iframe",
     {
       title: titulo2,
@@ -5777,7 +5257,7 @@ function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 =
 }
 
 // src/components/Calendario.jsx
-import { useMemo as useMemo6, useState as useState20 } from "react";
+import { useMemo as useMemo6, useState as useState18 } from "react";
 
 // src/utils/calendario.js
 var ES_PY2 = "es-PY";
@@ -5884,7 +5364,7 @@ function claveUTC(fecha) {
 }
 
 // src/components/Calendario.jsx
-import { Fragment as Fragment10, jsx as jsx74, jsxs as jsxs58 } from "react/jsx-runtime";
+import { Fragment as Fragment9, jsx as jsx72, jsxs as jsxs57 } from "react/jsx-runtime";
 var TONO_ITEM = { info: TONOS.chip.info, ok: TONOS.chip.ok, warn: TONOS.chip.warn, bad: TONOS.chip.bad };
 function ItemCalendario({ item, contexto, onElegir }) {
   const tono = TONO_ITEM[item.tono] || TONOS.chip.mute;
@@ -5894,28 +5374,28 @@ function ItemCalendario({ item, contexto, onElegir }) {
     contexto.vista === "lista" ? "px-2.5 py-1.5 text-xs" : "px-1.5 py-0.5 text-[11px]",
     tono
   );
-  const contenido = /* @__PURE__ */ jsxs58(Fragment10, { children: [
-    item.hora && /* @__PURE__ */ jsx74("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
-    /* @__PURE__ */ jsxs58("span", { className: "min-w-0 flex-1", children: [
-      /* @__PURE__ */ jsx74("span", { className: "block truncate font-medium", children: item.titulo }),
-      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx74("span", { className: "block truncate opacity-80", children: item.detalle })
+  const contenido = /* @__PURE__ */ jsxs57(Fragment9, { children: [
+    item.hora && /* @__PURE__ */ jsx72("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
+    /* @__PURE__ */ jsxs57("span", { className: "min-w-0 flex-1", children: [
+      /* @__PURE__ */ jsx72("span", { className: "block truncate font-medium", children: item.titulo }),
+      contexto.vista === "lista" && item.detalle && /* @__PURE__ */ jsx72("span", { className: "block truncate opacity-80", children: item.detalle })
     ] })
   ] });
   const etiqueta = [titulo2, item.detalle].filter(Boolean).join(" \u2014 ");
-  return item.href ? /* @__PURE__ */ jsx74("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx74("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
+  return item.href ? /* @__PURE__ */ jsx72("a", { href: item.href, title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido }) : /* @__PURE__ */ jsx72("button", { type: "button", title: etiqueta, className: clases, onClick: () => onElegir?.(item), children: contenido });
 }
 function ListaDias({ dias, porDia, hoy, onElegir, renderItem, soloConItems }) {
   const visibles = soloConItems ? dias.filter((dia) => (porDia.get(dia)?.length ?? 0) > 0 || dia === hoy) : dias;
-  if (!visibles.length) return /* @__PURE__ */ jsx74(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
-  return /* @__PURE__ */ jsx74("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
+  if (!visibles.length) return /* @__PURE__ */ jsx72(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" });
+  return /* @__PURE__ */ jsx72("div", { className: "divide-y divide-ink-600/60", children: visibles.map((dia) => {
     const delDia = porDia.get(dia) || [];
-    return /* @__PURE__ */ jsxs58("section", { className: "py-2", children: [
-      /* @__PURE__ */ jsxs58("header", { className: "flex items-center justify-between gap-2 px-1", children: [
-        /* @__PURE__ */ jsx74("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
-        dia === hoy && /* @__PURE__ */ jsx74("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-text", children: "Hoy" })
+    return /* @__PURE__ */ jsxs57("section", { className: "py-2", children: [
+      /* @__PURE__ */ jsxs57("header", { className: "flex items-center justify-between gap-2 px-1", children: [
+        /* @__PURE__ */ jsx72("span", { className: "text-xs font-semibold text-fore", children: etiquetaDia(dia) }),
+        dia === hoy && /* @__PURE__ */ jsx72("span", { className: "rounded-full bg-fono/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-fono-light", children: "Hoy" })
       ] }),
-      /* @__PURE__ */ jsx74("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx74("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx74("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx74(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
+      /* @__PURE__ */ jsx72("div", { className: "mt-1 space-y-1", children: delDia.length === 0 ? /* @__PURE__ */ jsx72("p", { className: "px-1 text-xs text-mute", children: "Sin movimientos" }) : delDia.map(
+        (item, indice) => renderItem ? /* @__PURE__ */ jsx72("div", { children: renderItem(item, { vista: "lista", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx72(ItemCalendario, { item, contexto: { vista: "lista", dia }, onElegir }, item.id ?? indice)
       ) })
     ] }, dia);
   }) });
@@ -5942,9 +5422,9 @@ function Calendario({
   className
 }) {
   const claveHoy = useMemo6(() => hoyClave(hoy), [hoy]);
-  const [vistaInterna, setVistaInterna] = useState20(vistaPorDefecto);
-  const [anclaInterna, setAnclaInterna] = useState20(() => anclaPorDefecto || ancla || claveHoy);
-  const [seleccionInterna, setSeleccionInterna] = useState20(null);
+  const [vistaInterna, setVistaInterna] = useState18(vistaPorDefecto);
+  const [anclaInterna, setAnclaInterna] = useState18(() => anclaPorDefecto || ancla || claveHoy);
+  const [seleccionInterna, setSeleccionInterna] = useState18(null);
   const vistaActual = vistas.includes(vista) ? vista : vistas.includes(vistaInterna) ? vistaInterna : vistas[0] || "mes";
   const anclaActual = String(ancla || anclaInterna || claveHoy).slice(0, 10);
   const seleccion = diaSeleccionado !== void 0 ? diaSeleccionado : seleccionInterna;
@@ -5979,10 +5459,10 @@ function Calendario({
     if (diaSeleccionado === void 0) setSeleccionInterna(dia);
     onSeleccionarDia?.(dia);
   }
-  return /* @__PURE__ */ jsxs58("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
-    /* @__PURE__ */ jsxs58("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-      /* @__PURE__ */ jsxs58("div", { className: "flex items-center gap-1.5", children: [
-        /* @__PURE__ */ jsx74(
+  return /* @__PURE__ */ jsxs57("section", { className: cn("space-y-3", className), "aria-label": ariaLabel, children: [
+    /* @__PURE__ */ jsxs57("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+      /* @__PURE__ */ jsxs57("div", { className: "flex items-center gap-1.5", children: [
+        /* @__PURE__ */ jsx72(
           "button",
           {
             type: "button",
@@ -5990,11 +5470,11 @@ function Calendario({
             "aria-label": vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
             title: vistaActual === "semana" ? "Semana anterior" : "Mes anterior",
             className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx74(Icon, { name: "back", className: "h-4 w-4" })
+            children: /* @__PURE__ */ jsx72(Icon, { name: "back", className: "h-4 w-4" })
           }
         ),
-        /* @__PURE__ */ jsx74(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
-        /* @__PURE__ */ jsx74(
+        /* @__PURE__ */ jsx72(Button, { type: "button", variant: "outline", onClick: irHoy, title: "Ir al d\xEDa de hoy", children: "Hoy" }),
+        /* @__PURE__ */ jsx72(
           "button",
           {
             type: "button",
@@ -6002,12 +5482,12 @@ function Calendario({
             "aria-label": vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
             title: vistaActual === "semana" ? "Semana siguiente" : "Mes siguiente",
             className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-            children: /* @__PURE__ */ jsx74(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
+            children: /* @__PURE__ */ jsx72(Icon, { name: "back", className: "h-4 w-4 rotate-180" })
           }
         )
       ] }),
-      /* @__PURE__ */ jsx74("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
-      vistas.length > 1 && /* @__PURE__ */ jsx74(
+      /* @__PURE__ */ jsx72("p", { className: "order-last w-full text-sm font-semibold text-fore sm:order-none sm:w-auto", "aria-live": "polite", children: periodo }),
+      vistas.length > 1 && /* @__PURE__ */ jsx72(
         SegmentedField,
         {
           value: vistaActual,
@@ -6020,15 +5500,15 @@ function Calendario({
         }
       )
     ] }),
-    cargando ? /* @__PURE__ */ jsx74("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx74(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs58(Fragment10, { children: [
-      /* @__PURE__ */ jsxs58("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
-        /* @__PURE__ */ jsx74("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx74("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
-        /* @__PURE__ */ jsx74("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
+    cargando ? /* @__PURE__ */ jsx72("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx72(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs57(Fragment9, { children: [
+      /* @__PURE__ */ jsxs57("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
+        /* @__PURE__ */ jsx72("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx72("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
+        /* @__PURE__ */ jsx72("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
           const delDia = porDia.get(dia) || [];
           const ocultos = delDia.length - maxPorDia;
           const esHoy = dia === claveHoy;
           const esSeleccionado = dia === seleccion;
-          return /* @__PURE__ */ jsxs58(
+          return /* @__PURE__ */ jsxs57(
             "div",
             {
               "data-fuera": mismoMes(dia, anclaActual) ? void 0 : "true",
@@ -6040,7 +5520,7 @@ function Calendario({
                 esSeleccionado && "bg-fono/5"
               ),
               children: [
-                /* @__PURE__ */ jsxs58(
+                /* @__PURE__ */ jsxs57(
                   "button",
                   {
                     type: "button",
@@ -6050,18 +5530,18 @@ function Calendario({
                     title: etiquetaDia(dia),
                     className: cn(
                       "flex items-center justify-between rounded-md px-1 py-0.5 text-xs transition",
-                      esHoy ? "bg-fono/15 font-bold text-fono-text" : "text-mute hover:bg-ink-700 hover:text-fore"
+                      esHoy ? "bg-fono/15 font-bold text-fono-light" : "text-mute hover:bg-ink-700 hover:text-fore"
                     ),
                     children: [
-                      /* @__PURE__ */ jsx74("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
-                      delDia.length > 0 && /* @__PURE__ */ jsx74("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
+                      /* @__PURE__ */ jsx72("span", { className: "tabular-nums", children: Number(dia.slice(8, 10)) }),
+                      delDia.length > 0 && /* @__PURE__ */ jsx72("span", { className: "rounded-full bg-ink-600 px-1 text-[10px] font-semibold tabular-nums text-mute", title: `${delDia.length} movimientos`, children: delDia.length })
                     ]
                   }
                 ),
-                /* @__PURE__ */ jsx74("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
-                  (item, indice) => renderItem ? /* @__PURE__ */ jsx74("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx74(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
+                /* @__PURE__ */ jsx72("div", { className: "space-y-0.5", children: delDia.slice(0, maxPorDia).map(
+                  (item, indice) => renderItem ? /* @__PURE__ */ jsx72("div", { children: renderItem(item, { vista: "grilla", dia }) }, item.id ?? indice) : /* @__PURE__ */ jsx72(ItemCalendario, { item, contexto: { vista: "grilla", dia }, onElegir: onElegirItem }, item.id ?? indice)
                 ) }),
-                ocultos > 0 && /* @__PURE__ */ jsxs58(
+                ocultos > 0 && /* @__PURE__ */ jsxs57(
                   "button",
                   {
                     type: "button",
@@ -6081,7 +5561,7 @@ function Calendario({
           );
         }) })
       ] }),
-      /* @__PURE__ */ jsx74("div", { className: "md:hidden", children: /* @__PURE__ */ jsx74(
+      /* @__PURE__ */ jsx72("div", { className: "md:hidden", children: /* @__PURE__ */ jsx72(
         ListaDias,
         {
           dias: rango.dias,
@@ -6093,28 +5573,28 @@ function Calendario({
         }
       ) })
     ] }),
-    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx74(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
-    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs58("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
-      /* @__PURE__ */ jsxs58("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
-        /* @__PURE__ */ jsx74("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
-        /* @__PURE__ */ jsxs58("div", { className: "flex items-center gap-2", children: [
-          /* @__PURE__ */ jsxs58("span", { className: "text-xs tabular-nums text-mute", children: [
+    !cargando && totalEnRango === 0 && /* @__PURE__ */ jsx72(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos en el per\xEDodo" }),
+    mostrarDetalle && seleccion && /* @__PURE__ */ jsxs57("section", { className: "rounded-xl border border-ink-600 bg-ink-800 p-3", "aria-label": `Detalle de ${etiquetaDia(seleccion)}`, children: [
+      /* @__PURE__ */ jsxs57("div", { className: "flex flex-wrap items-center justify-between gap-2", children: [
+        /* @__PURE__ */ jsx72("p", { className: "text-sm font-semibold text-fore", children: etiquetaDia(seleccion) }),
+        /* @__PURE__ */ jsxs57("div", { className: "flex items-center gap-2", children: [
+          /* @__PURE__ */ jsxs57("span", { className: "text-xs tabular-nums text-mute", children: [
             delSeleccionado.length,
             " ",
             delSeleccionado.length === 1 ? "movimiento" : "movimientos"
           ] }),
-          /* @__PURE__ */ jsx74(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
+          /* @__PURE__ */ jsx72(Button, { type: "button", variant: "ghost", onClick: () => cambiarSeleccion(null), title: "Cerrar el detalle del d\xEDa", children: "Cerrar" })
         ] })
       ] }),
-      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx74(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx74("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
-        (item, indice) => renderItem ? /* @__PURE__ */ jsx74("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx74(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
+      delSeleccionado.length === 0 ? /* @__PURE__ */ jsx72(EmptyState, { compact: true, icon: "calendar", title: "Sin movimientos", description: "Eleg\xED otro d\xEDa o naveg\xE1 a otro per\xEDodo." }) : /* @__PURE__ */ jsx72("div", { className: "mt-2 space-y-1", children: delSeleccionado.map(
+        (item, indice) => renderItem ? /* @__PURE__ */ jsx72("div", { children: renderItem(item, { vista: "lista", dia: seleccion }) }, item.id ?? indice) : /* @__PURE__ */ jsx72(ItemCalendario, { item, contexto: { vista: "lista", dia: seleccion }, onElegir: onElegirItem }, item.id ?? indice)
       ) })
     ] })
   ] });
 }
 
 // src/components/RangoFecha.jsx
-import { useId as useId9, useRef as useRef9, useState as useState21 } from "react";
+import { useId as useId8, useRef as useRef8, useState as useState19 } from "react";
 
 // src/utils/rangoFecha.js
 var PERIODOS_FECHA = ["hoy", "esta-semana", "este-mes", "mes-pasado", "ultimos-30", "personalizado"];
@@ -6165,7 +5645,7 @@ function rangoInvertido(desde, hasta) {
 }
 
 // src/components/RangoFecha.jsx
-import { jsx as jsx75, jsxs as jsxs59 } from "react/jsx-runtime";
+import { jsx as jsx73, jsxs as jsxs58 } from "react/jsx-runtime";
 function RangoFecha({
   desde,
   hasta,
@@ -6180,15 +5660,15 @@ function RangoFecha({
   className
 }) {
   const controlado = desde !== void 0 || hasta !== void 0;
-  const [interno, setInterno] = useState21(() => {
+  const [interno, setInterno] = useState19(() => {
     if (desdePorDefecto !== void 0 || hastaPorDefecto !== void 0) {
       return { desde: desdePorDefecto || "", hasta: hastaPorDefecto || "" };
     }
     return rangoDePeriodo(periodoPorDefecto, { hoy }) || { desde: "", hasta: "" };
   });
-  const idDesde = useId9();
-  const idHasta = useId9();
-  const refDesde = useRef9(null);
+  const idDesde = useId8();
+  const idHasta = useId8();
+  const refDesde = useRef8(null);
   const actual = controlado ? { desde: desde ?? "", hasta: hasta ?? "" } : interno;
   const activo = periodoDeRango(actual.desde, actual.hasta, { hoy });
   const invertido = rangoInvertido(actual.desde, actual.hasta);
@@ -6197,10 +5677,10 @@ function RangoFecha({
     if (!controlado) setInterno(par);
     onCambio?.(par.desde, par.hasta);
   }
-  return /* @__PURE__ */ jsxs59("div", { className: cn("space-y-2", className), children: [
-    /* @__PURE__ */ jsx75("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
+  return /* @__PURE__ */ jsxs58("div", { className: cn("space-y-2", className), children: [
+    /* @__PURE__ */ jsx73("div", { className: "flex flex-wrap items-center gap-1.5", role: "group", "aria-label": ariaLabel, children: atajos.map((periodo) => {
       const esActivo = activo === periodo;
-      return /* @__PURE__ */ jsx75(
+      return /* @__PURE__ */ jsx73(
         "button",
         {
           type: "button",
@@ -6212,17 +5692,17 @@ function RangoFecha({
           },
           className: cn(
             "rounded-lg border px-2.5 py-1.5 text-xs font-medium transition",
-            esActivo ? "border-fono/30 bg-fono/15 text-fono-text" : "border-ink-600 text-mute hover:border-fono/40 hover:text-fore"
+            esActivo ? "border-fono/30 bg-fono/15 text-fono-light" : "border-ink-600 text-mute hover:border-fono/40 hover:text-fore"
           ),
           children: ETIQUETA_PERIODO[periodo] || periodo
         },
         periodo
       );
     }) }),
-    mostrarCampos && /* @__PURE__ */ jsxs59("div", { className: "flex flex-wrap items-end gap-2", children: [
-      /* @__PURE__ */ jsxs59("div", { children: [
-        /* @__PURE__ */ jsx75(Label, { htmlFor: idDesde, children: "Desde" }),
-        /* @__PURE__ */ jsx75(
+    mostrarCampos && /* @__PURE__ */ jsxs58("div", { className: "flex flex-wrap items-end gap-2", children: [
+      /* @__PURE__ */ jsxs58("div", { children: [
+        /* @__PURE__ */ jsx73(Label, { htmlFor: idDesde, children: "Desde" }),
+        /* @__PURE__ */ jsx73(
           Input,
           {
             id: idDesde,
@@ -6235,9 +5715,9 @@ function RangoFecha({
           }
         )
       ] }),
-      /* @__PURE__ */ jsxs59("div", { children: [
-        /* @__PURE__ */ jsx75(Label, { htmlFor: idHasta, children: "Hasta" }),
-        /* @__PURE__ */ jsx75(
+      /* @__PURE__ */ jsxs58("div", { children: [
+        /* @__PURE__ */ jsx73(Label, { htmlFor: idHasta, children: "Hasta" }),
+        /* @__PURE__ */ jsx73(
           Input,
           {
             id: idHasta,
@@ -6250,13 +5730,13 @@ function RangoFecha({
         )
       ] })
     ] }),
-    invertido && /* @__PURE__ */ jsx75(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
+    invertido && /* @__PURE__ */ jsx73(Aviso, { tono: "warn", compact: true, children: "El rango est\xE1 invertido: \xABdesde\xBB es posterior a \xABhasta\xBB." })
   ] });
 }
 
 // src/components/PaletaComandos.jsx
-import { useEffect as useEffect9, useId as useId10, useMemo as useMemo7, useRef as useRef10, useState as useState22 } from "react";
-import { Fragment as Fragment11, jsx as jsx76, jsxs as jsxs60 } from "react/jsx-runtime";
+import { useEffect as useEffect8, useId as useId9, useMemo as useMemo7, useRef as useRef9, useState as useState20 } from "react";
+import { Fragment as Fragment10, jsx as jsx74, jsxs as jsxs59 } from "react/jsx-runtime";
 var CAPITALIZAR = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
 function agruparResultados(resultados = [], { etiquetasTipo = {}, iconosTipo = {} } = {}) {
   const grupos = [];
@@ -6310,20 +5790,20 @@ function PaletaComandos({
   mostrarAtajoEnBoton = true,
   className
 }) {
-  const [interna, setInterna] = useState22(false);
-  const [consulta, setConsulta] = useState22("");
-  const [resultados, setResultados] = useState22(null);
-  const [cargando, setCargando] = useState22(false);
-  const [error, setError] = useState22("");
-  const [activo, setActivo] = useState22(0);
-  const [intento, setIntento] = useState22(0);
-  const raiz = useRef10(null);
-  const entrada = useRef10(null);
-  const buscarRef = useRef10(buscar);
+  const [interna, setInterna] = useState20(false);
+  const [consulta, setConsulta] = useState20("");
+  const [resultados, setResultados] = useState20(null);
+  const [cargando, setCargando] = useState20(false);
+  const [error, setError] = useState20("");
+  const [activo, setActivo] = useState20(0);
+  const [intento, setIntento] = useState20(0);
+  const raiz = useRef9(null);
+  const entrada = useRef9(null);
+  const buscarRef = useRef9(buscar);
   buscarRef.current = buscar;
-  const onAbrirRef = useRef10(onAbrir);
+  const onAbrirRef = useRef9(onAbrir);
   onAbrirRef.current = onAbrir;
-  const idLista = useId10();
+  const idLista = useId9();
   const controlada = abierta !== void 0;
   const visible = controlada ? Boolean(abierta) : interna;
   function abrir() {
@@ -6334,7 +5814,7 @@ function PaletaComandos({
     if (!controlada) setInterna(false);
     onCerrar?.();
   }
-  useEffect9(() => {
+  useEffect8(() => {
     if (!conAtajo) return void 0;
     const onKeyDown2 = (event) => {
       if (event.defaultPrevented || event.altKey || event.shiftKey) return;
@@ -6347,7 +5827,7 @@ function PaletaComandos({
     document.addEventListener("keydown", onKeyDown2);
     return () => document.removeEventListener("keydown", onKeyDown2);
   }, [conAtajo, atajo, controlada]);
-  useEffect9(() => {
+  useEffect8(() => {
     if (!visible) return void 0;
     setConsulta("");
     setResultados(null);
@@ -6358,7 +5838,7 @@ function PaletaComandos({
     const frame = requestAnimationFrame(() => entrada.current?.focus());
     return () => cancelAnimationFrame(frame);
   }, [visible]);
-  useEffect9(() => {
+  useEffect8(() => {
     if (!visible) return void 0;
     const termino2 = consulta.trim();
     if (termino2.length < minimo) {
@@ -6396,10 +5876,10 @@ function PaletaComandos({
   const planos = useMemo7(() => grupos.flatMap((grupo) => grupo.items), [grupos]);
   const estado = estadoPaleta({ listo, cargando, error, total: planos.length });
   const indice = useMemo7(() => new Map(planos.map((item, posicion) => [item, posicion])), [planos]);
-  useEffect9(() => {
+  useEffect8(() => {
     setActivo(0);
   }, [resultados]);
-  useEffect9(() => {
+  useEffect8(() => {
     if (!visible) return;
     raiz.current?.querySelector(`[data-paleta-index="${activo}"]`)?.scrollIntoView?.({ block: "nearest" });
   }, [activo, visible, planos.length]);
@@ -6439,8 +5919,8 @@ function PaletaComandos({
   }
   const textoContinuar = textoSeguir || `Segu\xED escribiendo: buscamos desde ${minimo} caracteres.`;
   const idOpcion = (posicion) => `${idLista}-opcion-${posicion}`;
-  return /* @__PURE__ */ jsxs60(Fragment11, { children: [
-    boton && /* @__PURE__ */ jsxs60(
+  return /* @__PURE__ */ jsxs59(Fragment10, { children: [
+    boton && /* @__PURE__ */ jsxs59(
       "button",
       {
         type: "button",
@@ -6450,19 +5930,19 @@ function PaletaComandos({
         title: `${titulo2} \xB7 ${atajoTexto}`,
         className: "inline-flex h-9 items-center gap-2 rounded-lg border border-ink-500 px-3 text-sm text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx76(Icon, { name: "search", className: "h-4 w-4" }),
-          /* @__PURE__ */ jsx76("span", { className: "hidden sm:inline", children: textoBoton }),
-          mostrarAtajoEnBoton && /* @__PURE__ */ jsx76("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
+          /* @__PURE__ */ jsx74(Icon, { name: "search", className: "h-4 w-4" }),
+          /* @__PURE__ */ jsx74("span", { className: "hidden sm:inline", children: textoBoton }),
+          mostrarAtajoEnBoton && /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1.5 py-0.5 text-[10px] font-semibold text-mute", "aria-hidden": "true", children: atajoTexto })
         ]
       }
     ),
-    visible && /* @__PURE__ */ jsx76(
+    visible && /* @__PURE__ */ jsx74(
       "div",
       {
         className: "fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-3 sm:p-6",
         onMouseDown: (event) => event.target === event.currentTarget && cerrar(),
         onKeyDown,
-        children: /* @__PURE__ */ jsxs60(
+        children: /* @__PURE__ */ jsxs59(
           "div",
           {
             ref: raiz,
@@ -6471,7 +5951,7 @@ function PaletaComandos({
             "aria-label": titulo2,
             className: cn("mt-[8vh] w-full max-w-xl overflow-hidden rounded-2xl border border-ink-600 bg-ink shadow-float", className),
             children: [
-              /* @__PURE__ */ jsx76("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx76(
+              /* @__PURE__ */ jsx74("div", { className: "border-b border-ink-600 p-3", children: /* @__PURE__ */ jsx74(
                 SearchField_default,
                 {
                   ref: entrada,
@@ -6487,18 +5967,18 @@ function PaletaComandos({
                   autoComplete: "off"
                 }
               ) }),
-              /* @__PURE__ */ jsxs60("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
-                estado === "seguir" && /* @__PURE__ */ jsx76("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
-                estado === "error" && /* @__PURE__ */ jsxs60("div", { className: "space-y-2 p-2", children: [
-                  /* @__PURE__ */ jsx76(Aviso, { tono: "error", compact: true, children: error }),
-                  /* @__PURE__ */ jsx76(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
+              /* @__PURE__ */ jsxs59("div", { id: idLista, className: "max-h-[50vh] min-h-[9rem] overflow-y-auto p-2", children: [
+                estado === "seguir" && /* @__PURE__ */ jsx74("p", { className: "px-2 py-6 text-center text-sm text-mute", children: textoContinuar }),
+                estado === "error" && /* @__PURE__ */ jsxs59("div", { className: "space-y-2 p-2", children: [
+                  /* @__PURE__ */ jsx74(Aviso, { tono: "error", compact: true, children: error }),
+                  /* @__PURE__ */ jsx74(Button, { type: "button", variant: "outline", onClick: () => setIntento((actual) => actual + 1), children: "Reintentar" })
                 ] }),
-                estado === "cargando" && /* @__PURE__ */ jsxs60("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
-                  /* @__PURE__ */ jsx76(Skeleton, { className: "h-4 w-1/3" }),
-                  /* @__PURE__ */ jsx76(Skeleton, { className: "h-9 w-full" }),
-                  /* @__PURE__ */ jsx76(Skeleton, { className: "h-9 w-full" })
+                estado === "cargando" && /* @__PURE__ */ jsxs59("div", { className: "space-y-2 p-2", "aria-busy": "true", children: [
+                  /* @__PURE__ */ jsx74(Skeleton, { className: "h-4 w-1/3" }),
+                  /* @__PURE__ */ jsx74(Skeleton, { className: "h-9 w-full" }),
+                  /* @__PURE__ */ jsx74(Skeleton, { className: "h-9 w-full" })
                 ] }),
-                estado === "vacio" && /* @__PURE__ */ jsx76(
+                estado === "vacio" && /* @__PURE__ */ jsx74(
                   EmptyState,
                   {
                     compact: true,
@@ -6507,12 +5987,12 @@ function PaletaComandos({
                     description: descripcionVacio || `No encontramos nada para \xAB${termino}\xBB. Prob\xE1 con otro nombre o n\xFAmero.`
                   }
                 ),
-                estado === "listo" && /* @__PURE__ */ jsx76("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs60("section", { role: "group", "aria-label": grupo.etiqueta, children: [
-                  /* @__PURE__ */ jsx76("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+                estado === "listo" && /* @__PURE__ */ jsx74("div", { role: "listbox", "aria-label": "Resultados de la b\xFAsqueda", children: grupos.map((grupo) => /* @__PURE__ */ jsxs59("section", { role: "group", "aria-label": grupo.etiqueta, children: [
+                  /* @__PURE__ */ jsx74("p", { className: "px-2 pb-1 pt-2 text-[10px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
                   grupo.items.map((item) => {
                     const posicion = indice.get(item) ?? 0;
                     const esActivo = posicion === activo;
-                    return /* @__PURE__ */ jsxs60(
+                    return /* @__PURE__ */ jsxs59(
                       "button",
                       {
                         id: idOpcion(posicion),
@@ -6528,12 +6008,12 @@ function PaletaComandos({
                           esActivo ? "bg-fono/10 text-fore" : "text-mute hover:bg-ink-700/60 hover:text-fore"
                         ),
                         children: [
-                          /* @__PURE__ */ jsx76(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
-                          /* @__PURE__ */ jsxs60("span", { className: "min-w-0 flex-1", children: [
-                            /* @__PURE__ */ jsx76("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
-                            item.detalle && /* @__PURE__ */ jsx76("span", { className: "block truncate text-xs text-mute", children: item.detalle })
+                          /* @__PURE__ */ jsx74(Icon, { name: item.icono || grupo.icono, className: "h-4 w-4 shrink-0" }),
+                          /* @__PURE__ */ jsxs59("span", { className: "min-w-0 flex-1", children: [
+                            /* @__PURE__ */ jsx74("span", { className: "block truncate font-medium text-fore", children: item.titulo }),
+                            item.detalle && /* @__PURE__ */ jsx74("span", { className: "block truncate text-xs text-mute", children: item.detalle })
                           ] }),
-                          /* @__PURE__ */ jsx76(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
+                          /* @__PURE__ */ jsx74(Icon, { name: "back", className: "h-3.5 w-3.5 shrink-0 rotate-180 text-mute" })
                         ]
                       },
                       item.id ?? `${grupo.tipo}-${posicion}`
@@ -6541,19 +6021,19 @@ function PaletaComandos({
                   })
                 ] }, grupo.tipo)) })
               ] }),
-              /* @__PURE__ */ jsxs60("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
-                /* @__PURE__ */ jsxs60("span", { children: [
-                  /* @__PURE__ */ jsx76("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
+              /* @__PURE__ */ jsxs59("p", { className: "flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-ink-600 px-3 py-2 text-[11px] text-mute", children: [
+                /* @__PURE__ */ jsxs59("span", { children: [
+                  /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2191" }),
                   " ",
-                  /* @__PURE__ */ jsx76("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
+                  /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "\u2193" }),
                   " moverse"
                 ] }),
-                /* @__PURE__ */ jsxs60("span", { children: [
-                  /* @__PURE__ */ jsx76("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
+                /* @__PURE__ */ jsxs59("span", { children: [
+                  /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Enter" }),
                   " abrir"
                 ] }),
-                /* @__PURE__ */ jsxs60("span", { children: [
-                  /* @__PURE__ */ jsx76("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
+                /* @__PURE__ */ jsxs59("span", { children: [
+                  /* @__PURE__ */ jsx74("kbd", { className: "rounded border border-ink-600 bg-ink-700 px-1", children: "Esc" }),
                   " cerrar"
                 ] })
               ] })
@@ -6566,8 +6046,8 @@ function PaletaComandos({
 }
 
 // src/components/AyudaModulo.jsx
-import { useState as useState23 } from "react";
-import { jsx as jsx77, jsxs as jsxs61 } from "react/jsx-runtime";
+import { useState as useState21 } from "react";
+import { jsx as jsx75, jsxs as jsxs60 } from "react/jsx-runtime";
 function AyudaModulo({
   titulo: titulo2,
   resumen,
@@ -6580,7 +6060,7 @@ function AyudaModulo({
   onCerrar,
   className
 }) {
-  const [interna, setInterna] = useState23(false);
+  const [interna, setInterna] = useState21(false);
   if (!titulo2 && !resumen) return null;
   const controlada = abierta !== void 0;
   const visible = controlada ? Boolean(abierta) : interna;
@@ -6593,8 +6073,8 @@ function AyudaModulo({
     onCerrar?.();
   };
   const encabezado = tituloDialogo || `${etiquetaBoton} \xB7 ${titulo2 || "Ayuda"}`;
-  return /* @__PURE__ */ jsxs61("div", { className: cn("inline-flex", className), children: [
-    /* @__PURE__ */ jsx77(
+  return /* @__PURE__ */ jsxs60("div", { className: cn("inline-flex", className), children: [
+    /* @__PURE__ */ jsx75(
       "button",
       {
         type: "button",
@@ -6603,16 +6083,16 @@ function AyudaModulo({
         "aria-haspopup": "dialog",
         title: encabezado,
         className: "grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-sm font-bold text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
-        children: /* @__PURE__ */ jsx77("span", { "aria-hidden": "true", children: "?" })
+        children: /* @__PURE__ */ jsx75("span", { "aria-hidden": "true", children: "?" })
       }
     ),
-    /* @__PURE__ */ jsx77(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs61("div", { className: "space-y-4", children: [
-      resumen && /* @__PURE__ */ jsx77("p", { className: "text-sm leading-6 text-mute", children: resumen }),
-      puntos.length > 0 && /* @__PURE__ */ jsx77("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs61("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
-        /* @__PURE__ */ jsx77(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok-text" }),
-        /* @__PURE__ */ jsx77("span", { className: "min-w-0", children: punto })
+    /* @__PURE__ */ jsx75(Modal, { open: visible, onClose: cerrar, title: encabezado, size: "formulario", children: /* @__PURE__ */ jsxs60("div", { className: "space-y-4", children: [
+      resumen && /* @__PURE__ */ jsx75("p", { className: "text-sm leading-6 text-mute", children: resumen }),
+      puntos.length > 0 && /* @__PURE__ */ jsx75("ul", { className: "space-y-2", children: puntos.map((punto) => /* @__PURE__ */ jsxs60("li", { className: "flex items-start gap-2 text-sm leading-5 text-fore", children: [
+        /* @__PURE__ */ jsx75(Icon, { name: "check", className: "mt-0.5 h-3.5 w-3.5 shrink-0 text-ok" }),
+        /* @__PURE__ */ jsx75("span", { className: "min-w-0", children: punto })
       ] }, punto)) }),
-      enlaces.length > 0 && /* @__PURE__ */ jsx77("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs61(
+      enlaces.length > 0 && /* @__PURE__ */ jsx75("nav", { "aria-label": `Ir a otro m\xF3dulo desde ${titulo2 || "la ayuda"}`, className: "grid gap-1.5 border-t border-ink-600 pt-3", children: enlaces.map((enlace) => /* @__PURE__ */ jsxs60(
         "a",
         {
           href: enlace.href,
@@ -6622,19 +6102,19 @@ function AyudaModulo({
           },
           className: "flex items-center justify-between gap-2 rounded-lg border border-ink-600 px-3 py-2 text-sm font-medium text-fore transition hover:border-fono hover:bg-fono/10",
           children: [
-            /* @__PURE__ */ jsx77("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
-            /* @__PURE__ */ jsx77(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
+            /* @__PURE__ */ jsx75("span", { className: "min-w-0 truncate", children: enlace.etiqueta }),
+            /* @__PURE__ */ jsx75(Icon, { name: "external", className: "h-3.5 w-3.5 shrink-0 text-mute" })
           ]
         },
         enlace.href || enlace.etiqueta
       )) }),
-      /* @__PURE__ */ jsx77("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx77(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
+      /* @__PURE__ */ jsx75("div", { className: "flex justify-end border-t border-ink-600 pt-3", children: /* @__PURE__ */ jsx75(Button, { type: "button", variant: "outline", onClick: cerrar, children: "Cerrar" }) })
     ] }) })
   ] });
 }
 
 // src/components/BarraInferior.jsx
-import { Fragment as Fragment12, jsx as jsx78, jsxs as jsxs62 } from "react/jsx-runtime";
+import { Fragment as Fragment11, jsx as jsx76, jsxs as jsxs61 } from "react/jsx-runtime";
 var ESPACIO_BARRA_INFERIOR = "pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0";
 function BarraInferior({
   items = [],
@@ -6655,7 +6135,7 @@ function BarraInferior({
     "flex min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[10px] font-semibold transition",
     esActivo ? "text-fono-light" : "text-mute hover:text-fore"
   );
-  return /* @__PURE__ */ jsxs62(
+  return /* @__PURE__ */ jsxs61(
     "nav",
     {
       "aria-label": ariaLabel,
@@ -6666,16 +6146,16 @@ function BarraInferior({
       children: [
         visibles.map((item) => {
           const esActivo = item.id === activo;
-          const contenido = /* @__PURE__ */ jsxs62(Fragment12, { children: [
-            /* @__PURE__ */ jsxs62("span", { className: "relative", children: [
-              item.icono && /* @__PURE__ */ jsx78(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
-              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx78("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
+          const contenido = /* @__PURE__ */ jsxs61(Fragment11, { children: [
+            /* @__PURE__ */ jsxs61("span", { className: "relative", children: [
+              item.icono && /* @__PURE__ */ jsx76(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
+              item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx76("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
             ] }),
-            /* @__PURE__ */ jsx78("span", { className: "max-w-full truncate", children: item.etiqueta })
+            /* @__PURE__ */ jsx76("span", { className: "max-w-full truncate", children: item.etiqueta })
           ] });
           const titulo2 = item.title || item.etiqueta;
           const clase = cn(claseItem(esActivo), "h-14");
-          return item.href ? /* @__PURE__ */ jsx78(
+          return item.href ? /* @__PURE__ */ jsx76(
             "a",
             {
               href: item.href,
@@ -6687,7 +6167,7 @@ function BarraInferior({
               children: contenido
             },
             item.id ?? item.href
-          ) : /* @__PURE__ */ jsx78(
+          ) : /* @__PURE__ */ jsx76(
             "button",
             {
               type: "button",
@@ -6704,7 +6184,7 @@ function BarraInferior({
             item.id ?? item.etiqueta
           );
         }),
-        onMas && /* @__PURE__ */ jsxs62(
+        onMas && /* @__PURE__ */ jsxs61(
           "button",
           {
             type: "button",
@@ -6715,8 +6195,8 @@ function BarraInferior({
             title: masEtiqueta,
             className: cn(claseItem(menuAbierto), "h-14"),
             children: [
-              /* @__PURE__ */ jsx78(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
-              /* @__PURE__ */ jsx78("span", { className: "max-w-full truncate", children: masEtiqueta })
+              /* @__PURE__ */ jsx76(Icon, { name: masIcono, className: "h-[18px] w-[18px]" }),
+              /* @__PURE__ */ jsx76("span", { className: "max-w-full truncate", children: masEtiqueta })
             ]
           }
         )
@@ -6726,16 +6206,16 @@ function BarraInferior({
 }
 
 // src/components/Avatar.jsx
-import { useEffect as useEffect10, useState as useState24 } from "react";
+import { useEffect as useEffect9, useState as useState22 } from "react";
 
 // src/utils/avatar.js
 var COLORES_AVATAR = {
-  fono: "bg-fono/15 text-fono-text",
-  ok: "bg-ok/15 text-ok-text",
-  info: "bg-info/15 text-info-text",
-  warn: "bg-warn/15 text-warn-text",
-  bad: "bg-bad/15 text-bad-text",
-  pass: "bg-pass/15 text-pass-text",
+  fono: "bg-fono/15 text-fono-light",
+  ok: "bg-ok/15 text-ok",
+  info: "bg-info/15 text-info",
+  warn: "bg-warn/15 text-warn",
+  bad: "bg-bad/15 text-bad",
+  pass: "bg-pass/15 text-pass",
   reserved: "bg-reserved/15 text-reserved",
   mute: "bg-ink-600 text-mute"
 };
@@ -6766,7 +6246,7 @@ function colorDeNombre(nombre) {
 }
 
 // src/components/Avatar.jsx
-import { jsx as jsx79 } from "react/jsx-runtime";
+import { jsx as jsx77 } from "react/jsx-runtime";
 var TAMANOS_AVATAR = {
   xs: "h-5 w-5 text-[9px]",
   sm: "h-7 w-7 text-[10px]",
@@ -6786,15 +6266,15 @@ function Avatar({
   onError,
   className
 }) {
-  const [fallo, setFallo] = useState24(false);
-  useEffect10(() => {
+  const [fallo, setFallo] = useState22(false);
+  useEffect9(() => {
     setFallo(false);
   }, [src]);
   const cuadro = empresa ? "cuadrado" : forma || "redondo";
   const redondo = cuadro !== "cuadrado";
   const etiqueta = ariaLabel || title || String(nombre ?? "").trim() || "Identidad";
   const conImagen = Boolean(src) && !fallo;
-  return /* @__PURE__ */ jsx79(
+  return /* @__PURE__ */ jsx77(
     "span",
     {
       role: decorativo ? void 0 : "img",
@@ -6808,7 +6288,7 @@ function Avatar({
         TAMANOS_AVATAR[tamano] || TAMANOS_AVATAR.md,
         className
       ),
-      children: conImagen ? /* @__PURE__ */ jsx79(
+      children: conImagen ? /* @__PURE__ */ jsx77(
         "img",
         {
           src,
@@ -6821,13 +6301,13 @@ function Avatar({
           },
           className: cn("h-full w-full", redondo ? "object-cover" : "object-contain")
         }
-      ) : /* @__PURE__ */ jsx79("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
+      ) : /* @__PURE__ */ jsx77("span", { "aria-hidden": "true", children: inicialesDeNombre(nombre) })
     }
   );
 }
 
 // src/components/PersonaChip.jsx
-import { useEffect as useEffect11, useState as useState25 } from "react";
+import { useEffect as useEffect10, useState as useState23 } from "react";
 
 // src/utils/identidad.js
 var primerTexto = (...valores) => {
@@ -6867,7 +6347,7 @@ function resumenPresencia(personas = []) {
 }
 
 // src/components/PersonaChip.jsx
-import { jsx as jsx80, jsxs as jsxs63 } from "react/jsx-runtime";
+import { jsx as jsx78, jsxs as jsxs62 } from "react/jsx-runtime";
 function PersonaChip({
   user,
   foto,
@@ -6888,15 +6368,15 @@ function PersonaChip({
   const presencia = ESTADOS_PRESENCIA[estado] || null;
   const local = foto ?? (identidad.hasAvatar === false ? "" : identidad.fotoLocal);
   const google = picture ?? identidad.picture;
-  const [localRota, setLocalRota] = useState25(false);
-  useEffect11(() => {
+  const [localRota, setLocalRota] = useState23(false);
+  useEffect10(() => {
     setLocalRota(false);
   }, [local]);
   const src = !localRota && local ? local : google;
   const etiqueta = title || [identidad.nombre, presencia?.etiqueta, identidad.scope].filter(Boolean).join(" \xB7 ");
-  return /* @__PURE__ */ jsxs63("span", { "data-testid": "persona-chip", className: cn("inline-flex min-w-0 items-center gap-2", className), title: etiqueta, children: [
-    /* @__PURE__ */ jsxs63("span", { className: "relative inline-flex shrink-0", children: [
-      /* @__PURE__ */ jsx80(
+  return /* @__PURE__ */ jsxs62("span", { "data-testid": "persona-chip", className: cn("inline-flex min-w-0 items-center gap-2", className), title: etiqueta, children: [
+    /* @__PURE__ */ jsxs62("span", { className: "relative inline-flex shrink-0", children: [
+      /* @__PURE__ */ jsx78(
         Avatar,
         {
           nombre: identidad.nombre,
@@ -6908,15 +6388,15 @@ function PersonaChip({
           title: etiqueta
         }
       ),
-      presencia ? /* @__PURE__ */ jsx80("i", { "aria-hidden": true, className: cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-1 ring-paper", presencia.punto) }) : null
+      presencia ? /* @__PURE__ */ jsx78("i", { "aria-hidden": true, className: cn("absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full ring-1 ring-paper", presencia.punto) }) : null
     ] }),
-    nombre ? /* @__PURE__ */ jsx80("span", { className: cn("min-w-0", CELDA_IDENTIDAD_GRANDE, textoClassName), children: visible }) : null,
-    children ? /* @__PURE__ */ jsx80("span", { className: CELDA_DATO, children }) : null
+    nombre ? /* @__PURE__ */ jsx78("span", { className: cn("min-w-0", CELDA_IDENTIDAD_GRANDE, textoClassName), children: visible }) : null,
+    children ? /* @__PURE__ */ jsx78("span", { className: CELDA_DATO, children }) : null
   ] });
 }
 
 // src/components/PilaPersonas.jsx
-import { Fragment as Fragment13, jsx as jsx81, jsxs as jsxs64 } from "react/jsx-runtime";
+import { Fragment as Fragment12, jsx as jsx79, jsxs as jsxs63 } from "react/jsx-runtime";
 function PilaPersonas({
   personas = [],
   max = 4,
@@ -6932,12 +6412,12 @@ function PilaPersonas({
   const visibles = lista.slice(0, Math.max(0, max));
   const restantes = lista.length - visibles.length;
   const texto = title || resumenPresencia(lista);
-  const contenido = /* @__PURE__ */ jsxs64(Fragment13, { children: [
-    /* @__PURE__ */ jsxs64("span", { className: "flex -space-x-2", children: [
+  const contenido = /* @__PURE__ */ jsxs63(Fragment12, { children: [
+    /* @__PURE__ */ jsxs63("span", { className: "flex -space-x-2", children: [
       visibles.map((persona, indice) => {
         const fuente = typeof persona === "string" ? { name: persona } : persona || {};
         const identidad = identidadDeUsuario(fuente);
-        return /* @__PURE__ */ jsx81(
+        return /* @__PURE__ */ jsx79(
           PersonaChip,
           {
             user: fuente,
@@ -6952,7 +6432,7 @@ function PilaPersonas({
           fuente.id ?? `${identidad.nombre}-${indice}`
         );
       }),
-      restantes > 0 && /* @__PURE__ */ jsxs64(
+      restantes > 0 && /* @__PURE__ */ jsxs63(
         "span",
         {
           className: cn(
@@ -6967,14 +6447,14 @@ function PilaPersonas({
         }
       )
     ] }),
-    resumen && texto ? /* @__PURE__ */ jsx81("span", { className: "whitespace-nowrap text-xs font-semibold text-mute", children: texto }) : null
+    resumen && texto ? /* @__PURE__ */ jsx79("span", { className: "whitespace-nowrap text-xs font-semibold text-mute", children: texto }) : null
   ] });
   const clases = "flex items-center gap-2 rounded-full border border-fore/10 bg-ink-700/60 px-2.5 py-1";
-  return onMas ? /* @__PURE__ */ jsx81("button", { type: "button", onClick: onMas, className: cn(clases, className), "aria-label": texto || ariaLabel, title: texto, children: contenido }) : /* @__PURE__ */ jsx81("div", { role: "group", "aria-label": texto || ariaLabel, title: texto, className: cn(clases, className), children: contenido });
+  return onMas ? /* @__PURE__ */ jsx79("button", { type: "button", onClick: onMas, className: cn(clases, className), "aria-label": texto || ariaLabel, title: texto, children: contenido }) : /* @__PURE__ */ jsx79("div", { role: "group", "aria-label": texto || ariaLabel, title: texto, className: cn(clases, className), children: contenido });
 }
 
 // src/components/ImporteDelta.jsx
-import { jsx as jsx82 } from "react/jsx-runtime";
+import { jsx as jsx80 } from "react/jsx-runtime";
 function tonoDelta(valor, { invertir = false } = {}) {
   const numero = Number(valor);
   if (!Number.isFinite(numero) || numero === 0) return "mute";
@@ -6982,7 +6462,7 @@ function tonoDelta(valor, { invertir = false } = {}) {
   const bueno = invertir ? !positivo : positivo;
   return bueno ? "ok" : "bad";
 }
-var TONO_TEXTO = { ok: "text-ok-text", bad: "text-bad-text", mute: "text-mute" };
+var TONO_TEXTO = { ok: "text-ok", bad: "text-bad", mute: "text-mute" };
 function ImporteDelta({
   valor,
   moneda = "PYG",
@@ -6994,9 +6474,9 @@ function ImporteDelta({
 }) {
   const numero = Number(valor);
   const ausente = valor === null || valor === void 0 || valor === "" || !Number.isFinite(numero);
-  if (ausente) return /* @__PURE__ */ jsx82("span", { className: cn("tabular-nums text-mute", className), children: vacio });
+  if (ausente) return /* @__PURE__ */ jsx80("span", { className: cn("tabular-nums text-mute", className), children: vacio });
   const texto = formato === "porcentaje" ? `${signoDe(numero) ? `${signoDe(numero)} ` : ""}${formatPercent(Math.abs(numero))} %` : montoConSigno(numero, moneda, vacio, { simbolo });
-  return /* @__PURE__ */ jsx82(
+  return /* @__PURE__ */ jsx80(
     "span",
     {
       className: cn(
@@ -7010,7 +6490,7 @@ function ImporteDelta({
 }
 
 // src/components/IndicadorConexion.jsx
-import { jsx as jsx83, jsxs as jsxs65 } from "react/jsx-runtime";
+import { jsx as jsx81, jsxs as jsxs64 } from "react/jsx-runtime";
 function IndicadorConexion({
   enLinea = true,
   pendientes = 0,
@@ -7027,7 +6507,7 @@ function IndicadorConexion({
   const texto = sincronizando ? etiquetaSincronizando : enLinea ? etiquetaEnLinea : etiquetaSinConexion;
   const detalle = cuenta > 0 ? `${formatoNumero(cuenta)} ${cuenta === 1 ? "pendiente" : "pendientes"} de subir` : "";
   const titulo2 = [texto, detalle].filter(Boolean).join(" \xB7 ");
-  const boton = onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs65(
+  const boton = onSincronizar && cuenta > 0 && /* @__PURE__ */ jsxs64(
     "button",
     {
       type: "button",
@@ -7040,13 +6520,13 @@ function IndicadorConexion({
         variante === "banner" ? "border-current/40 hover:bg-fore/10" : "border-ink-500 text-mute hover:border-fono hover:text-fore"
       ),
       children: [
-        /* @__PURE__ */ jsx83(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
+        /* @__PURE__ */ jsx81(Icon, { name: "refresh", className: cn("h-3.5 w-3.5", sincronizando && "animate-spin") }),
         "Sincronizar"
       ]
     }
   );
   if (variante === "banner") {
-    return /* @__PURE__ */ jsxs65(
+    return /* @__PURE__ */ jsxs64(
       "div",
       {
         role: "status",
@@ -7058,18 +6538,18 @@ function IndicadorConexion({
           className
         ),
         children: [
-          /* @__PURE__ */ jsx83(Icon, { name: enLinea ? "refresh" : "alert", className: "h-4 w-4 shrink-0", "aria-hidden": "true" }),
-          /* @__PURE__ */ jsxs65("span", { children: [
+          /* @__PURE__ */ jsx81(Icon, { name: enLinea ? "refresh" : "alert", className: "h-4 w-4 shrink-0", "aria-hidden": "true" }),
+          /* @__PURE__ */ jsxs64("span", { children: [
             mensaje || texto,
             !mensaje && detalle ? ` \xB7 ${detalle}` : ""
           ] }),
-          !enLinea && !mensaje && /* @__PURE__ */ jsx83("span", { className: "hidden sm:inline", children: "Se sincroniza al reconectar." }),
+          !enLinea && !mensaje && /* @__PURE__ */ jsx81("span", { className: "hidden sm:inline", children: "Se sincroniza al reconectar." }),
           boton
         ]
       }
     );
   }
-  return /* @__PURE__ */ jsxs65(
+  return /* @__PURE__ */ jsxs64(
     "div",
     {
       role: "status",
@@ -7077,14 +6557,14 @@ function IndicadorConexion({
       title: titulo2,
       className: cn(
         "inline-flex min-w-0 items-center gap-2 rounded-lg border border-ink-600 bg-ink-800 px-2.5 py-1.5 text-xs",
-        enLinea ? "text-mute" : "text-warn-text",
+        enLinea ? "text-mute" : "text-warn",
         className
       ),
       children: [
-        /* @__PURE__ */ jsx83(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
-        /* @__PURE__ */ jsxs65("span", { className: "min-w-0 truncate font-medium", children: [
+        /* @__PURE__ */ jsx81(Dot, { color: enLinea ? "green" : "orange", pulse: sincronizando || !enLinea }),
+        /* @__PURE__ */ jsxs64("span", { className: "min-w-0 truncate font-medium", children: [
           texto,
-          detalle && /* @__PURE__ */ jsxs65("span", { className: "text-mute", children: [
+          detalle && /* @__PURE__ */ jsxs64("span", { className: "text-mute", children: [
             " \xB7 ",
             detalle
           ] })
@@ -7096,8 +6576,8 @@ function IndicadorConexion({
 }
 
 // src/components/CampanaAvisos.jsx
-import { useEffect as useEffect12, useRef as useRef11, useState as useState26 } from "react";
-import { Fragment as Fragment14, jsx as jsx84, jsxs as jsxs66 } from "react/jsx-runtime";
+import { useEffect as useEffect11, useRef as useRef10, useState as useState24 } from "react";
+import { Fragment as Fragment13, jsx as jsx82, jsxs as jsxs65 } from "react/jsx-runtime";
 function contarSinLeer(avisos = []) {
   const conEstado = avisos.filter((aviso) => aviso && typeof aviso.leido === "boolean");
   if (conEstado.length) return conEstado.filter((aviso) => !aviso.leido).length;
@@ -7119,10 +6599,10 @@ function CampanaAvisos({
   pie,
   className
 }) {
-  const [abierto, setAbierto] = useState26(false);
-  const raiz = useRef11(null);
+  const [abierto, setAbierto] = useState24(false);
+  const raiz = useRef10(null);
   const sinLeer = contarSinLeer(avisos);
-  useEffect12(() => {
+  useEffect11(() => {
     if (!abierto) return void 0;
     const cerrarFuera = (event) => {
       if (event.target instanceof Node && raiz.current?.contains(event.target)) return;
@@ -7144,8 +6624,8 @@ function CampanaAvisos({
       return !actual;
     });
   }
-  return /* @__PURE__ */ jsxs66("div", { ref: raiz, className: cn("relative", className), children: [
-    /* @__PURE__ */ jsxs66(
+  return /* @__PURE__ */ jsxs65("div", { ref: raiz, className: cn("relative", className), children: [
+    /* @__PURE__ */ jsxs65(
       "button",
       {
         type: "button",
@@ -7156,12 +6636,12 @@ function CampanaAvisos({
         title: sinLeer > 0 ? `${ariaLabel} \xB7 ${sinLeer} sin leer` : ariaLabel,
         className: "relative grid h-9 w-9 place-items-center rounded-lg border border-ink-500 text-mute transition hover:border-fono hover:bg-fono/10 hover:text-fore",
         children: [
-          /* @__PURE__ */ jsx84(Icon, { name: "bell", className: "h-4 w-4" }),
-          sinLeer > 0 && /* @__PURE__ */ jsx84("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
+          /* @__PURE__ */ jsx82(Icon, { name: "bell", className: "h-4 w-4" }),
+          sinLeer > 0 && /* @__PURE__ */ jsx82("span", { className: "absolute -right-1 -top-1 rounded-full bg-bad px-1 text-[10px] font-bold tabular-nums text-white dark:text-onbrand", children: textoContador(sinLeer) })
         ]
       }
     ),
-    abierto && /* @__PURE__ */ jsxs66(
+    abierto && /* @__PURE__ */ jsxs65(
       "div",
       {
         role: "menu",
@@ -7171,25 +6651,25 @@ function CampanaAvisos({
           anclaje === "left" ? "left-0" : "right-0"
         ),
         children: [
-          /* @__PURE__ */ jsxs66("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx84("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
-            sinLeer > 0 && /* @__PURE__ */ jsxs66("span", { className: "text-xs tabular-nums text-mute", children: [
+          /* @__PURE__ */ jsxs65("header", { className: "flex items-center justify-between gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx82("p", { className: "text-sm font-semibold text-fore", children: titulo2 }),
+            sinLeer > 0 && /* @__PURE__ */ jsxs65("span", { className: "text-xs tabular-nums text-mute", children: [
               textoContador(sinLeer),
               " sin leer"
             ] })
           ] }),
-          /* @__PURE__ */ jsx84("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx84(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
+          /* @__PURE__ */ jsx82("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx82(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
             const tono = TONOS.punto[aviso.tono] || TONOS.punto.mute;
-            const contenido = /* @__PURE__ */ jsxs66(Fragment14, { children: [
-              /* @__PURE__ */ jsx84("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx84(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
-              /* @__PURE__ */ jsxs66("span", { className: "min-w-0 flex-1", children: [
-                /* @__PURE__ */ jsx84("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
-                aviso.detalle && /* @__PURE__ */ jsx84("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
-                aviso.fecha && /* @__PURE__ */ jsx84("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
+            const contenido = /* @__PURE__ */ jsxs65(Fragment13, { children: [
+              /* @__PURE__ */ jsx82("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx82(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
+              /* @__PURE__ */ jsxs65("span", { className: "min-w-0 flex-1", children: [
+                /* @__PURE__ */ jsx82("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
+                aviso.detalle && /* @__PURE__ */ jsx82("span", { className: "mt-0.5 block text-xs leading-5 text-mute", children: aviso.detalle }),
+                aviso.fecha && /* @__PURE__ */ jsx82("span", { className: "mt-1 block text-[10px] uppercase tracking-wide text-mute", children: aviso.fecha })
               ] })
             ] });
             const clases = "flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition hover:bg-ink-700/60";
-            return aviso.href ? /* @__PURE__ */ jsx84(
+            return aviso.href ? /* @__PURE__ */ jsx82(
               "a",
               {
                 role: "menuitem",
@@ -7203,7 +6683,7 @@ function CampanaAvisos({
                 children: contenido
               },
               aviso.id ?? aviso.titulo
-            ) : /* @__PURE__ */ jsx84(
+            ) : /* @__PURE__ */ jsx82(
               "button",
               {
                 type: "button",
@@ -7219,7 +6699,7 @@ function CampanaAvisos({
               aviso.id ?? aviso.titulo
             );
           }) }),
-          pie && /* @__PURE__ */ jsx84("div", { className: "border-t border-ink-600 p-2", children: pie })
+          pie && /* @__PURE__ */ jsx82("div", { className: "border-t border-ink-600 p-2", children: pie })
         ]
       }
     )
@@ -7227,7 +6707,7 @@ function CampanaAvisos({
 }
 
 // src/components/GraficoBarras.jsx
-import { jsx as jsx85, jsxs as jsxs67 } from "react/jsx-runtime";
+import { jsx as jsx83, jsxs as jsxs66 } from "react/jsx-runtime";
 var COLORES = {
   fono: "bg-fono",
   ok: "bg-ok",
@@ -7261,47 +6741,47 @@ function GraficoBarras({
   className
 }) {
   const formatear = formatoValor || ((valor) => formatoNumero(valor));
-  if (!datos.length) return /* @__PURE__ */ jsx85(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
+  if (!datos.length) return /* @__PURE__ */ jsx83(EmptyState, { compact: true, icon: "chart", title: "Sin datos para graficar", className });
   const tope = maximoDeBarras(datos, max);
   const colorDe = (dato) => COLORES[dato.tono] || COLORES[tono] || COLORES.fono;
-  const listaAccesible = /* @__PURE__ */ jsx85("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx85("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
+  const listaAccesible = /* @__PURE__ */ jsx83("ul", { className: "sr-only", children: datos.map((dato, indice) => /* @__PURE__ */ jsx83("li", { children: `${dato.etiqueta}: ${formatear(dato.valor)}` }, dato.id ?? indice)) });
   if (orientacion === "horizontal") {
-    return /* @__PURE__ */ jsxs67("div", { className: cn("space-y-1.5", className), children: [
-      datos.map((dato, indice) => /* @__PURE__ */ jsxs67("div", { className: "flex items-center gap-2 text-xs", children: [
-        /* @__PURE__ */ jsx85("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
-        /* @__PURE__ */ jsx85(
+    return /* @__PURE__ */ jsxs66("div", { className: cn("space-y-1.5", className), children: [
+      datos.map((dato, indice) => /* @__PURE__ */ jsxs66("div", { className: "flex items-center gap-2 text-xs", children: [
+        /* @__PURE__ */ jsx83("span", { className: "w-28 shrink-0 truncate text-mute", title: dato.etiqueta, children: dato.etiqueta }),
+        /* @__PURE__ */ jsx83(
           "span",
           {
             className: "h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-fore/10",
             role: "img",
             "aria-label": `${dato.etiqueta}: ${formatear(dato.valor)}`,
             title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-            children: /* @__PURE__ */ jsx85("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
+            children: /* @__PURE__ */ jsx83("span", { className: cn("block h-full rounded-full transition-[width] duration-500", colorDe(dato)), style: { width: `${porcentajeBarra(dato.valor, tope)}%` } })
           }
         ),
-        mostrarValores && /* @__PURE__ */ jsx85("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
+        mostrarValores && /* @__PURE__ */ jsx83("span", { className: "w-24 shrink-0 text-right font-semibold tabular-nums text-fore", children: formatear(dato.valor) })
       ] }, dato.id ?? indice)),
       listaAccesible
     ] });
   }
-  return /* @__PURE__ */ jsxs67("div", { className: cn("space-y-1", className), children: [
-    /* @__PURE__ */ jsx85("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx85("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx85(
+  return /* @__PURE__ */ jsxs66("div", { className: cn("space-y-1", className), children: [
+    /* @__PURE__ */ jsx83("div", { className: "flex items-end gap-2", style: { height: altura }, role: "img", "aria-label": etiqueta, children: datos.map((dato, indice) => /* @__PURE__ */ jsx83("div", { className: "relative h-full min-w-0 flex-1", children: /* @__PURE__ */ jsx83(
       "span",
       {
         className: cn("absolute inset-x-0 bottom-0 rounded-t-md transition-[height] duration-500", colorDe(dato)),
         style: { height: `${porcentajeBarra(dato.valor, tope)}%` },
         title: `${dato.etiqueta}: ${formatear(dato.valor)}`,
-        children: mostrarValores && /* @__PURE__ */ jsx85("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
+        children: mostrarValores && /* @__PURE__ */ jsx83("span", { className: "absolute inset-x-0 -top-4 truncate text-center text-[10px] font-semibold tabular-nums text-mute", children: formatear(dato.valor) })
       }
     ) }, dato.id ?? indice)) }),
-    /* @__PURE__ */ jsx85("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx85("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
+    /* @__PURE__ */ jsx83("div", { className: "flex gap-2", children: datos.map((dato, indice) => /* @__PURE__ */ jsx83("span", { className: "min-w-0 flex-1 truncate text-center text-[10px] text-mute", title: dato.etiqueta, children: dato.etiqueta }, dato.id ?? indice)) }),
     listaAccesible
   ] });
 }
 
 // src/components/TableroKanban.jsx
-import { useCallback as useCallback4, useEffect as useEffect13, useMemo as useMemo8, useRef as useRef12, useState as useState27 } from "react";
-import { jsx as jsx86, jsxs as jsxs68 } from "react/jsx-runtime";
+import { useCallback as useCallback3, useEffect as useEffect12, useMemo as useMemo8, useRef as useRef11, useState as useState25 } from "react";
+import { jsx as jsx84, jsxs as jsxs67 } from "react/jsx-runtime";
 var SIN_MOVIMIENTOS = /* @__PURE__ */ new Set();
 function columnasDelTablero(columnas = [], tarjetas = []) {
   const declaradas = [...columnas || []];
@@ -7322,18 +6802,18 @@ function destinosDeTarjeta(tarjeta, columnas = []) {
   return (permitidos || []).filter((valor, indice) => valor !== tarjeta?.estado && permitidos.indexOf(valor) === indice);
 }
 function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
-  const [overrides, setOverrides] = useState27({});
-  const [moviendo, setMoviendo] = useState27(SIN_MOVIMIENTOS);
-  const tarjetasRef = useRef12(tarjetas);
-  const overridesRef = useRef12(overrides);
-  const enVueloRef = useRef12(/* @__PURE__ */ new Set());
-  useEffect13(() => {
+  const [overrides, setOverrides] = useState25({});
+  const [moviendo, setMoviendo] = useState25(SIN_MOVIMIENTOS);
+  const tarjetasRef = useRef11(tarjetas);
+  const overridesRef = useRef11(overrides);
+  const enVueloRef = useRef11(/* @__PURE__ */ new Set());
+  useEffect12(() => {
     tarjetasRef.current = tarjetas;
   }, [tarjetas]);
-  useEffect13(() => {
+  useEffect12(() => {
     overridesRef.current = overrides;
   }, [overrides]);
-  useEffect13(() => {
+  useEffect12(() => {
     setOverrides((actual) => {
       const entradas = Object.entries(actual);
       if (entradas.length === 0) return actual;
@@ -7352,7 +6832,7 @@ function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
     }),
     [tarjetas, overrides]
   );
-  const revertir = useCallback4(
+  const revertir = useCallback3(
     (id, mensaje) => {
       setOverrides((actual) => {
         if (!(id in actual)) return actual;
@@ -7364,7 +6844,7 @@ function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
     },
     [onError]
   );
-  const moverA = useCallback4(
+  const moverA = useCallback3(
     (id, estadoDestino) => {
       if (!onMover || !id || !estadoDestino) return;
       const tarjeta = tarjetasRef.current.find((candidata) => candidata.id === id);
@@ -7423,8 +6903,8 @@ function TableroKanban({
   className
 }) {
   const { tarjetas: efectivas, moverA, moviendo } = useTableroOptimista({ tarjetas, onMover, onError });
-  const [arrastrandoId, setArrastrandoId] = useState27("");
-  const [sobreColumna, setSobreColumna] = useState27("");
+  const [arrastrandoId, setArrastrandoId] = useState25("");
+  const [sobreColumna, setSobreColumna] = useState25("");
   const columnasReales = useMemo8(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
   const grupos = useMemo8(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
   const arrastrando = arrastrandoId ? efectivas.find((tarjeta) => tarjeta.id === arrastrandoId) ?? null : null;
@@ -7434,10 +6914,10 @@ function TableroKanban({
     setSobreColumna("");
   }
   const tituloDe = (valor) => columnasReales.find((columna) => columna.valor === valor)?.titulo ?? valor;
-  return /* @__PURE__ */ jsx86("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
+  return /* @__PURE__ */ jsx84("div", { className: cn("flex snap-x gap-3 overflow-x-auto pb-2", className), role: "group", "aria-label": etiqueta, children: columnasReales.map((columna) => {
     const deLaColumna = grupos[columna.valor] ?? [];
     const sobre = sobreColumna === columna.valor && acepta(arrastrando, columna.valor);
-    return /* @__PURE__ */ jsxs68(
+    return /* @__PURE__ */ jsxs67(
       "section",
       {
         "aria-label": `${columna.titulo}: ${deLaColumna.length}`,
@@ -7460,17 +6940,17 @@ function TableroKanban({
           if (id) moverA(id, columna.valor);
         },
         children: [
-          /* @__PURE__ */ jsxs68("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
-            /* @__PURE__ */ jsx86("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
-            /* @__PURE__ */ jsx86("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
-            /* @__PURE__ */ jsx86("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
+          /* @__PURE__ */ jsxs67("header", { className: "flex items-center gap-2 border-b border-ink-600 px-3 py-2", children: [
+            /* @__PURE__ */ jsx84("span", { className: cn("h-2 w-2 shrink-0 rounded-full", puntoDeTono(columna.tono)), "aria-hidden": "true" }),
+            /* @__PURE__ */ jsx84("h3", { className: "min-w-0 flex-1 truncate text-[11px] font-bold uppercase tracking-wider text-mute", children: columna.titulo }),
+            /* @__PURE__ */ jsx84("span", { className: "shrink-0 rounded-md bg-ink-700 px-1.5 text-[11px] font-bold tabular-nums text-mute", title: `${deLaColumna.length} tarjeta${deLaColumna.length === 1 ? "" : "s"}`, children: deLaColumna.length })
           ] }),
-          /* @__PURE__ */ jsxs68("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
+          /* @__PURE__ */ jsxs67("div", { className: "flex min-h-[3rem] flex-col gap-2 p-2", children: [
             deLaColumna.map((tarjeta) => {
               const destinos = destinosDeTarjeta(tarjeta, columnasReales);
               const movible = Boolean(onMover && puedeMover && destinos.length > 0 && !moviendo.has(tarjeta.id));
               const tieneMonto = tarjeta.monto !== null && tarjeta.monto !== void 0;
-              return /* @__PURE__ */ jsxs68(
+              return /* @__PURE__ */ jsxs67(
                 "article",
                 {
                   className: cn(
@@ -7491,34 +6971,34 @@ function TableroKanban({
                   },
                   onDragEnd: terminarArrastre,
                   children: [
-                    /* @__PURE__ */ jsxs68("div", { className: "flex items-start justify-between gap-2", children: [
-                      /* @__PURE__ */ jsx86("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
-                      tarjeta.acciones && /* @__PURE__ */ jsx86("span", { className: "shrink-0", children: tarjeta.acciones })
+                    /* @__PURE__ */ jsxs67("div", { className: "flex items-start justify-between gap-2", children: [
+                      /* @__PURE__ */ jsx84("strong", { className: "min-w-0 flex-1 truncate text-sm font-semibold text-fore", title: tarjeta.titulo, children: tarjeta.titulo }),
+                      tarjeta.acciones && /* @__PURE__ */ jsx84("span", { className: "shrink-0", children: tarjeta.acciones })
                     ] }),
-                    tarjeta.subtitulo && /* @__PURE__ */ jsx86("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
-                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx86("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs68(
+                    tarjeta.subtitulo && /* @__PURE__ */ jsx84("p", { className: "mt-0.5 truncate text-xs text-mute", title: tarjeta.subtitulo, children: tarjeta.subtitulo }),
+                    tarjeta.chips?.length > 0 && /* @__PURE__ */ jsx84("div", { className: "mt-1.5 flex flex-wrap items-center gap-1", children: tarjeta.chips.map((chip, indice) => /* @__PURE__ */ jsxs67(
                       "span",
                       {
                         title: chip.titulo ?? chip.etiqueta,
                         className: cn("inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(chip.tono)),
                         children: [
-                          chip.icono && /* @__PURE__ */ jsx86(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
+                          chip.icono && /* @__PURE__ */ jsx84(Icon, { name: chip.icono, className: "h-3 w-3", "aria-hidden": "true" }),
                           chip.etiqueta
                         ]
                       },
                       chip.etiqueta ?? indice
                     )) }),
-                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs68("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
-                      tieneMonto && /* @__PURE__ */ jsxs68("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
-                        /* @__PURE__ */ jsx86(Money, { value: tarjeta.monto }),
-                        tarjeta.montoNota && /* @__PURE__ */ jsx86("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
+                    (tieneMonto || tarjeta.fecha) && /* @__PURE__ */ jsxs67("div", { className: "mt-1.5 flex items-baseline justify-between gap-2", children: [
+                      tieneMonto && /* @__PURE__ */ jsxs67("span", { className: "min-w-0 truncate text-xs font-semibold tabular-nums text-fore", children: [
+                        /* @__PURE__ */ jsx84(Money, { value: tarjeta.monto }),
+                        tarjeta.montoNota && /* @__PURE__ */ jsx84("small", { className: "ml-1 font-normal text-mute", children: tarjeta.montoNota })
                       ] }),
-                      tarjeta.fecha && /* @__PURE__ */ jsx86("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
+                      tarjeta.fecha && /* @__PURE__ */ jsx84("span", { className: cn("shrink-0 text-[11px] tabular-nums text-mute", !tieneMonto && "ml-auto"), title: tarjeta.fechaTitulo, children: fechaDia(tarjeta.fecha) })
                     ] }),
-                    tarjeta.detalle && /* @__PURE__ */ jsx86("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
-                    movible && /* @__PURE__ */ jsxs68("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
-                      /* @__PURE__ */ jsx86("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
-                      /* @__PURE__ */ jsxs68(
+                    tarjeta.detalle && /* @__PURE__ */ jsx84("p", { className: "mt-1 text-[11px] leading-4 text-mute", children: tarjeta.detalle }),
+                    movible && /* @__PURE__ */ jsxs67("div", { className: "mt-2", onDragStart: (event) => event.preventDefault(), children: [
+                      /* @__PURE__ */ jsx84("label", { className: "sr-only", htmlFor: `mover-${tarjeta.id}`, children: `Mover ${tarjeta.titulo} a otro estado` }),
+                      /* @__PURE__ */ jsxs67(
                         "select",
                         {
                           id: `mover-${tarjeta.id}`,
@@ -7532,8 +7012,8 @@ function TableroKanban({
                             "outline-none transition focus:border-fono focus:ring-1 focus:ring-fono/40 [&>option]:bg-ink-800 [&>option]:text-fore"
                           ),
                           children: [
-                            /* @__PURE__ */ jsx86("option", { value: "", children: etiquetaMover }),
-                            destinos.map((valor) => /* @__PURE__ */ jsx86("option", { value: valor, children: tituloDe(valor) }, valor))
+                            /* @__PURE__ */ jsx84("option", { value: "", children: etiquetaMover }),
+                            destinos.map((valor) => /* @__PURE__ */ jsx84("option", { value: valor, children: tituloDe(valor) }, valor))
                           ]
                         }
                       )
@@ -7543,7 +7023,7 @@ function TableroKanban({
                 tarjeta.id
               );
             }),
-            deLaColumna.length === 0 && /* @__PURE__ */ jsx86("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
+            deLaColumna.length === 0 && /* @__PURE__ */ jsx84("p", { className: "px-2 py-6 text-center text-xs text-mute", children: textoVacio })
           ] })
         ]
       },
@@ -7553,7 +7033,7 @@ function TableroKanban({
 }
 
 // src/components/Cronologia.jsx
-import { jsx as jsx87, jsxs as jsxs69 } from "react/jsx-runtime";
+import { jsx as jsx85, jsxs as jsxs68 } from "react/jsx-runtime";
 var ICONOS_HITO = {
   creado: "plus",
   actualizado: "edit",
@@ -7656,18 +7136,18 @@ function FilaHito({ hito, iconos, tonos, etiquetas, mostrarTipo }) {
   const tono = hito.tono || tonos[tipo] || "mute";
   const icono = hito.icono || iconos[tipo] || "info";
   const etiqueta = mostrarTipo ? etiquetaDeHito(tipo, etiquetas) : "";
-  return /* @__PURE__ */ jsxs69("li", { className: "flex gap-3", children: [
-    /* @__PURE__ */ jsx87("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx87(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
-    /* @__PURE__ */ jsxs69("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
-      /* @__PURE__ */ jsxs69("p", { className: "text-sm font-semibold text-fore", children: [
-        /* @__PURE__ */ jsx87("span", { className: "break-words", children: hito.titulo }),
-        hito.actor && /* @__PURE__ */ jsxs69("span", { className: "font-normal text-mute", children: [
+  return /* @__PURE__ */ jsxs68("li", { className: "flex gap-3", children: [
+    /* @__PURE__ */ jsx85("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", puntoDeTono(tono)), "aria-hidden": "true", children: /* @__PURE__ */ jsx85(Icon, { name: icono, className: "h-3.5 w-3.5" }) }),
+    /* @__PURE__ */ jsxs68("div", { className: "min-w-0 flex-1 border-b border-ink-700 pb-2.5", children: [
+      /* @__PURE__ */ jsxs68("p", { className: "text-sm font-semibold text-fore", children: [
+        /* @__PURE__ */ jsx85("span", { className: "break-words", children: hito.titulo }),
+        hito.actor && /* @__PURE__ */ jsxs68("span", { className: "font-normal text-mute", children: [
           " \xB7 ",
           hito.actor
         ] })
       ] }),
-      hito.detalle && /* @__PURE__ */ jsx87("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
-      /* @__PURE__ */ jsx87("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
+      hito.detalle && /* @__PURE__ */ jsx85("p", { className: "mt-0.5 text-xs leading-5 text-mute", children: hito.detalle }),
+      /* @__PURE__ */ jsx85("p", { className: "mt-0.5 text-[11px] tabular-nums text-mute", children: [fechaDelHito(hito.fecha), etiqueta].filter(Boolean).join(" \xB7 ") })
     ] })
   ] });
 }
@@ -7691,17 +7171,17 @@ function Cronologia({
   className
 }) {
   if (!hitos?.length) {
-    return /* @__PURE__ */ jsx87(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
+    return /* @__PURE__ */ jsx85(EmptyState, { compact: true, icon: "clock", title: vacioTitulo, description: vacioDetalle, className });
   }
-  const fila = (hito) => /* @__PURE__ */ jsx87(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
-  return /* @__PURE__ */ jsx87("div", { className, children: agrupar ? /* @__PURE__ */ jsx87("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs69("section", { children: [
-    /* @__PURE__ */ jsx87("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
-    /* @__PURE__ */ jsx87("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
-  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx87("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
+  const fila = (hito) => /* @__PURE__ */ jsx85(FilaHito, { hito, iconos, tonos, etiquetas, mostrarTipo }, hito.id);
+  return /* @__PURE__ */ jsx85("div", { className, children: agrupar ? /* @__PURE__ */ jsx85("div", { className: "space-y-3", children: agruparHitos(hitos).map((grupo) => /* @__PURE__ */ jsxs68("section", { children: [
+    /* @__PURE__ */ jsx85("h3", { className: "mb-1.5 text-[11px] font-bold uppercase tracking-wider text-mute", children: grupo.etiqueta }),
+    /* @__PURE__ */ jsx85("ol", { className: "space-y-2.5", "aria-label": `${etiqueta} \xB7 ${grupo.etiqueta}`, children: grupo.hitos.map(fila) })
+  ] }, grupo.clave)) }) : /* @__PURE__ */ jsx85("ol", { className: "space-y-2.5", "aria-label": etiqueta, children: hitos.map(fila) }) });
 }
 
 // src/components/PlanPagos.jsx
-import { jsx as jsx88, jsxs as jsxs70 } from "react/jsx-runtime";
+import { jsx as jsx86, jsxs as jsxs69 } from "react/jsx-runtime";
 var ESTADOS_CUOTA = {
   pendiente: { chip: "pendiente", etiqueta: "Pendiente", icono: "clock" },
   revision: { chip: "revision", etiqueta: "En revisi\xF3n", icono: "refresh" },
@@ -7711,18 +7191,18 @@ var ESTADOS_CUOTA = {
 function ChipCuota({ estado, estados }) {
   const config = estados[estado];
   if (!config) return null;
-  return /* @__PURE__ */ jsx88(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
+  return /* @__PURE__ */ jsx86(ChipEstado, { estado: config.chip, etiqueta: config.etiqueta, icono: config.icono, tono: config.tono });
 }
 function FilaPlan({ etiqueta, monto, vence, estado, nota, moneda, simbolo, estados, destacada, conEstado }) {
-  return /* @__PURE__ */ jsxs70("tr", { className: "border-t border-ink-700", children: [
-    /* @__PURE__ */ jsxs70("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
-      /* @__PURE__ */ jsx88("span", { className: "font-semibold", children: etiqueta }),
-      destacada && /* @__PURE__ */ jsx88("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
-      nota && /* @__PURE__ */ jsx88("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
+  return /* @__PURE__ */ jsxs69("tr", { className: "border-t border-ink-700", children: [
+    /* @__PURE__ */ jsxs69("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 text-xs text-fore"), children: [
+      /* @__PURE__ */ jsx86("span", { className: "font-semibold", children: etiqueta }),
+      destacada && /* @__PURE__ */ jsx86("small", { className: "ml-1.5 font-medium text-fono-light", children: "A transferir ahora" }),
+      nota && /* @__PURE__ */ jsx86("small", { className: "mt-0.5 block text-[11px] text-mute", children: nota })
     ] }),
-    /* @__PURE__ */ jsx88("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx88(Money, { value: monto, currency: moneda, simbolo }) }),
-    /* @__PURE__ */ jsx88("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
-    conEstado && /* @__PURE__ */ jsx88("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx88(ChipCuota, { estado, estados }) : null })
+    /* @__PURE__ */ jsx86("td", { className: cn(CELDA_NUMERO, "py-1.5 pr-3 text-xs font-semibold text-fore"), children: /* @__PURE__ */ jsx86(Money, { value: monto, currency: moneda, simbolo }) }),
+    /* @__PURE__ */ jsx86("td", { className: cn(CELDA_DATO, "py-1.5 pr-3 whitespace-nowrap text-xs"), children: vence ? fechaDia(vence) : "\u2014" }),
+    conEstado && /* @__PURE__ */ jsx86("td", { className: cn(CELDA_DATO, "py-1.5 text-xs"), children: estado ? /* @__PURE__ */ jsx86(ChipCuota, { estado, estados }) : null })
   ] });
 }
 function PlanPagos({
@@ -7760,23 +7240,23 @@ function PlanPagos({
   const conEstado = (cuotas || []).some((cuota) => Boolean(cuota.estado));
   const vacioPlan = !hayAnticipo && !(cuotas || []).length;
   if (vacioPlan && total === null && !condiciones && !aTransferir) {
-    return /* @__PURE__ */ jsx88(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
+    return /* @__PURE__ */ jsx86(EmptyState, { compact: true, icon: "receipt", title: vacio, className });
   }
-  return /* @__PURE__ */ jsxs70("div", { className: cn("space-y-2.5", className), children: [
-    aTransferir && /* @__PURE__ */ jsxs70("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
-      /* @__PURE__ */ jsx88("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
-      /* @__PURE__ */ jsx88("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx88(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
+  return /* @__PURE__ */ jsxs69("div", { className: cn("space-y-2.5", className), children: [
+    aTransferir && /* @__PURE__ */ jsxs69("div", { className: "flex flex-wrap items-baseline justify-between gap-2 rounded-xl border border-fono/40 bg-fono/10 px-3 py-2", children: [
+      /* @__PURE__ */ jsx86("span", { className: "text-xs font-semibold text-fono-light", children: aTransferir.etiqueta || "A transferir ahora" }),
+      /* @__PURE__ */ jsx86("strong", { className: "text-lg font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx86(Money, { value: aTransferir.monto, currency: moneda, simbolo }) })
     ] }),
-    vacioPlan ? /* @__PURE__ */ jsx88("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs70("table", { className: "w-full", children: [
-      /* @__PURE__ */ jsx88("caption", { className: "sr-only", children: "Plan de pagos" }),
-      /* @__PURE__ */ jsx88("thead", { children: /* @__PURE__ */ jsxs70("tr", { children: [
-        /* @__PURE__ */ jsx88("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
-        /* @__PURE__ */ jsx88("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
-        /* @__PURE__ */ jsx88("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
-        conEstado && /* @__PURE__ */ jsx88("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
+    vacioPlan ? /* @__PURE__ */ jsx86("p", { className: "text-xs text-mute", children: vacio }) : /* @__PURE__ */ jsxs69("table", { className: "w-full", children: [
+      /* @__PURE__ */ jsx86("caption", { className: "sr-only", children: "Plan de pagos" }),
+      /* @__PURE__ */ jsx86("thead", { children: /* @__PURE__ */ jsxs69("tr", { children: [
+        /* @__PURE__ */ jsx86("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Cuota" }),
+        /* @__PURE__ */ jsx86("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-right"), scope: "col", children: "Monto" }),
+        /* @__PURE__ */ jsx86("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Vencimiento" }),
+        conEstado && /* @__PURE__ */ jsx86("th", { className: cn(CELDA_ENCABEZADO, "pb-1 text-left"), scope: "col", children: "Estado" })
       ] }) }),
-      /* @__PURE__ */ jsxs70("tbody", { children: [
-        hayAnticipo && /* @__PURE__ */ jsx88(
+      /* @__PURE__ */ jsxs69("tbody", { children: [
+        hayAnticipo && /* @__PURE__ */ jsx86(
           FilaPlan,
           {
             etiqueta: anticipoEtiqueta,
@@ -7789,7 +7269,7 @@ function PlanPagos({
             destacada: aTransferir?.id === "anticipo"
           }
         ),
-        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx88(
+        (cuotas || []).map((cuota, indice) => /* @__PURE__ */ jsx86(
           FilaPlan,
           {
             etiqueta: cuota.etiqueta,
@@ -7806,27 +7286,27 @@ function PlanPagos({
           cuota.id ?? `${cuota.etiqueta}-${indice}`
         ))
       ] }),
-      total !== null && /* @__PURE__ */ jsx88("tfoot", { children: /* @__PURE__ */ jsxs70("tr", { className: "border-t border-ink-500", children: [
-        /* @__PURE__ */ jsx88("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
-        /* @__PURE__ */ jsx88("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx88(Money, { value: total, currency: moneda, simbolo }) })
+      total !== null && /* @__PURE__ */ jsx86("tfoot", { children: /* @__PURE__ */ jsxs69("tr", { className: "border-t border-ink-500", children: [
+        /* @__PURE__ */ jsx86("td", { className: cn(CELDA_DATO, "py-2 text-xs font-semibold text-fore"), colSpan: conEstado ? 3 : 2, children: totalEtiqueta }),
+        /* @__PURE__ */ jsx86("td", { className: cn(CELDA_NUMERO, "py-2 text-sm font-bold text-fore"), children: /* @__PURE__ */ jsx86(Money, { value: total, currency: moneda, simbolo }) })
       ] }) })
     ] }),
-    vacioPlan && total !== null && /* @__PURE__ */ jsxs70("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
-      /* @__PURE__ */ jsx88("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
-      /* @__PURE__ */ jsx88("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx88(Money, { value: total, currency: moneda, simbolo }) })
+    vacioPlan && total !== null && /* @__PURE__ */ jsxs69("div", { className: "flex items-baseline justify-between gap-2 border-t border-ink-700 pt-2", children: [
+      /* @__PURE__ */ jsx86("span", { className: "text-xs font-semibold text-fore", children: totalEtiqueta }),
+      /* @__PURE__ */ jsx86("span", { className: "text-sm font-bold tabular-nums text-fore", children: /* @__PURE__ */ jsx86(Money, { value: total, currency: moneda, simbolo }) })
     ] }),
-    saldoSinCuota > 0 && /* @__PURE__ */ jsxs70("p", { className: "text-xs text-mute", children: [
+    saldoSinCuota > 0 && /* @__PURE__ */ jsxs69("p", { className: "text-xs text-mute", children: [
       saldoEtiqueta,
       ":",
       " ",
-      /* @__PURE__ */ jsx88("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx88(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
+      /* @__PURE__ */ jsx86("span", { className: "font-semibold tabular-nums text-fore", children: /* @__PURE__ */ jsx86(Money, { value: saldoSinCuota, currency: moneda, simbolo }) })
     ] }),
-    condiciones && /* @__PURE__ */ jsx88(Nota, { tono: "info", compact: true, children: condiciones })
+    condiciones && /* @__PURE__ */ jsx86(Nota, { tono: "info", compact: true, children: condiciones })
   ] });
 }
 
 // src/components/DocumentoImpresion.jsx
-import { Fragment as Fragment15, jsx as jsx89, jsxs as jsxs71 } from "react/jsx-runtime";
+import { Fragment as Fragment14, jsx as jsx87, jsxs as jsxs70 } from "react/jsx-runtime";
 var CANTIDAD_FORMATTER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 3 });
 function cantidadTexto(cantidad) {
   if (cantidad === null || cantidad === void 0 || cantidad === "") return "";
@@ -7834,23 +7314,23 @@ function cantidadTexto(cantidad) {
 }
 function Dato({ etiqueta, valor, className }) {
   if (!valor) return null;
-  return /* @__PURE__ */ jsxs71("p", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsx89("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
-    /* @__PURE__ */ jsx89("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
+  return /* @__PURE__ */ jsxs70("p", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsx87("span", { className: "block text-[9.5px] font-bold uppercase tracking-wider oc-print-suave", children: etiqueta }),
+    /* @__PURE__ */ jsx87("span", { className: "block whitespace-pre-wrap text-[12.5px]", children: valor })
   ] });
 }
 function Identidad({ titulo: titulo2, datos, logo, monograma }) {
   if (!datos) return null;
-  return /* @__PURE__ */ jsxs71("section", { className: "oc-print-bloque", children: [
-    /* @__PURE__ */ jsx89("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
-    /* @__PURE__ */ jsxs71("div", { className: "flex items-start gap-3", children: [
-      (logo || monograma) && /* @__PURE__ */ jsx89("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx89("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx89("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
-      /* @__PURE__ */ jsxs71("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx89(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
-        /* @__PURE__ */ jsx89(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
-        /* @__PURE__ */ jsx89(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
-        /* @__PURE__ */ jsx89(Dato, { etiqueta: "Correo", valor: datos.correo }),
-        /* @__PURE__ */ jsx89(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
+  return /* @__PURE__ */ jsxs70("section", { className: "oc-print-bloque", children: [
+    /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: titulo2 }),
+    /* @__PURE__ */ jsxs70("div", { className: "flex items-start gap-3", children: [
+      (logo || monograma) && /* @__PURE__ */ jsx87("span", { className: "shrink-0", children: logo ? /* @__PURE__ */ jsx87("img", { src: logo, alt: "", "aria-hidden": "true", className: "h-9 w-9 object-contain" }) : /* @__PURE__ */ jsx87("span", { className: "grid h-9 w-9 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }) }),
+      /* @__PURE__ */ jsxs70("div", { className: "grid min-w-0 flex-1 gap-1.5 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx87(Dato, { etiqueta: "Nombre", valor: datos.nombre, className: "sm:col-span-2" }),
+        /* @__PURE__ */ jsx87(Dato, { etiqueta: datos.etiquetaDocumento || "RUC", valor: datos.documento }),
+        /* @__PURE__ */ jsx87(Dato, { etiqueta: "Tel\xE9fono", valor: datos.telefono }),
+        /* @__PURE__ */ jsx87(Dato, { etiqueta: "Correo", valor: datos.correo }),
+        /* @__PURE__ */ jsx87(Dato, { etiqueta: "Direcci\xF3n", valor: datos.direccion, className: "sm:col-span-2" })
       ] })
     ] })
   ] });
@@ -7858,17 +7338,17 @@ function Identidad({ titulo: titulo2, datos, logo, monograma }) {
 function FilaLiquidacion({ etiqueta, valor, moneda, simbolo, nota, fuerte = false }) {
   const numero = Number(valor);
   const negativo = Number.isFinite(numero) && numero < 0;
-  return /* @__PURE__ */ jsxs71("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
-    /* @__PURE__ */ jsxs71("span", { className: "min-w-0", children: [
+  return /* @__PURE__ */ jsxs70("div", { className: cn("oc-print-fila", fuerte ? "oc-print-fila--total" : "oc-print-linea"), children: [
+    /* @__PURE__ */ jsxs70("span", { className: "min-w-0", children: [
       etiqueta,
-      nota && /* @__PURE__ */ jsxs71("small", { className: "oc-print-suave", children: [
+      nota && /* @__PURE__ */ jsxs70("small", { className: "oc-print-suave", children: [
         " ",
         nota
       ] })
     ] }),
-    /* @__PURE__ */ jsxs71("span", { className: "oc-print-num shrink-0 font-semibold", children: [
+    /* @__PURE__ */ jsxs70("span", { className: "oc-print-num shrink-0 font-semibold", children: [
       negativo && "\u2212 ",
-      /* @__PURE__ */ jsx89(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
+      /* @__PURE__ */ jsx87(Money, { value: negativo ? Math.abs(numero) : valor, currency: moneda, simbolo })
     ] })
   ] });
 }
@@ -7920,70 +7400,70 @@ function DocumentoImpresion({
 }) {
   const monograma = String(emisor?.nombre ?? "").trim().slice(0, 2).toUpperCase() || "\xB7\xB7";
   const tieneLiquidacion = Boolean(liquidacion && (liquidacion.subtotal !== void 0 || liquidacion.total !== void 0));
-  return /* @__PURE__ */ jsxs71("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
-    onImprimir && /* @__PURE__ */ jsx89("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs71(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
-      /* @__PURE__ */ jsx89(Icon, { name: "printer", className: "h-4 w-4" }),
+  return /* @__PURE__ */ jsxs70("div", { className: cn("oc-print min-h-screen px-3 py-4 md:px-6", className), children: [
+    onImprimir && /* @__PURE__ */ jsx87("div", { className: "oc-print-oculto mx-auto mb-3 flex w-full max-w-[210mm] justify-end", children: /* @__PURE__ */ jsxs70(Button, { type: "button", variant: "outline", onClick: onImprimir, children: [
+      /* @__PURE__ */ jsx87(Icon, { name: "printer", className: "h-4 w-4" }),
       etiquetaImprimir
     ] }) }),
-    /* @__PURE__ */ jsxs71("article", { className: "oc-print-hoja", children: [
-      /* @__PURE__ */ jsxs71("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
-        /* @__PURE__ */ jsxs71("div", { className: "flex min-w-0 items-center gap-2.5", children: [
-          emisor?.logo ? /* @__PURE__ */ jsx89("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx89("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
-          /* @__PURE__ */ jsxs71("span", { className: "grid min-w-0 gap-0.5", children: [
-            /* @__PURE__ */ jsx89("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
-            emisor?.direccion && /* @__PURE__ */ jsx89("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
+    /* @__PURE__ */ jsxs70("article", { className: "oc-print-hoja", children: [
+      /* @__PURE__ */ jsxs70("header", { className: "oc-print-bloque flex flex-wrap items-start justify-between gap-4 border-b-2 pb-2.5 oc-print-linea", children: [
+        /* @__PURE__ */ jsxs70("div", { className: "flex min-w-0 items-center gap-2.5", children: [
+          emisor?.logo ? /* @__PURE__ */ jsx87("img", { src: emisor.logo, alt: "", "aria-hidden": "true", className: "h-8 w-8 object-contain" }) : /* @__PURE__ */ jsx87("span", { className: "grid h-8 w-8 shrink-0 place-items-center rounded-lg border text-[11px] font-bold oc-print-linea oc-print-suave", "aria-hidden": "true", children: monograma }),
+          /* @__PURE__ */ jsxs70("span", { className: "grid min-w-0 gap-0.5", children: [
+            /* @__PURE__ */ jsx87("strong", { className: "truncate text-[13px] font-bold tracking-wider", children: emisor?.nombre || "\u2014" }),
+            emisor?.direccion && /* @__PURE__ */ jsx87("span", { className: "truncate text-[10.5px] uppercase tracking-wider oc-print-suave", children: emisor.direccion })
           ] })
         ] }),
-        /* @__PURE__ */ jsxs71("div", { className: "text-right", children: [
-          /* @__PURE__ */ jsx89("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
-          numero && /* @__PURE__ */ jsxs71("p", { className: "text-[12px] font-bold", children: [
+        /* @__PURE__ */ jsxs70("div", { className: "text-right", children: [
+          /* @__PURE__ */ jsx87("h1", { className: "text-lg font-bold uppercase tracking-wide", children: titulo2 }),
+          numero && /* @__PURE__ */ jsxs70("p", { className: "text-[12px] font-bold", children: [
             etiquetaNumero,
             " ",
             numero
           ] }),
-          estado && /* @__PURE__ */ jsx89("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
+          estado && /* @__PURE__ */ jsx87("span", { className: cn("mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10.5px] font-semibold", chipDeTono(estadoTono)), children: estado })
         ] })
       ] }),
-      (emisor || receptor) && /* @__PURE__ */ jsxs71("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
-        /* @__PURE__ */ jsx89(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
-        /* @__PURE__ */ jsx89(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
+      (emisor || receptor) && /* @__PURE__ */ jsxs70("div", { className: "mt-3.5 grid gap-4 sm:grid-cols-2", children: [
+        /* @__PURE__ */ jsx87(Identidad, { titulo: etiquetaEmisor, datos: emisor, logo: emisor?.logo, monograma }),
+        /* @__PURE__ */ jsx87(Identidad, { titulo: etiquetaReceptor, datos: receptor ? { ...receptor, etiquetaDocumento: receptor.etiquetaDocumento || "RUC" } : null })
       ] }),
-      meta?.length > 0 && /* @__PURE__ */ jsxs71("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx89("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
-        /* @__PURE__ */ jsx89("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx89(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
+      meta?.length > 0 && /* @__PURE__ */ jsxs70("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaMeta }),
+        /* @__PURE__ */ jsx87("div", { className: "grid gap-1.5 sm:grid-cols-3", children: meta.map((dato, indice) => /* @__PURE__ */ jsx87(Dato, { etiqueta: dato.etiqueta, valor: dato.valor }, dato.etiqueta ?? indice)) })
       ] }),
-      /* @__PURE__ */ jsxs71("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx89("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
-        detalle?.length > 0 ? /* @__PURE__ */ jsxs71("table", { className: "oc-print-tabla", children: [
-          /* @__PURE__ */ jsx89("thead", { children: /* @__PURE__ */ jsxs71("tr", { children: [
-            /* @__PURE__ */ jsx89("th", { scope: "col", children: "Cantidad" }),
-            /* @__PURE__ */ jsx89("th", { scope: "col", children: "Concepto" }),
-            /* @__PURE__ */ jsx89("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
-            /* @__PURE__ */ jsx89("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
+      /* @__PURE__ */ jsxs70("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaDetalle }),
+        detalle?.length > 0 ? /* @__PURE__ */ jsxs70("table", { className: "oc-print-tabla", children: [
+          /* @__PURE__ */ jsx87("thead", { children: /* @__PURE__ */ jsxs70("tr", { children: [
+            /* @__PURE__ */ jsx87("th", { scope: "col", children: "Cantidad" }),
+            /* @__PURE__ */ jsx87("th", { scope: "col", children: "Concepto" }),
+            /* @__PURE__ */ jsx87("th", { scope: "col", className: "oc-print-num", children: "Unitario" }),
+            /* @__PURE__ */ jsx87("th", { scope: "col", className: "oc-print-num", children: "Subtotal" })
           ] }) }),
-          /* @__PURE__ */ jsx89("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs71("tr", { children: [
-            /* @__PURE__ */ jsx89("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
-            /* @__PURE__ */ jsxs71("td", { children: [
+          /* @__PURE__ */ jsx87("tbody", { children: detalle.map((item, indice) => /* @__PURE__ */ jsxs70("tr", { children: [
+            /* @__PURE__ */ jsx87("td", { className: "oc-print-num w-16", children: cantidadTexto(item.cantidad) }),
+            /* @__PURE__ */ jsxs70("td", { children: [
               item.concepto,
-              item.nota && /* @__PURE__ */ jsx89("small", { className: "block oc-print-suave", children: item.nota })
+              item.nota && /* @__PURE__ */ jsx87("small", { className: "block oc-print-suave", children: item.nota })
             ] }),
-            /* @__PURE__ */ jsx89("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx89(Money, { value: item.unitario, currency: moneda, simbolo }) }),
-            /* @__PURE__ */ jsx89("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx89(Money, { value: item.subtotal, currency: moneda, simbolo }) })
+            /* @__PURE__ */ jsx87("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx87(Money, { value: item.unitario, currency: moneda, simbolo }) }),
+            /* @__PURE__ */ jsx87("td", { className: "oc-print-num", children: /* @__PURE__ */ jsx87(Money, { value: item.subtotal, currency: moneda, simbolo }) })
           ] }, item.id ?? indice)) })
-        ] }) : /* @__PURE__ */ jsx89("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
+        ] }) : /* @__PURE__ */ jsx87("p", { className: "rounded-md border border-dashed px-2.5 py-2 text-[11.5px] oc-print-linea oc-print-suave", children: vacioDetalle })
       ] }),
-      tieneLiquidacion && /* @__PURE__ */ jsxs71("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
-        /* @__PURE__ */ jsx89("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
-        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx89(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
-        liquidacion.descuento ? /* @__PURE__ */ jsx89(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
-        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx89(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
-        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx89(
+      tieneLiquidacion && /* @__PURE__ */ jsxs70("section", { className: "oc-print-totales oc-print-bloque mt-3 ml-auto w-full max-w-[86mm]", children: [
+        /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: etiquetaLiquidacion }),
+        liquidacion.subtotal !== void 0 && /* @__PURE__ */ jsx87(FilaLiquidacion, { etiqueta: "Subtotal", valor: liquidacion.subtotal, moneda, simbolo }),
+        liquidacion.descuento ? /* @__PURE__ */ jsx87(FilaLiquidacion, { etiqueta: liquidacion.descuentoEtiqueta || "Descuento", valor: -Number(liquidacion.descuento), moneda, simbolo }) : null,
+        liquidacion.otros?.map((otro, indice) => /* @__PURE__ */ jsx87(FilaLiquidacion, { etiqueta: otro.etiqueta, valor: otro.monto, moneda, simbolo }, otro.etiqueta ?? indice)),
+        liquidacion.iva?.map((iva, indice) => /* @__PURE__ */ jsx87(
           FilaLiquidacion,
           {
             etiqueta: `IVA ${iva.tasa}%`,
-            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs71(Fragment15, { children: [
+            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs70(Fragment14, { children: [
               "sobre ",
-              /* @__PURE__ */ jsx89(Money, { value: iva.base, currency: moneda, simbolo })
+              /* @__PURE__ */ jsx87(Money, { value: iva.base, currency: moneda, simbolo })
             ] }) : null,
             valor: iva.monto,
             moneda,
@@ -7991,20 +7471,20 @@ function DocumentoImpresion({
           },
           `${iva.tasa}-${indice}`
         )),
-        liquidacion.total !== void 0 && /* @__PURE__ */ jsx89(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
+        liquidacion.total !== void 0 && /* @__PURE__ */ jsx87(FilaLiquidacion, { etiqueta: "Total", valor: liquidacion.total, moneda, simbolo, fuerte: true })
       ] }),
-      notas && /* @__PURE__ */ jsxs71("section", { className: "oc-print-bloque mt-3.5", children: [
-        /* @__PURE__ */ jsx89("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
-        /* @__PURE__ */ jsx89("div", { className: "oc-print-nota", children: notas })
+      notas && /* @__PURE__ */ jsxs70("section", { className: "oc-print-bloque mt-3.5", children: [
+        /* @__PURE__ */ jsx87("h2", { className: "mb-1.5 border-b pb-1 text-[10.5px] font-bold uppercase tracking-wider oc-print-suave oc-print-linea", children: notasEtiqueta }),
+        /* @__PURE__ */ jsx87("div", { className: "oc-print-nota", children: notas })
       ] }),
-      pie && /* @__PURE__ */ jsx89("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
+      pie && /* @__PURE__ */ jsx87("footer", { className: "oc-print-bloque mt-5 flex flex-wrap items-baseline justify-between gap-3 border-t pt-2 text-[10px] oc-print-linea oc-print-suave", children: pie })
     ] })
   ] });
 }
 
 // src/components/SubidaImagen.jsx
-import { useId as useId11, useRef as useRef13, useState as useState28 } from "react";
-import { jsx as jsx90, jsxs as jsxs72 } from "react/jsx-runtime";
+import { useId as useId10, useRef as useRef12, useState as useState26 } from "react";
+import { jsx as jsx88, jsxs as jsxs71 } from "react/jsx-runtime";
 var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
 var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
 var TAMANO_MAXIMO_IMAGEN = 5 * 1024 * 1024;
@@ -8160,14 +7640,14 @@ function SubidaImagen({
   ocupado = false,
   className
 }) {
-  const inputRef = useRef13(null);
-  const campoId = useId11();
+  const inputRef = useRef12(null);
+  const campoId = useId10();
   const errorId = `${campoId}-error`;
   const ayudaId = `${campoId}-ayuda`;
-  const [preparando, setPreparando] = useState28(false);
-  const [errorLocal, setErrorLocal] = useState28("");
-  const [vistaLocal, setVistaLocal] = useState28(null);
-  const [arrastrando, setArrastrando] = useState28(false);
+  const [preparando, setPreparando] = useState26(false);
+  const [errorLocal, setErrorLocal] = useState26("");
+  const [vistaLocal, setVistaLocal] = useState26(null);
+  const [arrastrando, setArrastrando] = useState26(false);
   const mensaje = error || errorLocal;
   const trabajando = Boolean(ocupado) || preparando;
   const vista = vistaLocal ?? valor;
@@ -8200,9 +7680,9 @@ function SubidaImagen({
     if (inputRef.current) inputRef.current.value = "";
     onLimpiar?.();
   }
-  return /* @__PURE__ */ jsxs72("div", { className: cn("min-w-0", className), children: [
-    etiqueta && /* @__PURE__ */ jsx90("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
-    /* @__PURE__ */ jsxs72(
+  return /* @__PURE__ */ jsxs71("div", { className: cn("min-w-0", className), children: [
+    etiqueta && /* @__PURE__ */ jsx88("span", { className: "mb-1.5 block text-[11px] font-medium uppercase tracking-wider text-mute", children: etiqueta }),
+    /* @__PURE__ */ jsxs71(
       "div",
       {
         className: cn(
@@ -8224,23 +7704,23 @@ function SubidaImagen({
           void elegir(event.dataTransfer.files?.[0] ?? null);
         },
         children: [
-          vista ? /* @__PURE__ */ jsx90("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx90("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx90("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx90(Icon, { name: "image", className: "h-6 w-6" }) }),
-          /* @__PURE__ */ jsxs72("div", { className: "min-w-0 flex-1", children: [
-            /* @__PURE__ */ jsx90("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
-            /* @__PURE__ */ jsxs72("p", { className: "mt-0.5 text-[11px] text-mute", children: [
+          vista ? /* @__PURE__ */ jsx88("span", { className: cn("grid shrink-0 place-items-center overflow-hidden rounded-xl border border-ink-500 bg-ink-800", cuadrado ? "h-20 w-20" : "h-20 w-28"), children: /* @__PURE__ */ jsx88("img", { src: vista, alt: "", className: cn("h-full w-full", cuadrado ? "object-cover" : "object-contain") }) }) : /* @__PURE__ */ jsx88("span", { className: "grid h-20 w-20 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-800 text-mute", "aria-hidden": "true", children: /* @__PURE__ */ jsx88(Icon, { name: "image", className: "h-6 w-6" }) }),
+          /* @__PURE__ */ jsxs71("div", { className: "min-w-0 flex-1", children: [
+            /* @__PURE__ */ jsx88("p", { className: "text-xs text-mute", children: vista ? "La imagen est\xE1 lista." : "Arrastr\xE1 una imagen o eleg\xED un archivo." }),
+            /* @__PURE__ */ jsxs71("p", { className: "mt-0.5 text-[11px] text-mute", children: [
               tipos.map((tipo) => ETIQUETA_TIPO[tipo] || tipo).join(" \xB7 "),
               " \xB7 hasta ",
               pesoLegible(tamanoMaximo)
             ] }),
-            /* @__PURE__ */ jsxs72("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
-              /* @__PURE__ */ jsxs72(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
-                /* @__PURE__ */ jsx90(Icon, { name: "upload", className: "h-4 w-4" }),
+            /* @__PURE__ */ jsxs71("div", { className: "mt-2 flex flex-wrap items-center gap-2", children: [
+              /* @__PURE__ */ jsxs71(Button, { type: "button", variant: "outline", disabled: disabled || trabajando, onClick: () => inputRef.current?.click(), "aria-describedby": mensaje ? errorId : descripcion ? ayudaId : void 0, children: [
+                /* @__PURE__ */ jsx88(Icon, { name: "upload", className: "h-4 w-4" }),
                 trabajando ? "Procesando\u2026" : vista ? cambiarEtiqueta : subirEtiqueta
               ] }),
-              (vista || vistaLocal) && /* @__PURE__ */ jsx90(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
+              (vista || vistaLocal) && /* @__PURE__ */ jsx88(IconAction, { icon: "trash", label: limpiarEtiqueta, disabled: disabled || trabajando, onClick: limpiar })
             ] })
           ] }),
-          /* @__PURE__ */ jsx90(
+          /* @__PURE__ */ jsx88(
             "input",
             {
               ref: inputRef,
@@ -8258,12 +7738,12 @@ function SubidaImagen({
         ]
       }
     ),
-    mensaje ? /* @__PURE__ */ jsx90("p", { className: "mt-1.5 text-xs text-bad-text", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx90("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
+    mensaje ? /* @__PURE__ */ jsx88("p", { className: "mt-1.5 text-xs text-bad", id: errorId, role: "alert", children: mensaje }) : descripcion ? /* @__PURE__ */ jsx88("p", { className: "mt-1.5 text-xs text-mute", id: ayudaId, children: descripcion }) : null
   ] });
 }
 
 // src/components/ProgresoChecklist.jsx
-import { jsx as jsx91, jsxs as jsxs73 } from "react/jsx-runtime";
+import { jsx as jsx89, jsxs as jsxs72 } from "react/jsx-runtime";
 function progresoChecklist({
   hechas = 0,
   total = 0,
@@ -8317,83 +7797,27 @@ function ProgresoChecklist({
   className
 }) {
   const avance = progresoChecklist({ hechas, total, vencidas, riesgo, sustantivo, textoVacio });
-  const tonoTexto = avance.tono === "ok" ? "text-ok-text" : avance.tono === "bad" ? "text-bad-text" : avance.tono === "warn" ? "text-warn-text" : "text-fore";
+  const tonoTexto = avance.tono === "ok" ? "text-ok" : avance.tono === "bad" ? "text-bad" : avance.tono === "warn" ? "text-warn" : "text-fore";
   const hayDetalle = avance.vencidas > 0 || avance.riesgo;
-  return /* @__PURE__ */ jsxs73("div", { className: cn("min-w-0", className), children: [
-    /* @__PURE__ */ jsxs73("div", { className: "flex items-baseline justify-between gap-2", children: [
-      /* @__PURE__ */ jsx91("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
-      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs73("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
+  return /* @__PURE__ */ jsxs72("div", { className: cn("min-w-0", className), children: [
+    /* @__PURE__ */ jsxs72("div", { className: "flex items-baseline justify-between gap-2", children: [
+      /* @__PURE__ */ jsx89("span", { className: cn("min-w-0 truncate text-xs font-semibold", avance.total > 0 ? tonoTexto : "text-mute"), title: avance.detalle, children: avance.etiqueta }),
+      porcentaje && avance.total > 0 && /* @__PURE__ */ jsxs72("span", { className: "shrink-0 text-xs tabular-nums text-mute", children: [
         avance.porcentaje,
         "%"
       ] })
     ] }),
-    avance.total > 0 && /* @__PURE__ */ jsx91(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
-    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs73("p", { className: "mt-1 text-[11px] text-mute", children: [
-      avance.riesgo && /* @__PURE__ */ jsx91("span", { className: "text-bad-text", children: "Sin avance" }),
+    avance.total > 0 && /* @__PURE__ */ jsx89(BarraProgreso, { valor: avance.hechas, max: avance.total, tono: avance.tono, alto, etiqueta: avance.detalle, className: "mt-1.5" }),
+    mostrarDetalle && hayDetalle && /* @__PURE__ */ jsxs72("p", { className: "mt-1 text-[11px] text-mute", children: [
+      avance.riesgo && /* @__PURE__ */ jsx89("span", { className: "text-bad", children: "Sin avance" }),
       avance.riesgo && avance.vencidas > 0 && " \xB7 ",
-      avance.vencidas > 0 && /* @__PURE__ */ jsxs73("span", { className: "text-warn-text", children: [
+      avance.vencidas > 0 && /* @__PURE__ */ jsxs72("span", { className: "text-warn", children: [
         avance.vencidas,
         " vencida",
         avance.vencidas === 1 ? "" : "s"
       ] })
     ] })
   ] });
-}
-
-// src/hooks/useSingleFlightSubmit.js
-import { useCallback as useCallback5, useRef as useRef14, useState as useState29 } from "react";
-
-// src/utils/guardado.js
-var AVISO_REFRESCO = "Se guard\xF3 correctamente, pero no se pudo actualizar la lista. Recarg\xE1 la p\xE1gina para ver los cambios; no hace falta guardar otra vez.";
-function crearEnvioUnico(enviar) {
-  let enCurso = false;
-  return {
-    get enCurso() {
-      return enCurso;
-    },
-    async ejecutar(evento) {
-      if (enCurso) return void 0;
-      enCurso = true;
-      try {
-        return await enviar(evento);
-      } finally {
-        enCurso = false;
-      }
-    }
-  };
-}
-async function completeSave(cerrar, refrescar, { avisar: avisar2 } = {}) {
-  cerrar?.();
-  try {
-    await refrescar?.();
-    return true;
-  } catch {
-    avisar2?.(AVISO_REFRESCO);
-    return false;
-  }
-}
-
-// src/hooks/useSingleFlightSubmit.js
-function useSingleFlightSubmit(enviar) {
-  const [pendiente, setPendiente] = useState29(false);
-  const ultimoEnviar = useRef14(enviar);
-  ultimoEnviar.current = enviar;
-  const envio = useRef14(null);
-  if (!envio.current) {
-    envio.current = crearEnvioUnico(async (evento) => {
-      setPendiente(true);
-      try {
-        await ultimoEnviar.current(evento);
-      } finally {
-        setPendiente(false);
-      }
-    });
-  }
-  const onSubmit = useCallback5(async (evento) => {
-    evento?.preventDefault?.();
-    await envio.current.ejecutar(evento);
-  }, []);
-  return { pendiente, onSubmit };
 }
 
 // src/utils/nombre.js
@@ -8860,10 +8284,15 @@ function paginaDePrueba({
 function paginaDePruebaSimple(opciones = {}) {
   return paginaDePrueba({ ...opciones, tipo: "caracteres" });
 }
+
+// src/utils/formulario.js
+var GRILLA_DOS_COLUMNAS = "grid gap-3 sm:grid-cols-2";
+var GRILLA_DOS_COLUMNAS_COMPACTA = "grid gap-2 sm:grid-cols-2";
+var PIE_ACCIONES = "flex flex-wrap justify-end gap-2";
+var PIE_ACCIONES_REVERSO = "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end";
 export {
   ANCHOS_PAPEL,
   AVANCES_FIRMA,
-  AVISO_REFRESCO,
   AjustesImpresion,
   AuthLayout,
   Avatar,
@@ -8954,7 +8383,6 @@ export {
   FilaChecklist,
   FilaDato,
   FilaRevision,
-  FormActions,
   FormField,
   GLIFOS_CATEGORIA,
   GRADOS_CONDICION,
@@ -8984,9 +8412,6 @@ export {
   ListGridToggle,
   LoadingScreen,
   MARCAS_ACCESORIOS,
-  MENSAJE_RUC,
-  MENSAJE_RUC_CONSULTA,
-  MENSAJE_RUC_SIN_DATOS,
   MENSAJE_TELEFONO,
   METODOS_ENVIO,
   MIMES_IMAGEN,
@@ -9004,8 +8429,6 @@ export {
   ORIGENES_NECESIDAD,
   PASOS_ENVIO,
   PASOS_NECESIDAD,
-  PATRON_RUC,
-  PATRON_TAX_ID_GENERICO,
   PERFILES_DISPOSITIVO,
   PERIODOS_FECHA,
   PIE_ACCIONES,
@@ -9036,13 +8459,10 @@ export {
   ResumenIncidencias,
   ResumenRecepcion,
   RucField,
-  SELECTOR_ENFOCABLES,
   SIMBOLOS_MONEDA,
   SIMBOLO_PYG,
-  SaveActions,
   SearchField_default as SearchField,
   SeccionColapsable,
-  SectionState,
   SegmentedField,
   Select,
   SelectorIncidencia,
@@ -9061,8 +8481,6 @@ export {
   TAMANO_MAXIMO_IMAGEN,
   TAMANO_MODAL_PREDETERMINADO,
   TAMANO_OBJETIVO_IMAGEN,
-  TEMA_CLARO,
-  TEMA_OSCURO,
   TIPOS_PRUEBA,
   TIPOS_TICKET_PRUEBA,
   TONOS,
@@ -9075,9 +8493,7 @@ export {
   TarjetaLote,
   TarjetaNecesidad,
   TarjetaRecepcion,
-  TaxIdField,
   Textarea,
-  ThemeToggle,
   TileEquipo,
   TileRol,
   ToastProvider,
@@ -9092,12 +8508,10 @@ export {
   agruparResultados,
   agruparTarjetas,
   anchoParaLargo,
-  aplicarTema,
   bloqueFirma,
   buscarCiudad,
   buscarDispositivo,
   buscarEnCatalogo,
-  caretTrasDigitos,
   categoriaDe,
   chipDeTono,
   claveColorDeNombre,
@@ -9119,20 +8533,13 @@ export {
   colorTrabajo,
   columnasDeAncho,
   columnasDelTablero,
-  completeSave,
   componerTelefono,
-  conFormulario,
   conexionDeDestino,
   contarSinLeer,
-  crearEnvioUnico,
-  crearPilaCapas,
-  crearRegistroPendientes,
   crearTicket,
   departamentoDe,
   destinoDeConexion,
-  destinoDeTab,
   destinosDeTarjeta,
-  diasHasta,
   envolver,
   errorMonto,
   esApellidosPrimero,
@@ -9177,8 +8584,6 @@ export {
   fechaDia,
   fechaHora,
   fechaHoraCorta,
-  fechaLista,
-  fechaListaCorta,
   fechaValida,
   formatGs,
   formatGsInput,
@@ -9202,7 +8607,6 @@ export {
   limiteMonto,
   limpiarDependientes,
   limpiarPercent,
-  limpiarTaxId,
   logoDeBanco,
   maximoDeBarras,
   metodoEnvio,
@@ -9218,12 +8622,10 @@ export {
   normalizarBanco,
   normalizarCategoria,
   normalizarInstagram,
-  normalizarMontoInput,
   normalizarNombre,
   normalizarSerial,
   normalizarSeriales,
   normalizarTelefono,
-  normalizeTaxId,
   opcionesDependiente,
   ordenDePrioridad,
   ordenarPorPrioridad,
@@ -9257,9 +8659,6 @@ export {
   sugerenciasDeBanco,
   sumarDias,
   sumarMeses,
-  taxIdGenericoValid,
-  taxIdValid,
-  taxIdValidoParaPais,
   telefonoValido,
   telefonoVisible,
   textoContador,
@@ -9275,12 +8674,7 @@ export {
   tonoPrioridad,
   tonoRecepcion,
   tonoRevision,
-  tonoVencimiento,
   ultimos4,
-  useDialogClose,
-  useDialogFocusTrap,
-  useDialogPending,
-  useSingleFlightSubmit,
   useTableroOptimista,
   useToast,
   validarImagen,

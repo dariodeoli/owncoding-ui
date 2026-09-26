@@ -937,10 +937,18 @@ export const GRILLA_DOS_COLUMNAS_COMPACTA: string
 export const PIE_ACCIONES: string
 export const PIE_ACCIONES_REVERSO: string
 
-export const CIUDADES_PARAGUAY: Array<{ ciudad: string; departamento: string; [clave: string]: any }>
+/** Fila bilingüe: español (`ciudad`/`departamento`) e inglés (`city`/`department`). */
+export type CiudadParaguay = {
+  ciudad: string
+  departamento: string
+  city: string
+  department: string
+}
+export const CIUDADES_PARAGUAY: CiudadParaguay[]
 export const DEPARTAMENTOS_PARAGUAY: string[]
-export function departamentoDe(ciudad: string): string | null
-export function buscarCiudad(consulta: string, limite?: number): any[]
+/** Departamento de una ciudad por nombre exacto; `''` si no está en el catálogo. */
+export function departamentoDe(ciudad: string): string
+export function buscarCiudad(consulta: string, limite?: number): CiudadParaguay[]
 
 export const MODELOS_IPHONE: string[]
 export const CAPACIDADES_IPHONE: string[]

@@ -32,7 +32,7 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | RUC / CI | `RucField` (+`extraerRuc`/`esRuc`) | input con el botón **Extraer** adentro (trailing, `BotonDentroCampo`): la consulta entra por `consultar` (async) y el resultado se aplica solo al confirmar («Usar estos datos»); sin `consultar` el botón no se muestra |
 | Serial (lectura) | `SerialTexto` | el serial completo si entra y, si la columna queda corta, se recorta la cabeza y los **últimos 4** siguen visibles; vacío → `—` |
 | Seriales por lote (pegar/escanear) | `CampoSeriales` (+`imeiValido`, `separarSeriales`, `normalizarSeriales`) | textarea que normaliza al vuelo y entrega **solo los válidos únicos** por `onCambio`, con conteos de repetidos e inválidos; para IMEI se pasa `validar={imeiValido}` (15 dígitos + Luhn) |
-| Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el texto libre sigue permitido |
+| Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el catálogo es bilingüe (`ciudad`/`departamento` y `city`/`department`) y el texto libre sigue permitido |
 | RUC/identificación fiscal | `TaxIdField` | RUC PY de 5 a 8 dígitos, con o sin verificador (`taxIdValid`); el resto de los países usa el patrón genérico. Se guarda con `normalizeTaxId`; la consulta de razón social es un callback de la app (`onBuscarRazonSocial`): la librería no consulta nada |
 
 ### Tamaños recomendados (#148, portable)

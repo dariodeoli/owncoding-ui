@@ -31,9 +31,24 @@ describe('ciudades y departamentos', () => {
     expect(departamentoDe('')).toBe('')
   })
 
+  test('el catálogo es bilingüe: español e inglés apuntan al mismo dato', () => {
+    expect(CIUDADES_PARAGUAY[0]).toEqual({
+      ciudad: 'Bahía Negra',
+      departamento: 'Alto Paraguay',
+      city: 'Bahía Negra',
+      department: 'Alto Paraguay',
+    })
+    expect(CIUDADES_PARAGUAY.every((fila) => fila.city === fila.ciudad && fila.department === fila.departamento)).toBe(true)
+  })
+
   test('las sugerencias priorizan las coincidencias al principio', () => {
     const filas = buscarCiudad('asunc')
-    expect(filas[0]).toEqual({ city: 'Asunción', department: 'Asunción' })
+    expect(filas[0]).toEqual({
+      ciudad: 'Asunción',
+      departamento: 'Asunción',
+      city: 'Asunción',
+      department: 'Asunción',
+    })
     expect(buscarCiudad('a')).toEqual([])
     expect(buscarCiudad('itapúa').length).toBeGreaterThan(3)
   })

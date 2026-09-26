@@ -2,10 +2,15 @@
 // librería: 263 distritos oficiales con su departamento. El autocompletado
 // resuelve el departamento solo con la ciudad (es dependiente de ella).
 //
+// El catálogo es bilingüe: cada fila trae `{ ciudad, departamento }` (español)
+// y `{ city, department }` (inglés, el contrato de `CityAutocomplete` y del
+// `buscar` propio de cada app). Las dos parejas apuntan al mismo dato; la
+// fuente se mantiene en español y la exportada deriva las claves en inglés.
+//
 // Se actualiza acá y llega a todas las apps con el release de la librería.
 // Fuente: lista oficial de municipios (misma que el backend de MobOS).
 
-export const CIUDADES_PARAGUAY = [
+const MUNICIPIOS = [
   { ciudad: "Bahía Negra", departamento: "Alto Paraguay" },
   { ciudad: "Capitán Carmelo Peralta", departamento: "Alto Paraguay" },
   { ciudad: "Fuerte Olimpo", departamento: "Alto Paraguay" },
@@ -271,6 +276,14 @@ export const CIUDADES_PARAGUAY = [
   { ciudad: "Yrybucuá", departamento: "San Pedro" },
 ]
 
+// Filas bilingües del catálogo (misma identidad, dos idiomas de claves).
+export const CIUDADES_PARAGUAY = MUNICIPIOS.map(({ ciudad, departamento }) => ({
+  ciudad,
+  departamento,
+  city: ciudad,
+  department: departamento,
+}))
+
 export const DEPARTAMENTOS_PARAGUAY = [
   "Alto Paraguay",
   "Alto Paraná",
@@ -303,6 +316,7 @@ export function departamentoDe(ciudad) {
 }
 
 // Busca por ciudad o departamento, con las coincidencias al principio primero.
+// Devuelve las filas bilingües (`ciudad`/`departamento` y `city`/`department`).
 export function buscarCiudad(texto, limite = 8) {
   const q = norm(texto)
   if (q.length < 2) return []
@@ -314,5 +328,5 @@ export function buscarCiudad(texto, limite = 8) {
       return aInicio - bInicio || a.ciudad.localeCompare(b.ciudad, "es")
     })
     .slice(0, limite)
-    .map(({ ciudad, departamento }) => ({ city: ciudad, department: departamento }))
+    .map(({ ciudad, departamento, city, department }) => ({ ciudad, departamento, city, department }))
 }
