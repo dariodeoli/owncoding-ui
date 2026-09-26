@@ -36,6 +36,15 @@ function excedeMonto(value, limite = LIMITE_MONTO_GENERAL) {
   const numero = Number(texto);
   return Number.isFinite(numero) && Math.abs(numero) > limite;
 }
+var LIMITE_MONTO_ALMACENABLE = 2147483647;
+function limiteMonto(max = LIMITE_MONTO_GENERAL) {
+  const valor = Number(max);
+  return Number.isFinite(valor) && valor > 0 ? Math.min(valor, LIMITE_MONTO_ALMACENABLE) : LIMITE_MONTO_ALMACENABLE;
+}
+function errorMonto(value, max = LIMITE_MONTO_GENERAL) {
+  const limite = limiteMonto(max);
+  return excedeMonto(value, limite) ? `El monto supera el m\xE1ximo que el sistema puede guardar (Gs ${formatoNumero(limite)}).` : "";
+}
 var USD_FORMATTER = new Intl.NumberFormat("es-PY", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
@@ -558,7 +567,7 @@ function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_
   return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className), children: [
     /* @__PURE__ */ jsxs("div", { className: "mb-4 flex items-center justify-between gap-3", children: [
       /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-      /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
+      /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
     ] }),
     children
   ] }) });
@@ -596,6 +605,8 @@ function Badge({ className, color = "slate", ...props }) {
     {
       className: cn(
         "inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium",
+        // Dentro del scope v2 el chip va tipo pill (micro-rótulo), como el mock.
+        "v2-chip",
         BADGE[color],
         className
       ),
@@ -603,7 +614,7 @@ function Badge({ className, color = "slate", ...props }) {
     }
   );
 }
-var DOT = { green: "bg-ok", red: "bg-bad", blue: "bg-fono", slate: "bg-mute", orange: "bg-warn" };
+var DOT = { green: "bg-ok", red: "bg-bad", blue: "bg-fono", slate: "bg-mute", orange: "bg-warn", ok: "bg-ok", warn: "bg-warn", bad: "bg-bad", info: "bg-info", mute: "bg-mute" };
 function Dot({ color = "slate", pulse = false, className }) {
   return /* @__PURE__ */ jsxs("span", { className: cn("relative inline-flex h-2 w-2 shrink-0", className), children: [
     pulse && /* @__PURE__ */ jsx2(
@@ -695,7 +706,7 @@ function Drawer({ open, onClose, title, children, side = "right", className }) {
       children: [
         /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
           /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
+          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
         ] }),
         /* @__PURE__ */ jsx2("div", { className: "flex-1 overflow-y-auto p-4 sm:p-5", children })
       ]
@@ -7842,6 +7853,7 @@ export {
   IndicadorConexion,
   Input,
   InstagramField,
+  LIMITE_MONTO_ALMACENABLE,
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
   LOCKS_DISPOSITIVO,
@@ -7961,6 +7973,7 @@ export {
   destinoDeConexion,
   destinosDeTarjeta,
   envolver,
+  errorMonto,
   esApellidosPrimero,
   esAtajo,
   esClaveDia,
@@ -8009,6 +8022,7 @@ export {
   inicialesDeNombre,
   internationalPhone,
   largoMaximoMonto,
+  limiteMonto,
   limpiarDependientes,
   limpiarPercent,
   logoDeBanco,

@@ -88,6 +88,8 @@ describe('render de los objetos base', () => {
     expect(renderToStaticMarkup(<ErrorState description="Falló" />)).toContain('Falló')
     expect(renderToStaticMarkup(<Skeleton className="h-4" />)).toContain('animate-pulse')
     expect(renderToStaticMarkup(<Badge color="green">Activo</Badge>)).toContain('Activo')
+    // Dentro del scope v2 el chip va tipo pill (clase del scope, no estilo suelto).
+    expect(renderToStaticMarkup(<Badge color="green">Activo</Badge>)).toContain('v2-chip')
     expect(renderToStaticMarkup(<Stat label="Ventas" valor="10" />)).toContain('Ventas')
     expect(renderToStaticMarkup(<Card>Contenido</Card>)).toContain('Contenido')
   })
@@ -148,6 +150,8 @@ describe('render de los objetos base', () => {
     expect(amplio).toContain('max-w-3xl')
     expect(renderToStaticMarkup(<Modal open title="Aviso" />)).toContain('max-w-xl')
     expect(renderToStaticMarkup(<Modal open title="Chico" size="corto" />)).toContain('max-w-md')
+    // El cierre del modal conserva el alto táctil de 44 px (#249).
+    expect(renderToStaticMarkup(<Modal open title="Aviso" onClose={() => {}} />)).toContain('toque-44 rounded-lg p-2')
     expect(renderToStaticMarkup(<Modal open title="Grande" size="completo" />)).toContain('max-w-5xl')
 
     const boton = renderToStaticMarkup(<BotonDentroCampo etiqueta="Extraer los datos del RUC" />)

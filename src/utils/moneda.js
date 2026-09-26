@@ -38,6 +38,24 @@ export function excedeMonto(value, limite = LIMITE_MONTO_GENERAL) {
   return Number.isFinite(numero) && Math.abs(numero) > limite
 }
 
+// Tope real de almacenamiento: los importes viven en columnas enteras de 32
+// bits, así que por encima de este valor el backend rechaza el guardado. Los
+// campos marcan y los formularios bloquean con `errorMonto`; los límites de
+// producto (10B/99B de #148) quedan como objetivo pendiente de migrar.
+export const LIMITE_MONTO_ALMACENABLE = 2_147_483_647
+
+/** Límite efectivo de un campo: el del contexto, acotado a lo almacenable. */
+export function limiteMonto(max = LIMITE_MONTO_GENERAL) {
+  const valor = Number(max)
+  return Number.isFinite(valor) && valor > 0 ? Math.min(valor, LIMITE_MONTO_ALMACENABLE) : LIMITE_MONTO_ALMACENABLE
+}
+
+/** Mensaje para bloquear el guardado, o '' si el monto entra. */
+export function errorMonto(value, max = LIMITE_MONTO_GENERAL) {
+  const limite = limiteMonto(max)
+  return excedeMonto(value, limite) ? `El monto supera el máximo que el sistema puede guardar (Gs ${formatoNumero(limite)}).` : ''
+}
+
 const USD_FORMATTER = new Intl.NumberFormat('es-PY', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,

@@ -256,7 +256,7 @@ export function Modal({ open, onClose, title, children, className, size = TAMANO
       <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className={cn('max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6', TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className)}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 id={titleId} className="text-base font-bold text-fore">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
+          <button type="button" onClick={onClose} className="toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
         </div>
         {children}
       </div>
@@ -306,6 +306,8 @@ export function Badge({ className, color = 'slate', ...props }) {
     <span
       className={cn(
         'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium',
+        // Dentro del scope v2 el chip va tipo pill (micro-rótulo), como el mock.
+        'v2-chip',
         BADGE[color],
         className,
       )}
@@ -315,7 +317,7 @@ export function Badge({ className, color = 'slate', ...props }) {
 }
 
 // ── Punto de estado (semáforo minimalista) ──────────────────────────
-const DOT = { green: 'bg-ok', red: 'bg-bad', blue: 'bg-fono', slate: 'bg-mute', orange: 'bg-warn' }
+const DOT = { green: 'bg-ok', red: 'bg-bad', blue: 'bg-fono', slate: 'bg-mute', orange: 'bg-warn', ok: 'bg-ok', warn: 'bg-warn', bad: 'bg-bad', info: 'bg-info', mute: 'bg-mute' }
 export function Dot({ color = 'slate', pulse = false, className }) {
   return (
     <span className={cn('relative inline-flex h-2 w-2 shrink-0', className)}>
@@ -407,7 +409,7 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
       >
         <div className="flex items-center justify-between gap-3 border-b border-ink-600 p-4">
           <h2 id={titleId} className="text-base font-bold text-fore">{title}</h2>
-          <button type="button" onClick={onClose} className="rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
+          <button type="button" onClick={onClose} className="toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
         </div>
         <div className="flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
       </div>

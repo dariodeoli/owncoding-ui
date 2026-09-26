@@ -4,6 +4,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.32.0 — 2026-09-26
+
+- **Paridad para la migración del kit (#253):**
+  - `Badge` suma la clase de scope **`v2-chip`** (chip tipo pill dentro de v2) y
+    los tonos `ok/warn/bad/info/mute` del semáforo, como los usa MobOS.
+  - Los cierres de **`Modal` y `Drawer`** usan **`toque-44`**: 44 px de toque
+    sin mover el dibujo (#249).
+  - **`utils/moneda`** publica `LIMITE_MONTO_ALMACENABLE`, **`limiteMonto(max)`**
+    y **`errorMonto(value, max)`**: el límite efectivo del campo se acota a lo
+    que el backend puede guardar y el mensaje queda en un solo lugar.
+- Tests: límite y error de monto, `v2-chip` en `Badge` y el cierre táctil del
+  modal.
+
 ## v0.31.0 — 2026-09-26
 
 - **Paridad para la migración (#253):** `SeccionColapsable` acepta **`id` como

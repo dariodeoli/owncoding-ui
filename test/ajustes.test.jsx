@@ -7,6 +7,7 @@ import {
   BancoCombobox,
   BancoLogo,
   BotonImprimir,
+  LIMITE_MONTO_ALMACENABLE,
   MenuDesplegable,
   MoneyInput,
   NavLateral,
@@ -14,9 +15,11 @@ import {
   TarjetaAjuste,
   agregarEstado,
   destinoDeConexion,
+  errorMonto,
   esApellidosPrimero,
   etiquetaTrabajo,
   largoMaximoMonto,
+  limiteMonto,
   logoDeBanco,
   normalizarNombre,
   sugerenciasDeBanco,
@@ -65,6 +68,15 @@ describe('nombre y plata', () => {
     expect(largoMaximoMonto(99_000_000_000)).toBe(14)
     expect(largoMaximoMonto(10_000_000_000, { decimales: true })).toBe(17)
     expect(largoMaximoMonto(1000)).toBe(5) // 1.000
+  })
+
+  test('el límite efectivo del campo se acota a lo almacenable (#148)', () => {
+    expect(LIMITE_MONTO_ALMACENABLE).toBe(2_147_483_647)
+    expect(limiteMonto(5_000)).toBe(5_000)
+    expect(limiteMonto(99_000_000_000)).toBe(LIMITE_MONTO_ALMACENABLE)
+    expect(limiteMonto(0)).toBe(LIMITE_MONTO_ALMACENABLE)
+    expect(errorMonto(1_000)).toBe('')
+    expect(errorMonto(99_000_000_000, 10_000_000_000)).toContain('Gs 2.147.483.647')
   })
 
   test('el campo de monto no deja escribir más que el tope', () => {
