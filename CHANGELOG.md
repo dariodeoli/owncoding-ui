@@ -4,6 +4,14 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.31.0 — 2026-09-26
+
+- **Paridad para la migración (#253):** `SeccionColapsable` acepta **`id` como
+  alias de `clave`** — las apps que ya lo llamaban así conservan el estado
+  plegable de la sesión al puentear el objeto. La clave de sesión es el valor
+  tal cual.
+- Tests: `render.test.jsx` cubre el alias.
+
 ## v0.30.0 — 2026-09-25
 
 - **Guía práctica de adopción v2 en otra app:** nuevo

@@ -11,7 +11,9 @@ import { cn } from '../utils/cn.js'
 // lectura y las pruebas lo encuentran.
 //
 //   <SeccionColapsable clave="pedido-123:detalle" titulo="Detalle" resumen="3 ítems">
-export default function SeccionColapsable({ titulo, resumen, icono, abierta = false, clave, className = '', children }) {
+// `id` es alias de `clave` para las apps que ya lo llamaban así (MobOS): la
+// clave de sesión es el valor tal cual.
+export default function SeccionColapsable({ id, titulo, resumen, icono, abierta = false, clave = id, className = '', children }) {
   const autoId = useId()
   const panelId = `seccion-panel-${autoId.replace(/[^a-zA-Z0-9_-]/g, '')}`
   const [expandida, setExpandida] = useState(() => {

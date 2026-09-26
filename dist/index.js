@@ -2403,7 +2403,7 @@ var CELDA_IDENTIDAD_GRANDE = "truncate text-sm font-semibold";
 
 // src/components/SeccionColapsable.jsx
 import { jsx as jsx25, jsxs as jsxs17 } from "react/jsx-runtime";
-function SeccionColapsable({ titulo: titulo2, resumen, icono, abierta = false, clave, className = "", children }) {
+function SeccionColapsable({ id, titulo: titulo2, resumen, icono, abierta = false, clave = id, className = "", children }) {
   const autoId = useId5();
   const panelId = `seccion-panel-${autoId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
   const [expandida, setExpandida] = useState8(() => {

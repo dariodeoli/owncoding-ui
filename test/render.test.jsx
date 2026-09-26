@@ -318,6 +318,8 @@ describe('render de los objetos base', () => {
     expect(seccion).toContain('hidden=""')
     expect(seccion).toContain('contenido')
     expect(renderToStaticMarkup(<SeccionColapsable titulo="Detalle" abierta><p>contenido</p></SeccionColapsable>)).toContain('aria-expanded="true"')
+    // `id` es alias de `clave` (apps que ya lo llamaban así): no rompe el render.
+    expect(renderToStaticMarkup(<SeccionColapsable id="pedido-1" titulo="Detalle" abierta><p>contenido</p></SeccionColapsable>)).toContain('aria-expanded="true"')
 
     // ProductCombobox: contrato de combobox (la lista se abre recién al tipear).
     const combo = renderToStaticMarkup(<ProductCombobox products={[{ id: 'p1', nombre: 'iPhone 15' }]} />)
