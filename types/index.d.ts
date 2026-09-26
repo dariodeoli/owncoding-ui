@@ -244,6 +244,40 @@ export function CampoSeriales(props: {
 }): ReactElement
 export function MedidorStock(props: { stock?: number | null; umbral?: number | null; variante?: 'texto' | 'chip' | 'barra'; etiqueta?: string; mostrarUmbral?: boolean; vacio?: string; className?: string }): ReactElement
 export function ContadorLote(props: { recibidos?: number | null; total?: number | null; variante?: 'texto' | 'chip' | 'barra'; sufijo?: string; mostrarFaltan?: boolean; vacio?: string; className?: string }): ReactElement
+export function ChipPrioridad(props: { prioridad?: 'alta' | 'media' | 'baja' | string; etiqueta?: ReactNode; title?: string; className?: string }): ReactElement
+export function ContadoresCompra(props: { pendiente?: number; comprado?: number; faltan?: number; variante?: 'texto' | 'chips'; className?: string }): ReactElement
+export function TarjetaNecesidad(props: {
+  producto?: ReactNode
+  variante?: ReactNode
+  prioridad?: 'alta' | 'media' | 'baja' | string
+  estado?: string
+  origen?: ReactNode
+  fechaPrometida?: string | number | Date | null
+  diasAviso?: number
+  vinculo?: { etiqueta?: ReactNode; onClick?: () => void } | null
+  destinos?: Array<{ id?: string; etiqueta: ReactNode; cantidad: number; detalle?: string }>
+  onElegirDestino?: (destino: any) => void
+  observaciones?: ReactNode
+  pendiente?: number
+  comprado?: number
+  faltan?: number
+  onAbrir?: () => void
+  acciones?: ReactNode
+  className?: string
+}): ReactElement
+export const PRIORIDADES_COMPRA: Record<string, { etiqueta: string; tono: string; orden: number }>
+export function prioridadDe(clave?: string): { etiqueta: string; tono: string; orden: number }
+export function etiquetaPrioridad(clave?: string): string
+export function tonoPrioridad(clave?: string): string
+export function ordenDePrioridad(clave?: string): number
+export function ordenarPorPrioridad<T>(lista?: T[], clave?: string): T[]
+export const ESTADOS_NECESIDAD: Record<string, { etiqueta: string; tono: string; icono: string }>
+export function estadoNecesidad(clave?: string): { etiqueta: string; tono: string; icono: string }
+export function etiquetaNecesidad(clave?: string): string
+export function tonoNecesidad(clave?: string): string
+export const PASOS_NECESIDAD: string[]
+export const COLOR_DE_TONO: Record<string, string>
+export function colorDeTono(tono?: string): string
 export function ResumenDestinos(props: { destinos?: Array<{ id?: string; etiqueta: ReactNode; cantidad: number; detalle?: string }>; ariaLabel?: string; onElegir?: (destino: any) => void; className?: string }): ReactElement | null
 export function ResumenIncidencias(props: { incidencias?: Array<{ tipo?: string; etiqueta?: ReactNode; cantidad?: number; tono?: string; detalle?: string }>; sinIncidencias?: string; className?: string }): ReactElement
 export function FilaRevision(props: { etiqueta: ReactNode; serial?: string | null; estado?: string; detalle?: ReactNode; acciones?: ReactNode; compact?: boolean; className?: string }): ReactElement

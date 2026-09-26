@@ -4,6 +4,23 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.33.0 — 2026-09-26
+
+- **Abastecimiento F1 — demanda y tablero (#250/#254):**
+  - **`ChipPrioridad`** con `PRIORIDADES_COMPRA` (alta/media/baja → tono y
+    orden) y **`ordenarPorPrioridad`** para la lista.
+  - **`ContadoresCompra`** (pendiente/comprado/faltan) en texto o chips, con
+    números tabulares y sin negativos.
+  - **`TarjetaNecesidad`**: la tarjeta compacta del panel «Por comprar»
+    (producto/variante exacta, estado, prioridad, origen, fecha prometida,
+    vínculo con la venta/reserva, destinos, observaciones y acciones), que
+    compone `Vencimiento`, `ResumenDestinos` y los contadores.
+  - **`utils/abastecimiento.js`**: `ESTADOS_NECESIDAD` (por comprar → recibido,
+    más incidencia/cancelada), `PASOS_NECESIDAD` y `colorDeTono`.
+  - Docs: `REGLAS.md` §12 y README.
+- **Paridad:** `normalizarSerial` quita el prefijo `MOBOS:` de las etiquetas del
+  agente (el campo de MobOS ya lo hacía).
+
 ## v0.32.0 — 2026-09-26
 
 - **Paridad para la migración del kit (#253):**

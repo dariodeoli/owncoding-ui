@@ -302,6 +302,10 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `SelectorIncidencia` y `DestinoRecepcion` (faltantes, sobrantes, dañadas,
   incorrectas, sin IMEI, y recibir en depósito). El shell suma
   `IndicadorConexion variante="banner"`.
+  **F1 — Demanda y tablero:** `ChipPrioridad` (alta/media/baja), `ContadoresCompra`
+  (pendiente/comprado/faltan), `TarjetaNecesidad` (la tarjeta compacta del panel
+  «Por comprar») y los mapas `PRIORIDADES_COMPRA`/`ESTADOS_NECESIDAD` con
+  `ordenarPorPrioridad` en `utils/abastecimiento.js` (REGLAS §12).
 - **Tablero (lote 2, sin publicar):** `ImporteDelta` (monto con signo y color),
   `IndicadorConexion` (en línea / pendientes de subir), `CampanaAvisos`
   (contador + panel por props) y `GraficoBarras` (barras CSS sin dependencias).

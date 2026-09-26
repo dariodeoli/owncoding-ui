@@ -434,4 +434,32 @@ sección:
   `Switch`; el control pelado acepta `ariaLabel` para filas de tabla.
 - **Mapa campo por campo**: `docs/MAPA-CONFIG.md` de MobOS (grupos y detalle).
 
+## 12. Abastecimiento F1: demanda y tablero (#250)
+
+El panel «Por comprar» y la lista de compra se arman con estas piezas; ninguna
+pantalla repite los mapas ni los contadores:
+
+- **Prioridad**: `ChipPrioridad` con `PRIORIDADES_COMPRA` (alta → rojo, media →
+  ámbar, baja → mute). La lista se ordena con `ordenarPorPrioridad`; la
+  prioridad no se escribe como texto suelto.
+- **Estado de la necesidad**: `ESTADOS_NECESIDAD` (por comprar · comprando ·
+  comprado · preparar envío · en tránsito · recepción · recibido · incidencia ·
+  cancelada) con etiqueta, tono e ícono. Los tabs del panel usan las mismas
+  claves y `PASOS_NECESIDAD` marca el recorrido lineal.
+- **Contadores**: `ContadoresCompra` (pendiente/comprado/faltan) con números
+  tabulares; «faltan» solo se pinta en rojo cuando hay diferencia y nunca hay
+  negativos.
+- **Fecha prometida**: `Vencimiento` (texto o chip) con `diasAviso`; la fecha
+  entra por prop y el vacío es explícito.
+- **Consolidación**: `ResumenDestinos` conserva los destinos al agrupar
+  solicitudes idénticas («1 Pedido A · 3 stock»); nunca se mezclan variante,
+  condición ni origen.
+- **Tarjeta**: `TarjetaNecesidad` compone todo lo anterior para el panel móvil
+  (producto/variante exacta, estado, prioridad, origen, fecha prometida,
+  vínculo con la venta o reserva, destinos, observaciones y acciones). Sin
+  scroll horizontal y sin lógica de permisos.
+- **Stock**: nada de esto crea stock disponible; el stock entra recién en la
+  recepción de la épica. Los vínculos con la venta/reserva y la auditoría los
+  maneja la app.
+
 

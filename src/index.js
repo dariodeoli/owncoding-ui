@@ -102,6 +102,24 @@ export { default as ChipsLocks } from './components/ChipsLocks.jsx'
 export { default as MedidorBateria } from './components/MedidorBateria.jsx'
 export { default as MedidorStock } from './components/MedidorStock.jsx'
 export { default as ContadorLote } from './components/ContadorLote.jsx'
+export { default as ChipPrioridad } from './components/ChipPrioridad.jsx'
+export { default as ContadoresCompra } from './components/ContadoresCompra.jsx'
+export { default as TarjetaNecesidad } from './components/TarjetaNecesidad.jsx'
+export {
+  PRIORIDADES_COMPRA,
+  prioridadDe,
+  etiquetaPrioridad,
+  tonoPrioridad,
+  ordenDePrioridad,
+  ordenarPorPrioridad,
+  ESTADOS_NECESIDAD,
+  estadoNecesidad,
+  etiquetaNecesidad,
+  tonoNecesidad,
+  PASOS_NECESIDAD,
+  COLOR_DE_TONO,
+  colorDeTono,
+} from './utils/abastecimiento.js'
 export { default as ResumenDestinos } from './components/ResumenDestinos.jsx'
 export { default as ResumenIncidencias } from './components/ResumenIncidencias.jsx'
 export { default as FilaRevision } from './components/FilaRevision.jsx'

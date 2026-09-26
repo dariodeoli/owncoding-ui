@@ -1,9 +1,11 @@
 // Serial/IMEI: el final identifica el equipo de un vistazo y nunca se recorta.
 
-// Limpieza estándar: sin espacios ni guiones, en mayúsculas.
+// Limpieza estándar: sin espacios ni guiones, en mayúsculas y sin el prefijo
+// `MOBOS:` de las etiquetas del agente.
 export function normalizarSerial(value = '') {
   return String(value ?? '')
     .trim()
+    .replace(/^MOBOS:/i, '')
     .replace(/[\s-]+/g, '')
     .toUpperCase()
 }

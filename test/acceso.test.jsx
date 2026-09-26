@@ -88,6 +88,8 @@ describe('campos ampliados', () => {
 
   test('serial normaliza y el Instagram deja el usuario pelado', () => {
     expect(normalizarSerial(' mob-123 456 ')).toBe('MOB123456')
+    // El prefijo de las etiquetas del agente no forma parte del serial.
+    expect(normalizarSerial('MOBOS: mob-123 456')).toBe('MOB123456')
     expect(renderToStaticMarkup(<SerialField value="abc123" onChange={() => {}} />)).toContain('autoCapitalize="characters"')
     expect(normalizarInstagram('https://instagram.com/ana.lopez?hl=es')).toBe('ana.lopez')
     expect(normalizarInstagram('@ana lopez')).toBe('analopez')
