@@ -16,6 +16,7 @@ import type {
   ReactNode,
   Ref,
   RefAttributes,
+  RefObject,
   SelectHTMLAttributes,
   SVGProps,
   TextareaHTMLAttributes,
@@ -103,7 +104,8 @@ export function ErrorState(props: { title?: string; description?: ReactNode; onR
 export function Aviso(props: HTMLAttributes<HTMLElement> & { tono?: 'error' | 'ok' | 'warn'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function Nota(props: HTMLAttributes<HTMLElement> & { tono?: 'warn' | 'info' | 'neutro'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function PageHeader(props: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; backTo?: () => void; eyebrow?: ReactNode; migas?: Array<{ etiqueta: ReactNode; href?: string }> }): ReactElement
-export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string }): ReactElement
+export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string; descripcionId?: string }): ReactElement
+export function SectionState(props: { estado?: 'vacio' | 'cargando' | 'error'; title?: ReactNode; description?: ReactNode; icon?: string; action?: ReactNode; compact?: boolean; onRetry?: () => void; className?: string }): ReactElement
 
 export type DataTableColumn<Row = Record<string, unknown>> = {
   key: string
@@ -174,6 +176,42 @@ export function SerialField(props: Omit<InputProps, 'onChange'> & { value?: stri
 export function normalizarSerial(valor: string): string
 export function InstagramField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void }): ReactElement
 export function normalizarInstagram(valor: string): string
+
+// ── Identificación fiscal (cosecha de PagaYa, #1) ─────────────────────────
+
+export type TaxIdFieldProps = Omit<InputProps, 'value' | 'onChange'> & {
+  label?: ReactNode
+  value?: string
+  onChange?: (valor: string) => void
+  pais?: string
+  onBuscarRazonSocial?: (taxId: string) => Promise<string | null | undefined> | string | null | undefined
+  onAplicarRazonSocial?: (razonSocial: string) => void
+  etiquetaConsulta?: string
+  mensajeInvalido?: string
+  mensajeSinDatos?: string
+  mensajeError?: string
+  hint?: ReactNode
+  error?: ReactNode
+}
+export function TaxIdField(props: TaxIdFieldProps): ReactElement
+export const PATRON_RUC: RegExp
+export const PATRON_TAX_ID_GENERICO: RegExp
+export const MENSAJE_RUC: string
+export const MENSAJE_RUC_SIN_DATOS: string
+export const MENSAJE_RUC_CONSULTA: string
+export function taxIdValid(value: unknown): boolean
+export function taxIdGenericoValid(value: unknown): boolean
+export function taxIdValidoParaPais(value: unknown, pais?: string): boolean
+export function normalizeTaxId(value: unknown): string | null
+export function limpiarTaxId(value: unknown, max?: number): string
+
+// ── Tema (cosecha de PagaYa, #1) ──────────────────────────────────────────
+
+export type Tema = 'claro' | 'oscuro'
+export const TEMA_CLARO: 'claro'
+export const TEMA_OSCURO: 'oscuro'
+export function aplicarTema(tema: Tema, clave?: string | null): void
+export function ThemeToggle(props: { clave?: string | null; alCambiar?: (tema: Tema) => void; etiquetaClaro?: string; etiquetaOscuro?: string; className?: string }): ReactElement
 export function ProductCombobox(props: Record<string, any> & {
   products?: Array<{ id: string; nombre?: string; name?: string; sku?: string; model?: string; capacity?: string; color?: string; category?: string; [clave: string]: any }>
   selectedId?: string
@@ -681,6 +719,9 @@ export function useTableroOptimista(props: { tarjetas?: TarjetaTablero[]; onMove
   moviendo: string | null
   mover: (id: string, destino: string) => Promise<void>
 }
+export const SELECTOR_ENFOCABLES: string
+export function destinoDeTab(opciones: { shiftKey: boolean; activo: Element | null; primero: Element | null; ultimo: Element | null; contenedor: Element | null; fuera?: boolean }): Element | null
+export function useDialogFocusTrap(open: boolean, onClose: (() => void) | undefined, ref: RefObject<HTMLElement>, opciones?: { initialFocus?: () => HTMLElement | null; bloquearScroll?: boolean }): void
 export function columnasDelTablero(columnas: ColumnaTablero[], tarjetas: TarjetaTablero[]): Array<ColumnaTablero & { tarjetas: TarjetaTablero[] }>
 export function agruparTarjetas(columnas: ColumnaTablero[], tarjetas: TarjetaTablero[]): Record<string, TarjetaTablero[]>
 export function destinosDeTarjeta(tarjeta: TarjetaTablero): string[]

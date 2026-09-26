@@ -44,6 +44,9 @@ describe('tipos publicados (.d.ts)', () => {
       // Lote LedBox
       'TableroKanban', 'useTableroOptimista', 'Cronologia', 'PlanPagos',
       'DocumentoImpresion', 'SubidaImagen', 'ProgresoChecklist', 'progresoChecklist',
+      // Cosecha de PagaYa (#1)
+      'TaxIdField', 'taxIdValid', 'normalizeTaxId', 'ThemeToggle', 'aplicarTema',
+      'SectionState', 'useDialogFocusTrap',
     ]) {
       expect(exporta(nombre), `falta el tipo de ${nombre}`).toBe(true)
     }
