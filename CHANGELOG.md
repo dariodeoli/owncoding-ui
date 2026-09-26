@@ -142,6 +142,17 @@ opcionales. El integrador decide el número final.
   sin React y sin el banner de cliente; `dist/utils.js` +
   `dist/utils.d.ts`. Sirve para server components, route handlers y scripts de
   Next sin `serverExternalPackages`. `owncoding-ui` sigue igual.
+- **Tipos al día con el runtime (cierre de #3):** el `.d.ts` suma
+  `VistaPreviaPapel`/`ANCHOS_PAPEL`, `LIMITE_MONTO_ALMACENABLE`,
+  `limiteMonto` y `errorMonto`, y `normalizarBusqueda` ahora sale por
+  `owncoding-ui` (estaba declarado en los tipos pero no exportado). Test
+  nuevo en `tipos.test.js`: todo export del runtime tiene declaración y toda
+  declaración de valor existe en runtime (la deriva vuelve a fallar sola).
+- **Cierre del piloto de LedBox (#3):** el resto de la cosecha
+  (`owncodingContent`, tipos publicados, `tokens.css`/`base.css`, `timeZone`,
+  símbolo del guaraní, `ChipEstado` de negocio y los 23 íconos) ya viajó en
+  v0.14.0; esta ronda completa los tipos que faltaban y corrige
+  `docs/ADOPCION.md`, que todavía afirmaba que el preset aportaba `content`.
 
 ## v0.38.0 — 2026-09-26
 

@@ -792,6 +792,15 @@ export function PlanPagos(props: {
 }): ReactElement
 export const ESTADOS_CUOTA: Record<string, { chip: string; etiqueta: string; icono: string; tono?: Tono }>
 
+export const ANCHOS_PAPEL: Record<'thermal-80' | 'thermal-58' | 'thermal-55' | 'thermal' | 'a4', string>
+export function VistaPreviaPapel(props: {
+  formato?: 'thermal-80' | 'thermal-58' | 'thermal-55' | 'thermal' | 'a4' | (string & {})
+  contenido?: string
+  titulo?: string
+  alto?: string
+  className?: string
+} & Record<string, any>): ReactElement
+
 export type ItemDocumento = { id?: string; cantidad: number; concepto: ReactNode; unitario: number; subtotal: number; nota?: ReactNode }
 export function DocumentoImpresion(props: {
   titulo?: string
@@ -967,6 +976,12 @@ export const SIMBOLO_PYG: string
 export const SIMBOLOS_MONEDA: Record<string, string>
 export const LIMITE_MONTO_GENERAL: number
 export const LIMITE_MONTO_VENTAS: number
+/** Tope real de almacenamiento (columnas enteras de 32 bits). */
+export const LIMITE_MONTO_ALMACENABLE: number
+/** Límite efectivo del campo: el del contexto acotado a lo almacenable. */
+export function limiteMonto(max?: number): number
+/** Mensaje para bloquear el guardado, o `''` si el monto entra. */
+export function errorMonto(value: unknown, max?: number): string
 export function formatGs(value: unknown, opciones?: OpcionesSimbolo): string
 export function formatGsInput(value: unknown): string
 export function parseGsInput(value: unknown): number
