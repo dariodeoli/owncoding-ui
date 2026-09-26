@@ -4,6 +4,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.35.0 — 2026-09-26
+
+- **Abastecimiento F1 · contrato real (#254):** los mapas se alinean al
+  contrato de INV para que el panel de PLT no traduzca nada:
+  - **Prioridades** `URGENTE · ALTA · NORMAL · BAJA` (con `media` como alias de
+    `normal`), tolerantes a mayúsculas.
+  - **`ChipOrigen`** + `ORIGENES_NECESIDAD` (venta sin stock, reserva sin
+    unidad, venta sobre stock, bajo reposición, pedido comprometido, manual)
+    con etiqueta, tono e ícono; las claves libres se muestran tal cual.
+  - **Estados** `ABIERTA · ASIGNADA · COMPRADA · RECIBIDA · CANCELADA` (más las
+    fases siguientes), con alias de la UI (`por_comprar`, `comprado`…).
+  - **`TarjetaNecesidad`** suma `centro` y usa `ChipOrigen` para el origen.
+- Docs: `REGLAS.md` §12 y README al día.
+
 ## v0.34.0 — 2026-09-26
 
 - **`CityAutocomplete` (#253):** si `buscar` falla, el campo muestra el aviso en

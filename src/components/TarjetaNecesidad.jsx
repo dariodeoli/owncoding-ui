@@ -1,4 +1,5 @@
 import { Badge } from './ui.jsx'
+import ChipOrigen from './ChipOrigen.jsx'
 import ChipPrioridad from './ChipPrioridad.jsx'
 import ContadoresCompra from './ContadoresCompra.jsx'
 import Icon from './Icon.jsx'
@@ -30,6 +31,7 @@ export default function TarjetaNecesidad({
   prioridad,
   estado,
   origen,
+  centro,
   fechaPrometida,
   diasAviso,
   vinculo,
@@ -65,10 +67,11 @@ export default function TarjetaNecesidad({
 
       <div className="mt-2 flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-mute">
         <Badge color={colorDeTono(est.tono)}>{est.etiqueta}</Badge>
-        {origen ? (
+        {origen ? <ChipOrigen origen={origen} /> : null}
+        {centro ? (
           <span className="inline-flex min-w-0 items-center gap-1">
             <Icon name="building" className="h-3.5 w-3.5 shrink-0" />
-            <span className="truncate">{origen}</span>
+            <span className="truncate">{centro}</span>
           </span>
         ) : null}
         {fechaPrometida ? (

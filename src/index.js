@@ -103,16 +103,24 @@ export { default as MedidorBateria } from './components/MedidorBateria.jsx'
 export { default as MedidorStock } from './components/MedidorStock.jsx'
 export { default as ContadorLote } from './components/ContadorLote.jsx'
 export { default as ChipPrioridad } from './components/ChipPrioridad.jsx'
+export { default as ChipOrigen } from './components/ChipOrigen.jsx'
 export { default as ContadoresCompra } from './components/ContadoresCompra.jsx'
 export { default as TarjetaNecesidad } from './components/TarjetaNecesidad.jsx'
 export {
   PRIORIDADES_COMPRA,
+  claveDePrioridad,
   prioridadDe,
   etiquetaPrioridad,
   tonoPrioridad,
   ordenDePrioridad,
   ordenarPorPrioridad,
+  ORIGENES_NECESIDAD,
+  origenDe,
+  etiquetaOrigen,
+  tonoOrigen,
+  iconoOrigen,
   ESTADOS_NECESIDAD,
+  claveDeEstado,
   estadoNecesidad,
   etiquetaNecesidad,
   tonoNecesidad,

@@ -4,48 +4,76 @@ import { describe, expect, test } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 
 import {
+  ChipOrigen,
   ChipPrioridad,
   ContadoresCompra,
   ESTADOS_NECESIDAD,
+  ORIGENES_NECESIDAD,
   PASOS_NECESIDAD,
   PRIORIDADES_COMPRA,
   TarjetaNecesidad,
+  claveDeEstado,
+  claveDePrioridad,
   colorDeTono,
   etiquetaNecesidad,
+  etiquetaOrigen,
   etiquetaPrioridad,
+  iconoOrigen,
   ordenarPorPrioridad,
   tonoNecesidad,
+  tonoOrigen,
   tonoPrioridad,
 } from '../src/index.js'
 
 describe('abastecimiento F1', () => {
-  test('prioridades: etiqueta, tono y orden (con fallback en media)', () => {
-    expect(Object.keys(PRIORIDADES_COMPRA)).toEqual(['alta', 'media', 'baja'])
-    expect(etiquetaPrioridad('alta')).toBe('Alta')
-    expect(tonoPrioridad('alta')).toBe('bad')
-    expect(etiquetaPrioridad('desconocida')).toBe('Media')
-    const ordenadas = ordenarPorPrioridad([{ id: 1, prioridad: 'baja' }, { id: 2, prioridad: 'alta' }, { id: 3 }])
+  test('prioridades del contrato (URGENTE/ALTA/NORMAL/BAJA) con alias de la UI', () => {
+    expect(Object.keys(PRIORIDADES_COMPRA)).toEqual(['urgente', 'alta', 'normal', 'baja'])
+    expect(etiquetaPrioridad('URGENTE')).toBe('Urgente')
+    expect(tonoPrioridad('urgente')).toBe('bad')
+    expect(claveDePrioridad('ALTA')).toBe('alta')
+    expect(etiquetaPrioridad('media')).toBe('Normal')
+    expect(etiquetaPrioridad('desconocida')).toBe('Normal')
+    const ordenadas = ordenarPorPrioridad([{ id: 1, prioridad: 'BAJA' }, { id: 2, prioridad: 'URGENTE' }, { id: 3 }])
     expect(ordenadas.map((n) => n.id)).toEqual([2, 3, 1])
   })
 
-  test('estados: etiqueta y tono con las claves del panel', () => {
-    for (const clave of ['por_comprar', 'comprando', 'comprado', 'preparar_envio', 'en_transito', 'recepcion', 'incidencia', 'cancelada']) {
-      expect(ESTADOS_NECESIDAD[clave], `falta ${clave}`).toBeTruthy()
+  test('orígenes con etiqueta, tono e ícono (y clave libre en mute)', () => {
+    expect(Object.keys(ORIGENES_NECESIDAD)).toContain('sale_no_stock')
+    expect(etiquetaOrigen('SALE_NO_STOCK')).toBe('Venta sin stock')
+    expect(tonoOrigen('sale_no_stock')).toBe('warn')
+    expect(iconoOrigen('RESERVATION_NO_STOCK')).toBe('clock')
+    expect(etiquetaOrigen('CDE')).toBe('CDE')
+    expect(tonoOrigen('CDE')).toBe('mute')
+  })
+
+  test('estados del contrato con alias de la UI', () => {
+    for (const clave of ['ABIERTA', 'ASIGNADA', 'COMPRADA', 'RECIBIDA', 'CANCELADA']) {
+      expect(ESTADOS_NECESIDAD[claveDeEstado(clave)], `falta ${clave}`).toBeTruthy()
     }
+    expect(etiquetaNecesidad('ABIERTA')).toBe('Por comprar')
     expect(etiquetaNecesidad('por_comprar')).toBe('Por comprar')
+    expect(claveDeEstado('COMPRADA')).toBe('comprada')
     expect(tonoNecesidad('incidencia')).toBe('bad')
     expect(etiquetaNecesidad('inexistente')).toBe('Por comprar')
-    expect(PASOS_NECESIDAD[0]).toBe('por_comprar')
+    expect(PASOS_NECESIDAD[0]).toBe('abierta')
     expect(colorDeTono('ok')).toBe('green')
     expect(colorDeTono('x')).toBe('slate')
   })
 
+  test('ChipOrigen pinta el ícono y el tono del origen', () => {
+    const html = renderToStaticMarkup(<ChipOrigen origen="SALE_NO_STOCK" />)
+    expect(html).toContain('Venta sin stock')
+    expect(html).toContain('text-warn')
+    expect(html).toContain('<svg')
+  })
+
   test('ChipPrioridad pinta el tono y acepta etiqueta propia', () => {
-    const alta = renderToStaticMarkup(<ChipPrioridad prioridad="alta" />)
-    expect(alta).toContain('Alta')
-    expect(alta).toContain('text-bad')
-    expect(alta).toContain('Prioridad alta')
-    expect(renderToStaticMarkup(<ChipPrioridad prioridad="baja" etiqueta="Urgente" />)).toContain('Urgente')
+    const urgente = renderToStaticMarkup(<ChipPrioridad prioridad="URGENTE" />)
+    expect(urgente).toContain('Urgente')
+    expect(urgente).toContain('text-bad')
+    expect(urgente).toContain('Prioridad urgente')
+    expect(renderToStaticMarkup(<ChipPrioridad prioridad="alta" />)).toContain('text-warn')
+    expect(renderToStaticMarkup(<ChipPrioridad prioridad="baja" etiqueta="Sin apuro" />)).toContain('Sin apuro')
   })
 
   test('ContadoresCompra: números tabulares, sin negativos', () => {
@@ -64,9 +92,10 @@ describe('abastecimiento F1', () => {
       <TarjetaNecesidad
         producto="iPhone 15 Pro"
         variante="256 GB · Titanio natural · Nuevo"
-        prioridad="alta"
-        estado="por_comprar"
-        origen="CDE"
+        prioridad="URGENTE"
+        estado="ABIERTA"
+        origen="SALE_NO_STOCK"
+        centro="CDE"
         fechaPrometida="2026-09-30"
         vinculo={{ etiqueta: 'Pedido MOB-0042' }}
         destinos={[{ etiqueta: 'Pedido MOB-0042', cantidad: 1 }, { etiqueta: 'stock', cantidad: 3 }]}
@@ -78,12 +107,13 @@ describe('abastecimiento F1', () => {
     )
     expect(html).toContain('iPhone 15 Pro')
     expect(html).toContain('256 GB')
-    expect(html).toContain('Alta')
+    expect(html).toContain('Urgente')
     expect(html).toContain('Por comprar')
+    expect(html).toContain('Venta sin stock')
     expect(html).toContain('CDE')
     expect(html).toContain('Pedido MOB-0042')
     expect(html).toContain('El cliente confirmó color')
-    expect(html).toContain('data-estado="por_comprar"')
+    expect(html).toContain('data-estado="ABIERTA"')
     const conAbrir = renderToStaticMarkup(<TarjetaNecesidad producto="X" onAbrir={() => {}} acciones={<button>Abrir</button>} />)
     expect(conAbrir).toContain('<button')
     expect(conAbrir).toContain('Abrir')

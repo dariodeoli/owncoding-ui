@@ -244,14 +244,16 @@ export function CampoSeriales(props: {
 }): ReactElement
 export function MedidorStock(props: { stock?: number | null; umbral?: number | null; variante?: 'texto' | 'chip' | 'barra'; etiqueta?: string; mostrarUmbral?: boolean; vacio?: string; className?: string }): ReactElement
 export function ContadorLote(props: { recibidos?: number | null; total?: number | null; variante?: 'texto' | 'chip' | 'barra'; sufijo?: string; mostrarFaltan?: boolean; vacio?: string; className?: string }): ReactElement
-export function ChipPrioridad(props: { prioridad?: 'alta' | 'media' | 'baja' | string; etiqueta?: ReactNode; title?: string; className?: string }): ReactElement
+export function ChipPrioridad(props: { prioridad?: 'urgente' | 'alta' | 'normal' | 'baja' | string; etiqueta?: ReactNode; title?: string; className?: string }): ReactElement
+export function ChipOrigen(props: { origen?: string; etiqueta?: ReactNode; title?: string; className?: string }): ReactElement
 export function ContadoresCompra(props: { pendiente?: number; comprado?: number; faltan?: number; variante?: 'texto' | 'chips'; className?: string }): ReactElement
 export function TarjetaNecesidad(props: {
   producto?: ReactNode
   variante?: ReactNode
-  prioridad?: 'alta' | 'media' | 'baja' | string
+  prioridad?: 'urgente' | 'alta' | 'normal' | 'baja' | string
   estado?: string
-  origen?: ReactNode
+  origen?: string
+  centro?: ReactNode
   fechaPrometida?: string | number | Date | null
   diasAviso?: number
   vinculo?: { etiqueta?: ReactNode; onClick?: () => void } | null
@@ -266,12 +268,19 @@ export function TarjetaNecesidad(props: {
   className?: string
 }): ReactElement
 export const PRIORIDADES_COMPRA: Record<string, { etiqueta: string; tono: string; orden: number }>
+export function claveDePrioridad(clave?: string): string
 export function prioridadDe(clave?: string): { etiqueta: string; tono: string; orden: number }
 export function etiquetaPrioridad(clave?: string): string
 export function tonoPrioridad(clave?: string): string
 export function ordenDePrioridad(clave?: string): number
 export function ordenarPorPrioridad<T>(lista?: T[], clave?: string): T[]
+export const ORIGENES_NECESIDAD: Record<string, { etiqueta: string; tono: string; icono: string }>
+export function origenDe(clave?: string): { etiqueta: string; tono: string; icono: string }
+export function etiquetaOrigen(clave?: string): string
+export function tonoOrigen(clave?: string): string
+export function iconoOrigen(clave?: string): string
 export const ESTADOS_NECESIDAD: Record<string, { etiqueta: string; tono: string; icono: string }>
+export function claveDeEstado(clave?: string): string
 export function estadoNecesidad(clave?: string): { etiqueta: string; tono: string; icono: string }
 export function etiquetaNecesidad(clave?: string): string
 export function tonoNecesidad(clave?: string): string

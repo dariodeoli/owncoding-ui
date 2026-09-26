@@ -439,13 +439,18 @@ sección:
 El panel «Por comprar» y la lista de compra se arman con estas piezas; ninguna
 pantalla repite los mapas ni los contadores:
 
-- **Prioridad**: `ChipPrioridad` con `PRIORIDADES_COMPRA` (alta → rojo, media →
-  ámbar, baja → mute). La lista se ordena con `ordenarPorPrioridad`; la
-  prioridad no se escribe como texto suelto.
-- **Estado de la necesidad**: `ESTADOS_NECESIDAD` (por comprar · comprando ·
-  comprado · preparar envío · en tránsito · recepción · recibido · incidencia ·
-  cancelada) con etiqueta, tono e ícono. Los tabs del panel usan las mismas
-  claves y `PASOS_NECESIDAD` marca el recorrido lineal.
+- **Prioridad**: `ChipPrioridad` con `PRIORIDADES_COMPRA`, alineado al contrato
+  del backend (`URGENTE` → rojo, `ALTA` → ámbar, `NORMAL` → azul, `BAJA` →
+  mute; `media` sigue como alias de `normal`). La lista se ordena con
+  `ordenarPorPrioridad`; la prioridad no se escribe como texto suelto.
+- **Origen**: `ChipOrigen` con `ORIGENES_NECESIDAD` (venta sin stock, reserva
+  sin unidad, venta sobre stock, bajo reposición, pedido comprometido, manual),
+  con etiqueta, tono e ícono. Una clave libre se muestra tal cual en mute.
+- **Estado de la necesidad**: `ESTADOS_NECESIDAD` con las claves del contrato
+  (`ABIERTA` · `ASIGNADA` · `COMPRADA` · `RECIBIDA` · `CANCELADA`) más las de
+  las fases siguientes (preparar envío · en tránsito · recepción · incidencia);
+  los alias de la UI (`por_comprar`, `comprado`…) siguen andando y
+  `PASOS_NECESIDAD` marca el recorrido lineal.
 - **Contadores**: `ContadoresCompra` (pendiente/comprado/faltan) con números
   tabulares; «faltan» solo se pinta en rojo cuando hay diferencia y nunca hay
   negativos.
@@ -455,9 +460,9 @@ pantalla repite los mapas ni los contadores:
   solicitudes idénticas («1 Pedido A · 3 stock»); nunca se mezclan variante,
   condición ni origen.
 - **Tarjeta**: `TarjetaNecesidad` compone todo lo anterior para el panel móvil
-  (producto/variante exacta, estado, prioridad, origen, fecha prometida,
-  vínculo con la venta o reserva, destinos, observaciones y acciones). Sin
-  scroll horizontal y sin lógica de permisos.
+  (producto/variante exacta, estado, prioridad, origen, centro, fecha
+  prometida, vínculo con la venta o reserva, destinos, observaciones y
+  acciones). Sin scroll horizontal y sin lógica de permisos.
 - **Stock**: nada de esto crea stock disponible; el stock entra recién en la
   recepción de la épica. Los vínculos con la venta/reserva y la auditoría los
   maneja la app.
