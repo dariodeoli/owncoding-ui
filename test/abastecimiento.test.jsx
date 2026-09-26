@@ -13,14 +13,18 @@ import {
   PASOS_ENVIO,
   PASOS_NECESIDAD,
   PRIORIDADES_COMPRA,
+  ResumenRecepcion,
   TarjetaCompra,
   TarjetaLote,
   TarjetaNecesidad,
+  TarjetaRecepcion,
   claveDeEstado,
   claveDeEstadoCompra,
   claveDeEstadoEnvio,
   claveDePrioridad,
+  claveRevision,
   colorDeTono,
+  esIncidencia,
   estadoEnvio,
   etiquetaCompra,
   etiquetaEnvio,
@@ -29,6 +33,7 @@ import {
   etiquetaOrigen,
   etiquetaPrioridad,
   etiquetaRecepcion,
+  etiquetaRevision,
   iconoMetodoEnvio,
   iconoOrigen,
   ordenarPorPrioridad,
@@ -106,6 +111,40 @@ describe('abastecimiento F1', () => {
     expect(lote).toContain('En tránsito')
     expect(lote).toContain('Bus')
     expect(lote).toContain('Nsa · Guía 123')
+  })
+
+  test('resultados de recepción tolerantes a las claves del backend (F5)', () => {
+    expect(claveRevision('DANADO')).toBe('danado')
+    expect(claveRevision('sin_imei')).toBe('sinImei')
+    expect(etiquetaRevision('RECIBIDO')).toBe('Recibido')
+    expect(esIncidencia('FALTANTE')).toBe(true)
+    expect(esIncidencia('RECIBIDO')).toBe(false)
+  })
+
+  test('ResumenRecepcion cuenta por resultado (mapa del backend o ítems)', () => {
+    const mapa = renderToStaticMarkup(<ResumenRecepcion resumen={{ RECIBIDO: 12, FALTANTE: 1, DANADO: 1 }} />)
+    expect(mapa).toContain('12')
+    expect(mapa).toContain('recibidos')
+    expect(mapa).toContain('faltan')
+    expect(mapa).toContain('dañadas')
+    expect(mapa).toContain('text-bad')
+
+    const items = renderToStaticMarkup(<ResumenRecepcion items={[{ resultado: 'RECIBIDO' }, { resultado: 'SOBRANTE' }]} />)
+    expect(items).toContain('recibido')
+    expect(items).toContain('sobran')
+    expect(renderToStaticMarkup(<ResumenRecepcion resumen={{}} />)).toBe('')
+  })
+
+  test('TarjetaRecepcion muestra el lote por recibir', () => {
+    const html = renderToStaticMarkup(
+      <TarjetaRecepcion codigo="ENV-CDE-ASU-0021" estado="EN_TRANSITO" origen="CDE" destino="Asunción" metodo="BUS" eta="2026-10-02" unidades={12} conImei={9} deposito="Depósito 1" />,
+    )
+    expect(html).toContain('ENV-CDE-ASU-0021')
+    expect(html).toContain('CDE → Asunción')
+    expect(html).toContain('En tránsito')
+    expect(html).toContain('Bus')
+    expect(html).toContain('Depósito 1')
+    expect(html).toContain('9 de 12')
   })
 
   test('EtiquetaLote: PRODUCTO n DE N, IMEI o pendiente y QR', () => {

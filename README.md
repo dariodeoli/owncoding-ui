@@ -310,8 +310,10 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `ORIGENES_NECESIDAD`/`ESTADOS_NECESIDAD` con `ordenarPorPrioridad` viven en
   `utils/abastecimiento.js` (REGLAS §12).
   **F2–F5 — compra, lote, etiqueta y recepción:** `TarjetaCompra`, `TarjetaLote`,
-  `EtiquetaLote` («PRODUCTO n DE N» con QR), `ESTADOS_COMPRA`/`ESTADOS_ENVIO`/
-  `ESTADOS_RECEPCION`, `METODOS_ENVIO` y `PASOS_ENVIO` (REGLAS §13).
+  `TarjetaRecepcion` (llegada pendiente con ETA y depósito sugerido),
+  `ResumenRecepcion` (conteos por resultado), `EtiquetaLote` («PRODUCTO n DE N»
+  con QR), `ESTADOS_COMPRA`/`ESTADOS_ENVIO`/`ESTADOS_RECEPCION`, `METODOS_ENVIO`,
+  `PASOS_ENVIO` y `claveRevision` (REGLAS §13).
 - **Tablero (lote 2, sin publicar):** `ImporteDelta` (monto con signo y color),
   `IndicadorConexion` (en línea / pendientes de subir), `CampanaAvisos`
   (contador + panel por props) y `GraficoBarras` (barras CSS sin dependencias).

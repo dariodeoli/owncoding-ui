@@ -4,6 +4,20 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.38.0 — 2026-09-26
+
+- **Abastecimiento F5 — recepción e incidencias (#250):**
+  - **`TarjetaRecepcion`**: la llegada pendiente (lote, origen → destino,
+    método, ETA con `Vencimiento`, «N de M con IMEI» y depósito sugerido) con
+    la acción de abrir/retomar.
+  - **`ResumenRecepcion`**: conteos por resultado desde el mapa del backend
+    (`{ RECIBIDO: 12, FALTANTE: 1, … }`) o desde los ítems, con los tonos del
+    mapa compartido.
+  - **`claveRevision`**: los resultados del backend (`RECIBIDO`, `DANADO`,
+    `SIN_IMEI`…) se normalizan antes de buscar en `ESTADOS_REVISION`; los
+    helpers `etiquetaRevision`/`tonoRevision`/`esIncidencia` la usan.
+- Docs: `REGLAS.md` §13 y README.
+
 ## v0.37.0 — 2026-09-26
 
 - **Abastecimiento F2–F5 (#250):** objetos para la compra, el lote y la

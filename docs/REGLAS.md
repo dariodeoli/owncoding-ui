@@ -491,7 +491,11 @@ pantalla repite los mapas ni los contadores:
   modelo/variante, IMEI o «IMEI pendiente», pedido/destino y QR del manifiesto);
   se imprime en papel claro y se envuelve con `DocumentoImpresion`.
 - **Recepción**: los resultados de unidad usan `ESTADOS_REVISION`/`FilaRevision`
-  (`RECIBIDO` entra como estado ok) y los conteos, `ContadorLote` +
-  `ResumenIncidencias`; el stock nace recién al confirmar (regla de la épica).
+  (`RECIBIDO` entra como estado ok; `claveRevision` tolera las claves del
+  backend) y los conteos, `ResumenRecepcion` (mapa del backend o ítems) +
+  `ResumenIncidencias`. La llegada pendiente se muestra con `TarjetaRecepcion`
+  (lote, ETA, «N de M con IMEI» y depósito sugerido), el cierre con
+  `DestinoRecepcion` y el escaneo con `CampoSeriales`/`SerialField`; el stock
+  nace recién al confirmar (regla de la épica).
 
 

@@ -284,6 +284,29 @@ export function TarjetaCompra(props: {
   acciones?: ReactNode
   className?: string
 }): ReactElement
+export function TarjetaRecepcion(props: {
+  codigo?: string
+  estado?: string
+  origen?: ReactNode
+  destino?: ReactNode
+  metodo?: string
+  eta?: string | number | Date | null
+  unidades?: number
+  conImei?: number
+  deposito?: ReactNode
+  depositoSugerido?: ReactNode
+  llegada?: ReactNode
+  notas?: ReactNode
+  onAbrir?: () => void
+  acciones?: ReactNode
+  className?: string
+}): ReactElement
+export function ResumenRecepcion(props: {
+  resumen?: Record<string, number>
+  items?: Array<{ resultado?: string }>
+  className?: string
+}): ReactElement | null
+export function claveRevision(estado?: string): string
 export function TarjetaLote(props: {
   codigo?: string
   estado?: string

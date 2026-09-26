@@ -17,7 +17,21 @@ export const ESTADOS_REVISION = {
 // Tipos que cuentan como incidencia (y por eso aparecen en el resumen).
 export const INCIDENCIAS = ['faltante', 'sobrante', 'danado', 'incorrecto', 'sinImei', 'sinDocumentacion']
 
-export const esIncidencia = (estado) => INCIDENCIAS.includes(estado)
-export const etiquetaRevision = (estado) => ESTADOS_REVISION[estado]?.etiqueta || String(estado || '')
-export const etiquetaPluralRevision = (estado) => ESTADOS_REVISION[estado]?.etiquetaPlural || String(estado || '')
-export const tonoRevision = (estado) => ESTADOS_REVISION[estado]?.tono || 'mute'
+// Los resultados del backend llegan en mayúsculas (`RECIBIDO`, `DANADO`…), así
+// que la clave se normaliza (sin acentos ni separadores) antes de buscar.
+const normalizar = (valor) =>
+  String(valor ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]/g, '')
+const POR_CLAVE = new Map(Object.keys(ESTADOS_REVISION).map((clave) => [normalizar(clave), clave]))
+
+/** Clave canónica de un resultado de revisión (`'DANADO'` → `'danado'`). */
+export const claveRevision = (estado) => POR_CLAVE.get(normalizar(estado)) || String(estado ?? '')
+
+export const esIncidencia = (estado) => INCIDENCIAS.includes(claveRevision(estado))
+export const etiquetaRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]?.etiqueta || String(estado || '')
+export const etiquetaPluralRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]?.etiquetaPlural || String(estado || '')
+export const tonoRevision = (estado) => ESTADOS_REVISION[claveRevision(estado)]?.tono || 'mute'
