@@ -3690,23 +3690,25 @@ var BANCOS_PARAGUAY = [
   "Cooperativa San Crist\xF3bal",
   "Cooperativa Universitaria",
   "Financiera El Comercio",
+  "Financiera FIC",
   "Financiera Finexpar",
   "Financiera Paraguayo Japonesa",
   "Solar Banco",
-  "ueno bank"
+  "Ueno Bank",
+  "Visi\xF3n Banco"
 ];
 var LOGOS_BANCOS = {
-  "Banco Atlas": { archivo: "banco-atlas.png" },
+  "Banco Atlas": { archivo: "banco-atlas.png", alias: ["atlas"] },
   "Banco Basa": { archivo: "banco-basa.svg" },
-  "Banco Continental": { marca: "continental" },
+  "Banco Continental": { marca: "continental", alias: ["continental"] },
   "Banco de la Naci\xF3n Argentina": { archivo: "banco-nacion-argentina.png", chip: true, alias: ["banco nacion", "bna"] },
   "Banco do Brasil": { archivo: "banco-do-brasil.svg", alias: ["bb", "brasil"] },
-  "Banco Familiar": { marca: "familiar" },
+  "Banco Familiar": { marca: "familiar", alias: ["familiar"] },
   "Banco GNB Paraguay": { archivo: "banco-gnb.svg" },
-  "Banco Interfisa": { archivo: "interfisa.png" },
+  "Banco Interfisa": { archivo: "interfisa.png", alias: ["interfisa"] },
   "Banco Ita\xFA Paraguay": { archivo: "itau.png", alias: ["itau", "banco itau", "itau paraguay"] },
-  "Banco Nacional de Fomento": { archivo: "bnf.png" },
-  "Banco Sudameris": { archivo: "sudameris.png" },
+  "Banco Nacional de Fomento": { archivo: "bnf.png", alias: ["bnf", "nacional de fomento"] },
+  "Banco Sudameris": { archivo: "sudameris.png", alias: ["sudameris"] },
   "Bancop": { archivo: "bancop.png" },
   "Citibank Paraguay": { archivo: "citibank.svg", alias: ["citibank", "citi"] },
   "Coomecipar": { monograma: "CO", color: "#0B6E4F" },
@@ -3714,10 +3716,15 @@ var LOGOS_BANCOS = {
   "Cooperativa San Crist\xF3bal": { monograma: "CSC", color: "#167A54" },
   "Cooperativa Universitaria": { monograma: "CU", color: "#1D4E9E" },
   "Financiera El Comercio": { monograma: "FEC", color: "#0E7C7B" },
+  "Financiera FIC": { monograma: "FIC", color: "#C8102E", alias: ["fic", "financiera fic"] },
   "Financiera Finexpar": { monograma: "FX", color: "#C24E1B" },
   "Financiera Paraguayo Japonesa": { archivo: "paraguayo-japonesa.png" },
   "Solar Banco": { archivo: "solar.svg", alias: ["solar", "solar ahorro y finanzas"] },
-  "ueno bank": { marca: "ueno", alias: ["ueno"] }
+  "Ueno Bank": { marca: "ueno", alias: ["ueno"] },
+  "Visi\xF3n Banco": { monograma: "VB", color: "#E4572E", alias: ["vision", "banco vision"] },
+  // Absorbido por Banco Continental (2025): se resuelve para los datos
+  // históricos de las apps, pero no entra en las sugerencias del catálogo.
+  "Banco R\xEDo": { monograma: "BR", color: "#1B5FA8", alias: ["rio", "banco rio"] }
 };
 var COLORES_BANCO_RESPALDO = ["#33414F", "#1D4E9E", "#0B6E4F", "#8A3A1B", "#6C3FA0", "#12659E"];
 function normalizarBanco(texto) {

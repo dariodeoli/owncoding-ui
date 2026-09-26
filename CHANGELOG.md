@@ -117,6 +117,17 @@ opcionales. El integrador decide el número final.
   - `PhoneField` tipa sus props reales y `CODIGOS_PAIS` queda como `string[]`
     (el `.d.ts` declaraba objetos). La política sigue siendo móvil-PY y
     `docs/REGLAS.md` §7 documenta el formato.
+- **Bancos — tipos del registro y alias de LedBox (#4):**
+  - `BANCOS_PARAGUAY` se publica como `string[]` y `logoDeBanco` con el tipo
+    real del registro (`{ banco, tipo: archivo|marca|monograma } | null`); el
+    `.d.ts` declaraba objetos y `string | null`.
+  - El registro suma los alias que cada app resolvía a mano: `continental`,
+    `bnf`, `interfisa`, `atlas`, `familiar`, `vision`, `sudameris`, `fic`,
+    `rio` y `ueno`. `Visión Banco` y `Financiera FIC` entran al catálogo;
+    `Banco Río` (absorbido por Continental) solo se resuelve para datos
+    históricos y no se sugiere.
+  - `'ueno bank'` pasa a `'Ueno Bank'` (el alias `ueno` sigue andando) y
+    `coberturaBancos` no cambia.
 
 ## v0.38.0 — 2026-09-26
 

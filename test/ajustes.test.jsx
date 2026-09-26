@@ -41,10 +41,34 @@ describe('nombres y documentos', () => {
 describe('bancos de Paraguay', () => {
   test('el catálogo por defecto y sus sugerencias', () => {
     expect(BANCOS_PARAGUAY).toContain('Banco Atlas')
-    expect(BANCOS_PARAGUAY).toContain('ueno bank')
+    // El nombre canónico va capitalizado (el alias `ueno` sigue resolviendo).
+    expect(BANCOS_PARAGUAY).toContain('Ueno Bank')
+    expect(BANCOS_PARAGUAY).toContain('Visión Banco')
+    expect(BANCOS_PARAGUAY).toContain('Financiera FIC')
     expect(sugerenciasDeBanco('continental')).toEqual(['Banco Continental'])
     expect(sugerenciasDeBanco('basa')).toEqual(['Banco Basa'])
     expect(sugerenciasDeBanco('')).toHaveLength(BANCOS_PARAGUAY.length)
+  })
+
+  test('los alias que resolvía LedBox vuelven al nombre canónico', () => {
+    const esperado = {
+      continental: 'Banco Continental',
+      bnf: 'Banco Nacional de Fomento',
+      interfisa: 'Banco Interfisa',
+      atlas: 'Banco Atlas',
+      familiar: 'Banco Familiar',
+      vision: 'Visión Banco',
+      sudameris: 'Banco Sudameris',
+      fic: 'Financiera FIC',
+      rio: 'Banco Río',
+      ueno: 'Ueno Bank',
+    }
+    for (const [alias, banco] of Object.entries(esperado)) {
+      expect(logoDeBanco(alias), `${alias} → ${banco}`).toMatchObject({ banco })
+    }
+    // `Banco Río` quedó absorbido: resuelve para datos históricos pero no se
+    // sugiere en el catálogo vigente.
+    expect(sugerenciasDeBanco('rio')).toEqual([])
   })
 
   test('el registro resuelve archivo, marca y monograma', () => {

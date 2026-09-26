@@ -874,14 +874,34 @@ export function nombrePartes(nombre: string): { nombres: string; apellidos: stri
 export function esApellidosPrimero(nombre: string): boolean
 export function esRazonSocial(nombre: string): boolean
 
-export const BANCOS_PARAGUAY: Array<{ codigo?: string; nombre: string; [clave: string]: any }>
-export const LOGOS_BANCOS: Record<string, string>
+/** Nombres del catálogo por defecto (`BANCOS_PARAGUAY`, listado vigente del BCP). */
+export type BancoParaguay = string
+
+/** Registro de logo: archivo del host, marca vectorial o monograma. */
+export type RegistroLogoBanco =
+  | { banco: string; tipo: 'archivo'; archivo: string; chip?: boolean }
+  | { banco: string; tipo: 'marca'; marca: string }
+  | { banco: string; tipo: 'monograma'; iniciales: string; color: string; generico?: boolean }
+
+/** Entrada del registro `LOGOS_BANCOS` (el nombre canónico es la clave). */
+export type EntradaLogoBanco = {
+  archivo?: string
+  marca?: string
+  monograma?: string
+  color?: string
+  chip?: boolean
+  alias?: string[]
+}
+
+export const BANCOS_PARAGUAY: string[]
+export const LOGOS_BANCOS: Record<string, EntradaLogoBanco>
 export const COLORES_BANCO_RESPALDO: string[]
 export function normalizarBanco(nombre: string): string
 export function inicialesDeBanco(nombre: string): string
 export function colorDeBanco(nombre: string): string
-export function logoDeBanco(nombre: string): string | null
-export function sugerenciasDeBanco(consulta: string, bancos?: any[]): any[]
+/** Resuelve archivo/marca/monograma por nombre o alias; sin nombre, `null`. */
+export function logoDeBanco(nombre: string): RegistroLogoBanco | null
+export function sugerenciasDeBanco(consulta?: string, bancos?: readonly string[]): string[]
 
 export const ESTADO_IMPRESORA: Record<string, string>
 export const ETIQUETA_ESTADO: Record<string, string>
