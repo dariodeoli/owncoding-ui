@@ -169,11 +169,24 @@ compatibilidad).
   columna angosta con la mitad del modal vacía.
 - `Modal`/`ConfirmDialog` con foco atrapado, `Esc`, scroll bloqueado y retorno
   de foco; el pie de guardado va asociado al formulario y bloquea doble clic.
-- Ese comportamiento vive en `useDialogFocusTrap(open, onClose, ref)`
+- Ese comportamiento vive en `useDialogFocusTrap(open, onClose, ref, opciones)`
   (`src/hooks/`), compartido por `Modal` y `Drawer`: bloquea el scroll, enfoca
   al abrir (o lo que devuelva `initialFocus()`), cicla Tab, cierra con `Esc` y
   devuelve el foco al elemento anterior. Un overlay propio usa el hook en vez de
-  copiar la trampa.
+  copiar la trampa. El hook además sostiene la **pila de capas** (#2): la capa
+  superior es la única que responde a `Esc`/Tab/foco y la única que lleva
+  `aria-modal`; el scroll se restaura cuando se cierra la última y el foco
+  vuelve a lo que abrió la capa. `busy` bloquea el cierre interactivo.
+- **Pending por formulario (#2):** cada `<form>` del diálogo registra su
+  bloqueo con `useDialogPending(pendiente)` mientras guarda; el diálogo no
+  cierra (Esc, clic afuera, botón ×) hasta que terminan todos. Un formulario
+  ocioso no destraba a otro que está guardando y el registro se libera en
+  layout effect para que un guardado confirmado pueda cerrar.
+- **Pie asociado al `<form>` real (#2):** `FormActions` monta las acciones en
+  el pie del diálogo (fuera del área de scroll) y les pone `form={id}`, así la
+  validación nativa, el Enter y el `disabled` siguen siendo los del
+  formulario. `SaveActions` es el pie completo del ciclo de guardado: registra
+  el pending y deja el cancelar deshabilitado mientras guarda.
 - Eliminación destructiva: confirmación propia; datos críticos con doble
   confirmación y plazo recuperable.
 

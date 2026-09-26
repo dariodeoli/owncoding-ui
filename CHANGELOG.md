@@ -21,6 +21,14 @@ versión ni tag. Reglas en `docs/REGLAS.md`.
   pegado es-PY (`1.250,50`), en-US (`1,250.50`) o suelto (`1250.50`) y suma
   `integerOnly` para los enteros de previsión/informes (mismo contrato de
   `onValueChange`, sin romper el `maxLength`).
+- **Overlays (#2):** `Modal`/`Drawer` sostienen la pila de capas —`aria-modal`
+  solo en la superior, `Esc`/Tab/foco solo en la de arriba, scroll con
+  contador y retorno de foco a la capa anterior—; `busy` bloquea el cierre
+  interactivo. Los formularios registran su bloqueo con
+  `useDialogPending(pendiente)` (uno ocioso no destraba a otro) y
+  `FormActions`/`SaveActions` montan el pie fuera del scroll asociado al
+  `<form>` real (`form={id}`), con el cancelar deshabilitado mientras guarda.
+  `Modal`/`Drawer` suman `busy`; `ConfirmDialog` lo pasa al modal.
 
 ## Sin publicar — contraste de chips y borde interactivo (#5)
 

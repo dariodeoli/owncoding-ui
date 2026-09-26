@@ -82,7 +82,12 @@ export function Eyebrow(props: HTMLAttributes<HTMLDivElement>): ReactElement
 export function Card(props: HTMLAttributes<HTMLDivElement>): ReactElement
 
 export type TamanoModal = 'corto' | 'formulario' | 'amplio' | 'completo'
-export function Modal(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; size?: TamanoModal; className?: string }): ReactElement | null
+export function Modal(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; size?: TamanoModal; className?: string; busy?: boolean }): ReactElement | null
+export function FormActions(props: { children?: ReactNode; className?: string }): ReactElement
+export function SaveActions(props: { pendiente?: boolean; children?: ReactNode; cancelLabel?: string | false; className?: string }): ReactElement
+export function useDialogClose(): (() => void) | undefined
+export function useDialogPending(pendiente: boolean): void
+export function conFormulario(children: ReactNode, formId?: string): ReactNode
 export function ConfirmDialog(props: {
   open: boolean
   onCancel?: () => void
@@ -97,7 +102,7 @@ export function ConfirmDialog(props: {
 export function Badge(props: HTMLAttributes<HTMLSpanElement> & { color?: 'blue' | 'green' | 'red' | 'orange' | 'yellow' | 'slate' }): ReactElement
 export function Dot(props: { color?: 'green' | 'red' | 'blue' | 'slate' | 'orange'; pulse?: boolean; className?: string }): ReactElement
 export function IconAction(props: { icon: string; label: string; tone?: Tono; onClick?: () => void; disabled?: boolean; size?: 'sm' | 'touch' }): ReactElement
-export function Drawer(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; side?: 'left' | 'right'; className?: string }): ReactElement | null
+export function Drawer(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; side?: 'left' | 'right'; className?: string; busy?: boolean }): ReactElement | null
 export function ToastProvider(props: { children?: ReactNode; demo?: boolean }): ReactElement
 export function useToast(): { success: (title: string, description?: string) => void; error: (title: string, description?: string) => void; info: (title: string, description?: string) => void }
 export function Skeleton(props: { className?: string }): ReactElement
@@ -723,7 +728,9 @@ export function useTableroOptimista(props: { tarjetas?: TarjetaTablero[]; onMove
 }
 export const SELECTOR_ENFOCABLES: string
 export function destinoDeTab(opciones: { shiftKey: boolean; activo: Element | null; primero: Element | null; ultimo: Element | null; contenedor: Element | null; fuera?: boolean }): Element | null
-export function useDialogFocusTrap(open: boolean, onClose: (() => void) | undefined, ref: RefObject<HTMLElement>, opciones?: { initialFocus?: () => HTMLElement | null; bloquearScroll?: boolean }): void
+export function useDialogFocusTrap(open: boolean, onClose: (() => void) | undefined, ref: RefObject<HTMLElement>, opciones?: { initialFocus?: () => HTMLElement | null; bloquearScroll?: boolean; busy?: boolean }): { esSuperior: boolean; requestClose: () => void }
+export function crearPilaCapas(): { agregar(id: symbol): void; insertar(id: symbol, indice: number): void; quitar(id: symbol): void; esSuperior(id: symbol): boolean; readonly tamano: number; ids(): symbol[] }
+export function crearRegistroPendientes(): { registrar(id: symbol, pendiente: boolean): number; readonly bloqueado: boolean; readonly cantidad: number }
 export const AVISO_REFRESCO: string
 export function crearEnvioUnico(enviar: (evento?: unknown) => unknown): { readonly enCurso: boolean; ejecutar(evento?: unknown): Promise<unknown> }
 export function completeSave(cerrar?: () => void, refrescar?: () => void | Promise<void>, opciones?: { avisar?: (mensaje: string) => void }): Promise<boolean>

@@ -1,10 +1,13 @@
-import { createContext, forwardRef, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { Children, cloneElement, createContext, forwardRef, isValidElement, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '../utils/cn.js'
-import { formatGs, formatGsInput, parseGsInput, formatUsdInput, parseUsdInput, normalizarMontoInput, caretTrasDigitos, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
+import { formatGs, formatGsInput, formatUsdInput, normalizarMontoInput, caretTrasDigitos, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
 import { TAMANOS_CAMPO } from '../utils/tamanos.js'
 import { TAMANO_MODAL_PREDETERMINADO, TAMANOS_MODAL } from '../utils/modal.js'
 import { textoDeTono } from '../utils/tonos.js'
 import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js'
+import { crearRegistroPendientes } from '../utils/pilaOverlays.js'
+import { PIE_ACCIONES } from '../utils/formulario.js'
 import Icon from './Icon.jsx'
 
 // ── Button ──────────────────────────────────────────────────────────
@@ -249,22 +252,133 @@ export function Card({ className, ...props }) {
   )
 }
 
+// ── Diálogos: contextos compartidos por Modal y Drawer ──────────────
+// El cierre interactivo (Esc, clic afuera, botón ×) pasa por acá y está
+// bloqueado mientras haya un formulario pendiente; el pie de acciones se
+// asocia al `<form>` real aunque viva fuera de él.
+const ContextoDialogo = createContext(null)
+const ContextoPie = createContext(null)
+
+// En el cliente, layout effect (el registro se libera antes de los efectos
+// pasivos); en SSR, `useEffect` para no ensuciar el render del servidor.
+const useEfectoLayout = typeof window === 'undefined' ? useEffect : useLayoutEffect
+
+/** Cierre del diálogo en curso; `undefined` fuera de un Modal/Drawer. */
+export function useDialogClose() {
+  return useContext(ContextoDialogo)?.requestClose
+}
+
+// Cada formulario registra su propio bloqueo mientras `pendiente`: el diálogo
+// no se cierra hasta que TODOS terminen. Uno ocioso no destraba a otro que
+// guarda. Se registra en layout effect para que un form que termina de guardar
+// libere el cierre antes de los efectos pasivos.
+export function useDialogPending(pendiente) {
+  const contexto = useContext(ContextoDialogo)
+  const id = useRef(Symbol('formulario')).current
+  useEfectoLayout(() => {
+    contexto?.registrar(id, Boolean(pendiente))
+    return () => contexto?.registrar(id, false)
+  }, [contexto, id, pendiente])
+}
+
+// Asocia a cada acción con forma de botón el `form` del formulario que la
+// contiene: la validación nativa, el Enter y el estado disabled siguen siendo
+// los del <form>. Los botones con `form` propio no se tocan.
+export function conFormulario(children, formId) {
+  return Children.map(children, (hijo) =>
+    isValidElement(hijo) && !hijo.props?.form && (hijo.type === 'button' || typeof hijo.type === 'function')
+      ? cloneElement(hijo, { form: formId || undefined })
+      : hijo,
+  )
+}
+
+// Pie de acciones del formulario. Si el diálogo expone un pie (Modal/Drawer),
+// las acciones se montan ahí por portal; si no, se dibujan donde van.
+export function FormActions({ children, className }) {
+  const pie = useContext(ContextoPie)
+  const ancla = useRef(null)
+  const id = useId()
+  const [formId, setFormId] = useState('')
+  // El pie se monta después del form: se re-evalúa cuando aparece o cambia,
+  // así un diálogo que cierra y reabre no conserva un form viejo.
+  useEfectoLayout(() => {
+    const formulario = ancla.current?.closest('form')
+    if (!formulario) {
+      setFormId('')
+      return
+    }
+    if (!formulario.id) formulario.id = id
+    setFormId(formulario.id)
+  }, [id, pie])
+  const acciones = <div className={cn(PIE_ACCIONES, className)}>{conFormulario(children, formId)}</div>
+  return (
+    <>
+      <span hidden ref={ancla} />
+      {pie ? createPortal(acciones, pie) : acciones}
+    </>
+  )
+}
+
+// Pie de guardado del ciclo #2: registra el bloqueo del diálogo mientras
+// `pendiente`, deja el cancelar deshabilitado y los children (la acción de
+// guardar) van al `<form>` real. Fuera de un diálogo solo dibuja los children.
+export function SaveActions({ pendiente = false, children, cancelLabel = 'Cancelar', className }) {
+  const requestClose = useDialogClose()
+  useDialogPending(pendiente)
+  return (
+    <FormActions className={className}>
+      {requestClose && cancelLabel ? (
+        <Button type="button" variant="ghost" disabled={pendiente} onClick={() => { if (!pendiente) requestClose() }}>
+          {cancelLabel}
+        </Button>
+      ) : null}
+      {children}
+    </FormActions>
+  )
+}
+
 // Popup estándar: Esc, clic afuera, botón cerrar y cierre opcional al guardar.
 // El ancho se elige con `size` (TAMANOS_MODAL): no se pasa `max-w-*` suelto.
-// El foco, el Esc y el scroll bloqueado son de useDialogFocusTrap.
-export function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
+// El foco, el Esc, el scroll bloqueado y la pila de capas son del hook; el
+// pie queda fijo abajo y `SaveActions`/`FormActions` se montan ahí.
+export function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO, busy = false }) {
   const dialog = useRef(null)
   const titleId = useId()
-  useDialogFocusTrap(open, onClose, dialog)
+  const [pie, setPie] = useState(null)
+  const pendientes = useRef(crearRegistroPendientes()).current
+  const [hayPendientes, setHayPendientes] = useState(false)
+  const bloqueado = Boolean(busy || hayPendientes)
+  const cerrar = useCallback(() => {
+    if (!busy && !pendientes.bloqueado) onClose?.()
+  }, [busy, onClose, pendientes])
+  const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, dialog, { busy: bloqueado })
+  const registrar = useCallback((id, pendiente) => {
+    pendientes.registrar(id, pendiente)
+    setHayPendientes(pendientes.bloqueado)
+  }, [pendientes])
+  const contexto = useMemo(() => ({ requestClose, registrar }), [requestClose, registrar])
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
-      <div ref={dialog} tabIndex={-1} role="dialog" aria-modal="true" aria-labelledby={titleId} className={cn('max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6', TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className)}>
-        <div className="mb-4 flex items-center justify-between gap-3">
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
+      <div
+        ref={dialog}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal={esSuperior ? 'true' : undefined}
+        aria-labelledby={titleId}
+        aria-busy={bloqueado || undefined}
+        className={cn('flex max-h-[min(90dvh,720px)] w-full flex-col overflow-hidden rounded-2xl border border-ink-600 bg-ink shadow-float', TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className)}
+      >
+        <div className="flex items-center justify-between gap-3 border-b border-ink-600 p-4 sm:px-6">
           <h2 id={titleId} className="text-base font-bold text-fore">{title}</h2>
-          <button type="button" onClick={onClose} className="toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
+          <button type="button" onClick={requestClose} disabled={bloqueado} className="toque-44 rounded-lg p-2 text-mute transition hover:bg-ink-700 hover:text-fore disabled:pointer-events-none disabled:opacity-40" aria-label="Cerrar">×</button>
         </div>
-        {children}
+        <ContextoDialogo.Provider value={contexto}>
+          <ContextoPie.Provider value={pie}>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">{children}</div>
+          </ContextoPie.Provider>
+        </ContextoDialogo.Provider>
+        <div ref={setPie} className="border-t border-ink-600 p-4 empty:hidden sm:px-6" />
       </div>
     </div>
   )
@@ -283,7 +397,7 @@ export function ConfirmDialog({
   busy = false,
 }) {
   return (
-    <Modal open={open} onClose={busy ? undefined : onCancel} title={title} size="corto">
+    <Modal open={open} onClose={onCancel} busy={busy} title={title} size="corto">
       <div className="space-y-5">
         <div className={cn('flex h-11 w-11 items-center justify-center rounded-2xl', variant === 'danger' ? 'bg-bad/10 text-bad-text' : 'bg-fono/10 text-fono-text')}>
           <Icon name={variant === 'danger' ? 'alert' : 'check'} className="h-5 w-5" />
@@ -376,19 +490,32 @@ export function IconAction({ icon, label, tone = 'mute', onClick, disabled = fal
 // Panel lateral móvil: overlay y clic afuera; el foco atrapado, Esc y el
 // scroll bloqueado salen del mismo hook que el Modal. Entra deslizándose
 // desde el costado.
-export function Drawer({ open, onClose, title, children, side = 'right', className }) {
+export function Drawer({ open, onClose, title, children, side = 'right', className, busy = false }) {
   const panel = useRef(null)
   const titleId = useId()
-  useDialogFocusTrap(open, onClose, panel)
+  const [pie, setPie] = useState(null)
+  const pendientes = useRef(crearRegistroPendientes()).current
+  const [hayPendientes, setHayPendientes] = useState(false)
+  const bloqueado = Boolean(busy || hayPendientes)
+  const cerrar = useCallback(() => {
+    if (!busy && !pendientes.bloqueado) onClose?.()
+  }, [busy, onClose, pendientes])
+  const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, panel, { busy: bloqueado })
+  const registrar = useCallback((id, pendiente) => {
+    pendientes.registrar(id, pendiente)
+    setHayPendientes(pendientes.bloqueado)
+  }, [pendientes])
+  const contexto = useMemo(() => ({ requestClose, registrar }), [requestClose, registrar])
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 bg-black/60" onMouseDown={(e) => e.target === e.currentTarget && onClose?.()}>
+    <div className="fixed inset-0 z-50 bg-black/60" onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
       <div
         ref={panel}
         tabIndex={-1}
         role="dialog"
-        aria-modal="true"
+        aria-modal={esSuperior ? 'true' : undefined}
         aria-labelledby={titleId}
+        aria-busy={bloqueado || undefined}
         className={cn(
           'absolute inset-y-0 flex max-h-full w-full max-w-md flex-col overflow-hidden border-ink-600 bg-ink shadow-float',
           side === 'left' ? 'left-0 border-r' : 'right-0 border-l',
@@ -397,9 +524,14 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
       >
         <div className="flex items-center justify-between gap-3 border-b border-ink-600 p-4">
           <h2 id={titleId} className="text-base font-bold text-fore">{title}</h2>
-          <button type="button" onClick={onClose} className="toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore" aria-label="Cerrar">×</button>
+          <button type="button" onClick={requestClose} disabled={bloqueado} className="toque-44 rounded-lg p-2 text-mute transition hover:bg-ink-700 hover:text-fore disabled:pointer-events-none disabled:opacity-40" aria-label="Cerrar">×</button>
         </div>
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
+        <ContextoDialogo.Provider value={contexto}>
+          <ContextoPie.Provider value={pie}>
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
+          </ContextoPie.Provider>
+        </ContextoDialogo.Provider>
+        <div ref={setPie} className="border-t border-ink-600 p-4 empty:hidden" />
       </div>
     </div>
   )

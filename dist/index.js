@@ -1,7 +1,8 @@
 "use client"
 
 // src/components/ui.jsx
-import { createContext, forwardRef, useCallback, useContext, useEffect as useEffect2, useId, useMemo, useRef as useRef2, useState } from "react";
+import { Children, cloneElement, createContext, forwardRef, isValidElement, useCallback as useCallback2, useContext, useEffect as useEffect2, useId, useLayoutEffect, useMemo, useRef as useRef2, useState as useState2 } from "react";
+import { createPortal } from "react-dom";
 
 // src/utils/cn.js
 import { clsx } from "clsx";
@@ -270,7 +271,52 @@ function textoDeTono(valor) {
 }
 
 // src/hooks/useDialogFocusTrap.js
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+// src/utils/pilaOverlays.js
+function crearPilaCapas() {
+  const capas = [];
+  return {
+    agregar(id) {
+      if (!capas.includes(id)) capas.push(id);
+    },
+    insertar(id, indice) {
+      if (capas.includes(id)) return;
+      capas.splice(Math.max(0, Math.min(indice, capas.length)), 0, id);
+    },
+    quitar(id) {
+      const indice = capas.indexOf(id);
+      if (indice >= 0) capas.splice(indice, 1);
+    },
+    esSuperior(id) {
+      return capas[capas.length - 1] === id;
+    },
+    get tamano() {
+      return capas.length;
+    },
+    ids() {
+      return [...capas];
+    }
+  };
+}
+function crearRegistroPendientes() {
+  const pendientes = /* @__PURE__ */ new Set();
+  return {
+    registrar(id, pendiente) {
+      if (pendiente) pendientes.add(id);
+      else pendientes.delete(id);
+      return pendientes.size;
+    },
+    get bloqueado() {
+      return pendientes.size > 0;
+    },
+    get cantidad() {
+      return pendientes.size;
+    }
+  };
+}
+
+// src/hooks/useDialogFocusTrap.js
 var SELECTOR_ENFOCABLES = 'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]';
 function destinoDeTab({ shiftKey, activo, primero, ultimo, contenedor, fuera = false }) {
   if (!primero) return null;
@@ -280,28 +326,56 @@ function destinoDeTab({ shiftKey, activo, primero, ultimo, contenedor, fuera = f
   if (!shiftKey && (enUltimo || fuera)) return primero;
   return null;
 }
-function useDialogFocusTrap(open, onClose, ref, { initialFocus, bloquearScroll = true } = {}) {
+var pila = crearPilaCapas();
+var paneles = /* @__PURE__ */ new Map();
+var oyentes = /* @__PURE__ */ new Set();
+var bloqueosScroll = 0;
+var overflowOriginal = "";
+function avisar() {
+  for (const oyente of oyentes) oyente();
+}
+function useDialogFocusTrap(open, onClose, ref, { initialFocus, bloquearScroll = true, busy = false } = {}) {
+  const id = useRef(Symbol("capa")).current;
+  const [esSuperior, setEsSuperior] = useState(true);
   const cerrar = useRef(onClose);
-  const opciones = useRef({ initialFocus, bloquearScroll });
+  const opciones = useRef({ initialFocus, bloquearScroll, busy });
   useEffect(() => {
     cerrar.current = onClose;
   }, [onClose]);
   useEffect(() => {
-    opciones.current = { initialFocus, bloquearScroll };
-  }, [initialFocus, bloquearScroll]);
+    opciones.current = { initialFocus, bloquearScroll, busy };
+  }, [initialFocus, bloquearScroll, busy]);
+  const requestClose = useCallback(() => {
+    if (pila.esSuperior(id) && !opciones.current.busy) cerrar.current?.();
+  }, [id]);
   useEffect(() => {
     if (!open) return void 0;
     const contenedor = ref.current;
-    const anterior = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const overflow = document.body.style.overflow;
     const bloquear = opciones.current.bloquearScroll;
-    if (bloquear) document.body.style.overflow = "hidden";
+    const anterior = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    paneles.set(id, ref);
+    const indice = pila.ids().findIndex((otra) => {
+      const panelOtra = paneles.get(otra)?.current;
+      return contenedor && panelOtra && contenedor.contains(panelOtra);
+    });
+    if (indice >= 0) pila.insertar(id, indice);
+    else pila.agregar(id);
+    if (bloquear) {
+      bloqueosScroll += 1;
+      if (bloqueosScroll === 1) overflowOriginal = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+    }
+    const actualizar = () => setEsSuperior(pila.esSuperior(id));
+    oyentes.add(actualizar);
+    actualizar();
     const inicial = opciones.current.initialFocus?.() ?? contenedor;
-    inicial?.focus?.();
+    if (pila.esSuperior(id)) inicial?.focus?.();
     const alTeclear = (evento) => {
+      if (!pila.esSuperior(id)) return;
       if (evento.key === "Escape") {
+        if (evento.isComposing || evento.repeat || evento.target?.tagName === "SELECT") return;
         evento.preventDefault();
-        cerrar.current?.();
+        if (!opciones.current.busy) cerrar.current?.();
         return;
       }
       if (evento.key !== "Tab" || !contenedor) return;
@@ -324,14 +398,42 @@ function useDialogFocusTrap(open, onClose, ref, { initialFocus, bloquearScroll =
         destino.focus();
       }
     };
+    const alEnfocar = (evento) => {
+      if (!pila.esSuperior(id) || !contenedor) return;
+      if (evento.target instanceof Node && contenedor.contains(evento.target)) return;
+      const primero = opciones.current.initialFocus?.() ?? contenedor;
+      primero?.focus?.();
+    };
     document.addEventListener("keydown", alTeclear);
+    document.addEventListener("focusin", alEnfocar);
     return () => {
       document.removeEventListener("keydown", alTeclear);
-      if (bloquear) document.body.style.overflow = overflow;
-      if (anterior?.isConnected) anterior.focus();
+      document.removeEventListener("focusin", alEnfocar);
+      oyentes.delete(actualizar);
+      const eraSuperior = pila.esSuperior(id);
+      pila.quitar(id);
+      paneles.delete(id);
+      avisar();
+      if (bloquear) {
+        bloqueosScroll = Math.max(0, bloqueosScroll - 1);
+        if (bloqueosScroll === 0) document.body.style.overflow = overflowOriginal;
+      }
+      if (eraSuperior) {
+        const superior = pila.ids().at(-1);
+        const panelSuperior = superior ? paneles.get(superior)?.current : null;
+        if (anterior?.isConnected) anterior.focus();
+        else panelSuperior?.focus?.();
+      }
     };
-  }, [open, ref]);
+  }, [open, ref, id]);
+  return { esSuperior, requestClose };
 }
+
+// src/utils/formulario.js
+var GRILLA_DOS_COLUMNAS = "grid gap-3 sm:grid-cols-2";
+var GRILLA_DOS_COLUMNAS_COMPACTA = "grid gap-2 sm:grid-cols-2";
+var PIE_ACCIONES = "flex flex-wrap justify-end gap-2";
+var PIE_ACCIONES_REVERSO = "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end";
 
 // src/components/Icon.jsx
 import { jsx } from "react/jsx-runtime";
@@ -466,7 +568,7 @@ function Icon({ name, className, ...props }) {
 }
 
 // src/components/ui.jsx
-import { jsx as jsx2, jsxs } from "react/jsx-runtime";
+import { Fragment, jsx as jsx2, jsxs } from "react/jsx-runtime";
 var VARIANTS = {
   primary: "bg-fono text-onbrand hover:bg-fono-light",
   success: "bg-ok text-black hover:brightness-110",
@@ -504,7 +606,7 @@ var Input = forwardRef(function Input2({ className, ...props }, ref) {
   );
 });
 function PasswordInput({ className, ...props }) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState2(false);
   return /* @__PURE__ */ jsxs("div", { className: "relative", children: [
     /* @__PURE__ */ jsx2(Input, { ...props, type: visible ? "text" : "password", className: cn("pr-11", className) }),
     /* @__PURE__ */ jsx2(
@@ -659,18 +761,93 @@ function Eyebrow({ className, ...props }) {
 function Card({ className, ...props }) {
   return /* @__PURE__ */ jsx2("div", { className: cn("rounded-2xl border border-ink-600 bg-ink p-5 shadow-card", className), ...props });
 }
-function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO }) {
+var ContextoDialogo = createContext(null);
+var ContextoPie = createContext(null);
+var useEfectoLayout = typeof window === "undefined" ? useEffect2 : useLayoutEffect;
+function useDialogClose() {
+  return useContext(ContextoDialogo)?.requestClose;
+}
+function useDialogPending(pendiente) {
+  const contexto = useContext(ContextoDialogo);
+  const id = useRef2(Symbol("formulario")).current;
+  useEfectoLayout(() => {
+    contexto?.registrar(id, Boolean(pendiente));
+    return () => contexto?.registrar(id, false);
+  }, [contexto, id, pendiente]);
+}
+function conFormulario(children, formId) {
+  return Children.map(
+    children,
+    (hijo) => isValidElement(hijo) && !hijo.props?.form && (hijo.type === "button" || typeof hijo.type === "function") ? cloneElement(hijo, { form: formId || void 0 }) : hijo
+  );
+}
+function FormActions({ children, className }) {
+  const pie = useContext(ContextoPie);
+  const ancla = useRef2(null);
+  const id = useId();
+  const [formId, setFormId] = useState2("");
+  useEfectoLayout(() => {
+    const formulario = ancla.current?.closest("form");
+    if (!formulario) {
+      setFormId("");
+      return;
+    }
+    if (!formulario.id) formulario.id = id;
+    setFormId(formulario.id);
+  }, [id, pie]);
+  const acciones = /* @__PURE__ */ jsx2("div", { className: cn(PIE_ACCIONES, className), children: conFormulario(children, formId) });
+  return /* @__PURE__ */ jsxs(Fragment, { children: [
+    /* @__PURE__ */ jsx2("span", { hidden: true, ref: ancla }),
+    pie ? createPortal(acciones, pie) : acciones
+  ] });
+}
+function SaveActions({ pendiente = false, children, cancelLabel = "Cancelar", className }) {
+  const requestClose = useDialogClose();
+  useDialogPending(pendiente);
+  return /* @__PURE__ */ jsxs(FormActions, { className, children: [
+    requestClose && cancelLabel ? /* @__PURE__ */ jsx2(Button, { type: "button", variant: "ghost", disabled: pendiente, onClick: () => {
+      if (!pendiente) requestClose();
+    }, children: cancelLabel }) : null,
+    children
+  ] });
+}
+function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO, busy = false }) {
   const dialog = useRef2(null);
   const titleId = useId();
-  useDialogFocusTrap(open, onClose, dialog);
+  const [pie, setPie] = useState2(null);
+  const pendientes = useRef2(crearRegistroPendientes()).current;
+  const [hayPendientes, setHayPendientes] = useState2(false);
+  const bloqueado = Boolean(busy || hayPendientes);
+  const cerrar = useCallback2(() => {
+    if (!busy && !pendientes.bloqueado) onClose?.();
+  }, [busy, onClose, pendientes]);
+  const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, dialog, { busy: bloqueado });
+  const registrar = useCallback2((id, pendiente) => {
+    pendientes.registrar(id, pendiente);
+    setHayPendientes(pendientes.bloqueado);
+  }, [pendientes]);
+  const contexto = useMemo(() => ({ requestClose, registrar }), [requestClose, registrar]);
   if (!open) return null;
-  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs("div", { ref: dialog, tabIndex: -1, role: "dialog", "aria-modal": "true", "aria-labelledby": titleId, className: cn("max-h-[min(90dvh,720px)] w-full overflow-y-auto rounded-2xl border border-ink-600 bg-ink p-4 shadow-float sm:p-6", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className), children: [
-    /* @__PURE__ */ jsxs("div", { className: "mb-4 flex items-center justify-between gap-3", children: [
-      /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-      /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
-    ] }),
-    children
-  ] }) });
+  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6", onMouseDown: (e) => e.target === e.currentTarget && requestClose(), children: /* @__PURE__ */ jsxs(
+    "div",
+    {
+      ref: dialog,
+      tabIndex: -1,
+      role: "dialog",
+      "aria-modal": esSuperior ? "true" : void 0,
+      "aria-labelledby": titleId,
+      "aria-busy": bloqueado || void 0,
+      className: cn("flex max-h-[min(90dvh,720px)] w-full flex-col overflow-hidden rounded-2xl border border-ink-600 bg-ink shadow-float", TAMANOS_MODAL[size] || TAMANOS_MODAL[TAMANO_MODAL_PREDETERMINADO], className),
+      children: [
+        /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3 border-b border-ink-600 p-4 sm:px-6", children: [
+          /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
+          /* @__PURE__ */ jsx2("button", { type: "button", onClick: requestClose, disabled: bloqueado, className: "toque-44 rounded-lg p-2 text-mute transition hover:bg-ink-700 hover:text-fore disabled:pointer-events-none disabled:opacity-40", "aria-label": "Cerrar", children: "\xD7" })
+        ] }),
+        /* @__PURE__ */ jsx2(ContextoDialogo.Provider, { value: contexto, children: /* @__PURE__ */ jsx2(ContextoPie.Provider, { value: pie, children: /* @__PURE__ */ jsx2("div", { className: "min-h-0 flex-1 overflow-y-auto p-4 sm:p-6", children }) }) }),
+        /* @__PURE__ */ jsx2("div", { ref: setPie, className: "border-t border-ink-600 p-4 empty:hidden sm:px-6" })
+      ]
+    }
+  ) });
 }
 function ConfirmDialog({
   open,
@@ -682,7 +859,7 @@ function ConfirmDialog({
   variant = "primary",
   busy = false
 }) {
-  return /* @__PURE__ */ jsx2(Modal, { open, onClose: busy ? void 0 : onCancel, title, size: "corto", children: /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
+  return /* @__PURE__ */ jsx2(Modal, { open, onClose: onCancel, busy, title, size: "corto", children: /* @__PURE__ */ jsxs("div", { className: "space-y-5", children: [
     /* @__PURE__ */ jsx2("div", { className: cn("flex h-11 w-11 items-center justify-center rounded-2xl", variant === "danger" ? "bg-bad/10 text-bad-text" : "bg-fono/10 text-fono-text"), children: /* @__PURE__ */ jsx2(Icon, { name: variant === "danger" ? "alert" : "check", className: "h-5 w-5" }) }),
     /* @__PURE__ */ jsx2("p", { className: "text-sm leading-6 text-mute", children: description }),
     /* @__PURE__ */ jsxs("div", { className: "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", children: [
@@ -754,19 +931,32 @@ function IconAction({ icon, label, tone = "mute", onClick, disabled = false, siz
     }
   );
 }
-function Drawer({ open, onClose, title, children, side = "right", className }) {
+function Drawer({ open, onClose, title, children, side = "right", className, busy = false }) {
   const panel = useRef2(null);
   const titleId = useId();
-  useDialogFocusTrap(open, onClose, panel);
+  const [pie, setPie] = useState2(null);
+  const pendientes = useRef2(crearRegistroPendientes()).current;
+  const [hayPendientes, setHayPendientes] = useState2(false);
+  const bloqueado = Boolean(busy || hayPendientes);
+  const cerrar = useCallback2(() => {
+    if (!busy && !pendientes.bloqueado) onClose?.();
+  }, [busy, onClose, pendientes]);
+  const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, panel, { busy: bloqueado });
+  const registrar = useCallback2((id, pendiente) => {
+    pendientes.registrar(id, pendiente);
+    setHayPendientes(pendientes.bloqueado);
+  }, [pendientes]);
+  const contexto = useMemo(() => ({ requestClose, registrar }), [requestClose, registrar]);
   if (!open) return null;
-  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 bg-black/60", onMouseDown: (e) => e.target === e.currentTarget && onClose?.(), children: /* @__PURE__ */ jsxs(
+  return /* @__PURE__ */ jsx2("div", { className: "fixed inset-0 z-50 bg-black/60", onMouseDown: (e) => e.target === e.currentTarget && requestClose(), children: /* @__PURE__ */ jsxs(
     "div",
     {
       ref: panel,
       tabIndex: -1,
       role: "dialog",
-      "aria-modal": "true",
+      "aria-modal": esSuperior ? "true" : void 0,
       "aria-labelledby": titleId,
+      "aria-busy": bloqueado || void 0,
       className: cn(
         "absolute inset-y-0 flex max-h-full w-full max-w-md flex-col overflow-hidden border-ink-600 bg-ink shadow-float",
         side === "left" ? "left-0 border-r" : "right-0 border-l",
@@ -775,9 +965,10 @@ function Drawer({ open, onClose, title, children, side = "right", className }) {
       children: [
         /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between gap-3 border-b border-ink-600 p-4", children: [
           /* @__PURE__ */ jsx2("h2", { id: titleId, className: "text-base font-bold text-fore", children: title }),
-          /* @__PURE__ */ jsx2("button", { type: "button", onClick: onClose, className: "toque-44 rounded-lg p-2 text-mute hover:bg-ink-700 hover:text-fore", "aria-label": "Cerrar", children: "\xD7" })
+          /* @__PURE__ */ jsx2("button", { type: "button", onClick: requestClose, disabled: bloqueado, className: "toque-44 rounded-lg p-2 text-mute transition hover:bg-ink-700 hover:text-fore disabled:pointer-events-none disabled:opacity-40", "aria-label": "Cerrar", children: "\xD7" })
         ] }),
-        /* @__PURE__ */ jsx2("div", { className: "flex-1 overflow-y-auto p-4 sm:p-5", children })
+        /* @__PURE__ */ jsx2(ContextoDialogo.Provider, { value: contexto, children: /* @__PURE__ */ jsx2(ContextoPie.Provider, { value: pie, children: /* @__PURE__ */ jsx2("div", { className: "flex-1 overflow-y-auto p-4 sm:p-5", children }) }) }),
+        /* @__PURE__ */ jsx2("div", { ref: setPie, className: "border-t border-ink-600 p-4 empty:hidden" })
       ]
     }
   ) });
@@ -787,11 +978,11 @@ var toastCounter = 0;
 var TOAST_ICON = { success: "check", error: "alert", info: "info" };
 var TOAST_TONE = { success: "text-ok-text", error: "text-bad-text", info: "text-fono-light" };
 function ToastProvider({ children, demo = false }) {
-  const [toasts, setToasts] = useState([]);
-  const [mounted, setMounted] = useState(false);
+  const [toasts, setToasts] = useState2([]);
+  const [mounted, setMounted] = useState2(false);
   useEffect2(() => setMounted(true), []);
-  const dismiss = useCallback((id) => setToasts((current) => current.filter((toast2) => toast2.id !== id)), []);
-  const toast = useCallback((variant, title, description) => {
+  const dismiss = useCallback2((id) => setToasts((current) => current.filter((toast2) => toast2.id !== id)), []);
+  const toast = useCallback2((variant, title, description) => {
     const id = `toast-${++toastCounter}`;
     setToasts((current) => [...current, { id, variant: TOAST_ICON[variant] ? variant : "info", title, description }]);
     setTimeout(() => dismiss(id), 4e3);
@@ -1212,7 +1403,7 @@ var SearchField = forwardRef2(function SearchField2({ value = "", onChange, onCl
 var SearchField_default = SearchField;
 
 // src/components/BotonDentroCampo.jsx
-import { Fragment, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
+import { Fragment as Fragment2, jsx as jsx6, jsxs as jsxs5 } from "react/jsx-runtime";
 function BotonDentroCampo({
   etiqueta,
   titulo: titulo2,
@@ -1238,7 +1429,7 @@ function BotonDentroCampo({
         ocupado ? "gap-2 bg-ink-700 px-3 text-xs font-semibold text-fono-light" : "w-11 justify-center",
         className
       ),
-      children: ocupado ? /* @__PURE__ */ jsxs5(Fragment, { children: [
+      children: ocupado ? /* @__PURE__ */ jsxs5(Fragment2, { children: [
         /* @__PURE__ */ jsx6("span", { "aria-hidden": "true", className: "h-3.5 w-3.5 animate-spin rounded-full border-2 border-ink-500 border-t-fono-light" }),
         etiquetaOcupada
       ] }) : /* @__PURE__ */ jsx6(Icon, { name: icono, className: "h-4 w-4" })
@@ -1419,7 +1610,7 @@ function BarraLote({ cantidad = 0, onLimpiar, children, etiqueta, className }) {
 }
 
 // src/components/EmailField.jsx
-import { useRef as useRef3, useState as useState2 } from "react";
+import { useRef as useRef3, useState as useState3 } from "react";
 import { jsx as jsx14, jsxs as jsxs9 } from "react/jsx-runtime";
 var DOMINIOS_EMAIL = [
   "gmail.com",
@@ -1454,7 +1645,7 @@ function EmailField({
   onBlur,
   ...props
 }) {
-  const [open, setOpen] = useState2(false);
+  const [open, setOpen] = useState3(false);
   const tecleando = useRef3(false);
   const tipeoReciente = useRef3(false);
   const inputRef = useRef3(null);
@@ -1533,7 +1724,7 @@ function EmailField({
 }
 
 // src/components/PhoneField.jsx
-import { useState as useState3 } from "react";
+import { useState as useState4 } from "react";
 
 // src/utils/telefono.js
 function normalizarTelefono(value) {
@@ -1616,7 +1807,7 @@ function PhoneField({
   id = "telefono-codigos",
   className
 }) {
-  const [tocado, setTocado] = useState3(false);
+  const [tocado, setTocado] = useState4(false);
   const invalido = tocado && Boolean(String(phone).trim()) && !telefonoValido(phone, countryCode);
   return /* @__PURE__ */ jsxs10("div", { className, children: [
     /* @__PURE__ */ jsxs10("div", { className: "flex gap-2", children: [
@@ -1769,7 +1960,7 @@ function InstagramField({ value = "", onChange, disabled = false, placeholder = 
 }
 
 // src/components/ProductCombobox.jsx
-import { useCallback as useCallback2, useEffect as useEffect3, useId as useId3, useMemo as useMemo2, useRef as useRef4, useState as useState4 } from "react";
+import { useCallback as useCallback3, useEffect as useEffect3, useId as useId3, useMemo as useMemo2, useRef as useRef4, useState as useState5 } from "react";
 
 // src/utils/categorias.js
 var CATEGORIAS_PRODUCTO = [
@@ -1843,10 +2034,10 @@ function productName(product) {
   return product?.nombre || product?.name || "";
 }
 function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, onQueryChange, placeholder = "Buscar producto\u2026", disabled = false, className }) {
-  const [query, setQuery] = useState4("");
-  const [open, setOpen] = useState4(false);
-  const [highlight, setHighlight] = useState4(0);
-  const [creating, setCreating] = useState4(false);
+  const [query, setQuery] = useState5("");
+  const [open, setOpen] = useState5(false);
+  const [highlight, setHighlight] = useState5(0);
+  const [creating, setCreating] = useState5(false);
   const listId = useId3();
   const rootRef = useRef4(null);
   useEffect3(() => {
@@ -1857,7 +2048,7 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
     document.addEventListener("click", cerrarFuera);
     return () => document.removeEventListener("click", cerrarFuera);
   }, []);
-  const setearQuery = useCallback2((next) => {
+  const setearQuery = useCallback3((next) => {
     setQuery(next);
     onQueryChange?.(next);
   }, [onQueryChange]);
@@ -1995,7 +2186,7 @@ function ProductCombobox({ products = [], selectedId = "", onSelect, onCreate, o
 }
 
 // src/components/BuscadorDispositivo.jsx
-import { useEffect as useEffect4, useId as useId4, useMemo as useMemo3, useRef as useRef5, useState as useState5 } from "react";
+import { useEffect as useEffect4, useId as useId4, useMemo as useMemo3, useRef as useRef5, useState as useState6 } from "react";
 
 // src/catalog/productos.js
 var MODELOS_IPHONE = [
@@ -2184,9 +2375,9 @@ function BuscadorDispositivo({
   const modelos = config.catalogo.modelos || [];
   const campos = config.campos || [];
   const etiqueta = (campo) => config.etiquetas?.[campo] || campo.charAt(0).toUpperCase() + campo.slice(1);
-  const [texto, setTexto] = useState5(() => valor.modelo || "");
-  const [abierto, setAbierto] = useState5(false);
-  const [resaltado, setResaltado] = useState5(0);
+  const [texto, setTexto] = useState6(() => valor.modelo || "");
+  const [abierto, setAbierto] = useState6(false);
+  const [resaltado, setResaltado] = useState6(0);
   const listaId = useId4();
   const raiz = useRef5(null);
   useEffect4(() => {
@@ -2318,7 +2509,7 @@ function BuscadorDispositivo({
 }
 
 // src/components/RucField.jsx
-import { useState as useState6 } from "react";
+import { useState as useState7 } from "react";
 import { jsx as jsx21, jsxs as jsxs14 } from "react/jsx-runtime";
 function RucField({
   id,
@@ -2335,9 +2526,9 @@ function RucField({
   ariaLabel,
   textoAyuda = "La raz\xF3n social se aplica solo si la confirm\xE1s."
 }) {
-  const [resultado, setResultado] = useState6(null);
-  const [consultando, setConsultando] = useState6(false);
-  const [error, setError] = useState6("");
+  const [resultado, setResultado] = useState7(null);
+  const [consultando, setConsultando] = useState7(false);
+  const [error, setError] = useState7("");
   const hayRuc = Boolean(String(value || "").trim());
   const puedeExtraer = mostrarExtractor && typeof consultar === "function";
   async function extraer() {
@@ -2432,7 +2623,7 @@ function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u201
 }
 
 // src/components/CampoSeriales.jsx
-import { useMemo as useMemo4, useState as useState7 } from "react";
+import { useMemo as useMemo4, useState as useState8 } from "react";
 import { jsx as jsx23, jsxs as jsxs16 } from "react/jsx-runtime";
 function CampoSeriales({
   valor,
@@ -2446,7 +2637,7 @@ function CampoSeriales({
   disabled = false,
   className
 }) {
-  const [texto, setTexto] = useState7(() => Array.isArray(valor) ? valor.join("\n") : valor || "");
+  const [texto, setTexto] = useState8(() => Array.isArray(valor) ? valor.join("\n") : valor || "");
   const resultado = useMemo4(() => normalizarSeriales(texto, { validar, limite, maxLargo }), [texto, validar, limite, maxLargo]);
   function cambiar(siguiente) {
     setTexto(siguiente);
@@ -2500,7 +2691,7 @@ function EstadoBadge({ mapa, valor, vacio = "Sin estado" }) {
 }
 
 // src/components/SeccionColapsable.jsx
-import { useId as useId5, useState as useState8 } from "react";
+import { useId as useId5, useState as useState9 } from "react";
 
 // src/utils/tabla.js
 var ROTULO_DATO = "text-[10px] font-bold uppercase tracking-wider text-mute";
@@ -2516,7 +2707,7 @@ import { jsx as jsx25, jsxs as jsxs17 } from "react/jsx-runtime";
 function SeccionColapsable({ id, titulo: titulo2, resumen, icono, abierta = false, clave = id, className = "", children }) {
   const autoId = useId5();
   const panelId = `seccion-panel-${autoId.replace(/[^a-zA-Z0-9_-]/g, "")}`;
-  const [expandida, setExpandida] = useState8(() => {
+  const [expandida, setExpandida] = useState9(() => {
     if (!clave) return abierta;
     try {
       const guardado = window.sessionStorage.getItem(clave);
@@ -2561,7 +2752,7 @@ function SeccionColapsable({ id, titulo: titulo2, resumen, icono, abierta = fals
 }
 
 // src/components/TaxIdField.jsx
-import { useId as useId6, useState as useState9 } from "react";
+import { useId as useId6, useState as useState10 } from "react";
 
 // src/utils/taxId.js
 var PATRON_RUC = /^\d{5,8}(-\d)?$/;
@@ -2613,8 +2804,8 @@ function TaxIdField({
   const generado = useId6();
   const inputId = id || generado;
   const descripcionId = `${inputId}-descripcion`;
-  const [tocado, setTocado] = useState9(false);
-  const [consulta, setConsulta] = useState9({ estado: "inicial" });
+  const [tocado, setTocado] = useState10(false);
+  const [consulta, setConsulta] = useState10({ estado: "inicial" });
   const esRucPy = String(pais).trim().toUpperCase() === "PY";
   const normalizado = normalizeTaxId(value);
   const invalido = normalizado !== null && !taxIdValidoParaPais(normalizado, pais);
@@ -2765,7 +2956,7 @@ function AuthLayout({ logo, aside, acciones, pie, children, className }) {
 }
 
 // src/components/ProductFooter.jsx
-import { Fragment as Fragment2, jsx as jsx29, jsxs as jsxs21 } from "react/jsx-runtime";
+import { Fragment as Fragment3, jsx as jsx29, jsxs as jsxs21 } from "react/jsx-runtime";
 function ProductFooter({
   nombre = "",
   version = "",
@@ -2786,11 +2977,11 @@ function ProductFooter({
       ". Todos los derechos reservados.",
       version ? ` \xB7 ${version}` : ""
     ] }),
-    children && /* @__PURE__ */ jsxs21(Fragment2, { children: [
+    children && /* @__PURE__ */ jsxs21(Fragment3, { children: [
       " \xB7 ",
       children
     ] }),
-    credito && /* @__PURE__ */ jsxs21(Fragment2, { children: [
+    credito && /* @__PURE__ */ jsxs21(Fragment3, { children: [
       " \xB7 ",
       /* @__PURE__ */ jsx29("a", { href: creditoUrl, target: "_blank", rel: "noreferrer", className: "font-medium text-fono-dark hover:underline", children: credito })
     ] })
@@ -2828,7 +3019,7 @@ function LoadingScreen({ mensaje = "Cargando\u2026", logo, tienda = null, etique
 }
 
 // src/components/PegarEnlaceToken.jsx
-import { useState as useState10 } from "react";
+import { useState as useState11 } from "react";
 
 // src/utils/token.js
 var RUTA_CON_TOKEN = /(?:^|\/)([^/?#]+)\/([a-f0-9]{64})(?:[/?#]|$)/i;
@@ -2859,8 +3050,8 @@ function PegarEnlaceToken({
   id = "pegar-enlace",
   className
 }) {
-  const [enlace, setEnlace] = useState10("");
-  const [error, setError] = useState10("");
+  const [enlace, setEnlace] = useState11("");
+  const [error, setError] = useState11("");
   function aplicar(event) {
     event.preventDefault();
     setError("");
@@ -2892,7 +3083,7 @@ function PegarEnlaceToken({
 }
 
 // src/components/NavLateral.jsx
-import { useState as useState11 } from "react";
+import { useState as useState12 } from "react";
 import { jsx as jsx32, jsxs as jsxs24 } from "react/jsx-runtime";
 function ItemNav({ item, activo, colapsado, onSelect }) {
   return /* @__PURE__ */ jsx32("li", { children: /* @__PURE__ */ jsxs24(
@@ -2931,7 +3122,7 @@ function NavLateral({
   ariaLabel = "Navegaci\xF3n principal",
   className
 }) {
-  const [plegadosInterno, setPlegadosInterno] = useState11({});
+  const [plegadosInterno, setPlegadosInterno] = useState12({});
   const plegados = gruposPlegados ?? plegadosInterno;
   const alternarGrupo = (titulo2) => {
     if (onToggleGrupo) onToggleGrupo(titulo2);
@@ -2995,10 +3186,10 @@ function NavLateral({
 }
 
 // src/components/MenuDesplegable.jsx
-import { useEffect as useEffect5, useRef as useRef6, useState as useState12 } from "react";
+import { useEffect as useEffect5, useRef as useRef6, useState as useState13 } from "react";
 import { jsx as jsx33, jsxs as jsxs25 } from "react/jsx-runtime";
 function MenuDesplegable({ trigger, items = [], alineacion = "right", ariaLabel = "Men\xFA", className }) {
-  const [abierto, setAbierto] = useState12(false);
+  const [abierto, setAbierto] = useState13(false);
   const raiz = useRef6(null);
   useEffect5(() => {
     if (!abierto) return void 0;
@@ -3159,7 +3350,7 @@ function EstadoGuardado({ testId, estado, className }) {
 }
 
 // src/components/AjustesImpresion.jsx
-import { useState as useState13 } from "react";
+import { useState as useState14 } from "react";
 
 // src/printing/estadoImpresoras.js
 var ESTADO_IMPRESORA = Object.freeze({
@@ -3304,7 +3495,7 @@ function AjustesImpresion({
   descripcion = "Eleg\xED c\xF3mo sale el papel: por red (LAN) o por una cola local (USB). La app verifica cada impresora antes de usarla.",
   className
 }) {
-  const [form, setForm] = useState13(null);
+  const [form, setForm] = useState14(null);
   const resumen = agregarEstado(impresoras, estado);
   function cambiar(campo, valor) {
     setForm((actual) => ({ ...actual, [campo]: valor }));
@@ -3454,7 +3645,7 @@ function BotonImprimir({
 }
 
 // src/components/BancoCombobox.jsx
-import { useEffect as useEffect6, useId as useId7, useMemo as useMemo5, useRef as useRef7, useState as useState15 } from "react";
+import { useEffect as useEffect6, useId as useId7, useMemo as useMemo5, useRef as useRef7, useState as useState16 } from "react";
 
 // src/utils/bancos.js
 var BANCOS_PARAGUAY = [
@@ -3544,10 +3735,10 @@ function sugerenciasDeBanco(texto, catalogo = BANCOS_PARAGUAY) {
 }
 
 // src/components/BancoLogo.jsx
-import { useState as useState14 } from "react";
+import { useState as useState15 } from "react";
 import { jsx as jsx40 } from "react/jsx-runtime";
 function BancoLogo({ banco, alto = "h-5", className, soloCatalogo = false, baseAssets = "/bancos", marcas = {} }) {
-  const [fallo, setFallo] = useState14(false);
+  const [fallo, setFallo] = useState15(false);
   const texto = String(banco || "").trim();
   const registro = logoDeBanco(texto);
   if (!registro) return null;
@@ -3595,8 +3786,8 @@ function BancoCombobox({
   catalogo = BANCOS_PARAGUAY,
   logoProps
 }) {
-  const [abierto, setAbierto] = useState15(false);
-  const [resaltado, setResaltado] = useState15(0);
+  const [abierto, setAbierto] = useState16(false);
+  const [resaltado, setResaltado] = useState16(0);
   const listaId = useId7();
   const raiz = useRef7(null);
   const lista = useRef7(null);
@@ -3692,7 +3883,7 @@ function BancoCombobox({
 }
 
 // src/components/CityAutocomplete.jsx
-import { useEffect as useEffect7, useRef as useRef8, useState as useState16 } from "react";
+import { useEffect as useEffect7, useRef as useRef8, useState as useState17 } from "react";
 
 // src/catalog/ciudades.js
 var CIUDADES_PARAGUAY = [
@@ -4011,9 +4202,9 @@ function CityAutocomplete({
   inputProps,
   mensajeError = "No se pudieron cargar las sugerencias."
 }) {
-  const [sugerencias, setSugerencias] = useState16([]);
-  const [abierto, setAbierto] = useState16(false);
-  const [error, setError] = useState16("");
+  const [sugerencias, setSugerencias] = useState17([]);
+  const [abierto, setAbierto] = useState17(false);
+  const [error, setError] = useState17("");
   const timer = useRef8(null);
   const raiz = useRef8(null);
   useEffect7(() => {
@@ -4749,7 +4940,7 @@ function Vencimiento({ fecha, variante = "texto", diasAviso = 7, hoy, texto, vac
 }
 
 // src/components/TarjetaNecesidad.jsx
-import { Fragment as Fragment3, jsx as jsx55, jsxs as jsxs42 } from "react/jsx-runtime";
+import { Fragment as Fragment4, jsx as jsx55, jsxs as jsxs42 } from "react/jsx-runtime";
 function TarjetaNecesidad({
   producto,
   variante,
@@ -4771,7 +4962,7 @@ function TarjetaNecesidad({
   className
 }) {
   const est = estadoNecesidad(estado);
-  const titulo2 = /* @__PURE__ */ jsxs42(Fragment3, { children: [
+  const titulo2 = /* @__PURE__ */ jsxs42(Fragment4, { children: [
     /* @__PURE__ */ jsx55("span", { className: "block truncate font-semibold", children: producto || "Sin producto" }),
     variante ? /* @__PURE__ */ jsx55("span", { className: "block truncate text-xs text-mute", children: variante }) : null
   ] });
@@ -4807,7 +4998,7 @@ function TarjetaNecesidad({
 }
 
 // src/components/TarjetaCompra.jsx
-import { Fragment as Fragment4, jsx as jsx56, jsxs as jsxs43 } from "react/jsx-runtime";
+import { Fragment as Fragment5, jsx as jsx56, jsxs as jsxs43 } from "react/jsx-runtime";
 function TarjetaCompra({
   codigo,
   proveedor,
@@ -4826,7 +5017,7 @@ function TarjetaCompra({
   className
 }) {
   const est = estadoCompra(estado);
-  const titulo2 = /* @__PURE__ */ jsxs43(Fragment4, { children: [
+  const titulo2 = /* @__PURE__ */ jsxs43(Fragment5, { children: [
     /* @__PURE__ */ jsx56("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
     /* @__PURE__ */ jsx56("span", { className: "block truncate font-semibold", children: proveedor || "Sin proveedor" })
   ] });
@@ -4862,7 +5053,7 @@ function TarjetaCompra({
 }
 
 // src/components/TarjetaLote.jsx
-import { Fragment as Fragment5, jsx as jsx57, jsxs as jsxs44 } from "react/jsx-runtime";
+import { Fragment as Fragment6, jsx as jsx57, jsxs as jsxs44 } from "react/jsx-runtime";
 function TarjetaLote({
   codigo,
   estado,
@@ -4882,7 +5073,7 @@ function TarjetaLote({
 }) {
   const est = estadoEnvio(estado);
   const ruta = [origen, destino].filter(Boolean).join(" \u2192 ");
-  const titulo2 = /* @__PURE__ */ jsxs44(Fragment5, { children: [
+  const titulo2 = /* @__PURE__ */ jsxs44(Fragment6, { children: [
     /* @__PURE__ */ jsx57("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
     /* @__PURE__ */ jsx57("span", { className: "block truncate font-semibold", children: ruta || "Sin origen ni destino" })
   ] });
@@ -4915,7 +5106,7 @@ function TarjetaLote({
 }
 
 // src/components/TarjetaRecepcion.jsx
-import { Fragment as Fragment6, jsx as jsx58, jsxs as jsxs45 } from "react/jsx-runtime";
+import { Fragment as Fragment7, jsx as jsx58, jsxs as jsxs45 } from "react/jsx-runtime";
 function TarjetaRecepcion({
   codigo,
   estado,
@@ -4936,7 +5127,7 @@ function TarjetaRecepcion({
   const est = estadoEnvio(estado);
   const ruta = [origen, destino].filter(Boolean).join(" \u2192 ");
   const depositoTexto = deposito ?? depositoSugerido;
-  const titulo2 = /* @__PURE__ */ jsxs45(Fragment6, { children: [
+  const titulo2 = /* @__PURE__ */ jsxs45(Fragment7, { children: [
     /* @__PURE__ */ jsx58("span", { className: "block truncate font-mono text-xs font-bold text-fono-light", children: codigo || "Sin c\xF3digo" }),
     /* @__PURE__ */ jsx58("span", { className: "block truncate font-semibold", children: ruta || "Sin origen ni destino" })
   ] });
@@ -4972,7 +5163,7 @@ function TarjetaRecepcion({
 }
 
 // src/components/CodigoQr.jsx
-import { useEffect as useEffect8, useState as useState17 } from "react";
+import { useEffect as useEffect8, useState as useState18 } from "react";
 
 // src/utils/qr.js
 var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
@@ -4990,7 +5181,7 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 // src/components/CodigoQr.jsx
 import { jsx as jsx59 } from "react/jsx-runtime";
 function CodigoQr({ valor, ancho = 220, nivel = "M", margen = 1, alt = "C\xF3digo QR", className, ...props }) {
-  const [imagen, setImagen] = useState17("");
+  const [imagen, setImagen] = useState18("");
   useEffect8(() => {
     let activo = true;
     qrDataUrl(valor, { ancho, nivel, margen }).then((data) => {
@@ -5182,7 +5373,7 @@ function SelectorIncidencia({ valor, onChange, tipos = INCIDENCIAS, permitirQuit
 }
 
 // src/components/DestinoRecepcion.jsx
-import { useId as useId8, useState as useState18 } from "react";
+import { useId as useId8, useState as useState19 } from "react";
 import { jsx as jsx65, jsxs as jsxs50 } from "react/jsx-runtime";
 function DestinoRecepcion({
   destino,
@@ -5194,7 +5385,7 @@ function DestinoRecepcion({
   textoRecibir = "Recibir todo",
   className
 }) {
-  const [elegido, setElegido] = useState18(destino?.id ?? depositos[0]?.id ?? "");
+  const [elegido, setElegido] = useState19(destino?.id ?? depositos[0]?.id ?? "");
   const id = useId8();
   const actual = depositos.find((deposito) => deposito.id === elegido) || destino || null;
   const alternativas = depositos.filter((deposito) => deposito.id !== actual?.id);
@@ -5232,7 +5423,7 @@ function GradoBadge({ grado, conDescripcion = false, className }) {
 }
 
 // src/components/TileEquipo.jsx
-import { Fragment as Fragment7, jsx as jsx67, jsxs as jsxs52 } from "react/jsx-runtime";
+import { Fragment as Fragment8, jsx as jsx67, jsxs as jsxs52 } from "react/jsx-runtime";
 function TileEquipo({
   modelo,
   imei,
@@ -5248,7 +5439,7 @@ function TileEquipo({
   className
 }) {
   const raiz = cn("w-full space-y-2.5 rounded-2xl border border-ink-600 bg-ink-800 p-3 text-left", onOpen && "transition hover:border-fono active:scale-[.995]", className);
-  const contenido = /* @__PURE__ */ jsxs52(Fragment7, { children: [
+  const contenido = /* @__PURE__ */ jsxs52(Fragment8, { children: [
     /* @__PURE__ */ jsxs52("div", { className: "flex items-start gap-3", children: [
       foto ? /* @__PURE__ */ jsx67("img", { src: foto, alt: modelo || "Equipo", className: "h-12 w-12 shrink-0 rounded-xl border border-ink-600 object-cover" }) : /* @__PURE__ */ jsx67("span", { className: "grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-ink-600 bg-ink-700 text-mute", children: /* @__PURE__ */ jsx67(IconoCategoria, { categoria: modelo, className: "h-6 w-6" }) }),
       /* @__PURE__ */ jsxs52("div", { className: "min-w-0 flex-1", children: [
@@ -5327,9 +5518,9 @@ function ColumnaLote({ etiqueta, tono = "slate", contador, acciones, children, v
 }
 
 // src/components/TileRol.jsx
-import { Fragment as Fragment8, jsx as jsx70, jsxs as jsxs55 } from "react/jsx-runtime";
+import { Fragment as Fragment9, jsx as jsx70, jsxs as jsxs55 } from "react/jsx-runtime";
 function TileRol({ titulo: titulo2, descripcion, cantidad, total, dominios = [], onAbrir, className }) {
-  const contenido = /* @__PURE__ */ jsxs55(Fragment8, { children: [
+  const contenido = /* @__PURE__ */ jsxs55(Fragment9, { children: [
     /* @__PURE__ */ jsxs55("div", { className: "flex items-start justify-between gap-2", children: [
       /* @__PURE__ */ jsxs55("div", { className: "min-w-0", children: [
         /* @__PURE__ */ jsx70("b", { className: "block truncate text-sm", children: titulo2 }),
@@ -5508,7 +5699,7 @@ function VistaPreviaPapel({ formato = "thermal-80", contenido, titulo: titulo2 =
 }
 
 // src/components/Calendario.jsx
-import { useMemo as useMemo6, useState as useState19 } from "react";
+import { useMemo as useMemo6, useState as useState20 } from "react";
 
 // src/utils/calendario.js
 var ES_PY2 = "es-PY";
@@ -5615,7 +5806,7 @@ function claveUTC(fecha) {
 }
 
 // src/components/Calendario.jsx
-import { Fragment as Fragment9, jsx as jsx74, jsxs as jsxs58 } from "react/jsx-runtime";
+import { Fragment as Fragment10, jsx as jsx74, jsxs as jsxs58 } from "react/jsx-runtime";
 var TONO_ITEM = { info: TONOS.chip.info, ok: TONOS.chip.ok, warn: TONOS.chip.warn, bad: TONOS.chip.bad };
 function ItemCalendario({ item, contexto, onElegir }) {
   const tono = TONO_ITEM[item.tono] || TONOS.chip.mute;
@@ -5625,7 +5816,7 @@ function ItemCalendario({ item, contexto, onElegir }) {
     contexto.vista === "lista" ? "px-2.5 py-1.5 text-xs" : "px-1.5 py-0.5 text-[11px]",
     tono
   );
-  const contenido = /* @__PURE__ */ jsxs58(Fragment9, { children: [
+  const contenido = /* @__PURE__ */ jsxs58(Fragment10, { children: [
     item.hora && /* @__PURE__ */ jsx74("span", { className: "shrink-0 tabular-nums opacity-80", children: item.hora }),
     /* @__PURE__ */ jsxs58("span", { className: "min-w-0 flex-1", children: [
       /* @__PURE__ */ jsx74("span", { className: "block truncate font-medium", children: item.titulo }),
@@ -5673,9 +5864,9 @@ function Calendario({
   className
 }) {
   const claveHoy = useMemo6(() => hoyClave(hoy), [hoy]);
-  const [vistaInterna, setVistaInterna] = useState19(vistaPorDefecto);
-  const [anclaInterna, setAnclaInterna] = useState19(() => anclaPorDefecto || ancla || claveHoy);
-  const [seleccionInterna, setSeleccionInterna] = useState19(null);
+  const [vistaInterna, setVistaInterna] = useState20(vistaPorDefecto);
+  const [anclaInterna, setAnclaInterna] = useState20(() => anclaPorDefecto || ancla || claveHoy);
+  const [seleccionInterna, setSeleccionInterna] = useState20(null);
   const vistaActual = vistas.includes(vista) ? vista : vistas.includes(vistaInterna) ? vistaInterna : vistas[0] || "mes";
   const anclaActual = String(ancla || anclaInterna || claveHoy).slice(0, 10);
   const seleccion = diaSeleccionado !== void 0 ? diaSeleccionado : seleccionInterna;
@@ -5751,7 +5942,7 @@ function Calendario({
         }
       )
     ] }),
-    cargando ? /* @__PURE__ */ jsx74("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx74(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs58(Fragment9, { children: [
+    cargando ? /* @__PURE__ */ jsx74("div", { className: "grid grid-cols-7 gap-1 p-1", "aria-busy": "true", children: Array.from({ length: 35 }, (_, indice) => /* @__PURE__ */ jsx74(Skeleton, { className: "h-20" }, indice)) }) : /* @__PURE__ */ jsxs58(Fragment10, { children: [
       /* @__PURE__ */ jsxs58("div", { className: "hidden overflow-hidden rounded-xl border border-ink-600 md:block", children: [
         /* @__PURE__ */ jsx74("div", { className: "grid grid-cols-7 border-b border-ink-600 bg-ink-900/60", children: DIAS_SEMANA.map((dia) => /* @__PURE__ */ jsx74("span", { className: "px-2 py-1 text-center text-[10px] font-bold uppercase tracking-wider text-mute", children: dia }, dia)) }),
         /* @__PURE__ */ jsx74("div", { className: "grid grid-cols-7", children: rango.dias.map((dia) => {
@@ -5845,7 +6036,7 @@ function Calendario({
 }
 
 // src/components/RangoFecha.jsx
-import { useId as useId9, useRef as useRef9, useState as useState20 } from "react";
+import { useId as useId9, useRef as useRef9, useState as useState21 } from "react";
 
 // src/utils/rangoFecha.js
 var PERIODOS_FECHA = ["hoy", "esta-semana", "este-mes", "mes-pasado", "ultimos-30", "personalizado"];
@@ -5911,7 +6102,7 @@ function RangoFecha({
   className
 }) {
   const controlado = desde !== void 0 || hasta !== void 0;
-  const [interno, setInterno] = useState20(() => {
+  const [interno, setInterno] = useState21(() => {
     if (desdePorDefecto !== void 0 || hastaPorDefecto !== void 0) {
       return { desde: desdePorDefecto || "", hasta: hastaPorDefecto || "" };
     }
@@ -5986,8 +6177,8 @@ function RangoFecha({
 }
 
 // src/components/PaletaComandos.jsx
-import { useEffect as useEffect9, useId as useId10, useMemo as useMemo7, useRef as useRef10, useState as useState21 } from "react";
-import { Fragment as Fragment10, jsx as jsx76, jsxs as jsxs60 } from "react/jsx-runtime";
+import { useEffect as useEffect9, useId as useId10, useMemo as useMemo7, useRef as useRef10, useState as useState22 } from "react";
+import { Fragment as Fragment11, jsx as jsx76, jsxs as jsxs60 } from "react/jsx-runtime";
 var CAPITALIZAR = (texto) => texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
 function agruparResultados(resultados = [], { etiquetasTipo = {}, iconosTipo = {} } = {}) {
   const grupos = [];
@@ -6041,13 +6232,13 @@ function PaletaComandos({
   mostrarAtajoEnBoton = true,
   className
 }) {
-  const [interna, setInterna] = useState21(false);
-  const [consulta, setConsulta] = useState21("");
-  const [resultados, setResultados] = useState21(null);
-  const [cargando, setCargando] = useState21(false);
-  const [error, setError] = useState21("");
-  const [activo, setActivo] = useState21(0);
-  const [intento, setIntento] = useState21(0);
+  const [interna, setInterna] = useState22(false);
+  const [consulta, setConsulta] = useState22("");
+  const [resultados, setResultados] = useState22(null);
+  const [cargando, setCargando] = useState22(false);
+  const [error, setError] = useState22("");
+  const [activo, setActivo] = useState22(0);
+  const [intento, setIntento] = useState22(0);
   const raiz = useRef10(null);
   const entrada = useRef10(null);
   const buscarRef = useRef10(buscar);
@@ -6170,7 +6361,7 @@ function PaletaComandos({
   }
   const textoContinuar = textoSeguir || `Segu\xED escribiendo: buscamos desde ${minimo} caracteres.`;
   const idOpcion = (posicion) => `${idLista}-opcion-${posicion}`;
-  return /* @__PURE__ */ jsxs60(Fragment10, { children: [
+  return /* @__PURE__ */ jsxs60(Fragment11, { children: [
     boton && /* @__PURE__ */ jsxs60(
       "button",
       {
@@ -6297,7 +6488,7 @@ function PaletaComandos({
 }
 
 // src/components/AyudaModulo.jsx
-import { useState as useState22 } from "react";
+import { useState as useState23 } from "react";
 import { jsx as jsx77, jsxs as jsxs61 } from "react/jsx-runtime";
 function AyudaModulo({
   titulo: titulo2,
@@ -6311,7 +6502,7 @@ function AyudaModulo({
   onCerrar,
   className
 }) {
-  const [interna, setInterna] = useState22(false);
+  const [interna, setInterna] = useState23(false);
   if (!titulo2 && !resumen) return null;
   const controlada = abierta !== void 0;
   const visible = controlada ? Boolean(abierta) : interna;
@@ -6365,7 +6556,7 @@ function AyudaModulo({
 }
 
 // src/components/BarraInferior.jsx
-import { Fragment as Fragment11, jsx as jsx78, jsxs as jsxs62 } from "react/jsx-runtime";
+import { Fragment as Fragment12, jsx as jsx78, jsxs as jsxs62 } from "react/jsx-runtime";
 var ESPACIO_BARRA_INFERIOR = "pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0";
 function BarraInferior({
   items = [],
@@ -6397,7 +6588,7 @@ function BarraInferior({
       children: [
         visibles.map((item) => {
           const esActivo = item.id === activo;
-          const contenido = /* @__PURE__ */ jsxs62(Fragment11, { children: [
+          const contenido = /* @__PURE__ */ jsxs62(Fragment12, { children: [
             /* @__PURE__ */ jsxs62("span", { className: "relative", children: [
               item.icono && /* @__PURE__ */ jsx78(Icon, { name: item.icono, className: "h-[18px] w-[18px]" }),
               item.contador != null && item.contador !== 0 && /* @__PURE__ */ jsx78("span", { className: "absolute -right-2 -top-1.5 rounded-full bg-fono px-1 text-[9px] font-bold tabular-nums text-onbrand", children: item.contador })
@@ -6457,7 +6648,7 @@ function BarraInferior({
 }
 
 // src/components/Avatar.jsx
-import { useEffect as useEffect10, useState as useState23 } from "react";
+import { useEffect as useEffect10, useState as useState24 } from "react";
 
 // src/utils/avatar.js
 var COLORES_AVATAR = {
@@ -6517,7 +6708,7 @@ function Avatar({
   onError,
   className
 }) {
-  const [fallo, setFallo] = useState23(false);
+  const [fallo, setFallo] = useState24(false);
   useEffect10(() => {
     setFallo(false);
   }, [src]);
@@ -6558,7 +6749,7 @@ function Avatar({
 }
 
 // src/components/PersonaChip.jsx
-import { useEffect as useEffect11, useState as useState24 } from "react";
+import { useEffect as useEffect11, useState as useState25 } from "react";
 
 // src/utils/identidad.js
 var primerTexto = (...valores) => {
@@ -6619,7 +6810,7 @@ function PersonaChip({
   const presencia = ESTADOS_PRESENCIA[estado] || null;
   const local = foto ?? (identidad.hasAvatar === false ? "" : identidad.fotoLocal);
   const google = picture ?? identidad.picture;
-  const [localRota, setLocalRota] = useState24(false);
+  const [localRota, setLocalRota] = useState25(false);
   useEffect11(() => {
     setLocalRota(false);
   }, [local]);
@@ -6647,7 +6838,7 @@ function PersonaChip({
 }
 
 // src/components/PilaPersonas.jsx
-import { Fragment as Fragment12, jsx as jsx81, jsxs as jsxs64 } from "react/jsx-runtime";
+import { Fragment as Fragment13, jsx as jsx81, jsxs as jsxs64 } from "react/jsx-runtime";
 function PilaPersonas({
   personas = [],
   max = 4,
@@ -6663,7 +6854,7 @@ function PilaPersonas({
   const visibles = lista.slice(0, Math.max(0, max));
   const restantes = lista.length - visibles.length;
   const texto = title || resumenPresencia(lista);
-  const contenido = /* @__PURE__ */ jsxs64(Fragment12, { children: [
+  const contenido = /* @__PURE__ */ jsxs64(Fragment13, { children: [
     /* @__PURE__ */ jsxs64("span", { className: "flex -space-x-2", children: [
       visibles.map((persona, indice) => {
         const fuente = typeof persona === "string" ? { name: persona } : persona || {};
@@ -6827,8 +7018,8 @@ function IndicadorConexion({
 }
 
 // src/components/CampanaAvisos.jsx
-import { useEffect as useEffect12, useRef as useRef11, useState as useState25 } from "react";
-import { Fragment as Fragment13, jsx as jsx84, jsxs as jsxs66 } from "react/jsx-runtime";
+import { useEffect as useEffect12, useRef as useRef11, useState as useState26 } from "react";
+import { Fragment as Fragment14, jsx as jsx84, jsxs as jsxs66 } from "react/jsx-runtime";
 function contarSinLeer(avisos = []) {
   const conEstado = avisos.filter((aviso) => aviso && typeof aviso.leido === "boolean");
   if (conEstado.length) return conEstado.filter((aviso) => !aviso.leido).length;
@@ -6850,7 +7041,7 @@ function CampanaAvisos({
   pie,
   className
 }) {
-  const [abierto, setAbierto] = useState25(false);
+  const [abierto, setAbierto] = useState26(false);
   const raiz = useRef11(null);
   const sinLeer = contarSinLeer(avisos);
   useEffect12(() => {
@@ -6911,7 +7102,7 @@ function CampanaAvisos({
           ] }),
           /* @__PURE__ */ jsx84("div", { className: "max-h-80 overflow-y-auto p-1", children: avisos.length === 0 ? /* @__PURE__ */ jsx84(EmptyState, { compact: true, icon: "bell", title: vacioTitulo, description: vacioDetalle }) : avisos.map((aviso) => {
             const tono = TONOS.punto[aviso.tono] || TONOS.punto.mute;
-            const contenido = /* @__PURE__ */ jsxs66(Fragment13, { children: [
+            const contenido = /* @__PURE__ */ jsxs66(Fragment14, { children: [
               /* @__PURE__ */ jsx84("span", { className: cn("mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full", tono), children: /* @__PURE__ */ jsx84(Icon, { name: aviso.icono || "bell", className: "h-3.5 w-3.5" }) }),
               /* @__PURE__ */ jsxs66("span", { className: "min-w-0 flex-1", children: [
                 /* @__PURE__ */ jsx84("span", { className: cn("block truncate text-sm", aviso.leido === false ? "font-semibold text-fore" : "font-medium text-fore"), children: aviso.titulo }),
@@ -7031,7 +7222,7 @@ function GraficoBarras({
 }
 
 // src/components/TableroKanban.jsx
-import { useCallback as useCallback3, useEffect as useEffect13, useMemo as useMemo8, useRef as useRef12, useState as useState26 } from "react";
+import { useCallback as useCallback4, useEffect as useEffect13, useMemo as useMemo8, useRef as useRef12, useState as useState27 } from "react";
 import { jsx as jsx86, jsxs as jsxs68 } from "react/jsx-runtime";
 var SIN_MOVIMIENTOS = /* @__PURE__ */ new Set();
 function columnasDelTablero(columnas = [], tarjetas = []) {
@@ -7053,8 +7244,8 @@ function destinosDeTarjeta(tarjeta, columnas = []) {
   return (permitidos || []).filter((valor, indice) => valor !== tarjeta?.estado && permitidos.indexOf(valor) === indice);
 }
 function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
-  const [overrides, setOverrides] = useState26({});
-  const [moviendo, setMoviendo] = useState26(SIN_MOVIMIENTOS);
+  const [overrides, setOverrides] = useState27({});
+  const [moviendo, setMoviendo] = useState27(SIN_MOVIMIENTOS);
   const tarjetasRef = useRef12(tarjetas);
   const overridesRef = useRef12(overrides);
   const enVueloRef = useRef12(/* @__PURE__ */ new Set());
@@ -7083,7 +7274,7 @@ function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
     }),
     [tarjetas, overrides]
   );
-  const revertir = useCallback3(
+  const revertir = useCallback4(
     (id, mensaje) => {
       setOverrides((actual) => {
         if (!(id in actual)) return actual;
@@ -7095,7 +7286,7 @@ function useTableroOptimista({ tarjetas = [], onMover, onError } = {}) {
     },
     [onError]
   );
-  const moverA = useCallback3(
+  const moverA = useCallback4(
     (id, estadoDestino) => {
       if (!onMover || !id || !estadoDestino) return;
       const tarjeta = tarjetasRef.current.find((candidata) => candidata.id === id);
@@ -7154,8 +7345,8 @@ function TableroKanban({
   className
 }) {
   const { tarjetas: efectivas, moverA, moviendo } = useTableroOptimista({ tarjetas, onMover, onError });
-  const [arrastrandoId, setArrastrandoId] = useState26("");
-  const [sobreColumna, setSobreColumna] = useState26("");
+  const [arrastrandoId, setArrastrandoId] = useState27("");
+  const [sobreColumna, setSobreColumna] = useState27("");
   const columnasReales = useMemo8(() => columnasDelTablero(columnas, efectivas), [columnas, efectivas]);
   const grupos = useMemo8(() => agruparTarjetas(columnasReales, efectivas), [columnasReales, efectivas]);
   const arrastrando = arrastrandoId ? efectivas.find((tarjeta) => tarjeta.id === arrastrandoId) ?? null : null;
@@ -7557,7 +7748,7 @@ function PlanPagos({
 }
 
 // src/components/DocumentoImpresion.jsx
-import { Fragment as Fragment14, jsx as jsx89, jsxs as jsxs71 } from "react/jsx-runtime";
+import { Fragment as Fragment15, jsx as jsx89, jsxs as jsxs71 } from "react/jsx-runtime";
 var CANTIDAD_FORMATTER = new Intl.NumberFormat("es-PY", { maximumFractionDigits: 3 });
 function cantidadTexto(cantidad) {
   if (cantidad === null || cantidad === void 0 || cantidad === "") return "";
@@ -7712,7 +7903,7 @@ function DocumentoImpresion({
           FilaLiquidacion,
           {
             etiqueta: `IVA ${iva.tasa}%`,
-            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs71(Fragment14, { children: [
+            nota: iva.base !== void 0 ? /* @__PURE__ */ jsxs71(Fragment15, { children: [
               "sobre ",
               /* @__PURE__ */ jsx89(Money, { value: iva.base, currency: moneda, simbolo })
             ] }) : null,
@@ -7734,7 +7925,7 @@ function DocumentoImpresion({
 }
 
 // src/components/SubidaImagen.jsx
-import { useId as useId11, useRef as useRef13, useState as useState27 } from "react";
+import { useId as useId11, useRef as useRef13, useState as useState28 } from "react";
 import { jsx as jsx90, jsxs as jsxs72 } from "react/jsx-runtime";
 var MIMES_IMAGEN = ["image/jpeg", "image/png", "image/webp"];
 var EXTENSION_IMAGEN = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" };
@@ -7895,10 +8086,10 @@ function SubidaImagen({
   const campoId = useId11();
   const errorId = `${campoId}-error`;
   const ayudaId = `${campoId}-ayuda`;
-  const [preparando, setPreparando] = useState27(false);
-  const [errorLocal, setErrorLocal] = useState27("");
-  const [vistaLocal, setVistaLocal] = useState27(null);
-  const [arrastrando, setArrastrando] = useState27(false);
+  const [preparando, setPreparando] = useState28(false);
+  const [errorLocal, setErrorLocal] = useState28("");
+  const [vistaLocal, setVistaLocal] = useState28(null);
+  const [arrastrando, setArrastrando] = useState28(false);
   const mensaje = error || errorLocal;
   const trabajando = Boolean(ocupado) || preparando;
   const vista = vistaLocal ?? valor;
@@ -8072,7 +8263,7 @@ function ProgresoChecklist({
 }
 
 // src/hooks/useSingleFlightSubmit.js
-import { useCallback as useCallback4, useRef as useRef14, useState as useState28 } from "react";
+import { useCallback as useCallback5, useRef as useRef14, useState as useState29 } from "react";
 
 // src/utils/guardado.js
 var AVISO_REFRESCO = "Se guard\xF3 correctamente, pero no se pudo actualizar la lista. Recarg\xE1 la p\xE1gina para ver los cambios; no hace falta guardar otra vez.";
@@ -8093,20 +8284,20 @@ function crearEnvioUnico(enviar) {
     }
   };
 }
-async function completeSave(cerrar, refrescar, { avisar } = {}) {
+async function completeSave(cerrar, refrescar, { avisar: avisar2 } = {}) {
   cerrar?.();
   try {
     await refrescar?.();
     return true;
   } catch {
-    avisar?.(AVISO_REFRESCO);
+    avisar2?.(AVISO_REFRESCO);
     return false;
   }
 }
 
 // src/hooks/useSingleFlightSubmit.js
 function useSingleFlightSubmit(enviar) {
-  const [pendiente, setPendiente] = useState28(false);
+  const [pendiente, setPendiente] = useState29(false);
   const ultimoEnviar = useRef14(enviar);
   ultimoEnviar.current = enviar;
   const envio = useRef14(null);
@@ -8120,7 +8311,7 @@ function useSingleFlightSubmit(enviar) {
       }
     });
   }
-  const onSubmit = useCallback4(async (evento) => {
+  const onSubmit = useCallback5(async (evento) => {
     evento?.preventDefault?.();
     await envio.current.ejecutar(evento);
   }, []);
@@ -8591,12 +8782,6 @@ function paginaDePrueba({
 function paginaDePruebaSimple(opciones = {}) {
   return paginaDePrueba({ ...opciones, tipo: "caracteres" });
 }
-
-// src/utils/formulario.js
-var GRILLA_DOS_COLUMNAS = "grid gap-3 sm:grid-cols-2";
-var GRILLA_DOS_COLUMNAS_COMPACTA = "grid gap-2 sm:grid-cols-2";
-var PIE_ACCIONES = "flex flex-wrap justify-end gap-2";
-var PIE_ACCIONES_REVERSO = "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end";
 export {
   ANCHOS_PAPEL,
   AVANCES_FIRMA,
@@ -8691,6 +8876,7 @@ export {
   FilaChecklist,
   FilaDato,
   FilaRevision,
+  FormActions,
   FormField,
   GLIFOS_CATEGORIA,
   GRADOS_CONDICION,
@@ -8775,6 +8961,7 @@ export {
   SELECTOR_ENFOCABLES,
   SIMBOLOS_MONEDA,
   SIMBOLO_PYG,
+  SaveActions,
   SearchField_default as SearchField,
   SeccionColapsable,
   SectionState,
@@ -8856,9 +9043,12 @@ export {
   columnasDelTablero,
   completeSave,
   componerTelefono,
+  conFormulario,
   conexionDeDestino,
   contarSinLeer,
   crearEnvioUnico,
+  crearPilaCapas,
+  crearRegistroPendientes,
   crearTicket,
   departamentoDe,
   destinoDeConexion,
@@ -9005,7 +9195,9 @@ export {
   tonoRecepcion,
   tonoRevision,
   ultimos4,
+  useDialogClose,
   useDialogFocusTrap,
+  useDialogPending,
   useSingleFlightSubmit,
   useTableroOptimista,
   useToast,
