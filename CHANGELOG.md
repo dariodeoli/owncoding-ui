@@ -4,12 +4,17 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Sin publicar — cosecha de ScaleOS (#2)
+## v0.39.0 — 2026-09-26
+
+Ronda de cosechas: PagaYa (#1), ScaleOS (#2), LedBox (#3/#4) y el fix de
+contraste AA de los chips (#5). Aditivo, sin cambios incompatibles de API.
+
+### Cosecha de ScaleOS (#2)
 
 Portado de ScaleOS (`app/save-actions.tsx`, `use-single-flight-submit.ts`,
 `save-completion.ts`, `amount-format.ts`, `dialog.tsx`, `overlay-stack.ts`,
-`list-format.tsx` y `due-date.tsx`, repetidos en las verticales). Sin subir
-versión ni tag. Reglas en `docs/REGLAS.md`.
+`list-format.tsx` y `due-date.tsx`, repetidos en las verticales). Reglas en
+`docs/REGLAS.md`.
 
 - **Ciclo de guardado:** `useSingleFlightSubmit(envio)` bloquea antes de la
   validación asíncrona y no solapa envíos; `completeSave(cerrar, refrescar,
@@ -36,7 +41,7 @@ versión ni tag. Reglas en `docs/REGLAS.md`.
   `Vencimiento`); `SerialTexto` suma `enmascarar` (`••••4821` con el serial
   completo en el `title`).
 
-## Sin publicar — contraste de chips y borde interactivo (#5)
+### Contraste de chips y borde interactivo (#5)
 
 Fix de la QA de Scale OS (ola 2): el texto de los chips quedaba por debajo de
 AA en tema claro. La evidencia y los valores medidos quedan en el issue.
@@ -64,12 +69,11 @@ AA en tema claro. La evidencia y los valores medidos quedan en el issue.
   superficies × dos temas) y el borde; ningún mapa de la librería puede volver
   al tono base como texto (aserción de fuente).
 
-## Sin publicar — cosecha de PagaYa (#1)
+### Cosecha de PagaYa (#1)
 
 Portado de PagaYa (`app/tokens.css`, `docs/ui-kit.md`, `components/app-icon.tsx`,
 `lib/shared/inputs.ts`, `components/fields/tax-id-field.tsx` y
-`lib/hooks/use-dialog.ts`). Sin subir versión ni tag: la versión la decide el
-integrador. Todas las reglas quedan en `docs/REGLAS.md`.
+`lib/hooks/use-dialog.ts`). Todas las reglas quedan en `docs/REGLAS.md`.
 
 - **`TaxIdField` (RUC paraguayo):** campo de identificación fiscal con
   `taxIdValid` / `normalizeTaxId` (más `taxIdGenericoValid`,
@@ -98,12 +102,13 @@ integrador. Todas las reglas quedan en `docs/REGLAS.md`.
 - **`useDialogFocusTrap`:** scroll bloqueado, foco inicial, ciclo de Tab, `Esc`
   y devolución del foco en un hook compartido por `Modal` y `Drawer` (antes
   estaba copiado en cada uno).
-## Sin publicar — v0.39.0 propuesta (2026-09-26)
+
+### Utils y tipos al día — LedBox (#3) y contrato de utils (#4)
 
 Pendientes de los issues **#4** (`.d.ts` vs runtime, ciudades y entrada de
 utils) y **#3** (cierre del piloto de LedBox). Aditivo: la firma tipada de los
 helpers de teléfono pasa a la del runtime y el resto de los agregados son
-opcionales. El integrador decide el número final.
+opcionales.
 
 - **Teléfono — contrato real y formato canónico (#4):**
   - `parseTelefono` y `componerTelefono` viven en `utils/telefono.js` (con
