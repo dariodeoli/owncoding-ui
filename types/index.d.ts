@@ -175,10 +175,25 @@ export function ListGridToggle(props: { value: 'list' | 'grid' | (string & {}); 
 export function EmailField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void; dominios?: string[]; sugerir?: boolean }): ReactElement
 export const DOMINIOS_EMAIL: string[]
 export function sugerenciasDe(valor: string, dominios?: string[]): string[]
-export function PhoneField(props: Record<string, any> & { value?: string; onChange?: (valor: string) => void; className?: string }): ReactElement
-export function parseTelefono(valor: string): { codigo: string; numero: string; local?: string }
-export function componerTelefono(codigo: string, numero: string): string
-export const CODIGOS_PAIS: Array<{ codigo: string; pais: string; bandera?: string }>
+export function PhoneField(props: {
+  countryCode?: string
+  phone?: string
+  onChange?: (valor: string) => void
+  onCountryCodeChange?: (codigo: string) => void
+  disabled?: boolean
+  placeholder?: string
+  countryAriaLabel?: string
+  phoneAriaLabel?: string
+  codigos?: string[]
+  mensajeInvalido?: string
+  id?: string
+  className?: string
+}): ReactElement
+/** Parte `+595 981 123 456`, `+595981123456` o el pegado `00595 …`. */
+export function parseTelefono(valor: string, countryCodePorDefecto?: string): { countryCode: string; phone: string }
+/** Arma `+<código> <número>`; sin número devuelve `null`. */
+export function componerTelefono(datos?: { countryCode?: string; phone?: string }): string | null
+export const CODIGOS_PAIS: string[]
 export function SerialField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void; normalizar?: (valor: string) => string }): ReactElement
 export function normalizarSerial(valor: string): string
 export function InstagramField(props: Omit<InputProps, 'onChange'> & { value?: string; onChange?: (event: any) => void }): ReactElement
@@ -777,6 +792,15 @@ export function PlanPagos(props: {
 }): ReactElement
 export const ESTADOS_CUOTA: Record<string, { chip: string; etiqueta: string; icono: string; tono?: Tono }>
 
+export const ANCHOS_PAPEL: Record<'thermal-80' | 'thermal-58' | 'thermal-55' | 'thermal' | 'a4', string>
+export function VistaPreviaPapel(props: {
+  formato?: 'thermal-80' | 'thermal-58' | 'thermal-55' | 'thermal' | 'a4' | (string & {})
+  contenido?: string
+  titulo?: string
+  alto?: string
+  className?: string
+} & Record<string, any>): ReactElement
+
 export type ItemDocumento = { id?: string; cantidad: number; concepto: ReactNode; unitario: number; subtotal: number; nota?: ReactNode }
 export function DocumentoImpresion(props: {
   titulo?: string
@@ -859,14 +883,34 @@ export function nombrePartes(nombre: string): { nombres: string; apellidos: stri
 export function esApellidosPrimero(nombre: string): boolean
 export function esRazonSocial(nombre: string): boolean
 
-export const BANCOS_PARAGUAY: Array<{ codigo?: string; nombre: string; [clave: string]: any }>
-export const LOGOS_BANCOS: Record<string, string>
+/** Nombres del catálogo por defecto (`BANCOS_PARAGUAY`, listado vigente del BCP). */
+export type BancoParaguay = string
+
+/** Registro de logo: archivo del host, marca vectorial o monograma. */
+export type RegistroLogoBanco =
+  | { banco: string; tipo: 'archivo'; archivo: string; chip?: boolean }
+  | { banco: string; tipo: 'marca'; marca: string }
+  | { banco: string; tipo: 'monograma'; iniciales: string; color: string; generico?: boolean }
+
+/** Entrada del registro `LOGOS_BANCOS` (el nombre canónico es la clave). */
+export type EntradaLogoBanco = {
+  archivo?: string
+  marca?: string
+  monograma?: string
+  color?: string
+  chip?: boolean
+  alias?: string[]
+}
+
+export const BANCOS_PARAGUAY: string[]
+export const LOGOS_BANCOS: Record<string, EntradaLogoBanco>
 export const COLORES_BANCO_RESPALDO: string[]
 export function normalizarBanco(nombre: string): string
 export function inicialesDeBanco(nombre: string): string
 export function colorDeBanco(nombre: string): string
-export function logoDeBanco(nombre: string): string | null
-export function sugerenciasDeBanco(consulta: string, bancos?: any[]): any[]
+/** Resuelve archivo/marca/monograma por nombre o alias; sin nombre, `null`. */
+export function logoDeBanco(nombre: string): RegistroLogoBanco | null
+export function sugerenciasDeBanco(consulta?: string, bancos?: readonly string[]): string[]
 
 export const ESTADO_IMPRESORA: Record<string, string>
 export const ETIQUETA_ESTADO: Record<string, string>
@@ -902,10 +946,18 @@ export const GRILLA_DOS_COLUMNAS_COMPACTA: string
 export const PIE_ACCIONES: string
 export const PIE_ACCIONES_REVERSO: string
 
-export const CIUDADES_PARAGUAY: Array<{ ciudad: string; departamento: string; [clave: string]: any }>
+/** Fila bilingüe: español (`ciudad`/`departamento`) e inglés (`city`/`department`). */
+export type CiudadParaguay = {
+  ciudad: string
+  departamento: string
+  city: string
+  department: string
+}
+export const CIUDADES_PARAGUAY: CiudadParaguay[]
 export const DEPARTAMENTOS_PARAGUAY: string[]
-export function departamentoDe(ciudad: string): string | null
-export function buscarCiudad(consulta: string, limite?: number): any[]
+/** Departamento de una ciudad por nombre exacto; `''` si no está en el catálogo. */
+export function departamentoDe(ciudad: string): string
+export function buscarCiudad(consulta: string, limite?: number): CiudadParaguay[]
 
 export const MODELOS_IPHONE: string[]
 export const CAPACIDADES_IPHONE: string[]
@@ -924,6 +976,12 @@ export const SIMBOLO_PYG: string
 export const SIMBOLOS_MONEDA: Record<string, string>
 export const LIMITE_MONTO_GENERAL: number
 export const LIMITE_MONTO_VENTAS: number
+/** Tope real de almacenamiento (columnas enteras de 32 bits). */
+export const LIMITE_MONTO_ALMACENABLE: number
+/** Límite efectivo del campo: el del contexto acotado a lo almacenable. */
+export function limiteMonto(max?: number): number
+/** Mensaje para bloquear el guardado, o `''` si el monto entra. */
+export function errorMonto(value: unknown, max?: number): string
 export function formatGs(value: unknown, opciones?: OpcionesSimbolo): string
 export function formatGsInput(value: unknown): string
 export function parseGsInput(value: unknown): number
@@ -963,13 +1021,15 @@ export function partirSerial(serial: string): { prefijo: string; ultimos: string
 export function serialEnmascarado(serial: string): string
 export function extractTokenFromUrl(url: string): string
 export function esToken(valor: string): boolean
-export function normalizarTelefono(valor: string): string
-export function internationalPhone(valor: string): string
-export function whatsappUrl(telefono: string, mensaje?: string): string
-export function soloDigitos(valor: string): string
+/** Formato canónico agrupado: `+595 981 123 456`; sin teléfono, `''`. */
+export function normalizarTelefono(telefono: string, countryCode?: string): string
+export function internationalPhone(telefono: string, countryCode?: string): string
+export function whatsappUrl(telefono: string, mensaje?: string, countryCode?: string): string
+export function soloDigitos(valor: string, max?: number): string
 export function codigoPais(telefono: string): string
-export function telefonoVisible(telefono: string): string
-export function telefonoValido(telefono: string): boolean
+export function telefonoVisible(telefono: string, countryCode?: string): string
+/** Móvil PY (9 dígitos tras +595); otros países, 6–12 dígitos. */
+export function telefonoValido(telefono: string, countryCode?: string): boolean
 export const MENSAJE_TELEFONO: string
 
 /** Props de los objetos con superficie abierta (se tipan al adoptarse). */

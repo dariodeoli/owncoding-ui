@@ -22,24 +22,29 @@ export const BANCOS_PARAGUAY = [
   'Cooperativa San Cristóbal',
   'Cooperativa Universitaria',
   'Financiera El Comercio',
+  'Financiera FIC',
   'Financiera Finexpar',
   'Financiera Paraguayo Japonesa',
   'Solar Banco',
-  'ueno bank',
+  'Ueno Bank',
+  'Visión Banco',
 ]
 
+// El registro resuelve el nombre canónico a partir del valor tipeado: los
+// alias cubren lo que las apps venían resolviendo a mano (continental, bnf,
+// interfisa, atlas, familiar, vision, sudameris, fic, rio, itau…).
 export const LOGOS_BANCOS = {
-  'Banco Atlas': { archivo: 'banco-atlas.png' },
+  'Banco Atlas': { archivo: 'banco-atlas.png', alias: ['atlas'] },
   'Banco Basa': { archivo: 'banco-basa.svg' },
-  'Banco Continental': { marca: 'continental' },
+  'Banco Continental': { marca: 'continental', alias: ['continental'] },
   'Banco de la Nación Argentina': { archivo: 'banco-nacion-argentina.png', chip: true, alias: ['banco nacion', 'bna'] },
   'Banco do Brasil': { archivo: 'banco-do-brasil.svg', alias: ['bb', 'brasil'] },
-  'Banco Familiar': { marca: 'familiar' },
+  'Banco Familiar': { marca: 'familiar', alias: ['familiar'] },
   'Banco GNB Paraguay': { archivo: 'banco-gnb.svg' },
-  'Banco Interfisa': { archivo: 'interfisa.png' },
+  'Banco Interfisa': { archivo: 'interfisa.png', alias: ['interfisa'] },
   'Banco Itaú Paraguay': { archivo: 'itau.png', alias: ['itau', 'banco itau', 'itau paraguay'] },
-  'Banco Nacional de Fomento': { archivo: 'bnf.png' },
-  'Banco Sudameris': { archivo: 'sudameris.png' },
+  'Banco Nacional de Fomento': { archivo: 'bnf.png', alias: ['bnf', 'nacional de fomento'] },
+  'Banco Sudameris': { archivo: 'sudameris.png', alias: ['sudameris'] },
   'Bancop': { archivo: 'bancop.png' },
   'Citibank Paraguay': { archivo: 'citibank.svg', alias: ['citibank', 'citi'] },
   'Coomecipar': { monograma: 'CO', color: '#0B6E4F' },
@@ -47,10 +52,15 @@ export const LOGOS_BANCOS = {
   'Cooperativa San Cristóbal': { monograma: 'CSC', color: '#167A54' },
   'Cooperativa Universitaria': { monograma: 'CU', color: '#1D4E9E' },
   'Financiera El Comercio': { monograma: 'FEC', color: '#0E7C7B' },
+  'Financiera FIC': { monograma: 'FIC', color: '#C8102E', alias: ['fic', 'financiera fic'] },
   'Financiera Finexpar': { monograma: 'FX', color: '#C24E1B' },
   'Financiera Paraguayo Japonesa': { archivo: 'paraguayo-japonesa.png' },
   'Solar Banco': { archivo: 'solar.svg', alias: ['solar', 'solar ahorro y finanzas'] },
-  'ueno bank': { marca: 'ueno', alias: ['ueno'] },
+  'Ueno Bank': { marca: 'ueno', alias: ['ueno'] },
+  'Visión Banco': { monograma: 'VB', color: '#E4572E', alias: ['vision', 'banco vision'] },
+  // Absorbido por Banco Continental (2025): se resuelve para los datos
+  // históricos de las apps, pero no entra en las sugerencias del catálogo.
+  'Banco Río': { monograma: 'BR', color: '#1B5FA8', alias: ['rio', 'banco rio'] },
 }
 
 // Paleta de respaldo para nombres escritos a mano fuera del catálogo.

@@ -32,8 +32,8 @@ npm install git+ssh://git@github.com:dariodeoli/owncoding-ui.git#v0.14.7   # SSH
 
 ```js
 // tailwind.config.js
-import preset from 'owncoding-ui/tailwind-preset'
-export default { presets: [preset], content: ['./index.html', './src/**/*.{js,jsx}'] }
+import preset, { owncodingContent } from 'owncoding-ui/tailwind-preset'
+export default { presets: [preset], content: [...owncodingContent, './index.html', './src/**/*.{js,jsx}'] }
 ```
 
 ```css
@@ -44,12 +44,16 @@ export default { presets: [preset], content: ['./index.html', './src/**/*.{js,js
 @import 'owncoding-ui/base.css';     /* base recomendada (opcional) */
 ```
 
-- El **preset ya declara `content` con el bundle de la librería**: sin eso,
-  Tailwind purga las clases de los componentes compartidos (síntoma típico:
-  “el componente se ve sin estilos”).
+- Tailwind 3.4 **ignora el `content` que declara un preset**: la app tiene que
+  sumar `owncodingContent` a su propio `content` (sin eso, Tailwind purga las
+  clases de los componentes compartidos; síntoma típico: “el componente se ve
+  sin estilos” y los íconos gigantes).
 - El tema oscuro se activa con la clase `dark` (o `consola`/`tema-v2` para los
   scopes v2) en `<html>` o en el contenedor.
 - Apps con TypeScript: el paquete ya trae `dist/index.d.ts` y tipos del preset.
+- Utils en el **servidor** (server components, route handlers, scripts):
+  importarlos de `owncoding-ui/utils`; la entrada principal es de cliente
+  (`"use client"`) y en Next obligaría a `serverExternalPackages`.
 
 ## 4. Peers opcionales
 
@@ -71,7 +75,8 @@ export default { presets: [preset], content: ['./index.html', './src/**/*.{js,js
 
 | Síntoma | Causa | Solución |
 | --- | --- | --- |
-| Componente sin estilos | Tailwind purgó las clases | Usar el preset (incluye `content`) o agregar `./node_modules/owncoding-ui/dist/**/*.js` al `content` |
+| Componente sin estilos | Tailwind purgó las clases | Sumar `owncodingContent` al `content` de la app (Tailwind 3.4 ignora el `content` del preset) |
+| Los utils fallan en el servidor | Se importó la entrada de cliente | Importar de `owncoding-ui/utils` (sin `"use client"`) |
 | Estilos “a medias” | Se importó el CSS antes de las directivas | Importarlo **después** de `@tailwind base/components/utilities` |
 | El QR no aparece | Falta `qrcode` | `npm install qrcode` (peer opcional) |
 | Tipos rotos en TS | Versión vieja sin `dist/index.d.ts` | Subir al tag que incluye tipos (≥ v0.14.0) |

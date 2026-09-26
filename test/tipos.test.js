@@ -4,6 +4,7 @@
 // TypeScript (no hay TS en el paquete): verifica el contrato publicado.
 import { describe, expect, test } from 'vitest'
 import { existsSync, readFileSync } from 'node:fs'
+import * as runtime from '../src/index.js'
 
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
 const dts = readFileSync(new URL('../types/index.d.ts', import.meta.url), 'utf8')
@@ -60,5 +61,21 @@ describe('tipos publicados (.d.ts)', () => {
   test('los tipos del preset cubren `owncodingContent`', () => {
     expect(presetDts).toContain('owncodingContent')
     expect(presetDts).toContain('export default')
+  })
+
+  test('todo export del runtime está declarado y toda declaración de valor existe', () => {
+    // La entrada principal no se vuelve a despegar del `.d.ts`: si un objeto
+    // nuevo sale por `owncoding-ui`, tiene que quedar declarado acá.
+    const sinDeclarar = Object.keys(runtime)
+      .filter((nombre) => nombre !== 'default')
+      .filter((nombre) => !exporta(nombre))
+    expect(sinDeclarar, `sin declarar: ${sinDeclarar.join(', ')}`).toEqual([])
+
+    // Al revés: un `function`/`const` declarado sin runtime es un tipo mentiroso
+    // (`normalizarBusqueda` estaba en esa situación). `type`/`interface` son
+    // solo del consumidor.
+    const valores = [...dts.matchAll(/export (?:function|const|class) ([A-Za-z_$][\w$]*)/g)].map((match) => match[1])
+    const sinRuntime = valores.filter((nombre) => !(nombre in runtime))
+    expect(sinRuntime, `declarados sin runtime: ${sinRuntime.join(', ')}`).toEqual([])
   })
 })

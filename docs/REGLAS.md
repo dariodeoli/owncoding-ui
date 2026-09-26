@@ -32,7 +32,7 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | RUC / CI | `RucField` (+`extraerRuc`/`esRuc`) | input con el botón **Extraer** adentro (trailing, `BotonDentroCampo`): la consulta entra por `consultar` (async) y el resultado se aplica solo al confirmar («Usar estos datos»); sin `consultar` el botón no se muestra |
 | Serial (lectura) | `SerialTexto` | el serial completo si entra y, si la columna queda corta, se recorta la cabeza y los **últimos 4** siguen visibles; vacío → `—` |
 | Seriales por lote (pegar/escanear) | `CampoSeriales` (+`imeiValido`, `separarSeriales`, `normalizarSeriales`) | textarea que normaliza al vuelo y entrega **solo los válidos únicos** por `onCambio`, con conteos de repetidos e inválidos; para IMEI se pasa `validar={imeiValido}` (15 dígitos + Luhn) |
-| Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el texto libre sigue permitido |
+| Ciudad | `CityAutocomplete` | sugiere al tipear y **resuelve el departamento solo** (es dependiente de la ciudad); el catálogo es bilingüe (`ciudad`/`departamento` y `city`/`department`) y el texto libre sigue permitido |
 | RUC/identificación fiscal | `TaxIdField` | RUC PY de 5 a 8 dígitos, con o sin verificador (`taxIdValid`); el resto de los países usa el patrón genérico. Se guarda con `normalizeTaxId`; la consulta de razón social es un callback de la app (`onBuscarRazonSocial`): la librería no consulta nada |
 
 ### Tamaños recomendados (#148, portable)
@@ -217,6 +217,10 @@ compatibilidad).
 - Un solo lugar para cada formato: `moneda.js` (`formatGs`, `formatUsd`,
   `montoGs`/`montoUsd`/`montoTexto`), `fecha.js` (24 h, vacío explícito,
   nunca “Invalid Date”), `telefono.js` (`whatsappUrl` arma el único enlace).
+  El teléfono se guarda y se muestra en el formato canónico agrupado
+  (`+595 981 123 456`) con `componerTelefono`/`normalizarTelefono`; el pegado
+  internacional `00…` se parte solo (`parseTelefono`) y `internationalPhone`
+  devuelve los dígitos para `wa.me`.
 - Listas densas (#2): `fechaLista` (`17 sept 26 · 14:30`, con la hora aparte
   en `{ hora }`) y `fechaListaCorta` (`17-sept`), con la zona de la app
   (`{ timeZone: 'America/Asuncion' }`); un día puro se formatea en UTC y no se
@@ -237,6 +241,10 @@ compatibilidad).
   Una clave `YYYY-MM-DD` es un día de calendario y no se corre de zona.
 - Prohibido `toLocaleString` de dinero/fechas por pantalla y los helpers
   locales (`fmt`, `fecha`, `precio`).
+- **Del servidor:** la lógica pura (dinero, fechas, teléfono, catálogos,
+  estados) se importa de `owncoding-ui/utils` —la entrada sin React ni
+  `"use client"`—; los objetos de interfaz salen de `owncoding-ui`. No se
+  reimplementa un helper del paquete para el server.
 - Los montos y las fechas no se convierten ni se inventan: dato ausente → texto
   de vacío.
 

@@ -7,9 +7,20 @@ import { cn } from '../utils/cn.js'
 // dependiente de la ciudad, así que se resuelve solo (al tipear una coincidencia
 // exacta y al elegir una sugerencia). El texto libre sigue permitido.
 //
-// Por defecto usa el catálogo de Paraguay de la librería (sin API). Si la app
-// tiene su propio buscador, pasa `buscar(texto) => Promise<[{city, department}]>`
-// (por ejemplo contra su backend) y el resto se comporta igual.
+// Por defecto usa el catálogo bilingüe de Paraguay de la librería (sin API),
+// que trae `ciudad`/`departamento` y `city`/`department`. Si la app tiene su
+// propio buscador pasa `buscar(texto) => Promise<[{city, department}]>` (o las
+// claves en español; se aceptan las dos) y el resto se comporta igual.
+
+// Las filas del catálogo (y de un `buscar` propio) pueden venir con las claves
+// en inglés o en español; se leen las dos.
+function ciudadDe(fila) {
+  return fila?.city ?? fila?.ciudad ?? ''
+}
+
+function departamentoDeFila(fila) {
+  return fila?.department ?? fila?.departamento ?? ''
+}
 
 export default function CityAutocomplete({
   value = '',
@@ -73,7 +84,9 @@ export default function CityAutocomplete({
 
   function elegir(fila) {
     if (timer.current) clearTimeout(timer.current)
-    onSelect?.(fila.city, fila.department || departamentoDe(fila.city))
+    const ciudad = ciudadDe(fila)
+    const departamento = departamentoDeFila(fila) || departamentoDe(ciudad)
+    onSelect?.(ciudad, departamento)
     setSugerencias([])
     setAbierto(false)
   }
@@ -104,15 +117,15 @@ export default function CityAutocomplete({
       {abierto && sugerencias.length > 0 && (
         <ul role="listbox" aria-label="Ciudades" className="absolute z-30 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-ink-500 bg-ink shadow-float">
           {sugerencias.map((fila) => (
-            <li key={`${fila.city}-${fila.department}`} role="option" aria-selected={false}>
+            <li key={`${ciudadDe(fila)}-${departamentoDeFila(fila)}`} role="option" aria-selected={false}>
               <button
                 type="button"
                 className="flex w-full items-baseline justify-between gap-3 px-3 py-2 text-left text-sm transition hover:bg-ink-700"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => elegir(fila)}
               >
-                <span className="truncate font-medium text-fore">{fila.city}</span>
-                <span className="shrink-0 text-xs text-mute">{fila.department}</span>
+                <span className="truncate font-medium text-fore">{ciudadDe(fila)}</span>
+                <span className="shrink-0 text-xs text-mute">{departamentoDeFila(fila)}</span>
               </button>
             </li>
           ))}

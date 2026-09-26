@@ -1,9 +1,25 @@
 // Validación de teléfono para WhatsApp y clientes.
 // Paraguay (+595): solo móviles 9XXXXXXXX (9 dígitos después del código).
 // Otros países: entre 6 y 12 dígitos, sin formato estricto.
+//
+// Formato canónico: SIEMPRE con código de país y agrupado —
+// `+595 981 123 456`—. `normalizarTelefono` lo fija y `componerTelefono` lo
+// arma; `telefonoVisible` lo dibuja. Los dígitos sueltos (`internationalPhone`,
+// `soloDigitos`) son para WhatsApp y para los campos de entrada.
 
-export function normalizarTelefono(value) {
-  return String(value || '').replace(/[^\d+]/g, '')
+// Códigos de país sugeridos por `PhoneField`. También son la pista para partir
+// un pegado con prefijo internacional `00…` (el código más largo primero).
+export const CODIGOS_PAIS = ['+595', '+55', '+54', '+56', '+591', '+598', '+1', '+34', '+44', '+351']
+
+const CODIGOS_ORDENADOS = CODIGOS_PAIS
+  .map((codigo) => codigo.replace(/\D/g, ''))
+  .filter(Boolean)
+  .sort((a, b) => b.length - a.length)
+
+// Teléfono en el formato canónico: `+595 981 123 456`. Sin teléfono devuelve
+// ''; es el mismo texto que se guarda con `componerTelefono`.
+export function normalizarTelefono(phone, countryCode = '+595') {
+  return telefonoVisible(phone, countryCode)
 }
 
 // Devuelve el teléfono en formato internacional sin signos (para wa.me).
@@ -55,6 +71,47 @@ export function telefonoValido(value, countryCode = '+595') {
   const local = digits.startsWith(code) ? digits.slice(code.length) : digits.startsWith('0') ? digits.slice(1) : digits
   if (code === '595') return /^9\d{8}$/.test(local)
   return local.length >= 6 && local.length <= 12
+}
+
+// Parte los dígitos de un `00…` en código de país y parte local. Primero busca
+// en los códigos sugeridos (los más largos primero, para no cortar +598 en
+// +59); si no, prueba el código por defecto; por último asume 1–3 dígitos.
+function partirCeroCero(digitos, countryCodePorDefecto) {
+  if (!digitos) return null
+  for (const codigo of CODIGOS_ORDENADOS) {
+    if (digitos.startsWith(codigo)) return { countryCode: `+${codigo}`, phone: digitos.slice(codigo.length) }
+  }
+  const porDefecto = String(countryCodePorDefecto || '').replace(/\D/g, '')
+  if (porDefecto && digitos.startsWith(porDefecto)) {
+    return { countryCode: `+${porDefecto}`, phone: digitos.slice(porDefecto.length) }
+  }
+  return { countryCode: `+${digitos.slice(0, 3)}`, phone: digitos.slice(3) }
+}
+
+// Separa un teléfono guardado o pegado en código de país y parte local.
+// Acepta `+595 981 123 456` (con `+`) y el prefijo internacional `00…`
+// (`00595 981 123 456` → +595). Sin `+` ni `00`, la parte local va con el
+// código por defecto y sin tocarla (puede traer espacios mientras se tipea).
+export function parseTelefono(value, countryCodePorDefecto = '+595') {
+  const texto = String(value || '').trim()
+  const conMas = texto.match(/^\+(\d{1,3})\s*(.*)$/)
+  if (conMas) return { countryCode: `+${conMas[1]}`, phone: conMas[2].trim() }
+  const conCeroCero = texto.match(/^00[\s.-]*(.*)$/)
+  if (conCeroCero) {
+    const resto = conCeroCero[1].trim()
+    const partes = partirCeroCero(resto.replace(/\D/g, ''), countryCodePorDefecto)
+    if (partes) return partes
+  }
+  return { countryCode: countryCodePorDefecto, phone: texto }
+}
+
+// Arma el string canónico que se guarda: `+<código> <número>`. Sin número,
+// devuelve null. Es la contracara de `parseTelefono`.
+export function componerTelefono({ countryCode = '+595', phone = '' } = {}) {
+  const numero = String(phone || '').trim().replace(/\s+/g, ' ')
+  if (!numero) return null
+  const codigo = String(countryCode || '').replace(/\D/g, '') || '595'
+  return `+${codigo} ${numero}`
 }
 
 export const MENSAJE_TELEFONO = 'Teléfono inválido. Para Paraguay usá un móvil de 9 dígitos, ej: 981 123 456 o +595 971 234567.'

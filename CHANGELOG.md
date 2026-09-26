@@ -98,6 +98,66 @@ integrador. Todas las reglas quedan en `docs/REGLAS.md`.
 - **`useDialogFocusTrap`:** scroll bloqueado, foco inicial, ciclo de Tab, `Esc`
   y devolución del foco en un hook compartido por `Modal` y `Drawer` (antes
   estaba copiado en cada uno).
+## Sin publicar — v0.39.0 propuesta (2026-09-26)
+
+Pendientes de los issues **#4** (`.d.ts` vs runtime, ciudades y entrada de
+utils) y **#3** (cierre del piloto de LedBox). Aditivo: la firma tipada de los
+helpers de teléfono pasa a la del runtime y el resto de los agregados son
+opcionales. El integrador decide el número final.
+
+- **Teléfono — contrato real y formato canónico (#4):**
+  - `parseTelefono` y `componerTelefono` viven en `utils/telefono.js` (con
+    `CODIGOS_PAIS`) y el `.d.ts` publica la firma real del runtime:
+    `{ countryCode, phone }` y el objeto de datos (antes declaraba
+    `{ codigo, numero }` y `(codigo, numero)`, así que TypeScript llamaba mal).
+  - `parseTelefono` parte el pegado internacional `00…` (`00595 981 123 456`
+    → `+595`, `981123456`) contra los códigos conocidos, el más largo primero.
+  - `normalizarTelefono` fija el formato canónico agrupado (`+595 981 000 000`)
+    en vez de devolver dígitos pegados; sin teléfono devuelve `''`.
+  - `PhoneField` tipa sus props reales y `CODIGOS_PAIS` queda como `string[]`
+    (el `.d.ts` declaraba objetos). La política sigue siendo móvil-PY y
+    `docs/REGLAS.md` §7 documenta el formato.
+- **Bancos — tipos del registro y alias de LedBox (#4):**
+  - `BANCOS_PARAGUAY` se publica como `string[]` y `logoDeBanco` con el tipo
+    real del registro (`{ banco, tipo: archivo|marca|monograma } | null`); el
+    `.d.ts` declaraba objetos y `string | null`.
+  - El registro suma los alias que cada app resolvía a mano: `continental`,
+    `bnf`, `interfisa`, `atlas`, `familiar`, `vision`, `sudameris`, `fic`,
+    `rio` y `ueno`. `Visión Banco` y `Financiera FIC` entran al catálogo;
+    `Banco Río` (absorbido por Continental) solo se resuelve para datos
+    históricos y no se sugiere.
+  - `'ueno bank'` pasa a `'Ueno Bank'` (el alias `ueno` sigue andando) y
+    `coberturaBancos` no cambia.
+- **Ciudades — catálogo bilingüe y campo tolerante (#4):**
+  - Cada fila de `CIUDADES_PARAGUAY` expone las claves en español
+    (`ciudad`/`departamento`) y en inglés (`city`/`department`), el mismo dato.
+    Antes el catálogo era solo español y `buscarCiudad` devolvía solo inglés.
+  - `buscarCiudad` devuelve las filas bilingües y `CityAutocomplete` acepta un
+    `buscar` propio con las claves en español o en inglés.
+  - El `.d.ts` publica `CiudadParaguay` (fila bilingüe) y `departamentoDe`
+    devuelve `string` (nunca `null`): se acaban los shims de las apps.
+- **Entrada de utils sin `"use client"` (#4):** nuevo subpath
+  **`owncoding-ui/utils`** con toda la lógica pura (dinero, fechas, teléfono,
+  catálogos, nombres, estados, agenda, abastecimiento e impresión de texto),
+  sin React y sin el banner de cliente; `dist/utils.js` +
+  `dist/utils.d.ts`. Sirve para server components, route handlers y scripts de
+  Next sin `serverExternalPackages`. `owncoding-ui` sigue igual. Tras integrar
+  la rama `lib`, el subpath también publica su cosecha pura: `fechaLista`/
+  `fechaListaCorta`/`diasHasta`/`tonoVencimiento`,
+  `normalizarMontoInput`/`caretTrasDigitos`, `taxId*` (`PATRON_*`,
+  `taxIdValid`, `normalizeTaxId`…) y `crearEnvioUnico`/`completeSave` +
+  pila de overlays.
+- **Tipos al día con el runtime (cierre de #3):** el `.d.ts` suma
+  `VistaPreviaPapel`/`ANCHOS_PAPEL`, `LIMITE_MONTO_ALMACENABLE`,
+  `limiteMonto` y `errorMonto`, y `normalizarBusqueda` ahora sale por
+  `owncoding-ui` (estaba declarado en los tipos pero no exportado). Test
+  nuevo en `tipos.test.js`: todo export del runtime tiene declaración y toda
+  declaración de valor existe en runtime (la deriva vuelve a fallar sola).
+- **Cierre del piloto de LedBox (#3):** el resto de la cosecha
+  (`owncodingContent`, tipos publicados, `tokens.css`/`base.css`, `timeZone`,
+  símbolo del guaraní, `ChipEstado` de negocio y los 23 íconos) ya viajó en
+  v0.14.0; esta ronda completa los tipos que faltaban y corrige
+  `docs/ADOPCION.md`, que todavía afirmaba que el preset aportaba `content`.
 
 ## v0.38.0 — 2026-09-26
 

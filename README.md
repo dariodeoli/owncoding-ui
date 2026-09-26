@@ -95,6 +95,15 @@ expuestos por `types`/`exports`): una app TypeScript `strict` los resuelve sin
 shim propio. Cubren los objetos principales, los campos, los estados, las
 tablas y los formatos (`Money`, fechas, etc.).
 
+La **lógica pura** también sale por **`owncoding-ui/utils`**: la misma
+superficie sin React y sin el banner `"use client"`, para componentes de
+servidor, route handlers y scripts de Next (no hace falta
+`serverExternalPackages`). Los objetos de interfaz siguen en `owncoding-ui`.
+
+```js
+import { formatGs, fechaDia, parseTelefono, telefonoValido } from 'owncoding-ui/utils'
+```
+
 ```jsx
 import { Button, Aviso, EmptyState, montoTexto, CELDA_DATO } from 'owncoding-ui'
 
@@ -239,9 +248,11 @@ export function Pantalla({ impresoras, onGuardar, onImprimir, ciudad, setCiudad 
   `PERFILES_DISPOSITIVO` y `etiquetaDispositivo`. Guía:
   `docs/DISPOSITIVOS.md`.
 - **Catálogos por defecto (Paraguay):** `CIUDADES_PARAGUAY` (263 municipios con
-  departamento) + `CityAutocomplete` (el departamento se resuelve solo con la
-  ciudad), `MODELOS_IPHONE`, `CAPACIDADES_IPHONE`, `COLORES_IPHONE` y
-  `CATEGORIAS_ACCESORIOS`. Se actualizan acá y llegan a todas las apps.
+  departamento, cada fila con las claves en español `ciudad`/`departamento` y
+  en inglés `city`/`department`) + `CityAutocomplete` (el departamento se
+  resuelve solo con la ciudad), `MODELOS_IPHONE`, `CAPACIDADES_IPHONE`,
+  `COLORES_IPHONE` y `CATEGORIAS_ACCESORIOS`. Se actualizan acá y llegan a
+  todas las apps.
 - **Tamaños de campo:** `TAMANOS_CAMPO` (`moneda: w-36`, `porcentaje: w-24`,
   `cantidad: w-20`, `fecha: w-40`, …) para que los campos no se estiren de más;
   `MoneyInput` y `PercentField` ya traen su ancho recomendado.

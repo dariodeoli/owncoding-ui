@@ -1727,8 +1727,10 @@ function EmailField({
 import { useState as useState4 } from "react";
 
 // src/utils/telefono.js
-function normalizarTelefono(value) {
-  return String(value || "").replace(/[^\d+]/g, "");
+var CODIGOS_PAIS = ["+595", "+55", "+54", "+56", "+591", "+598", "+1", "+34", "+44", "+351"];
+var CODIGOS_ORDENADOS = CODIGOS_PAIS.map((codigo) => codigo.replace(/\D/g, "")).filter(Boolean).sort((a, b) => b.length - a.length);
+function normalizarTelefono(phone, countryCode = "+595") {
+  return telefonoVisible(phone, countryCode);
 }
 function internationalPhone(value, countryCode = "+595") {
   let digits = String(value || "").replace(/\D/g, "");
@@ -1768,23 +1770,27 @@ function telefonoValido(value, countryCode = "+595") {
   if (code === "595") return /^9\d{8}$/.test(local);
   return local.length >= 6 && local.length <= 12;
 }
-var MENSAJE_TELEFONO = "Tel\xE9fono inv\xE1lido. Para Paraguay us\xE1 un m\xF3vil de 9 d\xEDgitos, ej: 981 123 456 o +595 971 234567.";
-
-// src/components/PhoneField.jsx
-import { jsx as jsx15, jsxs as jsxs10 } from "react/jsx-runtime";
-var MAX_CODIGO = 6;
-var MAX_NUMERO = 30;
-var CODIGOS_PAIS = ["+595", "+55", "+54", "+56", "+591", "+598", "+1", "+34", "+44", "+351"];
-function soloDigitos2(value) {
-  return String(value || "").replace(/\D/g, "").slice(0, MAX_CODIGO);
-}
-function soloNumero(value) {
-  return String(value || "").replace(/[^\d\s()-]/g, "").slice(0, MAX_NUMERO);
+function partirCeroCero(digitos, countryCodePorDefecto) {
+  if (!digitos) return null;
+  for (const codigo of CODIGOS_ORDENADOS) {
+    if (digitos.startsWith(codigo)) return { countryCode: `+${codigo}`, phone: digitos.slice(codigo.length) };
+  }
+  const porDefecto = String(countryCodePorDefecto || "").replace(/\D/g, "");
+  if (porDefecto && digitos.startsWith(porDefecto)) {
+    return { countryCode: `+${porDefecto}`, phone: digitos.slice(porDefecto.length) };
+  }
+  return { countryCode: `+${digitos.slice(0, 3)}`, phone: digitos.slice(3) };
 }
 function parseTelefono(value, countryCodePorDefecto = "+595") {
   const texto = String(value || "").trim();
-  const partes = texto.match(/^\+(\d{1,3})\s*(.*)$/);
-  if (partes) return { countryCode: `+${partes[1]}`, phone: partes[2].trim() };
+  const conMas = texto.match(/^\+(\d{1,3})\s*(.*)$/);
+  if (conMas) return { countryCode: `+${conMas[1]}`, phone: conMas[2].trim() };
+  const conCeroCero = texto.match(/^00[\s.-]*(.*)$/);
+  if (conCeroCero) {
+    const resto = conCeroCero[1].trim();
+    const partes = partirCeroCero(resto.replace(/\D/g, ""), countryCodePorDefecto);
+    if (partes) return partes;
+  }
   return { countryCode: countryCodePorDefecto, phone: texto };
 }
 function componerTelefono({ countryCode = "+595", phone = "" } = {}) {
@@ -1792,6 +1798,18 @@ function componerTelefono({ countryCode = "+595", phone = "" } = {}) {
   if (!numero) return null;
   const codigo = String(countryCode || "").replace(/\D/g, "") || "595";
   return `+${codigo} ${numero}`;
+}
+var MENSAJE_TELEFONO = "Tel\xE9fono inv\xE1lido. Para Paraguay us\xE1 un m\xF3vil de 9 d\xEDgitos, ej: 981 123 456 o +595 971 234567.";
+
+// src/components/PhoneField.jsx
+import { jsx as jsx15, jsxs as jsxs10 } from "react/jsx-runtime";
+var MAX_CODIGO = 6;
+var MAX_NUMERO = 30;
+function soloDigitos2(value) {
+  return String(value || "").replace(/\D/g, "").slice(0, MAX_CODIGO);
+}
+function soloNumero(value) {
+  return String(value || "").replace(/[^\d\s()-]/g, "").slice(0, MAX_NUMERO);
 }
 function PhoneField({
   countryCode = "+595",
@@ -3672,23 +3690,25 @@ var BANCOS_PARAGUAY = [
   "Cooperativa San Crist\xF3bal",
   "Cooperativa Universitaria",
   "Financiera El Comercio",
+  "Financiera FIC",
   "Financiera Finexpar",
   "Financiera Paraguayo Japonesa",
   "Solar Banco",
-  "ueno bank"
+  "Ueno Bank",
+  "Visi\xF3n Banco"
 ];
 var LOGOS_BANCOS = {
-  "Banco Atlas": { archivo: "banco-atlas.png" },
+  "Banco Atlas": { archivo: "banco-atlas.png", alias: ["atlas"] },
   "Banco Basa": { archivo: "banco-basa.svg" },
-  "Banco Continental": { marca: "continental" },
+  "Banco Continental": { marca: "continental", alias: ["continental"] },
   "Banco de la Naci\xF3n Argentina": { archivo: "banco-nacion-argentina.png", chip: true, alias: ["banco nacion", "bna"] },
   "Banco do Brasil": { archivo: "banco-do-brasil.svg", alias: ["bb", "brasil"] },
-  "Banco Familiar": { marca: "familiar" },
+  "Banco Familiar": { marca: "familiar", alias: ["familiar"] },
   "Banco GNB Paraguay": { archivo: "banco-gnb.svg" },
-  "Banco Interfisa": { archivo: "interfisa.png" },
+  "Banco Interfisa": { archivo: "interfisa.png", alias: ["interfisa"] },
   "Banco Ita\xFA Paraguay": { archivo: "itau.png", alias: ["itau", "banco itau", "itau paraguay"] },
-  "Banco Nacional de Fomento": { archivo: "bnf.png" },
-  "Banco Sudameris": { archivo: "sudameris.png" },
+  "Banco Nacional de Fomento": { archivo: "bnf.png", alias: ["bnf", "nacional de fomento"] },
+  "Banco Sudameris": { archivo: "sudameris.png", alias: ["sudameris"] },
   "Bancop": { archivo: "bancop.png" },
   "Citibank Paraguay": { archivo: "citibank.svg", alias: ["citibank", "citi"] },
   "Coomecipar": { monograma: "CO", color: "#0B6E4F" },
@@ -3696,10 +3716,15 @@ var LOGOS_BANCOS = {
   "Cooperativa San Crist\xF3bal": { monograma: "CSC", color: "#167A54" },
   "Cooperativa Universitaria": { monograma: "CU", color: "#1D4E9E" },
   "Financiera El Comercio": { monograma: "FEC", color: "#0E7C7B" },
+  "Financiera FIC": { monograma: "FIC", color: "#C8102E", alias: ["fic", "financiera fic"] },
   "Financiera Finexpar": { monograma: "FX", color: "#C24E1B" },
   "Financiera Paraguayo Japonesa": { archivo: "paraguayo-japonesa.png" },
   "Solar Banco": { archivo: "solar.svg", alias: ["solar", "solar ahorro y finanzas"] },
-  "ueno bank": { marca: "ueno", alias: ["ueno"] }
+  "Ueno Bank": { marca: "ueno", alias: ["ueno"] },
+  "Visi\xF3n Banco": { monograma: "VB", color: "#E4572E", alias: ["vision", "banco vision"] },
+  // Absorbido por Banco Continental (2025): se resuelve para los datos
+  // históricos de las apps, pero no entra en las sugerencias del catálogo.
+  "Banco R\xEDo": { monograma: "BR", color: "#1B5FA8", alias: ["rio", "banco rio"] }
 };
 var COLORES_BANCO_RESPALDO = ["#33414F", "#1D4E9E", "#0B6E4F", "#8A3A1B", "#6C3FA0", "#12659E"];
 function normalizarBanco(texto) {
@@ -3891,7 +3916,7 @@ function BancoCombobox({
 import { useEffect as useEffect7, useRef as useRef8, useState as useState17 } from "react";
 
 // src/catalog/ciudades.js
-var CIUDADES_PARAGUAY = [
+var MUNICIPIOS = [
   { ciudad: "Bah\xEDa Negra", departamento: "Alto Paraguay" },
   { ciudad: "Capit\xE1n Carmelo Peralta", departamento: "Alto Paraguay" },
   { ciudad: "Fuerte Olimpo", departamento: "Alto Paraguay" },
@@ -4156,6 +4181,12 @@ var CIUDADES_PARAGUAY = [
   { ciudad: "Yataity del Norte", departamento: "San Pedro" },
   { ciudad: "Yrybucu\xE1", departamento: "San Pedro" }
 ];
+var CIUDADES_PARAGUAY = MUNICIPIOS.map(({ ciudad, departamento }) => ({
+  ciudad,
+  departamento,
+  city: ciudad,
+  department: departamento
+}));
 var DEPARTAMENTOS_PARAGUAY = [
   "Alto Paraguay",
   "Alto Paran\xE1",
@@ -4190,11 +4221,17 @@ function buscarCiudad(texto, limite = 8) {
     const aInicio = norm(a.ciudad).startsWith(q) ? 0 : 1;
     const bInicio = norm(b.ciudad).startsWith(q) ? 0 : 1;
     return aInicio - bInicio || a.ciudad.localeCompare(b.ciudad, "es");
-  }).slice(0, limite).map(({ ciudad, departamento }) => ({ city: ciudad, department: departamento }));
+  }).slice(0, limite).map(({ ciudad, departamento, city, department }) => ({ ciudad, departamento, city, department }));
 }
 
 // src/components/CityAutocomplete.jsx
 import { jsx as jsx42, jsxs as jsxs31 } from "react/jsx-runtime";
+function ciudadDe(fila) {
+  return fila?.city ?? fila?.ciudad ?? "";
+}
+function departamentoDeFila(fila) {
+  return fila?.department ?? fila?.departamento ?? "";
+}
 function CityAutocomplete({
   value = "",
   onSelect,
@@ -4257,7 +4294,9 @@ function CityAutocomplete({
   }
   function elegir(fila) {
     if (timer.current) clearTimeout(timer.current);
-    onSelect?.(fila.city, fila.department || departamentoDe(fila.city));
+    const ciudad = ciudadDe(fila);
+    const departamento = departamentoDeFila(fila) || departamentoDe(ciudad);
+    onSelect?.(ciudad, departamento);
     setSugerencias([]);
     setAbierto(false);
   }
@@ -4293,11 +4332,11 @@ function CityAutocomplete({
         onMouseDown: (event) => event.preventDefault(),
         onClick: () => elegir(fila),
         children: [
-          /* @__PURE__ */ jsx42("span", { className: "truncate font-medium text-fore", children: fila.city }),
-          /* @__PURE__ */ jsx42("span", { className: "shrink-0 text-xs text-mute", children: fila.department })
+          /* @__PURE__ */ jsx42("span", { className: "truncate font-medium text-fore", children: ciudadDe(fila) }),
+          /* @__PURE__ */ jsx42("span", { className: "shrink-0 text-xs text-mute", children: departamentoDeFila(fila) })
         ]
       }
-    ) }, `${fila.city}-${fila.department}`)) }),
+    ) }, `${ciudadDe(fila)}-${departamentoDeFila(fila)}`)) }),
     error ? /* @__PURE__ */ jsx42("p", { role: "alert", className: "mt-1 text-xs text-bad-text", children: error }) : null
   ] });
 }
@@ -9191,6 +9230,7 @@ export {
   nombreDeDispositivo,
   nombrePartes,
   normalizarBanco,
+  normalizarBusqueda,
   normalizarCategoria,
   normalizarInstagram,
   normalizarMontoInput,
