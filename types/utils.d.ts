@@ -124,14 +124,25 @@ export function errorMonto(value: unknown, max?: number): string
 export function largoMaximoMonto(max?: number, opciones?: { decimales?: boolean }): number
 export function formatoNumero(value: unknown, opciones?: { decimales?: number; vacio?: string }): string
 export function signoDe(value: unknown): '' | '+' | '−'
+/** Máscara del campo de monto (conserva el caret al tipear/pegar). */
+export function normalizarMontoInput(texto: unknown, moneda?: Moneda, opciones?: { integerOnly?: boolean }): string
+export function caretTrasDigitos(display: string, digitos: number): number
 
-/** Opciones de formato: vacío y huso horario (`America/Asuncion`). */
-export type OpcionesFecha = { timeZone?: string; vacio?: string }
+/** Opciones de formato: vacío, huso horario (`America/Asuncion`) y hora aparte. */
+export type OpcionesFecha = { timeZone?: string; vacio?: string; hora?: string }
 export function fechaValida(value: unknown): Date | null
 export function fechaHora(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaDia(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaHoraCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+/** Listas densas: `17 sept 26 · 14:30` (la hora aparte con `{ hora }`). */
+export function fechaLista(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+/** Listas densas sin hora: `17-sept`. */
+export function fechaListaCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+/** Días de calendario hasta la fecha (negativo si ya venció); sin dato, `null`. */
+export function diasHasta(fecha: unknown, opciones?: { hoy?: unknown; timeZone?: string }): number | null
+/** Tono del vencimiento: `bad` vencido, `warn` dentro de `diasAviso`. */
+export function tonoVencimiento(fecha: unknown, opciones?: { hoy?: unknown; diasAviso?: number }): '' | 'bad' | 'warn'
 
 export function imeiValido(valor?: string | null): boolean
 export function separarSeriales(texto?: string, opciones?: { maxLargo?: number }): string[]
@@ -143,6 +154,18 @@ export function serialEnmascarado(serial: string): string
 export function extraerRuc(texto: string): string
 export function esRuc(valor: string): boolean
 export const RUC_RE: RegExp
+
+// Identificación fiscal (cosecha de PagaYa, #1).
+export const PATRON_RUC: RegExp
+export const PATRON_TAX_ID_GENERICO: RegExp
+export const MENSAJE_RUC: string
+export const MENSAJE_RUC_SIN_DATOS: string
+export const MENSAJE_RUC_CONSULTA: string
+export function taxIdValid(value: unknown): boolean
+export function taxIdGenericoValid(value: unknown): boolean
+export function taxIdValidoParaPais(value: unknown, pais?: string): boolean
+export function normalizeTaxId(value: unknown): string | null
+export function limpiarTaxId(value: unknown, max?: number): string
 
 export function extractTokenFromUrl(url: string): string
 export function esToken(valor: string): boolean
@@ -308,6 +331,21 @@ export function paginaDePrueba(opciones?: any): string
 export function paginaDePruebaSimple(opciones?: any): string
 export const TIPOS_PRUEBA: any
 export const TIPOS_TICKET_PRUEBA: any
+
+// ── Ciclo de guardado y overlays (cosecha de ScaleOS) ───────────────────────
+
+export const AVISO_REFRESCO: string
+export function crearEnvioUnico(enviar: (evento?: unknown) => unknown): { readonly enCurso: boolean; ejecutar(evento?: unknown): Promise<unknown> }
+export function completeSave(cerrar?: () => void, refrescar?: () => void | Promise<void>, opciones?: { avisar?: (mensaje: string) => void }): Promise<boolean>
+export function crearPilaCapas(): {
+  agregar(id: symbol): void
+  insertar(id: symbol, indice: number): void
+  quitar(id: symbol): void
+  esSuperior(id: symbol): boolean
+  readonly tamano: number
+  ids(): symbol[]
+}
+export function crearRegistroPendientes(): { registrar(id: symbol, pendiente: boolean): number; readonly bloqueado: boolean; readonly cantidad: number }
 
 // ── Utilidades puntuales ────────────────────────────────────────────────────
 

@@ -141,7 +141,12 @@ opcionales. El integrador decide el número final.
   catálogos, nombres, estados, agenda, abastecimiento e impresión de texto),
   sin React y sin el banner de cliente; `dist/utils.js` +
   `dist/utils.d.ts`. Sirve para server components, route handlers y scripts de
-  Next sin `serverExternalPackages`. `owncoding-ui` sigue igual.
+  Next sin `serverExternalPackages`. `owncoding-ui` sigue igual. Tras integrar
+  la rama `lib`, el subpath también publica su cosecha pura: `fechaLista`/
+  `fechaListaCorta`/`diasHasta`/`tonoVencimiento`,
+  `normalizarMontoInput`/`caretTrasDigitos`, `taxId*` (`PATRON_*`,
+  `taxIdValid`, `normalizeTaxId`…) y `crearEnvioUnico`/`completeSave` +
+  pila de overlays.
 - **Tipos al día con el runtime (cierre de #3):** el `.d.ts` suma
   `VistaPreviaPapel`/`ANCHOS_PAPEL`, `LIMITE_MONTO_ALMACENABLE`,
   `limiteMonto` y `errorMonto`, y `normalizarBusqueda` ahora sale por

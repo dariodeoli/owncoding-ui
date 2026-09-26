@@ -747,6 +747,37 @@ function parseUsdInput(value) {
   if (!/^\d+(\.\d+)?$/.test(normalized)) return "";
   return String(Number(normalized));
 }
+var GRUPO_MILES = /^\d{1,3}([.,])\d{3}(?:\1\d{3})*$/;
+var CONTINUACION_MILES = /^\d{1,3}([.,])\d{3,}(?:\1\d+)*$/;
+function normalizarMontoInput(texto, moneda = "PYG", { integerOnly = false } = {}) {
+  const bruto = String(texto ?? "").replace(/[^0-9.,]/g, "");
+  if (!bruto) return "";
+  if (GRUPO_MILES.test(bruto)) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+  if (moneda === "PYG" || integerOnly) return enteroDeMonto(bruto);
+  let display = bruto;
+  if (bruto.lastIndexOf(".") > bruto.lastIndexOf(",") && /\.\d{0,2}$/.test(bruto)) {
+    const punto = bruto.lastIndexOf(".");
+    display = bruto.slice(0, punto).replace(/[.,]/g, "") + "," + bruto.slice(punto + 1);
+  }
+  const [entero = "", decimales] = display.replace(/[^0-9,]/g, "").split(",");
+  const limpio = entero.replace(/^0+(?=\d)/, "");
+  return decimales !== void 0 ? `${limpio || "0"}.${decimales.slice(0, 2)}` : limpio;
+}
+function enteroDeMonto(bruto) {
+  if (CONTINUACION_MILES.test(bruto)) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+  const ultimo = Math.max(bruto.lastIndexOf("."), bruto.lastIndexOf(","));
+  if (ultimo < 0) return bruto.replace(/\D/g, "").replace(/^0+(?=\d)/, "");
+  return enteroDeMonto(bruto.slice(0, ultimo));
+}
+function caretTrasDigitos(display, digitos) {
+  if (digitos <= 0) return 0;
+  let vistos = 0;
+  for (let indice = 0; indice < display.length; indice += 1) {
+    if (/\d/.test(display[indice])) vistos += 1;
+    if (vistos === digitos) return indice + 1;
+  }
+  return display.length;
+}
 function formatUsd(value) {
   const amount = Number(value);
   return `USD ${USD_FORMATTER.format(Number.isFinite(amount) ? amount : 0)}`;
@@ -838,8 +869,8 @@ function fechaValida(value) {
   return Number.isNaN(fecha.getTime()) ? null : fecha;
 }
 function opcionesDe(vacio, opciones) {
-  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio, timeZone: vacio.timeZone };
-  return { vacio, timeZone: opciones?.timeZone };
+  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio, timeZone: vacio.timeZone, hora: vacio.hora };
+  return { vacio, timeZone: opciones?.timeZone, hora: opciones?.hora };
 }
 function formateador(formato, timeZone) {
   return new Intl.DateTimeFormat(ES_PY, timeZone ? { ...formato, timeZone } : formato);
@@ -873,6 +904,51 @@ function fechaCorta(value, vacio = "\u2014", opciones) {
   const parteDia = formateador({ day: "2-digit", month: "short" }, zona).format(fecha);
   const parteHora = formateador({ hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, zona).format(fecha);
   return `${parteDia} \xB7 ${parteHora}`;
+}
+function fechaLista(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, timeZone, hora } = opcionesDe(vacio, opciones);
+  const vacioReal = vacioFinal ?? "\u2014";
+  const dia = diaDeCalendario(value);
+  const fecha = dia || fechaValida(value);
+  if (!fecha) return vacioReal;
+  const zona = dia ? "UTC" : timeZone;
+  const parteDia = formateador({ day: "2-digit", month: "short", year: "2-digit" }, zona).format(fecha).replace(/\./g, "");
+  const reloj = String(
+    hora ?? (dia ? "" : formateador({ hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, zona).format(fecha))
+  ).slice(0, 5);
+  return reloj ? `${parteDia} \xB7 ${reloj}` : parteDia;
+}
+function fechaListaCorta(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
+  const vacioReal = vacioFinal ?? "\u2014";
+  const dia = diaDeCalendario(value);
+  const fecha = dia || fechaValida(value);
+  if (!fecha) return vacioReal;
+  return formateador({ day: "2-digit", month: "short" }, dia ? "UTC" : timeZone).format(fecha).replace(/\./g, "").replace(/\s+/g, "-");
+}
+function claveDeDia(fecha, timeZone) {
+  const dia = diaDeCalendario(fecha);
+  if (dia) return dia.toISOString().slice(0, 10);
+  const instante = fechaValida(fecha);
+  if (!instante) return null;
+  if (timeZone) {
+    return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(instante);
+  }
+  const mes = String(instante.getMonth() + 1).padStart(2, "0");
+  const diaMes = String(instante.getDate()).padStart(2, "0");
+  return `${instante.getFullYear()}-${mes}-${diaMes}`;
+}
+function diasHasta(fecha, { hoy = /* @__PURE__ */ new Date(), timeZone } = {}) {
+  const objetivo = claveDeDia(fecha, timeZone);
+  const base = claveDeDia(hoy, timeZone);
+  if (!objetivo || !base) return null;
+  return Math.round((Date.parse(`${objetivo}T00:00:00Z`) - Date.parse(`${base}T00:00:00Z`)) / 864e5);
+}
+function tonoVencimiento(fecha, { hoy, diasAviso = 7 } = {}) {
+  const dias = diasHasta(fecha, { hoy });
+  if (dias === null) return "";
+  if (dias < 0) return "bad";
+  return dias <= diasAviso ? "warn" : "";
 }
 
 // src/utils/serial.js
@@ -947,6 +1023,30 @@ function extraerRuc(texto) {
 }
 function esRuc(valor) {
   return RUC_RE.test(String(valor || "").trim());
+}
+
+// src/utils/taxId.js
+var PATRON_RUC = /^\d{5,8}(-\d)?$/;
+var PATRON_TAX_ID_GENERICO = /^[\p{L}\p{N}./-]{3,32}$/u;
+var MENSAJE_RUC = "RUC inv\xE1lido: us\xE1 5 a 8 d\xEDgitos, con o sin d\xEDgito verificador (ej: 80012345-6).";
+var MENSAJE_RUC_SIN_DATOS = "No encontramos la raz\xF3n social de este RUC.";
+var MENSAJE_RUC_CONSULTA = "No pudimos consultar el RUC. Intent\xE1 nuevamente.";
+function taxIdValid(value) {
+  return PATRON_RUC.test(String(value ?? "").trim());
+}
+function taxIdGenericoValid(value) {
+  return PATRON_TAX_ID_GENERICO.test(String(value ?? "").trim());
+}
+function taxIdValidoParaPais(value, pais = "PY") {
+  return String(pais).trim().toUpperCase() === "PY" ? taxIdValid(value) : taxIdGenericoValid(value);
+}
+function normalizeTaxId(value) {
+  if (typeof value !== "string") return null;
+  const taxId = value.replace(/[.\s]/g, "").trim();
+  return taxId || null;
+}
+function limpiarTaxId(value, max = 32) {
+  return String(value ?? "").replace(/[^\p{L}\p{N}./-]/gu, "").slice(0, max);
 }
 
 // src/utils/token.js
@@ -1045,31 +1145,33 @@ var MENSAJE_TELEFONO = "Tel\xE9fono inv\xE1lido. Para Paraguay us\xE1 un m\xF3vi
 
 // src/utils/tonos.js
 var TONOS = {
+  // El texto va por la familia `*-text` (#5): el tono base queda para el
+  // relleno/punto/borde y el par de texto sostiene AA sobre el tinte.
   punto: {
-    ok: "bg-ok/15 text-ok",
-    warn: "bg-warn/15 text-warn",
-    bad: "bg-bad/15 text-bad",
+    ok: "bg-ok/15 text-ok-text",
+    warn: "bg-warn/15 text-warn-text",
+    bad: "bg-bad/15 text-bad-text",
     mute: "bg-ink-700 text-mute",
-    info: "bg-info/15 text-info",
-    pass: "bg-pass/15 text-pass",
-    fono: "bg-fono/15 text-fono-light"
+    info: "bg-info/15 text-info-text",
+    pass: "bg-pass/15 text-pass-text",
+    fono: "bg-fono/15 text-fono-text"
   },
   chip: {
-    ok: "border-ok/30 bg-ok/10 text-ok",
-    warn: "border-warn/30 bg-warn/10 text-warn",
-    bad: "border-bad/30 bg-bad/10 text-bad",
+    ok: "border-ok/30 bg-ok/10 text-ok-text",
+    warn: "border-warn/30 bg-warn/10 text-warn-text",
+    bad: "border-bad/30 bg-bad/10 text-bad-text",
     mute: "border-ink-600 bg-ink-800/40 text-mute",
-    info: "border-info/30 bg-info/10 text-info",
-    pass: "border-pass/30 bg-pass/10 text-pass",
-    fono: "border-fono/30 bg-fono/10 text-fono-light"
+    info: "border-info/30 bg-info/10 text-info-text",
+    pass: "border-pass/30 bg-pass/10 text-pass-text",
+    fono: "border-fono/30 bg-fono/10 text-fono-text"
   },
   texto: {
-    ok: "text-ok",
-    warn: "text-warn",
-    bad: "text-bad",
+    ok: "text-ok-text",
+    warn: "text-warn-text",
+    bad: "text-bad-text",
     mute: "text-mute",
-    info: "text-info",
-    pass: "text-pass",
+    info: "text-info-text",
+    pass: "text-pass-text",
     fono: "text-fono-light"
   }
 };
@@ -1210,12 +1312,12 @@ var etiquetaDeCategoria = (texto) => normalizarCategoria(texto).etiqueta;
 
 // src/utils/avatar.js
 var COLORES_AVATAR = {
-  fono: "bg-fono/15 text-fono-light",
-  ok: "bg-ok/15 text-ok",
-  info: "bg-info/15 text-info",
-  warn: "bg-warn/15 text-warn",
-  bad: "bg-bad/15 text-bad",
-  pass: "bg-pass/15 text-pass",
+  fono: "bg-fono/15 text-fono-text",
+  ok: "bg-ok/15 text-ok-text",
+  info: "bg-info/15 text-info-text",
+  warn: "bg-warn/15 text-warn-text",
+  bad: "bg-bad/15 text-bad-text",
+  pass: "bg-pass/15 text-pass-text",
   reserved: "bg-reserved/15 text-reserved",
   mute: "bg-ink-600 text-mute"
 };
@@ -2088,6 +2190,79 @@ function paginaDePruebaSimple(opciones = {}) {
   return paginaDePrueba({ ...opciones, tipo: "caracteres" });
 }
 
+// src/utils/guardado.js
+var AVISO_REFRESCO = "Se guard\xF3 correctamente, pero no se pudo actualizar la lista. Recarg\xE1 la p\xE1gina para ver los cambios; no hace falta guardar otra vez.";
+function crearEnvioUnico(enviar) {
+  let enCurso = false;
+  return {
+    get enCurso() {
+      return enCurso;
+    },
+    async ejecutar(evento) {
+      if (enCurso) return void 0;
+      enCurso = true;
+      try {
+        return await enviar(evento);
+      } finally {
+        enCurso = false;
+      }
+    }
+  };
+}
+async function completeSave(cerrar, refrescar, { avisar } = {}) {
+  cerrar?.();
+  try {
+    await refrescar?.();
+    return true;
+  } catch {
+    avisar?.(AVISO_REFRESCO);
+    return false;
+  }
+}
+
+// src/utils/pilaOverlays.js
+function crearPilaCapas() {
+  const capas = [];
+  return {
+    agregar(id) {
+      if (!capas.includes(id)) capas.push(id);
+    },
+    insertar(id, indice) {
+      if (capas.includes(id)) return;
+      capas.splice(Math.max(0, Math.min(indice, capas.length)), 0, id);
+    },
+    quitar(id) {
+      const indice = capas.indexOf(id);
+      if (indice >= 0) capas.splice(indice, 1);
+    },
+    esSuperior(id) {
+      return capas[capas.length - 1] === id;
+    },
+    get tamano() {
+      return capas.length;
+    },
+    ids() {
+      return [...capas];
+    }
+  };
+}
+function crearRegistroPendientes() {
+  const pendientes = /* @__PURE__ */ new Set();
+  return {
+    registrar(id, pendiente) {
+      if (pendiente) pendientes.add(id);
+      else pendientes.delete(id);
+      return pendientes.size;
+    },
+    get bloqueado() {
+      return pendientes.size > 0;
+    },
+    get cantidad() {
+      return pendientes.size;
+    }
+  };
+}
+
 // src/utils/qr.js
 var QR_OPCIONES = { nivel: "M", margen: 1, ancho: 220 };
 async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES.nivel, margen = QR_OPCIONES.margen } = {}) {
@@ -2102,6 +2277,7 @@ async function qrDataUrl(valor, { ancho = QR_OPCIONES.ancho, nivel = QR_OPCIONES
 }
 export {
   AVANCES_FIRMA,
+  AVISO_REFRESCO,
   BANCOS_PARAGUAY,
   CAMPOS_DISPOSITIVO,
   CAPACIDADES_IPHONE,
@@ -2148,12 +2324,17 @@ export {
   LOCKS_DISPOSITIVO,
   LOGOS_BANCOS,
   MARCAS_ACCESORIOS,
+  MENSAJE_RUC,
+  MENSAJE_RUC_CONSULTA,
+  MENSAJE_RUC_SIN_DATOS,
   MENSAJE_TELEFONO,
   METODOS_ENVIO,
   MODELOS_IPHONE,
   ORIGENES_NECESIDAD,
   PASOS_ENVIO,
   PASOS_NECESIDAD,
+  PATRON_RUC,
+  PATRON_TAX_ID_GENERICO,
   PERFILES_DISPOSITIVO,
   PERIODOS_FECHA,
   PIE_ACCIONES,
@@ -2183,6 +2364,7 @@ export {
   buscarCiudad,
   buscarDispositivo,
   buscarEnCatalogo,
+  caretTrasDigitos,
   categoriaDe,
   chipDeTono,
   claveColorDeNombre,
@@ -2203,11 +2385,16 @@ export {
   colorDeTono,
   colorTrabajo,
   columnasDeAncho,
+  completeSave,
   componerTelefono,
   conexionDeDestino,
+  crearEnvioUnico,
+  crearPilaCapas,
+  crearRegistroPendientes,
   crearTicket,
   departamentoDe,
   destinoDeConexion,
+  diasHasta,
   envolver,
   errorMonto,
   esApellidosPrimero,
@@ -2249,6 +2436,8 @@ export {
   fechaDia,
   fechaHora,
   fechaHoraCorta,
+  fechaLista,
+  fechaListaCorta,
   fechaValida,
   formatGs,
   formatGsInput,
@@ -2270,6 +2459,7 @@ export {
   largoMaximoMonto,
   limiteMonto,
   limpiarDependientes,
+  limpiarTaxId,
   logoDeBanco,
   metodoEnvio,
   mismoMes,
@@ -2283,9 +2473,11 @@ export {
   normalizarBanco,
   normalizarBusqueda,
   normalizarCategoria,
+  normalizarMontoInput,
   normalizarNombre,
   normalizarSeriales,
   normalizarTelefono,
+  normalizeTaxId,
   opcionesDependiente,
   ordenDePrioridad,
   ordenarPorPrioridad,
@@ -2314,6 +2506,9 @@ export {
   sugerenciasDeBanco,
   sumarDias,
   sumarMeses,
+  taxIdGenericoValid,
+  taxIdValid,
+  taxIdValidoParaPais,
   telefonoValido,
   telefonoVisible,
   textoDeTono,
@@ -2327,6 +2522,7 @@ export {
   tonoPrioridad,
   tonoRecepcion,
   tonoRevision,
+  tonoVencimiento,
   ultimos4,
   whatsappUrl
 };

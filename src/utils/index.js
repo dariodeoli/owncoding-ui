@@ -75,10 +75,34 @@ export {
   SIMBOLOS_MONEDA,
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
+  normalizarMontoInput,
+  caretTrasDigitos,
 } from './moneda.js'
-export { fechaValida, fechaHora, fechaDia, fechaHoraCorta, fechaCorta } from './fecha.js'
+export {
+  fechaValida,
+  fechaHora,
+  fechaDia,
+  fechaHoraCorta,
+  fechaCorta,
+  fechaLista,
+  fechaListaCorta,
+  diasHasta,
+  tonoVencimiento,
+} from './fecha.js'
 export { imeiValido, separarSeriales, normalizarSeriales, ultimos4, partirSerial, serialEnmascarado } from './serial.js'
 export { RUC_RE, extraerRuc, esRuc } from './ruc.js'
+export {
+  PATRON_RUC,
+  PATRON_TAX_ID_GENERICO,
+  MENSAJE_RUC,
+  MENSAJE_RUC_SIN_DATOS,
+  MENSAJE_RUC_CONSULTA,
+  taxIdValid,
+  taxIdGenericoValid,
+  taxIdValidoParaPais,
+  normalizeTaxId,
+  limpiarTaxId,
+} from './taxId.js'
 export { extractTokenFromUrl, esToken } from './token.js'
 export {
   CODIGOS_PAIS,
@@ -201,6 +225,10 @@ export {
 } from '../printing/estadoImpresoras.js'
 export { crearTicket, columnasDeAncho, envolver, repartirLinea, bloqueFirma, AVANCES_FIRMA, VARIANTES_CORTE } from '../printing/escpos.js'
 export { paginaDePrueba, paginaDePruebaSimple, TIPOS_PRUEBA, TIPOS_TICKET_PRUEBA } from '../printing/prueba.js'
+
+// ── Ciclo de guardado y overlays (cosecha de ScaleOS) ───────────────────────
+export { AVISO_REFRESCO, crearEnvioUnico, completeSave } from './guardado.js'
+export { crearPilaCapas, crearRegistroPendientes } from './pilaOverlays.js'
 
 // ── Utilidades puntuales ────────────────────────────────────────────────────
 export { QR_OPCIONES, qrDataUrl } from './qr.js'
