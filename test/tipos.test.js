@@ -49,6 +49,9 @@ describe('tipos publicados (.d.ts)', () => {
       'SectionState', 'useDialogFocusTrap',
       // Cosecha de ScaleOS (#2)
       'useSingleFlightSubmit', 'completeSave', 'crearEnvioUnico', 'AVISO_REFRESCO',
+      'normalizarMontoInput', 'caretTrasDigitos', 'FormActions', 'SaveActions',
+      'useDialogPending', 'crearPilaCapas', 'fechaLista', 'fechaListaCorta',
+      'diasHasta', 'tonoVencimiento',
     ]) {
       expect(exporta(nombre), `falta el tipo de ${nombre}`).toBe(true)
     }

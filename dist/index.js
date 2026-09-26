@@ -2613,7 +2613,12 @@ function esRuc(valor) {
 
 // src/components/SerialTexto.jsx
 import { jsx as jsx22, jsxs as jsxs15 } from "react/jsx-runtime";
-function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u2014" }) {
+function SerialTexto({ serial, className, tonoCola = "text-fore", vacio = "\u2014", enmascarar = false }) {
+  if (enmascarar) {
+    const mascara = serialEnmascarado(serial);
+    if (!mascara) return /* @__PURE__ */ jsx22("span", { className: cn("font-mono", className), children: vacio });
+    return /* @__PURE__ */ jsx22("span", { className: cn("font-mono", className), title: String(serial), children: mascara });
+  }
   const { cabeza, cola } = partirSerial(serial);
   if (!cola) return /* @__PURE__ */ jsx22("span", { className: cn("font-mono", className), children: vacio });
   return /* @__PURE__ */ jsxs15("span", { className: cn("flex min-w-0 font-mono", className), title: String(serial), children: [
@@ -4869,8 +4874,8 @@ function fechaValida(value) {
   return Number.isNaN(fecha.getTime()) ? null : fecha;
 }
 function opcionesDe(vacio, opciones) {
-  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio, timeZone: vacio.timeZone };
-  return { vacio, timeZone: opciones?.timeZone };
+  if (vacio && typeof vacio === "object") return { vacio: vacio.vacio, timeZone: vacio.timeZone, hora: vacio.hora };
+  return { vacio, timeZone: opciones?.timeZone, hora: opciones?.hora };
 }
 function formateador(formato, timeZone) {
   return new Intl.DateTimeFormat(ES_PY, timeZone ? { ...formato, timeZone } : formato);
@@ -4905,17 +4910,65 @@ function fechaCorta(value, vacio = "\u2014", opciones) {
   const parteHora = formateador({ hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, zona).format(fecha);
   return `${parteDia} \xB7 ${parteHora}`;
 }
+function fechaLista(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, timeZone, hora } = opcionesDe(vacio, opciones);
+  const vacioReal = vacioFinal ?? "\u2014";
+  const dia = diaDeCalendario(value);
+  const fecha = dia || fechaValida(value);
+  if (!fecha) return vacioReal;
+  const zona = dia ? "UTC" : timeZone;
+  const parteDia = formateador({ day: "2-digit", month: "short", year: "2-digit" }, zona).format(fecha).replace(/\./g, "");
+  const reloj = String(
+    hora ?? (dia ? "" : formateador({ hour: "2-digit", minute: "2-digit", ...OPCIONES_HORA }, zona).format(fecha))
+  ).slice(0, 5);
+  return reloj ? `${parteDia} \xB7 ${reloj}` : parteDia;
+}
+function fechaListaCorta(value, vacio = "\u2014", opciones) {
+  const { vacio: vacioFinal, timeZone } = opcionesDe(vacio, opciones);
+  const vacioReal = vacioFinal ?? "\u2014";
+  const dia = diaDeCalendario(value);
+  const fecha = dia || fechaValida(value);
+  if (!fecha) return vacioReal;
+  return formateador({ day: "2-digit", month: "short" }, dia ? "UTC" : timeZone).format(fecha).replace(/\./g, "").replace(/\s+/g, "-");
+}
+function claveDeDia(fecha, timeZone) {
+  const dia = diaDeCalendario(fecha);
+  if (dia) return dia.toISOString().slice(0, 10);
+  const instante = fechaValida(fecha);
+  if (!instante) return null;
+  if (timeZone) {
+    return new Intl.DateTimeFormat("en-CA", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).format(instante);
+  }
+  const mes = String(instante.getMonth() + 1).padStart(2, "0");
+  const diaMes = String(instante.getDate()).padStart(2, "0");
+  return `${instante.getFullYear()}-${mes}-${diaMes}`;
+}
+function diasHasta(fecha, { hoy = /* @__PURE__ */ new Date(), timeZone } = {}) {
+  const objetivo = claveDeDia(fecha, timeZone);
+  const base = claveDeDia(hoy, timeZone);
+  if (!objetivo || !base) return null;
+  return Math.round((Date.parse(`${objetivo}T00:00:00Z`) - Date.parse(`${base}T00:00:00Z`)) / 864e5);
+}
+function tonoVencimiento(fecha, { hoy, diasAviso = 7 } = {}) {
+  const dias = diasHasta(fecha, { hoy });
+  if (dias === null) return "";
+  if (dias < 0) return "bad";
+  return dias <= diasAviso ? "warn" : "";
+}
 
 // src/components/Vencimiento.jsx
 import { jsx as jsx54 } from "react/jsx-runtime";
+var SOLO_DIA2 = /^\d{4}-\d{2}-\d{2}$/;
 function estadoVencimiento(fecha, { hoy = /* @__PURE__ */ new Date(), diasAviso = 7 } = {}) {
-  const vence = fecha ? new Date(fecha) : null;
-  if (!vence || Number.isNaN(vence.getTime())) return { texto: "\u2014", tono: "mute", vencido: false, dias: null, titulo: "Sin vencimiento cargado" };
+  const vence = fechaValida(fecha);
+  if (!vence) return { texto: "\u2014", tono: "mute", vencido: false, dias: null, titulo: "Sin vencimiento cargado" };
+  const dias = diasHasta(fecha, { hoy });
+  const tono = tonoVencimiento(fecha, { hoy, diasAviso }) || "mute";
   const titulo2 = `Vence el ${vence.toLocaleDateString("es-PY")}`;
-  const dias = Math.ceil((vence.getTime() - hoy.getTime()) / 864e5);
   if (dias < 0) return { texto: "venci\xF3", tono: "bad", vencido: true, dias, titulo: titulo2 };
-  if (dias <= diasAviso) return { texto: `en ${dias} d`, tono: "warn", vencido: false, dias, titulo: titulo2 };
-  return { texto: fechaCorta(vence), tono: "mute", vencido: false, dias, titulo: titulo2 };
+  if (dias <= diasAviso) return { texto: dias === 0 ? "hoy" : `en ${dias} d`, tono: "warn", vencido: false, dias, titulo: titulo2 };
+  const pura = typeof fecha === "string" && SOLO_DIA2.test(fecha.trim());
+  return { texto: pura ? fechaDia(fecha) : fechaCorta(vence), tono: "mute", vencido: false, dias, titulo: titulo2 };
 }
 var CLASES = {
   bad: "text-bad-text",
@@ -9054,6 +9107,7 @@ export {
   destinoDeConexion,
   destinoDeTab,
   destinosDeTarjeta,
+  diasHasta,
   envolver,
   errorMonto,
   esApellidosPrimero,
@@ -9098,6 +9152,8 @@ export {
   fechaDia,
   fechaHora,
   fechaHoraCorta,
+  fechaLista,
+  fechaListaCorta,
   fechaValida,
   formatGs,
   formatGsInput,
@@ -9194,6 +9250,7 @@ export {
   tonoPrioridad,
   tonoRecepcion,
   tonoRevision,
+  tonoVencimiento,
   ultimos4,
   useDialogClose,
   useDialogFocusTrap,

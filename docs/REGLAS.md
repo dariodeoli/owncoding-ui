@@ -217,6 +217,15 @@ compatibilidad).
 - Un solo lugar para cada formato: `moneda.js` (`formatGs`, `formatUsd`,
   `montoGs`/`montoUsd`/`montoTexto`), `fecha.js` (24 h, vacío explícito,
   nunca “Invalid Date”), `telefono.js` (`whatsappUrl` arma el único enlace).
+- Listas densas (#2): `fechaLista` (`17 sept 26 · 14:30`, con la hora aparte
+  en `{ hora }`) y `fechaListaCorta` (`17-sept`), con la zona de la app
+  (`{ timeZone: 'America/Asuncion' }`); un día puro se formatea en UTC y no se
+  corre de fecha. El vencimiento se mide por día de calendario con `diasHasta`
+  y su tono sale de `tonoVencimiento` (`bad` vencido, `warn` dentro de
+  `diasAviso`) — el mismo cálculo que usa `Vencimiento`/`estadoVencimiento`.
+- Seriales en listas y fichas (#2): `SerialTexto` mantiene la cola siempre
+  visible y con `enmascarar` deja solo `••••4821` donde el serial completo no
+  aporta (el valor completo queda en el `title`).
 - **Símbolo del guaraní configurable:** el default es `Gs 1.234.567` (sin
   punto); la app que escribe distinto pasa `{ simbolo: 'Gs.' }` (o `'₲'`) por
   llamada a `formatGs`/`montoTexto`/`Money`/`CeldaMoneda`/`MoneyInput`

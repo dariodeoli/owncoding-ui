@@ -1,20 +1,24 @@
-import { fechaCorta } from '../utils/fecha.js'
+import { diasHasta, fechaCorta, fechaDia, fechaValida, tonoVencimiento } from '../utils/fecha.js'
 import { cn } from '../utils/cn.js'
 
-// Semáforo de un vencimiento (#240/#250): dice «venció», «en 3 d» o la fecha,
-// con el tono según la urgencia. Portable: la fecha entra por prop (o por
+// Semáforo de un vencimiento (#240/#250): dice «venció», «hoy», «en 3 d» o la
+// fecha, con el tono según la urgencia. Portable: la fecha entra por prop (o por
 // `estadoVencimiento`) y el vacío es explícito.
 //
 //   <Vencimiento fecha={garantia.expiresAt} />         // texto con tono
 //   <Vencimiento fecha={cuota.vence} variante="chip" />
+const SOLO_DIA = /^\d{4}-\d{2}-\d{2}$/
+
 export function estadoVencimiento(fecha, { hoy = new Date(), diasAviso = 7 } = {}) {
-  const vence = fecha ? new Date(fecha) : null
-  if (!vence || Number.isNaN(vence.getTime())) return { texto: '—', tono: 'mute', vencido: false, dias: null, titulo: 'Sin vencimiento cargado' }
+  const vence = fechaValida(fecha)
+  if (!vence) return { texto: '—', tono: 'mute', vencido: false, dias: null, titulo: 'Sin vencimiento cargado' }
+  const dias = diasHasta(fecha, { hoy })
+  const tono = tonoVencimiento(fecha, { hoy, diasAviso }) || 'mute'
   const titulo = `Vence el ${vence.toLocaleDateString('es-PY')}`
-  const dias = Math.ceil((vence.getTime() - hoy.getTime()) / 86400000)
   if (dias < 0) return { texto: 'venció', tono: 'bad', vencido: true, dias, titulo }
-  if (dias <= diasAviso) return { texto: `en ${dias} d`, tono: 'warn', vencido: false, dias, titulo }
-  return { texto: fechaCorta(vence), tono: 'mute', vencido: false, dias, titulo }
+  if (dias <= diasAviso) return { texto: dias === 0 ? 'hoy' : `en ${dias} d`, tono: 'warn', vencido: false, dias, titulo }
+  const pura = typeof fecha === 'string' && SOLO_DIA.test(fecha.trim())
+  return { texto: pura ? fechaDia(fecha) : fechaCorta(vence), tono: 'mute', vencido: false, dias, titulo }
 }
 
 const CLASES = {

@@ -377,7 +377,7 @@ export {
   LIMITE_MONTO_GENERAL,
   LIMITE_MONTO_VENTAS,
 } from './utils/moneda.js'
-export { fechaValida, fechaHora, fechaDia, fechaHoraCorta, fechaCorta } from './utils/fecha.js'
+export { fechaValida, fechaHora, fechaDia, fechaHoraCorta, fechaCorta, fechaLista, fechaListaCorta, diasHasta, tonoVencimiento } from './utils/fecha.js'
 export { ultimos4, partirSerial, serialEnmascarado } from './utils/serial.js'
 export { extractTokenFromUrl, esToken } from './utils/token.js'
 export {

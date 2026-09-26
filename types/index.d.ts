@@ -271,7 +271,7 @@ export function RucField(props: Record<string, any> & {
 export function extraerRuc(texto: string): string
 export function esRuc(valor: string): boolean
 export const RUC_RE: RegExp
-export function SerialTexto(props: { serial?: string; className?: string; tonoCola?: string; vacio?: string }): ReactElement
+export function SerialTexto(props: { serial?: string; className?: string; tonoCola?: string; vacio?: string; enmascarar?: boolean }): ReactElement
 export function imeiValido(valor?: string | null): boolean
 export function separarSeriales(texto?: string, opciones?: { maxLargo?: number }): string[]
 export function normalizarSeriales(texto?: string, opciones?: { validar?: (serial: string) => boolean; limite?: number; maxLargo?: number }): { seriales: string[]; repetidos: string[]; invalidos: string[] }
@@ -945,12 +945,16 @@ export function signoDe(value: unknown): '' | '+' | '−'
 // ── Fechas ─────────────────────────────────────────────────────────────────
 
 /** Opciones de formato: vacío y huso horario (`America/Asuncion`). */
-export type OpcionesFecha = { timeZone?: string; vacio?: string }
+export type OpcionesFecha = { timeZone?: string; vacio?: string; hora?: string }
 export function fechaValida(value: unknown): Date | null
 export function fechaHora(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaDia(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaHoraCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
 export function fechaCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+export function fechaLista(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+export function fechaListaCorta(value: unknown, vacio?: string | OpcionesFecha, opciones?: OpcionesFecha): string
+export function diasHasta(fecha: unknown, opciones?: { hoy?: unknown; timeZone?: string }): number | null
+export function tonoVencimiento(fecha: unknown, opciones?: { hoy?: unknown; diasAviso?: number }): '' | 'bad' | 'warn'
 
 // ── Seriales, tokens y teléfono ────────────────────────────────────────────
 

@@ -29,6 +29,12 @@ versión ni tag. Reglas en `docs/REGLAS.md`.
   `FormActions`/`SaveActions` montan el pie fuera del scroll asociado al
   `<form>` real (`form={id}`), con el cancelar deshabilitado mientras guarda.
   `Modal`/`Drawer` suman `busy`; `ConfirmDialog` lo pasa al modal.
+- **Serial y fechas (#2):** `fechaLista` (`17 sept 26 · 14:30`, hora aparte
+  con `{ hora }`) y `fechaListaCorta` (`17-sept`) para las columnas densas, con
+  la zona de la app y h23; `diasHasta` y `tonoVencimiento` miden el vencimiento
+  por día de calendario (el `dueTone` de ScaleOS, ahora el mismo cálculo de
+  `Vencimiento`); `SerialTexto` suma `enmascarar` (`••••4821` con el serial
+  completo en el `title`).
 
 ## Sin publicar — contraste de chips y borde interactivo (#5)
 
