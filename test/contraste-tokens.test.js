@@ -21,7 +21,9 @@ function bloqueDe(apertura) {
     let fin = inicio
     while (fin < lineas.length && !lineas[fin].includes('}')) fin++
     const bloque = lineas.slice(inicio, fin + 1).join('\n')
-    if (bloque.includes('--c-')) return bloque
+    // Solo cuenta como bloque de paleta si *define* tokens de color; las
+    // referencias `rgb(var(--c-…))` (p. ej. dentro del sistema --ds-*) no.
+    if (/--c-[\w-]+:\s*[\d]+\s+[\d]+\s+[\d]+/.test(bloque)) return bloque
   }
   throw new Error(`falta el bloque de tokens que abre con ${apertura}`)
 }

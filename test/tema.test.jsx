@@ -16,8 +16,8 @@ describe('ThemeToggle', () => {
     expect(html).toContain('aria-label="Cambiar a modo oscuro"')
     expect(html).toContain('title="Cambiar a modo oscuro"')
     expect(html).toContain('aria-pressed="false"')
-    expect(html).toContain('M21 12.8A9 9 0 1 1 11.2 3') // luna: la acción es ir a oscuro
-    expect(html).not.toContain('M12 16a4 4 0 1 0 0-8')
+    expect(html).toContain('M20 14.6A8.6 8.6 0 0 1 9.4 4') // luna: la acción es ir a oscuro
+    expect(html).not.toContain('M16 12a4 4 0 1 1-8 0')
   })
 
   test('las etiquetas se configuran por prop', () => {
@@ -34,8 +34,8 @@ describe('ThemeToggle', () => {
   })
 
   test('los iconos de tema viven en Icon', () => {
-    expect(renderToStaticMarkup(<Icon name="sun" />)).toContain('M12 16a4 4 0 1 0 0-8')
-    expect(renderToStaticMarkup(<Icon name="moon" />)).toContain('M21 12.8A9 9 0 1 1 11.2 3')
+    expect(renderToStaticMarkup(<Icon name="sun" />)).toContain('M16 12a4 4 0 1 1-8 0')
+    expect(renderToStaticMarkup(<Icon name="moon" />)).toContain('M20 14.6A8.6 8.6 0 0 1 9.4 4')
   })
 
   test('la API exportada y la regla documentada', () => {
