@@ -350,6 +350,7 @@ export {
   CATEGORIAS_ACCESORIOS,
   MARCAS_ACCESORIOS,
   buscarEnCatalogo,
+  normalizarBusqueda,
 } from './catalog/productos.js'
 export {
   formatGs,

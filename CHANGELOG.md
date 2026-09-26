@@ -136,6 +136,12 @@ opcionales. El integrador decide el número final.
     `buscar` propio con las claves en español o en inglés.
   - El `.d.ts` publica `CiudadParaguay` (fila bilingüe) y `departamentoDe`
     devuelve `string` (nunca `null`): se acaban los shims de las apps.
+- **Entrada de utils sin `"use client"` (#4):** nuevo subpath
+  **`owncoding-ui/utils`** con toda la lógica pura (dinero, fechas, teléfono,
+  catálogos, nombres, estados, agenda, abastecimiento e impresión de texto),
+  sin React y sin el banner de cliente; `dist/utils.js` +
+  `dist/utils.d.ts`. Sirve para server components, route handlers y scripts de
+  Next sin `serverExternalPackages`. `owncoding-ui` sigue igual.
 
 ## v0.38.0 — 2026-09-26
 

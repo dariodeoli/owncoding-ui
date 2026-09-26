@@ -8620,6 +8620,7 @@ export {
   nombreDeDispositivo,
   nombrePartes,
   normalizarBanco,
+  normalizarBusqueda,
   normalizarCategoria,
   normalizarInstagram,
   normalizarNombre,

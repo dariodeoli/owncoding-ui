@@ -1,13 +1,12 @@
-// Build del paquete: un solo bundle ESM (`dist/index.js`), los tipos
-// declarados y las tres hojas CSS (`styles.css` = tokens + base, `tokens.css`
-// sola y `base.css` sola). Sin TypeScript: los `.d.ts` se escriben a mano en
-// `types/` y se copian tal cual al `dist/` publicado.
+// Build del paquete: el bundle principal (`dist/index.js`, con el banner
+// `"use client"`), la entrada pura para servidor (`dist/utils.js`, sin banner
+// ni React), los tipos declarados y las tres hojas CSS (`styles.css` = tokens +
+// base, `tokens.css` sola y `base.css` sola). Sin TypeScript: los `.d.ts` se
+// escriben a mano en `types/` y se copian tal cual al `dist/` publicado.
 import { build } from 'esbuild'
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 
-await build({
-  entryPoints: ['src/index.js'],
-  outfile: 'dist/index.js',
+const opciones = {
   bundle: true,
   format: 'esm',
   target: 'es2020',
@@ -15,8 +14,22 @@ await build({
   jsx: 'automatic',
   sourcemap: true,
   external: ['react', 'react-dom', 'clsx', 'tailwind-merge', 'qrcode'],
-  banner: { js: '"use client"' },
   logLevel: 'info',
+}
+
+await build({
+  ...opciones,
+  entryPoints: ['src/index.js'],
+  outfile: 'dist/index.js',
+  banner: { js: '"use client"' },
+})
+
+// Subpath `owncoding-ui/utils`: la misma lógica pura, sin el banner de cliente
+// (Next puede importarla desde el servidor sin `serverExternalPackages`).
+await build({
+  ...opciones,
+  entryPoints: ['src/utils/index.js'],
+  outfile: 'dist/utils.js',
 })
 
 mkdirSync('dist', { recursive: true })
@@ -28,4 +41,5 @@ copyFileSync('src/styles/base.css', 'dist/base.css')
 // concatenando, así ninguna herramienta tiene que resolver `@import`.
 writeFileSync('dist/styles.css', `${tokens.trimEnd()}\n\n${base}`)
 copyFileSync('types/index.d.ts', 'dist/index.d.ts')
-console.log('build ok: dist/index.js + dist/index.d.ts + dist/styles.css + dist/tokens.css + dist/base.css')
+copyFileSync('types/utils.d.ts', 'dist/utils.d.ts')
+console.log('build ok: dist/index.js + dist/utils.js + dist/index.d.ts + dist/utils.d.ts + dist/styles.css + dist/tokens.css + dist/base.css')

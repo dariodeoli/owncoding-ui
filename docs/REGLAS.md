@@ -241,6 +241,10 @@ compatibilidad).
   Una clave `YYYY-MM-DD` es un día de calendario y no se corre de zona.
 - Prohibido `toLocaleString` de dinero/fechas por pantalla y los helpers
   locales (`fmt`, `fecha`, `precio`).
+- **Del servidor:** la lógica pura (dinero, fechas, teléfono, catálogos,
+  estados) se importa de `owncoding-ui/utils` —la entrada sin React ni
+  `"use client"`—; los objetos de interfaz salen de `owncoding-ui`. No se
+  reimplementa un helper del paquete para el server.
 - Los montos y las fechas no se convierten ni se inventan: dato ausente → texto
   de vacío.
 
