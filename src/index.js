@@ -296,6 +296,8 @@ export { TONOS, TONOS_ALIAS, tonoCanonico, puntoDeTono, chipDeTono, textoDeTono 
 // Lógica compartida
 export { cn, primerNombre } from './utils/cn.js'
 export { default as useDialogFocusTrap, destinoDeTab, SELECTOR_ENFOCABLES } from './hooks/useDialogFocusTrap.js'
+export { useSingleFlightSubmit } from './hooks/useSingleFlightSubmit.js'
+export { completeSave, crearEnvioUnico, AVISO_REFRESCO } from './utils/guardado.js'
 export { normalizarNombre, nombrePartes, esApellidosPrimero, esRazonSocial } from './utils/nombre.js'
 export {
   BANCOS_PARAGUAY,

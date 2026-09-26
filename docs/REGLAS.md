@@ -87,6 +87,22 @@ compatibilidad).
 - Todos son **sin API**: no leen sesión ni llaman al backend; la app maneja el
   flujo y pasa callbacks.
 
+## 2 ter. Ciclo de guardado (#2)
+
+- **Envío único:** los formularios que validan o guardan con async usan
+  `useSingleFlightSubmit(envio)` (`{ pendiente, onSubmit }`): el bloqueo empieza
+  **antes** de la validación asíncrona, un segundo submit mientras corre se
+  ignora y `pendiente` pertenece al envío original. No se reimplementa con un
+  `useState` suelto ni se limpia el estado desde otro envío.
+- **Cierre después de persistir:** al terminar de escribir se llama
+  `completeSave(cerrar, refrescar, { avisar })`: cierra, refresca y convierte un
+  fallo de refresco en advertencia (`AVISO_REFRESCO`) — «no hace falta guardar
+  otra vez». Nunca se envuelve la mutación con `completeSave`.
+- Mientras el formulario está pendiente, el diálogo no se cierra: el form lo
+  registra con `useDialogPending(pendiente)` o usa el objeto `SaveActions`
+  (§5), que ya trae el botón de cancelar deshabilitado y el pie asociado al
+  `<form>` real.
+
 ## 3. Avisos, estados y vacíos
 
 - `Aviso` es el único objeto para el mensaje inline: `tono="error"` (role

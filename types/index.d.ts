@@ -722,6 +722,10 @@ export function useTableroOptimista(props: { tarjetas?: TarjetaTablero[]; onMove
 export const SELECTOR_ENFOCABLES: string
 export function destinoDeTab(opciones: { shiftKey: boolean; activo: Element | null; primero: Element | null; ultimo: Element | null; contenedor: Element | null; fuera?: boolean }): Element | null
 export function useDialogFocusTrap(open: boolean, onClose: (() => void) | undefined, ref: RefObject<HTMLElement>, opciones?: { initialFocus?: () => HTMLElement | null; bloquearScroll?: boolean }): void
+export const AVISO_REFRESCO: string
+export function crearEnvioUnico(enviar: (evento?: unknown) => unknown): { readonly enCurso: boolean; ejecutar(evento?: unknown): Promise<unknown> }
+export function completeSave(cerrar?: () => void, refrescar?: () => void | Promise<void>, opciones?: { avisar?: (mensaje: string) => void }): Promise<boolean>
+export function useSingleFlightSubmit(enviar: (evento?: any) => Promise<void> | void): { pendiente: boolean; onSubmit: (evento?: any) => Promise<void> }
 export function columnasDelTablero(columnas: ColumnaTablero[], tarjetas: TarjetaTablero[]): Array<ColumnaTablero & { tarjetas: TarjetaTablero[] }>
 export function agruparTarjetas(columnas: ColumnaTablero[], tarjetas: TarjetaTablero[]): Record<string, TarjetaTablero[]>
 export function destinosDeTarjeta(tarjeta: TarjetaTablero): string[]

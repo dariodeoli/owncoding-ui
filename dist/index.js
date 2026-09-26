@@ -8022,6 +8022,62 @@ function ProgresoChecklist({
   ] });
 }
 
+// src/hooks/useSingleFlightSubmit.js
+import { useCallback as useCallback4, useRef as useRef14, useState as useState28 } from "react";
+
+// src/utils/guardado.js
+var AVISO_REFRESCO = "Se guard\xF3 correctamente, pero no se pudo actualizar la lista. Recarg\xE1 la p\xE1gina para ver los cambios; no hace falta guardar otra vez.";
+function crearEnvioUnico(enviar) {
+  let enCurso = false;
+  return {
+    get enCurso() {
+      return enCurso;
+    },
+    async ejecutar(evento) {
+      if (enCurso) return void 0;
+      enCurso = true;
+      try {
+        return await enviar(evento);
+      } finally {
+        enCurso = false;
+      }
+    }
+  };
+}
+async function completeSave(cerrar, refrescar, { avisar } = {}) {
+  cerrar?.();
+  try {
+    await refrescar?.();
+    return true;
+  } catch {
+    avisar?.(AVISO_REFRESCO);
+    return false;
+  }
+}
+
+// src/hooks/useSingleFlightSubmit.js
+function useSingleFlightSubmit(enviar) {
+  const [pendiente, setPendiente] = useState28(false);
+  const ultimoEnviar = useRef14(enviar);
+  ultimoEnviar.current = enviar;
+  const envio = useRef14(null);
+  if (!envio.current) {
+    envio.current = crearEnvioUnico(async (evento) => {
+      setPendiente(true);
+      try {
+        await ultimoEnviar.current(evento);
+      } finally {
+        setPendiente(false);
+      }
+    });
+  }
+  const onSubmit = useCallback4(async (evento) => {
+    evento?.preventDefault?.();
+    await envio.current.ejecutar(evento);
+  }, []);
+  return { pendiente, onSubmit };
+}
+
 // src/utils/nombre.js
 var PARTICULAS = /* @__PURE__ */ new Set(["de", "del", "la", "las", "los", "y", "e", "da", "das", "do", "dos", "van", "von", "san", "santa"]);
 var titulo = (palabra) => {
@@ -8495,6 +8551,7 @@ var PIE_ACCIONES_REVERSO = "flex flex-col-reverse gap-2 sm:flex-row sm:justify-e
 export {
   ANCHOS_PAPEL,
   AVANCES_FIRMA,
+  AVISO_REFRESCO,
   AjustesImpresion,
   AuthLayout,
   Avatar,
@@ -8747,9 +8804,11 @@ export {
   colorTrabajo,
   columnasDeAncho,
   columnasDelTablero,
+  completeSave,
   componerTelefono,
   conexionDeDestino,
   contarSinLeer,
+  crearEnvioUnico,
   crearTicket,
   departamentoDe,
   destinoDeConexion,
@@ -8896,6 +8955,7 @@ export {
   tonoRevision,
   ultimos4,
   useDialogFocusTrap,
+  useSingleFlightSubmit,
   useTableroOptimista,
   useToast,
   validarImagen,

@@ -4,6 +4,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Sin publicar — cosecha de ScaleOS (#2)
+
+Portado de ScaleOS (`app/save-actions.tsx`, `use-single-flight-submit.ts`,
+`save-completion.ts`, `amount-format.ts`, `dialog.tsx`, `overlay-stack.ts`,
+`list-format.tsx` y `due-date.tsx`, repetidos en las verticales). Sin subir
+versión ni tag. Reglas en `docs/REGLAS.md`.
+
+- **Ciclo de guardado:** `useSingleFlightSubmit(envio)` bloquea antes de la
+  validación asíncrona y no solapa envíos; `completeSave(cerrar, refrescar,
+  { avisar })` cierra después de persistir y convierte un fallo de refresco en
+  advertencia («no hace falta guardar otra vez», `AVISO_REFRESCO`);
+  `crearEnvioUnico` es el envoltorio puro que usan los tests.
+
 ## Sin publicar — contraste de chips y borde interactivo (#5)
 
 Fix de la QA de Scale OS (ola 2): el texto de los chips quedaba por debajo de
