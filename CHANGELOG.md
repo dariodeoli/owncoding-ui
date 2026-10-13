@@ -6,6 +6,7 @@ documenta acá y en el README).
 
 ## Unreleased
 
+- **Correo:** identidad editorial e idioma opcionales en los correos transaccionales (`idioma`, `tema`), integrados desde `codex/owndata-mail-theme` (32d04d2).
 - **Teléfono:** el selector de país usa la altura compartida de los campos (`h-11 md:h-9`), así queda a la misma altura que el número en escritorio.
 
 ## v0.68.0 — 2026-10-13
