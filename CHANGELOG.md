@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.1 — 2026-10-13
 
 - **Correo:** identidad editorial e idioma opcionales en los correos transaccionales (`idioma`, `tema`), integrados desde `codex/owndata-mail-theme` (32d04d2).
 - **Teléfono:** el selector de país usa la altura compartida de los campos (`h-11 md:h-9`), así queda a la misma altura que el número en escritorio.
