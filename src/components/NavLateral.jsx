@@ -13,31 +13,59 @@ import { cn } from '../utils/cn.js'
 // está colapsado los rótulos no se dibujan y los ítems quedan siempre visibles.
 // Un ítem puede llevar `hijos` (subítems indentados, p. ej. «Mi página →
 // Personalización / Contenido»); se ocultan al colapsar el riel.
+// Un ítem con `href` se dibuja como enlace (`<a>`, o el `componenteEnlace` que
+// pase la app, p. ej. el `Link` de Next) con `aria-current="page"` si está
+// activo; sin `href` sigue siendo un `<button>`. `chip` (p. ej. «Próximamente»)
+// es una etiqueta chica junto al texto. `tactil` sube las filas a 44 px.
 // Dentro del scope `tema-v2` el activo usa el azul de acción AA y los rótulos
 // van en verde sólido (`styles.css`); la app no repite esas reglas.
 
-function ItemNav({ item, activo, colapsado, onSelect, hijo = false }) {
+function ItemNav({ item, activo, colapsado, onSelect, hijo = false, Enlace = 'a', tactil = false }) {
+  const clases = cn(
+    'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition',
+    hijo && 'px-2.5 py-1.5 text-[13px]',
+    activo ? 'bg-fono/15 text-fono-text' : 'text-mute hover:bg-ink-700 hover:text-fore',
+    colapsado && 'justify-center px-2',
+    tactil && 'min-h-11',
+  )
+  const contenido = (
+    <>
+      {item.icono && <Icon name={item.icono} className={cn('shrink-0', hijo ? 'h-3.5 w-3.5' : 'h-4 w-4')} />}
+      {!colapsado && <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>}
+      {!colapsado && item.chip != null && (
+        <span className="shrink-0 rounded-full border border-interactivo bg-ink-800 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-mute">{item.chip}</span>
+      )}
+      {!colapsado && item.contador != null && (
+        <span className="shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute">{item.contador}</span>
+      )}
+      {colapsado && item.chip != null && <span className="sr-only">{item.chip}</span>}
+      {colapsado && item.contador != null && <span className="sr-only">{item.contador}</span>}
+    </>
+  )
   return (
     <li>
-      <button
-        type="button"
-        onClick={() => onSelect?.(item.id)}
-        aria-current={activo ? 'page' : undefined}
-        title={colapsado ? item.label : undefined}
-        className={cn(
-          'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition',
-          hijo && 'px-2.5 py-1.5 text-[13px]',
-          activo ? 'bg-fono/15 text-fono-text' : 'text-mute hover:bg-ink-700 hover:text-fore',
-          colapsado && 'justify-center px-2',
-        )}
-      >
-        {item.icono && <Icon name={item.icono} className={cn('shrink-0', hijo ? 'h-3.5 w-3.5' : 'h-4 w-4')} />}
-        {!colapsado && <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>}
-        {!colapsado && item.contador != null && (
-          <span className="shrink-0 rounded-full bg-ink-700 px-1.5 py-0.5 text-[10px] font-bold tabular-nums text-mute">{item.contador}</span>
-        )}
-        {colapsado && item.contador != null && <span className="sr-only">{item.contador}</span>}
-      </button>
+      {item.href ? (
+        <Enlace
+          href={item.href}
+          onClick={() => onSelect?.(item.id)}
+          aria-current={activo ? 'page' : undefined}
+          aria-label={colapsado && typeof item.label === 'string' ? item.label : undefined}
+          title={colapsado ? item.label : undefined}
+          className={clases}
+        >
+          {contenido}
+        </Enlace>
+      ) : (
+        <button
+          type="button"
+          onClick={() => onSelect?.(item.id)}
+          aria-current={activo ? 'page' : undefined}
+          title={colapsado ? item.label : undefined}
+          className={clases}
+        >
+          {contenido}
+        </button>
+      )}
     </li>
   )
 }
@@ -51,6 +79,8 @@ export default function NavLateral(props) {
     onToggleGrupo,
     activeId,
     onSelect,
+    componenteEnlace,
+    tactil = false,
     colapsado: colapsadoProp,
     defaultColapsado = false,
     onToggle,
@@ -81,7 +111,7 @@ export default function NavLateral(props) {
     <ul className="space-y-1">
       {listaItems.map((item) => (
         <Fragment key={item.id}>
-          <ItemNav item={item} activo={item.id === activeId} colapsado={colapsado} onSelect={onSelect} />
+          <ItemNav item={item} activo={item.id === activeId} colapsado={colapsado} onSelect={onSelect} Enlace={componenteEnlace} tactil={tactil} />
           {!colapsado && item.hijos?.length ? (
             <li>
               <ul className="mt-0.5 space-y-0.5 pl-7">
@@ -92,6 +122,8 @@ export default function NavLateral(props) {
                     activo={hijo.id === activeId}
                     colapsado={false}
                     onSelect={onSelect}
+                    Enlace={componenteEnlace}
+                    tactil={tactil}
                     hijo
                   />
                 ))}

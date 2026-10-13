@@ -674,6 +674,12 @@ export const CATALOGO_EXPORTS = [
     "presentacion": null
   },
   {
+    "nombre": "COLORES_AVATAR_SOBRIOS",
+    "tipo": "api",
+    "categoria": "API y modelos",
+    "presentacion": null
+  },
+  {
     "nombre": "COLORES_BANCO_RESPALDO",
     "tipo": "api",
     "categoria": "API y modelos",
@@ -2181,6 +2187,12 @@ export const CATALOGO_EXPORTS = [
   },
   {
     "nombre": "NavLateral",
+    "tipo": "visual",
+    "categoria": "Shell y acceso",
+    "presentacion": "individual"
+  },
+  {
+    "nombre": "SelectorEspacio",
     "tipo": "visual",
     "categoria": "Shell y acceso",
     "presentacion": "individual"

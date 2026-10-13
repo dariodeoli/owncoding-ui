@@ -109,3 +109,15 @@ import { createOwnDataRucProvider as serverOwnDataProvider } from 'owncoding-ui/
 const ownDataProvider = createOwnDataRucProvider({ lookup: async () => ({}) })
 const ownDataField = <RucField maxBaseDigits={9} value="80012345-6" onChange={() => {}} consultar={ownDataProvider} onAplicar={result => { const source: string = result.ownData.provenance.source; void source }} />
 void ownDataField; void serverOwnDataProvider; void mapOwnDataRucResponse; void mapOwnDataRucError
+
+// Shell para paneles: enlaces en NavLateral, SelectorEspacio y paleta sobria.
+import { Avatar, NavLateral, SelectorEspacio, colorDeNombre } from 'owncoding-ui'
+const EnlaceDemo = (props: { href: string; children?: React.ReactNode }) => <a {...props} />
+const shellPanelContract = <>
+  <NavLateral items={[{ id: 'a', label: 'Inicio', href: '/', chip: 'Próximamente' }]} componenteEnlace={EnlaceDemo} tactil activeId="a" />
+  <SelectorEspacio espacios={[{ id: 'a', nombre: 'Acme', detalle: 'Propietario', avatar: null }]} valor="a" onCambiar={(id: string) => { void id }} acciones={[{ label: 'Crear empresa', onClick: () => {} }]} estado="listo" onReintentar={() => {}} cambiando={false} />
+  <Avatar nombre="Acme" paleta="sobria" />
+</>
+const claseSobria: string = colorDeNombre('Acme', 'sobria')
+void shellPanelContract
+void claseSobria

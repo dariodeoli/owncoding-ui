@@ -17,6 +17,9 @@ import { colorDeNombre, inicialesDeNombre } from '../utils/avatar.js'
 // `onError` avisa cuando la imagen falla (además de caer a iniciales), para que
 // la app pueda intentar la siguiente fuente (foto local → Google).
 //
+// `paleta="sobria"` (opt-in) limita el color generado a azules y grises, sin
+// tonos semánticos (ok/bad/warn/pass); sin ella, la paleta de siempre.
+//
 // Accesible: el marco es `role="img"` con `aria-label` (nombre o el que se
 // pase). Si el avatar solo acompaña a un texto que ya dice el nombre, se usa
 // `decorativo` para no repetirlo al lector de pantalla.
@@ -38,6 +41,7 @@ export default function Avatar({
   title,
   ariaLabel,
   decorativo = false,
+  paleta,
   onError,
   className,
 }) {
@@ -68,7 +72,7 @@ export default function Avatar({
       className={cn(
         'relative inline-flex shrink-0 items-center justify-center overflow-hidden font-bold uppercase',
         redondo ? 'rounded-full' : 'rounded-lg',
-        !visible && colorDeNombre(nombre),
+        !visible && colorDeNombre(nombre, paleta),
         TAMANOS_AVATAR[tamano] || TAMANOS_AVATAR.md,
         className,
       )}

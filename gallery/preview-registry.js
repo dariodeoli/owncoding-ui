@@ -92,6 +92,7 @@ export const PREVIEW_GROUPS = {
     "OAuthDivider",
     "PaletaComandos",
     "Avatar",
+    "SelectorEspacio",
     "PersonaChip",
     "PilaPersonas"
   ],

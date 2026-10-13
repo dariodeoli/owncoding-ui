@@ -17,7 +17,21 @@ export const COLORES_AVATAR = {
   mute: 'bg-ink-600 text-mute',
 }
 
+/**
+ * Paleta sobria (opt-in, `paleta="sobria"`): solo azules y grises, sin tonos
+ * semánticos (nunca ok/bad/warn/pass) para que una empresa no parezca «error»
+ * o «éxito» por azar del hash. Texto ≥4.5:1 sobre el fondo en claro y oscuro
+ * (medido en `test/espacio-shell.test.jsx`).
+ */
+export const COLORES_AVATAR_SOBRIOS = {
+  azul: 'bg-info/15 text-info-text',
+  'azul-fuerte': 'bg-info/25 text-fore',
+  gris: 'bg-ink-600 text-fore',
+  'gris-fuerte': 'bg-ink-500/50 text-fore',
+}
+
 const CLAVES_COLOR = Object.keys(COLORES_AVATAR)
+const CLAVES_SOBRIAS = Object.keys(COLORES_AVATAR_SOBRIOS)
 
 // El tipo societario (S.A., S.R.L., LTDA…) no cuenta como palabra del nombre,
 // pero su inicial acompaña cuando el nombre queda de una sola palabra:
@@ -47,16 +61,18 @@ export function inicialesDeNombre(nombre) {
 }
 
 /** Clave de color estable para un nombre (misma identidad → mismo color). */
-export function claveColorDeNombre(nombre) {
+export function claveColorDeNombre(nombre, paleta) {
   const texto = String(nombre ?? '').trim().toLowerCase()
   let hash = 0
   for (let indice = 0; indice < texto.length; indice += 1) {
     hash = (hash * 31 + texto.charCodeAt(indice)) % 100000
   }
-  return CLAVES_COLOR[hash % CLAVES_COLOR.length]
+  const claves = paleta === 'sobria' ? CLAVES_SOBRIAS : CLAVES_COLOR
+  return claves[hash % claves.length]
 }
 
-/** Clases Tailwind del color que le toca al nombre. */
-export function colorDeNombre(nombre) {
+/** Clases Tailwind del color que le toca al nombre (`paleta="sobria"`: solo azules y grises). */
+export function colorDeNombre(nombre, paleta) {
+  if (paleta === 'sobria') return COLORES_AVATAR_SOBRIOS[claveColorDeNombre(nombre, paleta)]
   return COLORES_AVATAR[claveColorDeNombre(nombre)] || COLORES_AVATAR.mute
 }

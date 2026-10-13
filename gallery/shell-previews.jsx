@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import {
   AuthLayout, AyudaModulo, BarraInferior, CampanaAvisos, GoogleButton, GoogleMark,
   LoadingScreen, MenuDesplegable, NavegacionSeccion, NavLateral, OAuthDivider,
-  PaletaComandos, Avatar, PersonaChip, PilaPersonas, Button, Card, Nota,
+  PaletaComandos, Avatar, PersonaChip, PilaPersonas, SelectorEspacio, Button, Card, Nota,
 } from '../src/index.js'
 
 const sections = [
@@ -10,6 +10,15 @@ const sections = [
   { id: 'actividad', label: 'Actividad', etiqueta: 'Actividad', icono: 'clock', descripcion: 'Movimientos ficticios sin conexión.' },
 ]
 const people = ['Persona Demo A', 'Persona Demo B', 'Persona Demo C'].map((name, index) => ({ id: index, name, estado: 'en-linea' }))
+
+// Enlace de muestra: la app real pasa el `Link` de su router; acá no navega.
+const EnlaceLocal = ({ href, onClick, ...props }) => <a href={href} onClick={event => { event.preventDefault(); onClick?.(event) }} {...props} />
+const espaciosDemo = [
+  { id: 'acme', nombre: 'Acme Demo S.A.', detalle: 'Propietario' },
+  { id: 'norte', nombre: 'Distribuidora Norte', detalle: 'Administrador' },
+  { id: 'sur', nombre: 'Taller Sur', detalle: 'Invitado' },
+]
+const accionesDemo = [{ id: 'crear', label: 'Crear empresa', icono: 'plus' }, { id: 'invitacion', label: 'Aceptar invitación', icono: 'mail' }]
 
 export const SHELL_DEMOS = {
   AuthLayout: ({ setStatus }) => <AuthLayout className="gallery-auth-scene" aside={<p>Espacio de muestra</p>} pie={<p className="p-3 text-center text-xs text-mute">Sin sesión ni proveedor</p>}><Card className="space-y-4 p-5"><h4 className="font-bold">Acceso de muestra</h4><p className="text-sm text-mute">Escena acotada del layout real. No se inicia una sesión.</p><GoogleButton onClick={() => setStatus('Acceso simulado; no autenticado.')} /><OAuthDivider texto="o explorá sin sesión" /><Button onClick={() => setStatus('Exploración local seleccionada.')}>Explorar muestra</Button></Card></AuthLayout>,
@@ -21,12 +30,21 @@ export const SHELL_DEMOS = {
   LoadingScreen: () => <LoadingScreen className="gallery-loading-scene" mensaje="Carga simulada" tienda={{ nombre: 'Espacio Demo' }} etiqueta="Fixture" />,
   MenuDesplegable: ({ setStatus }) => <MenuDesplegable alineacion="left" trigger={<span className="rounded-lg border border-ink-600 px-3 py-2">Acciones de muestra</span>} items={[{ label: 'Ver detalle local', icono: 'eye', onClick: () => setStatus('Detalle local seleccionado.') }, { label: 'Duplicar fixture', icono: 'copy', onClick: () => setStatus('Duplicación simulada; sin persistencia.') }, { separador: true }, { label: 'Acción no disponible', disabled: true }]} />,
   NavegacionSeccion: ({ active, setActive, expanded, setExpanded }) => <NavegacionSeccion items={sections} value={active} onChange={setActive} colapsado={expanded} onToggle={setExpanded}><Card className="p-4">Contenido de {active}; fixture local.</Card></NavegacionSeccion>,
-  NavLateral: ({ active, setActive, expanded, setExpanded }) => <div className="flex min-w-0 gap-3"><NavLateral className="gallery-side-scene" ancho="w-44" items={sections} activeId={active} onSelect={setActive} colapsado={expanded} onToggle={setExpanded} cabecera={!expanded && <span className="text-xs font-bold">Espacio Demo</span>} /><p className="min-w-0 py-4 text-sm text-mute">Sección local: {active}</p></div>,
+  NavLateral: ({ active, setActive, expanded, setExpanded }) => <div className="flex min-w-0 gap-3"><NavLateral className="gallery-side-scene" ancho="w-56" tactil componenteEnlace={EnlaceLocal} items={[...sections, { id: 'informes', label: 'Informes', icono: 'chart', href: '#informes' }, { id: 'facturas', label: 'Facturas', icono: 'money', href: '#facturas', chip: 'Próximamente' }]} activeId={active} onSelect={setActive} colapsado={expanded} onToggle={setExpanded} cabecera={!expanded && <span className="text-xs font-bold">Espacio Demo</span>} /><p className="min-w-0 py-4 text-sm text-mute">Sección local: {active}. Los ítems con enlace usan un componente de enlace local sin navegar.</p></div>,
   OAuthDivider: () => <OAuthDivider texto="o continuar con otro método" />,
   PaletaComandos: ({ setStatus }) => <PaletaComandos boton conAtajo={false} mostrarAtajoEnBoton={false} titulo="Buscar en la muestra" placeholder="Buscar resumen o actividad" espera={0} buscar={query => sections.filter(item => item.label.toLowerCase().includes(query.toLowerCase())).map(item => ({ id: item.id, tipo: 'modulo', titulo: item.label, detalle: 'Resultado local ficticio' }))} onElegir={item => setStatus(`Resultado local: ${item.titulo}`)} />,
-  Avatar: ({ expanded, setExpanded }) => <div className="flex items-center gap-4"><Avatar nombre="Persona Demo" tamano="lg" empresa={expanded} /><Button variant="outline" onClick={() => setExpanded(!expanded)}>Alternar persona / empresa</Button></div>,
+  Avatar: ({ expanded, setExpanded }) => <div className="space-y-3"><div className="flex items-center gap-4"><Avatar nombre="Persona Demo" tamano="lg" empresa={expanded} /><Button variant="outline" onClick={() => setExpanded(!expanded)}>Alternar persona / empresa</Button></div><div className="flex flex-wrap items-center gap-2" aria-label="Paleta sobria"><span className="text-xs text-mute">Paleta sobria:</span>{['Acme Demo', 'Distribuidora Norte', 'Taller Sur', 'Ferretería Este', 'Servicios Oeste', 'Logística Centro'].map(nombre => <Avatar key={nombre} nombre={nombre} empresa paleta="sobria" />)}</div></div>,
+  SelectorEspacio: ({ setStatus }) => <SelectorEspacioDemo setStatus={setStatus} />,
   PersonaChip: ({ expanded, setExpanded }) => <div className="space-y-3"><PersonaChip user={people[0]} estado={expanded ? 'ausente' : 'en-linea'} /><Button variant="outline" onClick={() => setExpanded(!expanded)}>Alternar presencia</Button></div>,
   PilaPersonas: ({ setStatus }) => <PilaPersonas personas={people} max={2} onMas={() => setStatus('Equipo ficticio: Persona Demo A, Persona Demo B y Persona Demo C.')} />,
+}
+
+function SelectorEspacioDemo({ setStatus }) {
+  const [valor, setValor] = useState('acme')
+  const [estado, setEstado] = useState('listo')
+  const [cambiando, setCambiando] = useState(false)
+  const cambiar = id => { setCambiando(true); setStatus('Guardando el cambio de espacio (simulado)…'); setTimeout(() => { setValor(id); setCambiando(false); setStatus(`Espacio local activo: ${id}.`) }, 900) }
+  return <div className="space-y-3"><div className="flex flex-wrap gap-2">{['listo', 'cargando', 'error'].map(item => <Button key={item} variant="outline" aria-pressed={estado === item} onClick={() => setEstado(item)}>Estado: {item}</Button>)}</div><div className="min-h-72 max-w-xs"><SelectorEspacio espacios={espaciosDemo} valor={valor} onCambiar={cambiar} acciones={accionesDemo} estado={estado} onReintentar={() => { setEstado('listo'); setStatus('Reintento local.') }} cambiando={cambiando} /></div></div>
 }
 
 export function ShellPreview({ name }) {

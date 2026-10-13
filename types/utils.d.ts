@@ -481,9 +481,10 @@ export function iconoDeCategoria(texto: string): string
 export function etiquetaDeCategoria(texto: string): string
 
 export const COLORES_AVATAR: Record<string, string>
+export const COLORES_AVATAR_SOBRIOS: Record<string, string>
 export function inicialesDeNombre(nombre: string): string
-export function claveColorDeNombre(nombre: string): string
-export function colorDeNombre(nombre: string): string
+export function claveColorDeNombre(nombre: string, paleta?: 'sobria'): string
+export function colorDeNombre(nombre: string, paleta?: 'sobria'): string
 export function identidadDeUsuario(fuente?: any): { nombre: string; primerNombre: string; fotoLocal: string; picture: string; hasAvatar?: boolean; scope: string }
 export function resumenPresencia(personas?: any[]): string
 export const ESTADOS_PRESENCIA: Record<string, { etiqueta: string; punto: string }>
