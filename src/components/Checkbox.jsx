@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef } from 'react'
 import { cn } from '../utils/cn.js'
+import { useFormulariosPro } from './FormulariosPro.jsx'
 
 // Checkbox de formulario (selección múltiple): por dentro es un
 // `<input type="checkbox">` real — conserva teclado, lectores de pantalla y el
@@ -7,10 +8,15 @@ import { cn } from '../utils/cn.js'
 //
 //   variante="simple"   → control + label en línea (permisos, listas)
 //   indeterminate       → estado mixto (selección parcial de un grupo): raya en
-//                         vez del check y `aria-checked="mixed"`
+//                         vez del check (propiedad DOM `indeterminate`; el input
+//                         nativo ya expone «mixto», sin `aria-checked`)
 //   motion={false}      → sin trazo animado ni escala al presionar
 //   variante="tarjeta"  → fila con borde y padding, título + descripción
 //                         (preferencias, ajustes con detalle)
+//
+// Sin `FormulariosPro` el control es el checkbox nativo de siempre (16 px,
+// `accent-fono`); `indeterminate` funciona igual sobre el nativo. Con el
+// interruptor se dibuja el control propio (borde, trazo animado, escala).
 //
 // Sin `label` queda el control pelado con `ariaLabel` (filas de tabla y colas).
 export default function Checkbox({
@@ -34,7 +40,24 @@ export default function Checkbox({
   // `indeterminate` solo existe como propiedad del DOM.
   useEffect(() => { if (nodo.current) nodo.current.indeterminate = Boolean(indeterminate) }, [indeterminate, checked])
   const malo = tono === 'bad'
-  const control = (
+  const pro = useFormulariosPro()
+  const nativo = (
+    <input
+      ref={nodo}
+      id={campoId}
+      type="checkbox"
+      checked={Boolean(checked)}
+      disabled={disabled}
+      onChange={onChange}
+      aria-label={label ? undefined : ariaLabel}
+      className={cn(
+        'h-4 w-4 shrink-0 rounded border-ink-500 accent-fono focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fono/40 disabled:cursor-not-allowed disabled:opacity-50',
+        malo && 'accent-bad',
+      )}
+      {...props}
+    />
+  )
+  const control = !pro ? nativo : (
     <span data-motion={motion ? 'on' : 'off'} data-oc-checkbox="" className="relative inline-grid h-[18px] w-[18px] shrink-0 place-items-center has-[:disabled]:opacity-50">
       <input
         ref={nodo}
@@ -44,7 +67,6 @@ export default function Checkbox({
         disabled={disabled}
         onChange={onChange}
         aria-label={label ? undefined : ariaLabel}
-        aria-checked={indeterminate ? 'mixed' : undefined}
         data-oc-indeterminado={indeterminate ? '' : undefined}
         className={cn(
           'peer h-full w-full cursor-pointer appearance-none rounded-[5px] border border-interactivo bg-ink-800 outline-none',

@@ -1,6 +1,6 @@
 import React, { useId, useRef, useState } from 'react'
 import {
-  AnimatedStatus, BotonDentroCampo, Button, Checkbox, EmailField, FormField, Input, MoneyInput, PhoneField,
+  AnimatedStatus, BotonDentroCampo, Button, Checkbox, EmailField, FormField, FormulariosPro, Input, MoneyInput, PhoneField,
   SearchField, SegmentedField, Select, Switch, Textarea,
 } from '../src/index.js'
 
@@ -59,6 +59,7 @@ export function FormulariosShowcase() {
   }
 
   return (
+    <FormulariosPro>
     <section id="formularios" aria-labelledby="titulo-formularios" className="priority-section">
       <div className="section-heading">
         <div>
@@ -142,5 +143,6 @@ export function FormulariosShowcase() {
         </div>
       </form>
     </section>
+    </FormulariosPro>
   )
 }

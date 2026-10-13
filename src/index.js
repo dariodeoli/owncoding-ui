@@ -50,6 +50,7 @@ export { default as useComboboxNavigation } from './hooks/useComboboxNavigation.
 
 // Campos y objetos compartidos
 export { default as Icon, ICONOS } from './components/Icon.jsx'
+export { FormulariosPro, useFormulariosPro } from './components/FormulariosPro.jsx'
 export { default as Switch } from './components/Switch.jsx'
 export { default as Checkbox } from './components/Checkbox.jsx'
 export { default as SearchField } from './components/SearchField.jsx'

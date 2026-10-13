@@ -99,8 +99,24 @@ ancho/margen/posición/z/visibilidad del `className` (y `style`/`hidden`) van al
 envoltorio; `min-h-*` se queda en el control. El movimiento (foco, error con
 sacudida única, éxito, switch, segmentado) sale de los tokens `--oc-motion-*`
 y se apaga con `motion={false}` o `prefers-reduced-motion` (ver
-`docs/MOTION.md`). `Label` es de 13 px y toma el tono de marca mientras su
-campo tiene foco.
+`docs/MOTION.md`). `Label` es de 13 px.
+
+**Segunda ola «pro» (opt-in por app):** sin activarla, las apps se ven y se
+comportan como en la primera ola. Se activa con **un** interruptor: envolver la
+app (o la pantalla) en `<FormulariosPro>` —pone `data-oc-formularios="pro"` en
+un contenedor `display: contents` y entrega el contexto a
+`useFormulariosPro()`—. Con portales (Modal, Drawer) conviene además poner
+`data-oc-formularios="pro"` en `<html>` y usar `<FormulariosPro contenedor={false}>`
+para que las reglas CSS también alcancen lo que se dibuja fuera del contenedor.
+Activa: tinte del `Label` con foco/error, entrada animada del mensaje de error,
+sacudida única, fondo de hover y giro del chevron del `Select`, `Checkbox` con
+dibujo propio (sin el interruptor es el nativo con `accent-fono` de 16 px;
+`indeterminate` funciona en ambos), resorte del `Switch`, indicador deslizante de
+`SegmentedField` y Esc que limpia `SearchField` (también con `limpiable`). Las
+props de cada componente ganan sobre el interruptor (`motion={false}` lo apaga
+en ese campo). Las correcciones de accesibilidad (contraste y área táctil de 44 px
+del `Switch`, caret/autofill acotados a los campos de la librería) rigen para
+todos, con o sin interruptor.
 
 **Datos personales (Ley 7593/2025):** todo formulario que recolecte datos
 personales muestra la **finalidad** y el enlace a la **política de privacidad**

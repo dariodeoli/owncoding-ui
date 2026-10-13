@@ -6,6 +6,19 @@ documenta acá y en el README).
 
 ## Unreleased
 
+- **Formularios pro, opt-in por app:** nuevo `FormulariosPro` /
+  `useFormulariosPro` (atributo `data-oc-formularios="pro"` + contexto). Sin él
+  las apps se ven como en la ola 1: `Label` sin tinte, mensaje sin animación,
+  sin sacudida, `Select` sin hover de fondo ni giro, `Checkbox` nativo con
+  `accent-fono`, `Switch` sin resorte, `SegmentedField` sin indicador y
+  `SearchField` sin Esc que limpia (salvo `limpiable`). El envoltorio de
+  adornos de `SearchField`/`PasswordInput`/`MoneyInput`/`RucField`/`TaxIdField`/
+  `InstagramField` se mantiene (ojo de 44 px, relleno medido). Rigen para todos:
+  contraste del `Switch` (≥3:1 con tokens), área táctil de 44 px sin z-index,
+  caret/selección/autofill acotados con `data-oc-control`, `tabular-nums` solo en
+  campos numéricos, spinners visibles con `motion={false}`, `.consola`
+  `ok`/`bad` con tinta oscura (≥4.5:1), `contador` sin `maxLength` no se dibuja
+  y chevron SVG en `CountryPhoneSelect`.
 - **Formularios premium (ola 2):** sistema de adornos único `inicio`/`fin` en
   `Input` (también `PasswordInput`, `MoneyInput`, `SearchField`,
   `RucField`/`TaxIdField` con `BotonDentroCampo integrado`, `InstagramField`,

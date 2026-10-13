@@ -277,6 +277,8 @@ export function Icon(props: { name: string; className?: string } & SVGProps<SVGS
 
 // ── Campos ─────────────────────────────────────────────────────────────────
 
+export function FormulariosPro(props: { children?: ReactNode; activo?: boolean; contenedor?: boolean }): ReactElement
+export function useFormulariosPro(): boolean
 export function Switch(props: { checked?: boolean; onChange?: (event: any) => void; disabled?: boolean; id?: string; ariaLabel?: string; className?: string; motion?: boolean }): ReactElement
 export const SearchField: ForwardRefExoticComponent<
   Omit<InputProps, 'value' | 'onChange'> & { value?: string; onChange?: (event: any) => void; onClear?: () => void; ariaLabel?: string; limpiable?: boolean; cargando?: boolean; motion?: boolean } & RefAttributes<HTMLInputElement>

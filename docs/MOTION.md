@@ -36,6 +36,14 @@ múltiples hijos ni otra transformación en la misma raíz.
 
 ## Campos de formulario
 
+**Activación (segunda ola «pro»).** Los movimientos de la tabla siguiente que
+no son opt-in por prop (label, mensaje de error, sacudida, Select, Checkbox,
+Switch, SegmentedField, Esc de SearchField) solo corren dentro de
+`<FormulariosPro>` (atributo `data-oc-formularios="pro"` para el CSS + contexto
+para el JS; ver `docs/REGLAS.md` §1). Sin él la app queda como en la primera
+ola. `motion={false}` en el componente gana sobre el interruptor, y apagar el
+movimiento nunca congela un spinner de `cargando`.
+
 Mismos tokens (`--oc-motion-fast` 160 ms, `--oc-motion-feedback` 240 ms,
 `--oc-motion-ease`) y mismo interruptor: `data-motion="on|off"` en el control
 (prop `motion`, default `true`). Los keyframes viven en `base.css` (opt-in);
