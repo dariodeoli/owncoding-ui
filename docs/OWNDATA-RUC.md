@@ -30,7 +30,7 @@ no reintenta y no inventa razón social, teléfono, correo o domicilio.
 - Códigos: 400 `INVALID_RUC_FORMAT`; 401 `API_KEY_REQUIRED`, `API_KEY_INVALID`,
   `API_KEY_REVOKED`, `API_KEY_EXPIRED`, `API_KEY_ENVIRONMENT_MISMATCH`; 403
   `INSUFFICIENT_SCOPE`, `PLAN_REQUIRED`; 404 `REGISTERED_RUC_NOT_FOUND`; 429
-  `DAILY_QUOTA_REACHED`; 503 `FREE_API_DISABLED`, `COMMERCIAL_API_DISABLED`,
+  `DAILY_QUOTA_REACHED`; 503 `FREE_API_DISABLED`, `PUBLISHABLE_KEY_UNAVAILABLE`, `COMMERCIAL_API_DISABLED`,
   `COMMERCIAL_API_UNAVAILABLE`, `DNIT_DATA_UNAVAILABLE`. El código anterior
   `ENVIRONMENT_MISMATCH` sigue reconocido como 401 por compatibilidad.
   Un código desconocido o no textual falla cerrado con mensaje genérico.
@@ -130,3 +130,15 @@ estricta para publicar la API comercial, no una certificación o conclusión leg
 universal. No se elimina ese guard ni los controles de datos privados, finalidad,
 sesión, abuso y cuotas. OwnData no representa ni está patrocinado por DNIT o el
 Estado paraguayo; no se habilitan exportación masiva ni enriquecimiento.
+
+## Clave publicable para la galería (contrato 1.4.0)
+
+La galería pública (`https://controlaria.online`) puede consultar el mismo
+`GET /api/v1/ruc/{ruc}` con una clave publicable `pk_…` en
+`Authorization: Bearer`. OwnData solo la acepta con `Origin`
+`https://controlaria.online`, alcance RUC, 10 consultas por IP por día y 500
+por clave por día (429 `DAILY_QUOTA_REACHED` con `Retry-After`). Cada clave
+atribuye el uso a su app. La clave se configura en `gallery/owndata-config.js`
+o con `VITE_OWNDATA_PUBLISHABLE_KEY` al construir la galería; sin clave, la
+vista usa datos de prueba. Mientras OwnData no habilite las claves publicables,
+la API responde 503 `PUBLISHABLE_KEY_UNAVAILABLE`.

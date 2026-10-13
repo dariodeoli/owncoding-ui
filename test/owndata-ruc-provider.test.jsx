@@ -3,11 +3,12 @@ import React, { useState } from 'react'
 import { afterEach, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RucField, createOwnDataRucProvider, mapOwnDataRucResponse, mapOwnDataRucError } from '../src/index.js'
-import { OwnDataIntegrationPreview, simulatedOwnDataEnvelope } from '../gallery/owndata-ruc-preview.jsx'
+import { OwnDataIntegrationPreview, realOwnDataLookup, simulatedOwnDataEnvelope } from '../gallery/owndata-ruc-preview.jsx'
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 it.each([
   ['API_KEY_ENVIRONMENT_MISMATCH', 401, 'La clave de OwnData no corresponde al ambiente configurado. Complete los datos manualmente.'],
   ['FREE_API_DISABLED', 503, 'La API gratuita de OwnData está deshabilitada. Complete los datos manualmente.'],
+  ['PUBLISHABLE_KEY_UNAVAILABLE', 503, 'La consulta pública de OwnData todavía no está disponible. Complete los datos manualmente.'],
 ])('maps current contract code %s to safe actionable text', (code, status, message) => {
   const error = mapOwnDataRucError({ error: { code, message: 'unsafe-provider-detail', retryAfter: 9 }, requestId: 'req-safe' })
   expect(error).toMatchObject({ code, status, message, requestId: 'req-safe' })
@@ -23,7 +24,7 @@ it.each([undefined, null, 401, {}, ['API_KEY_INVALID'], '__proto__', 'toString',
   expect(error).not.toHaveProperty('cause')
   expect(String(error)).not.toContain('unsafe-provider-detail')
 })
-it.each(['API_KEY_ENVIRONMENT_MISMATCH', 'FREE_API_DISABLED', 'ENVIRONMENT_MISMATCH', 'UNKNOWN_PROVIDER_ERROR'])('keeps manual entry available after %s without retrying or applying data', async code => {
+it.each(['API_KEY_ENVIRONMENT_MISMATCH', 'FREE_API_DISABLED', 'PUBLISHABLE_KEY_UNAVAILABLE', 'ENVIRONMENT_MISMATCH', 'UNKNOWN_PROVIDER_ERROR'])('keeps manual entry available after %s without retrying or applying data', async code => {
   const lookup = vi.fn(async () => ({ error: { code, message: 'unsafe-provider-detail' } }))
   const provider = createOwnDataRucProvider({ lookup }), apply = vi.fn()
   function ManualEntry() {
@@ -233,4 +234,34 @@ it('demo rejects letters and discards pending results when the company changes',
   fireEvent.change(screen.getByRole('combobox', { name: 'Empresa de ejemplo' }), { target: { value: '80054321-2' } })
   expect(screen.queryByRole('button', { name: 'Usar estos datos' })).toBeNull()
   expect(screen.queryByText(/Confirmado solo en demo/)).toBeNull()
+})
+
+function respuesta(body, { status = 200, headers = {} } = {}) {
+  return { status, headers: { get: name => headers[name] ?? null }, json: async () => body }
+}
+
+it('real lookup sends the publishable key as Bearer without cookies and maps a valid envelope', async () => {
+  const fetchImpl = vi.fn(async () => respuesta(simulatedOwnDataEnvelope('80012345-6')))
+  const lookup = createOwnDataRucProvider({ lookup: ruc => realOwnDataLookup(ruc, { key: 'pk_test_galeria', fetchImpl }) })
+  const result = await lookup('80012345-6')
+  const [url, init] = fetchImpl.mock.calls[0]
+  expect(url).toBe('https://app.controlaria.online/api/v1/ruc/80012345-6')
+  expect(init).toMatchObject({ method: 'GET', credentials: 'omit', headers: { Authorization: 'Bearer pk_test_galeria' } })
+  expect(result).toMatchObject({ name: 'EMPRESA DEMO — COMERCIO', reviewRequired: true })
+})
+
+it('real lookup surfaces PUBLISHABLE_KEY_UNAVAILABLE and quota Retry-After without retrying', async () => {
+  const noDisponible = vi.fn(async () => respuesta({ error: { code: 'PUBLISHABLE_KEY_UNAVAILABLE' } }, { status: 503 }))
+  await expect(createOwnDataRucProvider({ lookup: ruc => realOwnDataLookup(ruc, { key: 'pk_x', fetchImpl: noDisponible }) })('80012345-6'))
+    .rejects.toMatchObject({ code: 'PUBLISHABLE_KEY_UNAVAILABLE', status: 503 })
+  expect(noDisponible).toHaveBeenCalledTimes(1)
+  const cuota = vi.fn(async () => respuesta({ error: { code: 'DAILY_QUOTA_REACHED' } }, { status: 429, headers: { 'Retry-After': '3600' } }))
+  await expect(createOwnDataRucProvider({ lookup: ruc => realOwnDataLookup(ruc, { key: 'pk_x', fetchImpl: cuota }) })('80012345-6'))
+    .rejects.toMatchObject({ code: 'DAILY_QUOTA_REACHED', retryAfter: 3600 })
+})
+
+it('without a publishable key the gallery preview stays on fixture data', () => {
+  render(<OwnDataIntegrationPreview />)
+  expect(screen.getByText('Demo local interactiva')).toBeTruthy()
+  expect(screen.queryByRole('radiogroup', { name: 'Origen de los datos' })).toBeNull()
 })

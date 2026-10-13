@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **OwnData RUC:** nuevo código `PUBLISHABLE_KEY_UNAVAILABLE` (503). La galería consulta OwnData real con una clave publicable `pk_` cuando está configurada (`gallery/owndata-config.js` o `VITE_OWNDATA_PUBLISHABLE_KEY`); sin clave sigue con datos de prueba.
+
 ## v0.68.3 — 2026-10-13
 
 - **Logos financieros:** todos los logos se ven del mismo tamaño óptico y legibles. Cada asset lleva metadatos ópticos (rectángulo de tinta medido una sola vez; relación, escala por área y altura relativa derivadas) en `src/financial/optica.js`, junto a los bytes para no inflar `metadata` ni `utils`; `LogoFinanciero` recorta la vista a la tinta sin modificar los archivos oficiales ni sus hashes. Los wordmarks conservan al menos 12 px de alto en el slot horizontal y las marcas compactas pesan lo mismo (±15 % de área). Se corrige el desborde de la imagen sobre su `span` (caso Visa). Relleno único por tamaño de slot: sin relleno en el compacto y 8 px laterales en el horizontal con placa (`fondo`). Aditivo: ningún export ni prop cambia; los visuales sin asset empaquetado conservan el render anterior.
