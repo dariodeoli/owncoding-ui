@@ -67,7 +67,7 @@ html.dark :focus-visible {
   transform: translate(-50%, -50%);
 }
 input::placeholder, textarea::placeholder {
-  color: #8197a5;
+  color: rgb(var(--c-placeholder, 94 107 126));
 }
 /* PIN de `PinInput`: los dígitos reales no se dibujan (los puntos los pinta el
    componente). Sin esta regla el valor tipeado se ve encima de los puntos. */
