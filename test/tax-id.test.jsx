@@ -95,7 +95,9 @@ describe('TaxIdField', () => {
     )
     expect(conConsulta).toContain('Consultar RUC')
     expect(conConsulta).toContain('absolute inset-y-0 right-0')
-    expect(conConsulta).toContain('pr-11')
+    // El botón es el adorno final de Input: el campo reserva su espacio (pr-10 y, medido, style).
+    expect(conConsulta).toContain('data-oc-fin')
+    expect(conConsulta).toContain('pr-10')
 
     const vacio = renderToStaticMarkup(<TaxIdField value="" onChange={() => {}} onBuscarRazonSocial={async () => null} />)
     expect(vacio).toContain('disabled')

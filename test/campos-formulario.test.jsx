@@ -7,7 +7,7 @@ import { CAMPO_ESTADOS, CLASES_CAMPO, separarClasesDeLayout } from '../src/utils
 
 const html = (nodo) => renderToStaticMarkup(nodo)
 const clase = (marcado) => /class="([^"]*)"/.exec(marcado)?.[1] ?? ''
-const claseDe = (marcado, etiqueta) => new RegExp(`<${etiqueta}[^>]*class="([^"]*)"`).exec(marcado)?.[1] ?? ''
+const claseDe = (marcado, etiqueta) => (new RegExp(`<${etiqueta}[^>]*class="([^"]*)"`).exec(marcado)?.[1] ?? '').replaceAll('&amp;', '&')
 
 describe('estilo único de los campos', () => {
   test('todos los controles comparten los estados de CAMPO_ESTADOS', () => {
@@ -75,7 +75,7 @@ describe('aria-invalid', () => {
   })
 
   test('FormField sin error no marca inválido', () => {
-    expect(html(<FormField label="A" htmlFor="a" hint="ayuda"><Input id="a" /></FormField>)).not.toContain('aria-invalid')
+    expect(html(<FormField label="A" htmlFor="a" hint="ayuda"><Input id="a" /></FormField>)).not.toContain('aria-invalid="')
   })
 })
 

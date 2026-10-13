@@ -37,7 +37,7 @@ describe('Checkbox', () => {
       <Checkbox ariaLabel="Seleccionar trabajo" tono="bad" disabled onChange={() => {}} />,
     )
     expect(html).toContain('aria-label="Seleccionar trabajo"')
-    expect(html).toContain('accent-bad')
+    expect(html).toContain('checked:bg-bad')
     expect(html).toContain('disabled=""')
     expect(html).not.toContain('<label')
   })
