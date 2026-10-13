@@ -2,6 +2,9 @@ import { defineConfig } from 'vite'
 import autoprefixer from 'autoprefixer'
 import tailwindcss from 'tailwindcss'
 import preset from './tailwind-preset.js'
+import { validarClavePublicable } from './gallery/owndata-key-guard.js'
+
+validarClavePublicable(process.env.VITE_OWNDATA_PUBLISHABLE_KEY)
 
 export default defineConfig({
   root: 'gallery',
