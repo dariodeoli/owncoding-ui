@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.4 — 2026-10-13
 
 - **OwnData RUC:** nuevo código `PUBLISHABLE_KEY_UNAVAILABLE` (503). La galería consulta OwnData real con una clave publicable `pk_` cuando está configurada (`gallery/owndata-config.js` o `VITE_OWNDATA_PUBLISHABLE_KEY`); sin clave sigue con datos de prueba.
 
