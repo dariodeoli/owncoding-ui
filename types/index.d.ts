@@ -9,6 +9,7 @@
 
 import type {
   ButtonHTMLAttributes,
+  ElementType,
   ForwardRefExoticComponent,
   HTMLAttributes,
   InputHTMLAttributes,
@@ -912,7 +913,7 @@ export function ProductFooter(props: {
   nombre?: string
   /** @deprecated Usá `identidad.version`. Se mantendrá por al menos dos releases menores. */
   version?: string
-  modelo?: 'compacto' | 'apilado' | 'distribuido'
+  modelo?: 'compacto' | 'apilado' | 'distribuido' | 'panel'
   enlaces?: EnlaceInstitucional[]
   /** @deprecated Usá `identidad.credito`. Se mantendrá por al menos dos releases menores. */
   credito?: string | null
@@ -943,14 +944,19 @@ export function LoadingScreen(props: {
   className?: string
 }): ReactElement
 export function PegarEnlaceToken(props: Record<string, any> & { onToken?: (token: string) => void }): ReactElement
+export type ItemNavLateral = { id: string; label?: ReactNode; etiqueta?: ReactNode; icono?: string; contador?: number; href?: string; chip?: ReactNode; roles?: string[]; [clave: string]: any }
 export function NavLateral(props: {
-    items?: Array<{ id: string; label?: ReactNode; etiqueta?: ReactNode; icono?: string; contador?: number; href?: string; roles?: string[]; [clave: string]: any }>
-    grupos?: Array<{ titulo: string; items: Array<{ id: string; label?: ReactNode; icono?: string; contador?: number; hijos?: Array<{ id: string; label?: ReactNode; icono?: string; [clave: string]: any }>; [clave: string]: any }> }>
+    items?: Array<ItemNavLateral>
+    grupos?: Array<{ titulo: string; items: Array<ItemNavLateral & { hijos?: Array<ItemNavLateral> }> }>
     gruposPlegados?: Record<string, boolean>
     defaultGruposPlegados?: Record<string, boolean>
     onToggleGrupo?: (titulo: string, plegado: boolean) => void
     activeId?: string
     onSelect?: (id: string) => void
+    /** Componente de enlace para los ítems con `href` (p. ej. `Link` de Next). Por defecto `<a>`. */
+    componenteEnlace?: ElementType
+    /** Filas de 44 px de alto (táctil). Opt-in. */
+    tactil?: boolean
     colapsado?: boolean
     defaultColapsado?: boolean
     onToggle?: (colapsado: boolean) => void
@@ -960,6 +966,25 @@ export function NavLateral(props: {
     ariaLabel?: string
     className?: string
   } & Record<string, any>): ReactElement
+export type EspacioSelector = { id: string; nombre: string; detalle?: ReactNode; avatar?: string | null }
+export type AccionSelectorEspacio = { id?: string; label: ReactNode; icono?: string; onClick?: () => void; href?: string; disabled?: boolean }
+export function SelectorEspacio(props: {
+  espacios?: EspacioSelector[]
+  valor?: string | null
+  onCambiar?: (id: string) => void
+  /** Pie del menú: acciones (teclado incluido) o un nodo libre. */
+  acciones?: AccionSelectorEspacio[] | ReactNode
+  estado?: 'listo' | 'cargando' | 'error'
+  onReintentar?: () => void
+  /** Hay un cambio guardándose: bloquea la lista (`aria-busy`). */
+  cambiando?: boolean
+  etiqueta?: ReactNode
+  ariaLabel?: string
+  alineacion?: 'left' | 'right'
+  defaultAbierto?: boolean
+  paletaAvatar?: 'sobria'
+  className?: string
+}): ReactElement
 export function MenuDesplegable(props: Record<string, any> & { trigger?: ReactNode; items?: any[]; ariaLabel?: string; alineacion?: 'left' | 'right'; className?: string }): ReactElement
 
 // ── Ajustes, impresión y bancos ────────────────────────────────────────────
@@ -1149,7 +1174,7 @@ export function estadoPaleta(props?: { listo?: boolean; cargando?: boolean; erro
 export function AyudaModulo(props: { titulo?: ReactNode; resumen?: ReactNode; puntos?: ReactNode[]; enlaces?: Array<{ href: string; etiqueta: ReactNode; onClick?: () => void }>; abierta?: boolean; onAbrir?: () => void; onCerrar?: () => void; className?: string }): ReactElement | null
 export function BarraInferior(props: { items?: Array<{ id: string; etiqueta: ReactNode; icono?: string; href?: string }>; activo?: string; onSelect?: (item: any) => void; onMas?: () => void; masEtiqueta?: string; menuAbierto?: boolean; menuId?: string; maxItems?: number; className?: string }): ReactElement | null
 export const ESPACIO_BARRA_INFERIOR: string
-export function Avatar(props: { nombre?: string; src?: string | null; tamano?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'; forma?: 'redondo' | 'cuadrado'; empresa?: boolean | string; title?: string; ariaLabel?: string; decorativo?: boolean; onError?: (event: any) => void; className?: string }): ReactElement
+export function Avatar(props: { nombre?: string; src?: string | null; tamano?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'; forma?: 'redondo' | 'cuadrado'; empresa?: boolean | string; title?: string; ariaLabel?: string; decorativo?: boolean; paleta?: 'sobria'; onError?: (event: any) => void; className?: string }): ReactElement
 export function PersonaChip(props: {
   user?: string | { name?: string; nombre?: string; email?: string; id?: string; picture?: string; foto?: string; avatarUrl?: string; photoURL?: string; hasAvatar?: boolean; tieneFoto?: boolean; scope?: string; [clave: string]: any }
   foto?: string
@@ -1182,9 +1207,10 @@ export function PeriodoTabs(props: { periodo: string; setPeriodo: (id: string) =
 export function NumericKeypad(props: { value?: string; onChange: (valor: string) => void; max?: number; className?: string; ariaLabel?: string }): ReactElement
 export const TAMANOS_AVATAR: Record<string, string>
 export const COLORES_AVATAR: Record<string, string>
+export const COLORES_AVATAR_SOBRIOS: Record<string, string>
 export function inicialesDeNombre(nombre: string): string
-export function claveColorDeNombre(nombre: string): string
-export function colorDeNombre(nombre: string): string
+export function claveColorDeNombre(nombre: string, paleta?: 'sobria'): string
+export function colorDeNombre(nombre: string, paleta?: 'sobria'): string
 
 export function ImporteDelta(props: { valor?: number | string | null; moneda?: Moneda; formato?: 'moneda' | 'porcentaje'; invertir?: boolean; vacio?: string; simbolo?: string; className?: string }): ReactElement
 export function tonoDelta(valor: unknown, opciones?: { invertir?: boolean }): TonoCanonico

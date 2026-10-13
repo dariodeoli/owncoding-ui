@@ -49,6 +49,16 @@ documenta acá y en el README).
   el error lleva ícono. `CountryPhoneSelect` usa los mismos estados. Alturas
   sin cambios (`h-11` / `md:h-9`). La escena «campos» de la galería muestra todos
   los estados.
+- **Shell para paneles (OwnData, 2026-10-13):** cambios aditivos y opt-in, sin
+  renombrar ni quitar props. `NavLateral` acepta ítems con `href` (enlace con
+  `aria-current`, vía `componenteEnlace` o `<a>`), `chip` por ítem y `tactil`
+  (filas de 44 px). Nuevo `SelectorEspacio` (avatar + nombre, check en el
+  activo, pie `acciones`, `estado` listo/cargando/error con `onReintentar`,
+  `cambiando` con `aria-busy`, teclado y `Esc`). `Avatar` suma
+  `paleta="sobria"` (azules y grises, nunca tonos semánticos;
+  `COLORES_AVATAR_SOBRIOS`). `ProductFooter` suma `modelo="panel"` (49 px a
+  1280 y 69 px a 375, frente a 97/117 px de `compacto`). Tipos, vistas de
+  galería, tests (`test/espacio-shell.test.jsx`) y `docs/SHELL.md` al día.
 
 ## v0.67.2 — 2026-10-10
 

@@ -36,7 +36,8 @@ permisos; el shell solo dibuja y navega.
 | Objeto | Props |
 | --- | --- |
 | `PageHeader` | `title` (único `h1`), `migas` `[{ etiqueta, href? }]`, `eyebrow`, `subtitle`, `actions`, `backTo` |
-| `NavLateral` | `items` `[{ id, label, icono?, contador? }]` o `grupos` `[{ titulo, items }]`, controlado con `gruposPlegados`/`colapsado`, no controlado con `defaultGruposPlegados`/`defaultColapsado`, `onToggleGrupo(titulo, plegado)`, `onToggle(colapsado)`, `activeId`, `onSelect(id)`, `cabecera`, `pie`, `ancho` (`w-64`), `ariaLabel` |
+| `NavLateral` | `items` `[{ id, label, icono?, contador? }]` o `grupos` `[{ titulo, items }]`, controlado con `gruposPlegados`/`colapsado`, no controlado con `defaultGruposPlegados`/`defaultColapsado`, `onToggleGrupo(titulo, plegado)`, `onToggle(colapsado)`, `activeId`, `onSelect(id)`, `cabecera`, `pie`, `ancho` (`w-64`), `ariaLabel`, `componenteEnlace` (enlace de la app, p. ej. `Link` de Next; `<a>` por defecto), `tactil` (filas de 44 px); un ítem puede traer `href` (enlace con `aria-current`) y `chip` (p. ej. «Próximamente») |
+| `SelectorEspacio` | `espacios` `[{ id, nombre, detalle?, avatar? }]`, `valor`, `onCambiar(id)`, `acciones` (pie: `[{ label, icono?, onClick?, href? }]` o un nodo), `estado` (`listo`/`cargando`/`error`), `onReintentar`, `cambiando` (bloquea la lista con `aria-busy`), `etiqueta`, `ariaLabel`, `alineacion`, `defaultAbierto`, `paletaAvatar` (`sobria`), `className` |
 | `MenuDesplegable` | `trigger`, `items` `[{ id?, label, icono?, onClick?, peligro?, disabled?, separador? }]`, `alineacion` (`right`/`left`), `ariaLabel` |
 | `PaletaComandos` | `abierta`/`onAbrir`/`onCerrar`, `buscar(consulta)` async, `onElegir(resultado)`, `etiquetasTipo`, `iconosTipo`, `atajo`, `atajoTexto`, `conAtajo`, `minimo` (2), `espera` (220 ms), `boton`, `textoBoton` |
 | `AyudaModulo` | `titulo`, `resumen`, `puntos` (3–5), `enlaces` `[{ href, etiqueta, onClick? }]`, `abierta`/`onAbrir`/`onCerrar` |
@@ -44,9 +45,40 @@ permisos; el shell solo dibuja y navega.
 | `IndicadorConexion` | `enLinea`, `pendientes`, `sincronizando`, `onSincronizar`, etiquetas (`etiquetaEnLinea`/`etiquetaSinConexion`/`etiquetaSincronizando`) |
 | `PilaPersonas` | `personas` (objetos o strings), `max` (4), `size`, `onMas`, `resumen`, `ariaLabel`, `title`, `className` |
 | `CampanaAvisos` | `avisos` `[{ id, titulo, detalle?, tono?, fecha?, href?/destino?, onClick?, leido? }]`, `onAbrir`, `onElegir`, `vacioTitulo`/`vacioDetalle`/`vacioAccion`, `pie`, `anclaje` |
-| `Avatar` | `nombre`, `src`, `tamano` (`sm`/`md`/`lg`), `forma` (`redondo`/`cuadrado`), `empresa`, `title`, `ariaLabel`, `decorativo` |
+| `Avatar` | `nombre`, `src`, `tamano` (`sm`/`md`/`lg`), `forma` (`redondo`/`cuadrado`), `empresa`, `title`, `ariaLabel`, `decorativo`, `paleta` (`sobria`: solo azules y grises) |
 | `ProductPrefooter` | `modelo`, `titulo`, `descripcion`, `columnas`, `accion`, `redes`, `children`, `className` |
-| `ProductFooter` | `identidad` (`crearIdentidadApp`), `modelo`, `enlaces`; compatibilidad: `nombre`, `version`, `credito`, `creditoUrl`, `anio`, `leading`, `children`, `className` |
+| `ProductFooter` | `identidad` (`crearIdentidadApp`), `modelo` (`compacto`/`distribuido`/`apilado`/`panel`), `enlaces`; compatibilidad: `nombre`, `version`, `credito`, `creditoUrl`, `anio`, `leading`, `children`, `className` |
+
+### Panel con enlaces, selector de espacio y pie delgado
+
+Pensado para paneles (p. ej. OwnData); todo es opt-in y no cambia el render por defecto.
+
+- **`NavLateral` con enlaces**: un ítem con `href` se dibuja como `<a>` (o el
+  `componenteEnlace` que pase la app: `Link` de Next) con `aria-current="page"`
+  si es el activo; sin `href` sigue siendo `<button>`. `chip` agrega una
+  etiqueta chica («Próximamente», texto `mute` sobre `ink-800`, borde
+  `interactivo`; colapsado queda solo para lectores de pantalla). `tactil`
+  sube las filas a 44 px. El riel no tiene modo móvil propio: en móvil se monta
+  dentro de un `Drawer`.
+- **`SelectorEspacio`**: botón con avatar + nombre del espacio activo y menú
+  (`role="menu"`, filas `menuitemradio` con check en el activo, 44 px). ↓/↑/
+  Inicio/Fin recorren, `Esc` cierra y devuelve el foco, `Tab` y el clic afuera
+  cierran. `acciones` es el pie («+ Crear empresa», «Aceptar invitación»).
+  `estado="cargando"` muestra un esqueleto (`role="status"`, pulso solo con
+  movimiento permitido) y `estado="error"` una alerta con «Reintentar»
+  (`onReintentar`). Con `cambiando` la lista y las acciones quedan bloqueadas
+  (`aria-busy`, `aria-disabled`) hasta que la app termine de guardar. No
+  reemplaza a `AccountSwitcher`, que queda igual.
+- **`Avatar paleta="sobria"`**: el color generado sale de cuatro tonos azules y
+  grises (`COLORES_AVATAR_SOBRIOS`), nunca de `ok`/`bad`/`warn`/`pass`; iniciales
+  ≥4.5:1 en claro y oscuro (verificado en `test/espacio-shell.test.jsx`).
+  Sin la prop, la paleta de siempre.
+- **`ProductFooter modelo="panel"`**: pie delgado para ir dentro de un panel.
+  Medido (gallery, sin wrapper): `compacto` ocupa **97 px a 1280** y **117 px a
+  375** (relleno de 16 px + enlace de 44 px en su propia fila), demasiado para
+  un panel; `panel` ocupa **49 px a 1280** y **69 px a 375** (una fila; en
+  móvil se oculta «Todos los derechos reservados.» y los enlaces siguen con
+  área de toque de 44 px por `toque-44`).
 
 ## 3. Anatomía por breakpoint
 

@@ -11,7 +11,7 @@ import { CATALOGO_EXPORTS } from '../gallery/catalog.js'
 const observed = vi.hoisted(() => new Set())
 vi.mock('../src/index.js', async importOriginal => {
   const actual = await importOriginal()
-  const names = ['AuthLayout', 'AyudaModulo', 'BarraInferior', 'CampanaAvisos', 'GoogleButton', 'GoogleMark', 'LoadingScreen', 'MenuDesplegable', 'NavegacionSeccion', 'NavLateral', 'OAuthDivider', 'PaletaComandos', 'Avatar', 'PersonaChip', 'PilaPersonas', 'FormActions', 'SaveActions', 'FormField', 'SeccionColapsable', 'Subtabs', 'Stepper', 'PeriodoTabs', 'NumericKeypad', 'ConfirmarConPalabra', 'TaxIdField', 'InstagramField', 'ChipEstado', 'EstadoBadge', 'FilaDato', 'GradoBadge', 'GraficoBarras', 'Cronologia', 'MedidorStock', 'ConteoChecklist', 'ContadorLote', 'ChipOrigen', 'ChipPrioridad', 'Vencimiento']
+  const names = ['AuthLayout', 'AyudaModulo', 'BarraInferior', 'CampanaAvisos', 'GoogleButton', 'GoogleMark', 'LoadingScreen', 'MenuDesplegable', 'NavegacionSeccion', 'NavLateral', 'SelectorEspacio', 'OAuthDivider', 'PaletaComandos', 'Avatar', 'PersonaChip', 'PilaPersonas', 'FormActions', 'SaveActions', 'FormField', 'SeccionColapsable', 'Subtabs', 'Stepper', 'PeriodoTabs', 'NumericKeypad', 'ConfirmarConPalabra', 'TaxIdField', 'InstagramField', 'ChipEstado', 'EstadoBadge', 'FilaDato', 'GradoBadge', 'GraficoBarras', 'Cronologia', 'MedidorStock', 'ConteoChecklist', 'ContadorLote', 'ChipOrigen', 'ChipPrioridad', 'Vencimiento']
   return { ...actual, ...Object.fromEntries(names.map(name => [name, props => { observed.add(name); return React.createElement(actual[name], props) }])) }
 })
 globalThis.IS_REACT_ACT_ENVIRONMENT = true

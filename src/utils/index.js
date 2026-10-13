@@ -200,7 +200,7 @@ export {
   tonoBateria,
 } from './estadoEquipo.js'
 export { CATEGORIAS_PRODUCTO, ICONO_CATEGORIA, normalizarCategoria, categoriaDe, iconoDeCategoria, etiquetaDeCategoria } from './categorias.js'
-export { COLORES_AVATAR, inicialesDeNombre, claveColorDeNombre, colorDeNombre } from './avatar.js'
+export { COLORES_AVATAR, COLORES_AVATAR_SOBRIOS, inicialesDeNombre, claveColorDeNombre, colorDeNombre } from './avatar.js'
 export { identidadDeUsuario, ESTADOS_PRESENCIA, resumenPresencia } from './identidad.js'
 
 // ── Agenda y rangos ─────────────────────────────────────────────────────────
