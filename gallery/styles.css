@@ -307,7 +307,7 @@
   grid-template-columns: 3.5rem minmax(0, 1fr);
   gap: .75rem;
   align-items: center;
-  margin-top: .75rem;
+  margin-top: 0;
   border: 1px solid rgb(var(--c-ink-600));
   border-radius: .9rem;
   padding: .7rem;
@@ -320,13 +320,24 @@
   place-items: center;
   border: 1px solid rgb(var(--c-ink-600));
   border-radius: .8rem;
-  background: rgb(var(--c-ink));
+  background: #fff;
 }
 .brand-selection__wordmark {
   display: grid;
   min-width: 0;
-  justify-items: start;
+  justify-items: stretch;
   gap: .35rem;
+}
+.brand-selection__plate {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 4rem;
+  place-items: center;
+  border: 1px solid rgb(var(--c-ink-600));
+  border-radius: .65rem;
+  padding: .35rem .5rem;
+  background: #fff;
 }
 .brand-selection__eyebrow {
   color: rgb(var(--c-fono-text));
@@ -342,14 +353,16 @@
   overflow-wrap: anywhere;
 }
 
+.financial-pick { display: grid; min-width: 0; gap: .85rem; }
+.financial-pick__field { min-width: 0; }
+.financial-pair { display: grid; min-width: 0; grid-template-columns: minmax(0, 1fr); gap: .85rem; }
+.financial-pair > .preview-panel { align-self: stretch; }
+
 .bank-review-heading {
   display: flex;
   align-items: end;
   justify-content: space-between;
   gap: .75rem;
-  margin-top: 1.25rem;
-  border-top: 1px solid rgb(var(--c-ink-600));
-  padding-top: 1rem;
 }
 .bank-review-heading p { margin: 0; }
 .bank-review-heading > div > p:last-child { margin-top: .25rem; color: rgb(var(--c-mute)); font-size: .72rem; line-height: 1.45; }
@@ -364,7 +377,7 @@
 }
 .bank-review-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
   gap: .75rem;
   margin-top: .75rem;
   max-height: min(36rem, 65vh);
@@ -404,30 +417,29 @@
   cursor: pointer;
 }
 .bank-review-card__header button:focus-visible { outline: 2px solid rgb(var(--c-fono)); outline-offset: 2px; }
-.bank-review-card__variants { display: grid; grid-template-columns: minmax(5rem, .75fr) minmax(0, 1.25fr); gap: .55rem; margin-top: .7rem; }
+.bank-review-card__variants { display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: .55rem; margin-top: .7rem; }
 .bank-variant { display: grid; min-width: 0; gap: .3rem; }
 .bank-variant__label { color: rgb(var(--c-mute)); font-size: .58rem; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
 .bank-variant__surface {
   display: grid;
   min-width: 0;
-  min-height: 4.75rem;
+  min-height: 4.5rem;
   place-items: center;
   border: 1px solid rgb(var(--c-ink-600));
   border-radius: .75rem;
-  padding: .55rem;
+  padding: .5rem;
   background: #fff;
   color: #1f2937;
 }
-.bank-variant--compacto .bank-variant__surface { min-width: 4.75rem; }
+.bank-variant--compacto .bank-variant__surface { min-width: 0; }
 .bank-variant__surface > span { max-width: 100%; }
-.bank-variant__surface img { max-width: min(100%, 11rem); }
 .bank-variant__pending { color: #475569; font-size: .64rem; font-weight: 700; line-height: 1.35; text-align: center; }
 .bank-variant__state { color: rgb(var(--c-positive-text)); font-size: .58rem; font-weight: 700; }
 .bank-variant__state--pending { color: rgb(var(--c-warning-text)); }
 
 .payment-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 12rem), 1fr));
   gap: .5rem;
   margin: 0;
   padding: 0;
@@ -550,6 +562,13 @@
 .connected-brand-grid__relationship { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: .5rem; }
 .connected-brand-grid__relationship > span { color: rgb(var(--c-fore)); font-size: .66rem; font-weight: 720; line-height: 1.3; }
 .connected-brand-grid__relationship > :last-child { min-width: 0; max-width: 5.5rem; }
+/* Sobre fondo oscuro, los logos sin placa propia (`fondo`) van sobre una placa neutra
+   clara para conservar contraste; los que ya traen placa de marca no se tocan. */
+:is(.payment-grid__logos, .connected-brand-grid__logos, .connected-brand-grid__relationship) > [data-logo-variante]:not([style*="background"]) {
+  border-radius: .45rem;
+  background: #fff;
+}
+:is(.payment-grid__logos, .connected-brand-grid__logos, .connected-brand-grid__relationship) > [data-logo-variante="horizontal"]:not([style*="background"]) { padding-inline: .4rem; }
 .connected-brand-grid li > small { color: rgb(var(--c-mute)); font-size: .58rem; line-height: 1.25; overflow-wrap: anywhere; }
 
 .phone-output,
@@ -671,7 +690,8 @@
 
 @media (min-width: 640px) {
   .smart-inputs__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .bank-review-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .connected-brand-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); overflow-x: visible; padding-bottom: 0; }
+  .connected-brand-grid li { flex: none; }
   .bank-picker { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 14rem; overflow-x: visible; overflow-y: auto; padding-inline-end: .25rem; }
   .bank-picker li { min-width: 0; }
 }
@@ -681,6 +701,8 @@
   .priority-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .priority-card--1, .priority-card--4 { grid-column: 1 / -1; }
   .preview-layout--financial { grid-template-columns: minmax(0, 1fr); }
+  .financial-pick { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .financial-pair { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .preview-layout--customer { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .smart-inputs__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
@@ -739,18 +761,6 @@
 .gallery-toast-scene > .fixed {
   width: calc(100% - 2rem);
   max-width: 24rem;
-}
-
-/* Larger review frames preserve complete original marks, including source whitespace. */
-.bank-review-card__variants[data-bank-review-enlarged] { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.bank-variant__surface[data-bank-review-size="h-24"],
-.bank-variant__surface[data-bank-review-size="h-28"],
-.bank-variant__surface[data-bank-review-size="h-20"] { min-height: 8.25rem; padding: .35rem; }
-.bank-variant__surface[data-bank-review-size="h-24"] > span { height: 6rem; }
-.bank-variant__surface[data-bank-review-size="h-28"] > span { height: 7rem; }
-.bank-variant__surface[data-bank-review-size="h-20"] > span { height: 5rem; }
-@media (max-width: 420px) {
-  .bank-review-card__variants[data-bank-review-enlarged] { grid-template-columns: minmax(0, 1fr); }
 }
 
 .gallery-blog { margin-top: 2rem; }

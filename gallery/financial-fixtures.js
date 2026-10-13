@@ -1,4 +1,4 @@
-import { BANCOS_PARAGUAY, COOPERATIVAS_PARAGUAY, logoDeBanco } from '../src/utils/bancos.js'
+import { BANCOS_PARAGUAY } from '../src/utils/bancos.js'
 import { MEDIOS_PAGO_CON_MARCA, SOLUCIONES_PAGO_COMERCIOS, logoDeMedioPago } from '../src/utils/mediosPago.js'
 
 export const BANCO_DESTACADO = 'ueno bank'
@@ -27,12 +27,10 @@ export const MARCAS_PAGO_RESTO_PREVIEW = Object.freeze(
   )),
 )
 
-// Review-only sizing; ordinary bank selectors keep their compact defaults.
-export function bankReviewSize(nombre, variante) {
-  if (COOPERATIVAS_PARAGUAY.includes(nombre)) {
-    return variante === 'compacto' ? (nombre === 'San Cristóbal' ? 'h-28' : 'h-24') : 'h-20'
-  }
-  if (nombre === 'Banco GNB Paraguay' && variante === 'compacto') return 'h-28'
-  const contenida = ['horizontal-contained', 'marca-contained'].includes(logoDeBanco(nombre, variante)?.visual?.tipo)
-  return nombre === 'Itaú' && variante === 'horizontal' && contenida ? 'h-16' : variante === 'compacto' ? 'h-12' : 'h-10'
+// Slot uniforme de revisión: todas las instituciones usan el mismo tamaño por
+// variante (48 px compacto, 52 px horizontal). El recorte y la escala ópticos
+// (src/utils/financialOptica.js) compensan marcas con aire interno o formas
+// muy distintas; ya no se agranda ningún banco a mano.
+export function bankReviewSize(_nombre, variante) {
+  return variante === 'compacto' ? 'h-12' : 'h-[3.25rem]'
 }
