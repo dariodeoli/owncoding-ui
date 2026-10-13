@@ -224,7 +224,7 @@ function TarjetaBancoRevision({ nombre, seleccionado, onSelect }) {
           {seleccionado ? 'Seleccionado' : 'Ver arriba'}
         </button>
       </header>
-      <div className="bank-review-card__variants" data-bank-review-enlarged={bankReviewSize(nombre, 'compacto') !== 'h-12' ? 'true' : undefined}>
+      <div className="bank-review-card__variants">
         <VistaVarianteBanco nombre={nombre} variante="compacto" />
         <VistaVarianteBanco nombre={nombre} variante="horizontal" />
       </div>
@@ -238,6 +238,7 @@ export function VistaBancosPagos() {
 
   return (
     <div className="preview-layout preview-layout--financial">
+      {/* 1. Selector junto a la ficha del banco elegido */}
       <section className="preview-panel" aria-labelledby="preview-banco-titulo">
         <div className="preview-panel__heading">
           <div>
@@ -247,29 +248,37 @@ export function VistaBancosPagos() {
           <Badge color={tonoEstadoMarca(registro?.estado)}>{etiquetaEstadoMarca(registro?.estado)}</Badge>
         </div>
 
-        <Label htmlFor="gallery-banco">Banco o financiera</Label>
-        <BancoCombobox
-          id="gallery-banco"
-          value={banco}
-          onChange={setBanco}
-          placeholder="Buscar por nombre o alias"
-          logoProps={{ decorativo: true }}
-        />
-
-        <div className="brand-selection" aria-live="polite">
-          <div className="brand-selection__compact" aria-label={`Variante compacta de ${banco}`}>
-            <BancoLogo banco={banco} variante="compacto" alto="h-10" />
+        <div className="financial-pick">
+          <div className="financial-pick__field">
+            <Label htmlFor="gallery-banco">Banco o financiera</Label>
+            <BancoCombobox
+              id="gallery-banco"
+              value={banco}
+              onChange={setBanco}
+              placeholder="Buscar por nombre o alias"
+              logoProps={{ decorativo: true }}
+            />
+            <p className="preview-note">
+              Assets locales obtenidos de fuentes oficiales, con procedencia y hash auditables. Las marcas bloqueadas nunca se recrean.
+            </p>
           </div>
-          <div className="brand-selection__wordmark">
-            <span className="brand-selection__eyebrow">Seleccionado</span>
-            <BancoLogo banco={banco} variante="horizontal" alto="h-7" />
-            <span className="brand-selection__meta">{registro?.categoria || 'entidad financiera'} · {registro?.verificadoEn || 'sin fecha'}</span>
+          <div className="brand-selection" aria-live="polite">
+            <div className="brand-selection__compact" aria-label={`Variante compacta de ${banco}`}>
+              <BancoLogo banco={banco} variante="compacto" alto="h-12" />
+            </div>
+            <div className="brand-selection__wordmark">
+              <span className="brand-selection__eyebrow">Seleccionado</span>
+              <div className="brand-selection__plate">
+                <BancoLogo banco={banco} variante="horizontal" alto="h-[3.25rem]" />
+              </div>
+              <span className="brand-selection__meta">{registro?.categoria || 'entidad financiera'} · {registro?.verificadoEn || 'sin fecha'}</span>
+            </div>
           </div>
         </div>
-        <p className="preview-note">
-          Assets locales obtenidos de fuentes oficiales, con procedencia y hash auditables. Las marcas bloqueadas nunca se recrean.
-        </p>
+      </section>
 
+      {/* 2. Grilla completa de bancos */}
+      <section className="preview-panel" aria-label="Revisión de todas las instituciones">
         <div className="bank-review-heading">
           <div>
             <p className="bank-picker__label" id="gallery-bancos-todos">Revisión completa · {BANCOS_PREVIEW.length} instituciones</p>
@@ -285,73 +294,93 @@ export function VistaBancosPagos() {
         </div>
       </section>
 
-      <section className="preview-panel" aria-labelledby="preview-pagos-titulo">
-        <div className="preview-panel__heading">
-          <div>
-            <p className="preview-kicker">Medios de pago</p>
-            <h4 id="preview-pagos-titulo">Redes, billeteras y procesadores oficiales</h4>
-          </div>
-          <EtiquetaFixture>Assets autorizados</EtiquetaFixture>
-        </div>
-        <section className="payment-peer-group" aria-labelledby="gallery-soluciones-comercios">
-          <div className="payment-peer-group__heading">
+      {/* 3. Dos columnas desde 1024px: aceptación para comercios + apps conectadas */}
+      <div className="financial-pair">
+        <section className="preview-panel" aria-labelledby="preview-pagos-titulo">
+          <div className="preview-panel__heading">
             <div>
-              <p className="bank-picker__label" id="gallery-soluciones-comercios">{SOLUCIONES_PAGO_COMERCIOS_PREVIEW.titulo}</p>
-              <p>{SOLUCIONES_PAGO_COMERCIOS_PREVIEW.descripcion}</p>
+              <p className="preview-kicker">Medios de pago</p>
+              <h4 id="preview-pagos-titulo">Redes, billeteras y procesadores oficiales</h4>
             </div>
-            <span>Alternativas funcionales</span>
+            <EtiquetaFixture>Assets autorizados</EtiquetaFixture>
           </div>
-          <ul className="payment-peer-grid" aria-labelledby="gallery-soluciones-comercios">
-            {SOLUCIONES_PAGO_COMERCIOS_PREVIEW.marcas.map((marca) => {
-              const marcaRegistro = logoDeMedioPago(marca, 'horizontal')
+          <section className="payment-peer-group" aria-labelledby="gallery-soluciones-comercios">
+            <div className="payment-peer-group__heading">
+              <div>
+                <p className="bank-picker__label" id="gallery-soluciones-comercios">{SOLUCIONES_PAGO_COMERCIOS_PREVIEW.titulo}</p>
+                <p>{SOLUCIONES_PAGO_COMERCIOS_PREVIEW.descripcion}</p>
+              </div>
+              <span>Alternativas funcionales</span>
+            </div>
+            <ul className="payment-peer-grid" aria-labelledby="gallery-soluciones-comercios">
+              {SOLUCIONES_PAGO_COMERCIOS_PREVIEW.marcas.map((marca) => {
+                const marcaRegistro = logoDeMedioPago(marca, 'horizontal')
+                return (
+                  <li key={marca}>
+                    <strong>{marca}</strong>
+                    <div className="payment-peer-grid__logos">
+                      <span className="payment-peer-grid__compact" aria-label={`Logo compacto de ${marca}`}>
+                        <MedioPagoLogo marca={marca} variante="compacto" alto="h-11" decorativo />
+                      </span>
+                      <span className="payment-peer-grid__horizontal" aria-label={`Logo horizontal de ${marca}`}>
+                        <MedioPagoLogo marca={marca} variante="horizontal" alto="h-[3.25rem]" decorativo />
+                      </span>
+                    </div>
+                    <span className="payment-grid__status">{etiquetaEstadoMarca(marcaRegistro?.estado)}</span>
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="preview-note">Grupo funcional de soluciones para comercios. Pik mantiene, por separado, su relación corporativa verificada con Itaú.</p>
+          </section>
+        </section>
+
+        <section className="preview-panel" aria-labelledby="gallery-marcas-conectadas">
+          <div className="preview-panel__heading">
+            <div>
+              <p className="preview-kicker">Relaciones verificadas</p>
+              <h4 id="gallery-marcas-conectadas">Apps conectadas a instituciones</h4>
+            </div>
+          </div>
+          <ul className="connected-brand-grid" aria-labelledby="gallery-marcas-conectadas">
+            {MARCAS_CONECTADAS_PREVIEW.map((marca) => {
+              const relacion = relacionFinancieraDe(marca)
+              const institucion = relacion?.institucionPadre || relacion?.financialProvider
               return (
                 <li key={marca}>
-                  <strong>{marca}</strong>
-                  <div className="payment-peer-grid__logos">
-                    <span className="payment-peer-grid__compact" aria-label={`Logo compacto de ${marca}`}>
-                      <MedioPagoLogo marca={marca} variante="compacto" alto="h-11" decorativo />
-                    </span>
-                    <span className="payment-peer-grid__horizontal" aria-label={`Logo horizontal de ${marca}`}>
-                      <MedioPagoLogo marca={marca} variante="horizontal" alto="h-7" decorativo />
-                    </span>
+                  <div className="connected-brand-grid__logos">
+                    <MedioPagoLogo marca={marca} variante="compacto" alto="h-10" decorativo />
+                    <MedioPagoLogo marca={marca} variante="horizontal" alto="h-8" />
                   </div>
-                  <span className="payment-grid__status">{etiquetaEstadoMarca(marcaRegistro?.estado)}</span>
+                  <div className="connected-brand-grid__relationship">
+                    <span>{institucion ? `Con ${institucion}` : 'Relación verificada'}</span>
+                    {institucion ? <BancoLogo banco={institucion} variante="horizontal" alto="h-7" decorativo /> : null}
+                  </div>
+                  <small>{relacion?.operador?.nombreLegal}</small>
                 </li>
               )
             })}
           </ul>
-          <p className="preview-note">Grupo funcional de soluciones para comercios. Pik mantiene, por separado, su relación corporativa verificada con Itaú.</p>
+          <p className="preview-note">Cada app conserva su propia identidad. La relación informa proveedor u organización matriz verificada, sin convertir la marca en banco ni sustituir logos.</p>
         </section>
-        <p className="bank-picker__label" id="gallery-marcas-conectadas">Apps conectadas a instituciones</p>
-        <ul className="connected-brand-grid" aria-labelledby="gallery-marcas-conectadas">
-          {MARCAS_CONECTADAS_PREVIEW.map((marca) => {
-            const relacion = relacionFinancieraDe(marca)
-            const institucion = relacion?.institucionPadre || relacion?.financialProvider
-            return (
-              <li key={marca}>
-                <div className="connected-brand-grid__logos">
-                  <MedioPagoLogo marca={marca} variante="compacto" alto="h-9" decorativo />
-                  <MedioPagoLogo marca={marca} variante="horizontal" alto="h-6" />
-                </div>
-                <div className="connected-brand-grid__relationship">
-                  <span>{institucion ? `Con ${institucion}` : 'Relación verificada'}</span>
-                  {institucion ? <BancoLogo banco={institucion} variante="horizontal" alto="h-5" decorativo /> : null}
-                </div>
-                <small>{relacion?.operador?.nombreLegal}</small>
-              </li>
-            )
-          })}
-        </ul>
-        <p className="preview-note">Cada app conserva su propia identidad. La relación informa proveedor u organización matriz verificada, sin convertir la marca en banco ni sustituir logos.</p>
-        <p className="bank-picker__label" id="gallery-medios-pago">Redes y medios de pago</p>
+      </div>
+
+      {/* 4. Redes y medios de pago */}
+      <section className="preview-panel" aria-labelledby="gallery-medios-pago">
+        <div className="preview-panel__heading">
+          <div>
+            <p className="preview-kicker">Catálogo</p>
+            <h4 id="gallery-medios-pago">Redes y medios de pago</h4>
+          </div>
+        </div>
         <ul className="payment-grid" aria-labelledby="gallery-medios-pago">
           {MARCAS_PAGO_DEMO.map((marca) => {
             const marcaRegistro = logoDeMedioPago(marca, 'horizontal')
             return (
               <li key={marca}>
                 <div className="payment-grid__logos">
-                  <MedioPagoLogo marca={marca} variante="compacto" alto="h-8" decorativo />
-                  <MedioPagoLogo marca={marca} variante="horizontal" alto="h-6" />
+                  <MedioPagoLogo marca={marca} variante="compacto" alto="h-10" decorativo />
+                  <MedioPagoLogo marca={marca} variante="horizontal" alto="h-8" />
                 </div>
                 <span className="payment-grid__status">{etiquetaEstadoMarca(marcaRegistro?.estado)}</span>
               </li>

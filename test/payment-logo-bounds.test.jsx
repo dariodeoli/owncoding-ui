@@ -17,8 +17,13 @@ describe('payment logo frame containment', () => {
       expect(container.classList).toContain('max-w-full')
       expect(container.classList).toContain('max-h-full')
       expect(image.classList).toContain('object-contain')
-      expect(image.classList).toContain(variante === 'compacto' ? 'max-w-full' : 'max-w-[min(100%,11rem)]')
-      expect(image.classList).toContain('max-h-full')
+      // La vista óptica recorta la tinta dentro de una caja que nunca excede el
+      // slot: overflow oculto, se encoge con flex y su alto es una fracción <= 1.
+      const caja = container.querySelector('[data-logo-optico]')
+      expect(caja.classList).toContain('overflow-hidden')
+      expect(caja.classList).toContain('min-w-0')
+      expect(caja.classList).toContain('shrink')
+      expect(parseFloat(caja.style.height)).toBeLessThanOrEqual(100)
       expect(image.getAttribute('src')).toMatch(/compacto|horizontal/)
     }
   })

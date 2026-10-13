@@ -61,10 +61,10 @@ test('collapsible demo explicitly disables session persistence', async () => {
   expect(spy).not.toHaveBeenCalled()
   spy.mockRestore()
 })
-test('Itaú contained slot has targeted larger sizing without changing other marks', async () => {
+test('Itaú contained mark no longer needs a targeted slot: the optical scale balances it like every other mark', async () => {
   const source = readFileSync('gallery/financial-fixtures.js', 'utf8')
-  expect(source).toContain("nombre === 'Itaú' && variante === 'horizontal' && contenida ? 'h-16'")
-  expect(source).toContain("variante === 'compacto' ? 'h-12' : 'h-10'")
+  expect(source).not.toContain("nombre === 'Itaú'")
+  expect(source).toContain("variante === 'compacto' ? 'h-12' : 'h-[3.25rem]'")
 })
 
 test('every curated mapping is auditable against actual JSX or documented composition', async () => {
