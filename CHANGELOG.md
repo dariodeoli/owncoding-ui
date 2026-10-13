@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.2 — 2026-10-13
 
 - **Itaú:** la marca pasa a cuadro naranja `#EC7000` con letras blancas sobre placa blanca; antes se veía invertida (cuadro blanco con letras naranjas sobre placa naranja).
 
