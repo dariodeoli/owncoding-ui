@@ -94,7 +94,7 @@ describe('metadatos ópticos de logos financieros', () => {
   })
 
   test('las marcas compactas pesan lo mismo (±15 % de área) salvo wordmarks contenidos muy anchos', () => {
-    const marcas = visuales().filter((fila) => fila.variante === 'compacto' && fila.visual.optica.relacion <= 2.5)
+    const marcas = visuales().filter((fila) => fila.variante === 'compacto' && fila.visual.optica.relacion <= 2.5 && fila.visual.empaquetado !== 'pagos/bancard-compacto.png')
     const areas = marcas.map(({ visual }) => {
       const caja = cajaOptica(visual.optica, SLOT.compacto)
       return caja.ancho * caja.alto
@@ -124,5 +124,29 @@ describe('metadatos ópticos de logos financieros', () => {
       expect(raiz.querySelectorAll('img')).toHaveLength(1)
       expect(raiz.classList).toContain('max-w-full')
     }
+  })
+})
+
+describe('placa clara en tema oscuro', () => {
+  test('todo logo con asset y sin `fondo` lleva la placa clara dark:; con `fondo` no', () => {
+    let sinPlaca = 0
+    for (const [Comp, prop, registros] of [[BancoLogo, 'banco', LOGOS_BANCOS], [MedioPagoLogo, 'marca', MARCAS_MEDIOS_PAGO]]) {
+      for (const [nombre, registro] of Object.entries(registros)) {
+        for (const variante of ['compacto', 'horizontal']) {
+          const visual = registro.variantes?.[variante]
+          if (!visual?.empaquetado) continue
+          const raiz = new JSDOM(renderToStaticMarkup(<Comp {...{ [prop]: nombre }} variante={variante} />)).window.document.querySelector('[data-logo-variante]')
+          if (!raiz) continue
+          const clases = [...raiz.classList]
+          if (visual.fondo) expect(clases, `${nombre} ${variante}`).not.toContain('dark:bg-white')
+          else { sinPlaca += 1; expect(clases, `${nombre} ${variante}`).toContain('dark:bg-white') }
+        }
+      }
+    }
+    expect(sinPlaca).toBeGreaterThan(40)
+  }, 30000)
+
+  test('Bancard compacto no se reduce al área común', () => {
+    expect(opticaDeAsset('pagos/bancard-compacto.png', 'compacto').escala).toBe(1)
   })
 })

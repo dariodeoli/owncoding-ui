@@ -114,6 +114,10 @@ export default function LogoFinanciero({
           compacto && 'aspect-square shrink-0 rounded-[5px]',
           // Un solo relleno por tamaño de slot: el compacto no lleva relleno (la
           // escala óptica ya deja aire) y el horizontal reserva el borde lateral.
+          // Tema oscuro: toda marca sin placa propia va sobre placa clara para
+          // conservar contraste; en tema claro no cambia nada.
+          !placa && 'dark:rounded-md dark:bg-white',
+          !placa && !compacto && 'dark:px-1.5',
           placa && visual.padding && (optica ? (compacto ? 'rounded-md' : 'rounded-md px-2') : (compacto ? 'rounded-md p-[2px]' : 'rounded-md p-1.5')),
           alto,
           className,

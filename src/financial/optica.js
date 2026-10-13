@@ -119,6 +119,10 @@ export const REFERENCIA_OPTICA = Object.freeze({
 export const ESCALA_MAXIMA_CON_PLACA = 0.94
 export const ESCALA_MINIMA = 0.55
 
+// Marcas cuyo único asset oficial compacto trae texto diminuto: se muestran a
+// slot completo en vez de reducirse al área común.
+const ESCALA_FIJA = Object.freeze({ 'pagos/bancard-compacto.png': 1 })
+
 const redondear = (n) => Math.round(n * 1000) / 1000
 
 // Relación ancho/alto del rectángulo de tinta.
@@ -136,7 +140,8 @@ export function opticaDeAsset(clave, variante = 'horizontal', { placa = false } 
   const ancho = Math.min(ref.ancho, relacion)
   const area = ancho * (ancho / relacion)
   let escala = Math.min(1, Math.sqrt(ref.area / area))
-  if (placa) escala = Math.min(escala, ESCALA_MAXIMA_CON_PLACA)
+  if (Object.hasOwn(ESCALA_FIJA, clave) && variante === 'compacto') escala = ESCALA_FIJA[clave]
+  else if (placa) escala = Math.min(escala, ESCALA_MAXIMA_CON_PLACA)
   escala = redondear(Math.max(ESCALA_MINIMA, escala))
   const [, , x0, y0, x1, y1] = fila
   return Object.freeze({
