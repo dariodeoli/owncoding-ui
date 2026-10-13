@@ -7,6 +7,8 @@ import { App } from '../gallery/main.jsx'
 import { CATEGORIAS_CATALOGO } from '../gallery/catalog.js'
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
+// Dos pruebas montan la galería completa; con más vistas curadas superan los 5 s por defecto bajo carga.
+vi.setConfig({ testTimeout: 30000 })
 let host, root
 beforeEach(() => {
   window.history.replaceState({ retained: true }, '', '/')

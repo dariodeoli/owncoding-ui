@@ -220,9 +220,13 @@ html.dark {
   --c-fono-glow: 34 197 94;
   --c-fono-soft: 6 46 34;
   --c-onbrand: 6 30 20;
-  --c-on-ok: 255 255 255;
-  --c-on-bad: 255 255 255;
+  /* Relleno `ok` propio y tinta oscura: el blanco sobre el verde claro de html.dark daba 1.74:1. */
+  --c-ok: 74 222 128;
+  --c-on-ok: 6 30 20;
+  --c-bad: 252 165 165;
+  --c-on-bad: 6 30 20;
   --c-interactivo: 124 135 155;
+  --c-placeholder: 168 176 190;
 
   --oc-canvas: rgb(var(--c-paper));
   --oc-surface: rgb(var(--c-ink));

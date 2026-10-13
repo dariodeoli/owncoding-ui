@@ -9,6 +9,7 @@
 
 import type {
   ButtonHTMLAttributes,
+  ElementType,
   ForwardRefExoticComponent,
   HTMLAttributes,
   InputHTMLAttributes,
@@ -62,10 +63,29 @@ export function crearIdentidadApp(identidad: {
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'success' | 'danger' | 'outline' | 'ghost'
+  /** Opt-in: pasarlo (aunque sea `false`) activa spinner, aria-busy y clic bloqueado conservando el ancho. */
+  cargando?: boolean
+  /** Destello ok + check dibujado; la pantalla decide cuánto dura. */
+  exito?: boolean
+  /** `false` apaga el movimiento del control. */
+  motion?: boolean
 }
 export function Button(props: ButtonProps): ReactElement
 
-export type InputProps = InputHTMLAttributes<HTMLInputElement>
+/** Opt-in comunes de los campos (adornos, carga, éxito, movimiento). */
+export type CampoExtrasProps = {
+  /** Adorno inicial: ícono, unidad o prefijo («Gs», «https://»). */
+  inicio?: ReactNode
+  /** Adorno final: botón, unidad o sufijo. */
+  fin?: ReactNode
+  /** Spinner al final + `aria-busy`. */
+  cargando?: boolean
+  /** `ok` pinta el borde y el check; `error` equivale a `aria-invalid`. */
+  estado?: 'ok' | 'error'
+  /** `false` apaga la sacudida y las transiciones. */
+  motion?: boolean
+}
+export type InputProps = InputHTMLAttributes<HTMLInputElement> & CampoExtrasProps
 export const Input: ForwardRefExoticComponent<InputProps & RefAttributes<HTMLInputElement>>
 
 export function PasswordInput(props: InputProps): ReactElement
@@ -74,6 +94,7 @@ export function PinInput(props: Omit<InputHTMLAttributes<HTMLInputElement>, 'val
   value: string
   onChange: (value: string) => void
   onComplete?: () => void
+  motion?: boolean
   length?: number
   masked?: boolean
   autoFocus?: boolean
@@ -120,10 +141,16 @@ export type CurrencyConversionProps = {
 export function CurrencyConversion(props: CurrencyConversionProps): ReactElement
 export function Money(props: { value: number | string | null | undefined; currency?: Moneda; simbolo?: string; className?: string; locale?: string; currencyDisplay?: LocalizedMoneyOptions['currencyDisplay']; numberFormatOptions?: LocalizedMoneyOptions['numberFormatOptions']; vacio?: string }): ReactElement
 
-export type SelectProps = SelectHTMLAttributes<HTMLSelectElement>
-export function Select(props: SelectProps): ReactElement
-export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement>
-export function Textarea(props: TextareaProps): ReactElement
+export type SelectProps = SelectHTMLAttributes<HTMLSelectElement> & Pick<CampoExtrasProps, 'cargando' | 'estado' | 'motion'>
+export const Select: ForwardRefExoticComponent<SelectProps & RefAttributes<HTMLSelectElement>>
+export type TextareaProps = TextareaHTMLAttributes<HTMLTextAreaElement> & Pick<CampoExtrasProps, 'estado' | 'motion'> & {
+  /** La altura sigue al contenido hasta `filasMax` filas. */
+  autoCrecer?: boolean
+  filasMax?: number
+  /** Contador «n/max» (requiere `maxLength`): aviso al 90 %, tope al 100 %. */
+  contador?: boolean
+}
+export const Textarea: ForwardRefExoticComponent<TextareaProps & RefAttributes<HTMLTextAreaElement>>
 export type LabelProps = LabelHTMLAttributes<HTMLLabelElement>
 export function Label(props: LabelProps): ReactElement
 export function Eyebrow(props: HTMLAttributes<HTMLDivElement>): ReactElement
@@ -175,7 +202,7 @@ export function ErrorState(props: { title?: string; description?: ReactNode; onR
 export function Aviso(props: HTMLAttributes<HTMLElement> & { tono?: 'error' | 'ok' | 'warn'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function Nota(props: HTMLAttributes<HTMLElement> & { tono?: 'warn' | 'info' | 'neutro'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function PageHeader(props: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; backTo?: () => void; eyebrow?: ReactNode; migas?: Array<{ etiqueta: ReactNode; href?: string }> }): ReactElement
-export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string; descripcionId?: string; accion?: ReactNode; className?: string }): ReactElement
+export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string; descripcionId?: string; accion?: ReactNode; className?: string; requerido?: boolean; motion?: boolean }): ReactElement
 export function SectionState(props: { estado?: 'vacio' | 'cargando' | 'error'; title?: ReactNode; description?: ReactNode; icon?: string; action?: ReactNode; compact?: boolean; onRetry?: () => void; className?: string }): ReactElement
 
 export type DataTableColumn<Row = Record<string, unknown>> = {
@@ -251,13 +278,15 @@ export function Icon(props: { name: string; className?: string } & SVGProps<SVGS
 
 // ── Campos ─────────────────────────────────────────────────────────────────
 
-export function Switch(props: { checked?: boolean; onChange?: (event: any) => void; disabled?: boolean; id?: string; ariaLabel?: string; className?: string }): ReactElement
+export function FormulariosPro(props: { children?: ReactNode; activo?: boolean; contenedor?: boolean }): ReactElement
+export function useFormulariosPro(): boolean
+export function Switch(props: { checked?: boolean; onChange?: (event: any) => void; disabled?: boolean; id?: string; ariaLabel?: string; className?: string; motion?: boolean }): ReactElement
 export const SearchField: ForwardRefExoticComponent<
-  Omit<InputProps, 'value' | 'onChange'> & { value?: string; onChange?: (event: any) => void; onClear?: () => void; ariaLabel?: string } & RefAttributes<HTMLInputElement>
+  Omit<InputProps, 'value' | 'onChange'> & { value?: string; onChange?: (event: any) => void; onClear?: () => void; ariaLabel?: string; limpiable?: boolean; cargando?: boolean; motion?: boolean } & RefAttributes<HTMLInputElement>
 >
-export function BotonDentroCampo(props: { etiqueta: string; onClick?: () => void; icono?: string; ocupado?: boolean; disabled?: boolean; className?: string }): ReactElement
-export function SegmentedField(props: { value: string; onChange: (id: string) => void; options?: Array<[string, ReactNode, string?, number?]>; ariaLabel?: string; className?: string }): ReactElement | null
-export function PercentField(props: Omit<InputProps, 'value' | 'onChange'> & { value?: string; onChange?: (value: string) => void; onValueChange?: (value: string) => void; className?: string }): ReactElement
+export function BotonDentroCampo(props: { etiqueta: string; titulo?: string; etiquetaOcupada?: string; onClick?: () => void; icono?: string; ocupado?: boolean; disabled?: boolean; className?: string; /** Como `fin` de Input: sin posición propia. */ integrado?: boolean }): ReactElement
+export function SegmentedField(props: { value: string; onChange: (id: string) => void; options?: Array<[string, ReactNode, string?, number?]>; ariaLabel?: string; className?: string; motion?: boolean }): ReactElement | null
+export function PercentField(props: Omit<InputProps, 'value' | 'onChange'> & { value?: string; onChange?: (value: string) => void; onValueChange?: (value: string) => void; className?: string; simbolo?: boolean }): ReactElement
 export function parsePercent(valor: unknown): number | null
 export function formatPercent(numero: unknown): string
 export function limpiarPercent(valor: unknown, max?: number): string
@@ -884,7 +913,7 @@ export function ProductFooter(props: {
   nombre?: string
   /** @deprecated Usá `identidad.version`. Se mantendrá por al menos dos releases menores. */
   version?: string
-  modelo?: 'compacto' | 'apilado' | 'distribuido'
+  modelo?: 'compacto' | 'apilado' | 'distribuido' | 'panel'
   enlaces?: EnlaceInstitucional[]
   /** @deprecated Usá `identidad.credito`. Se mantendrá por al menos dos releases menores. */
   credito?: string | null
@@ -915,14 +944,19 @@ export function LoadingScreen(props: {
   className?: string
 }): ReactElement
 export function PegarEnlaceToken(props: Record<string, any> & { onToken?: (token: string) => void }): ReactElement
+export type ItemNavLateral = { id: string; label?: ReactNode; etiqueta?: ReactNode; icono?: string; contador?: number; href?: string; chip?: ReactNode; roles?: string[]; [clave: string]: any }
 export function NavLateral(props: {
-    items?: Array<{ id: string; label?: ReactNode; etiqueta?: ReactNode; icono?: string; contador?: number; href?: string; roles?: string[]; [clave: string]: any }>
-    grupos?: Array<{ titulo: string; items: Array<{ id: string; label?: ReactNode; icono?: string; contador?: number; hijos?: Array<{ id: string; label?: ReactNode; icono?: string; [clave: string]: any }>; [clave: string]: any }> }>
+    items?: Array<ItemNavLateral>
+    grupos?: Array<{ titulo: string; items: Array<ItemNavLateral & { hijos?: Array<ItemNavLateral> }> }>
     gruposPlegados?: Record<string, boolean>
     defaultGruposPlegados?: Record<string, boolean>
     onToggleGrupo?: (titulo: string, plegado: boolean) => void
     activeId?: string
     onSelect?: (id: string) => void
+    /** Componente de enlace para los ítems con `href` (p. ej. `Link` de Next). Por defecto `<a>`. */
+    componenteEnlace?: ElementType
+    /** Filas de 44 px de alto (táctil). Opt-in. */
+    tactil?: boolean
     colapsado?: boolean
     defaultColapsado?: boolean
     onToggle?: (colapsado: boolean) => void
@@ -932,6 +966,25 @@ export function NavLateral(props: {
     ariaLabel?: string
     className?: string
   } & Record<string, any>): ReactElement
+export type EspacioSelector = { id: string; nombre: string; detalle?: ReactNode; avatar?: string | null }
+export type AccionSelectorEspacio = { id?: string; label: ReactNode; icono?: string; onClick?: () => void; href?: string; disabled?: boolean }
+export function SelectorEspacio(props: {
+  espacios?: EspacioSelector[]
+  valor?: string | null
+  onCambiar?: (id: string) => void
+  /** Pie del menú: acciones (teclado incluido) o un nodo libre. */
+  acciones?: AccionSelectorEspacio[] | ReactNode
+  estado?: 'listo' | 'cargando' | 'error'
+  onReintentar?: () => void
+  /** Hay un cambio guardándose: bloquea la lista (`aria-busy`). */
+  cambiando?: boolean
+  etiqueta?: ReactNode
+  ariaLabel?: string
+  alineacion?: 'left' | 'right'
+  defaultAbierto?: boolean
+  paletaAvatar?: 'sobria'
+  className?: string
+}): ReactElement
 export function MenuDesplegable(props: Record<string, any> & { trigger?: ReactNode; items?: any[]; ariaLabel?: string; alineacion?: 'left' | 'right'; className?: string }): ReactElement
 
 // ── Ajustes, impresión y bancos ────────────────────────────────────────────
@@ -939,7 +992,7 @@ export function MenuDesplegable(props: Record<string, any> & { trigger?: ReactNo
 export function PanelDerecho(props: { children?: ReactNode; panel?: ReactNode; id?: string; className?: string; classNamePanel?: string }): ReactElement
 export function TarjetaAjuste(props: { titulo?: ReactNode; descripcion?: ReactNode; accion?: ReactNode; icono?: string; tono?: 'normal' | 'peligro'; children?: ReactNode; className?: string; id?: string }): ReactElement
 export function EstadoGuardado(props: { testId?: string; estado?: { ok: boolean; texto: ReactNode } | null; className?: string }): ReactElement
-export function Checkbox(props: { checked?: boolean; onChange?: (event: any) => void; label?: ReactNode; descripcion?: ReactNode; variante?: 'simple' | 'tarjeta'; tono?: 'fono' | 'bad'; disabled?: boolean; id?: string; ariaLabel?: string; className?: string; [clave: string]: any }): ReactElement
+export function Checkbox(props: { checked?: boolean; onChange?: (event: any) => void; label?: ReactNode; descripcion?: ReactNode; variante?: 'simple' | 'tarjeta'; tono?: 'fono' | 'bad'; indeterminate?: boolean; motion?: boolean; disabled?: boolean; id?: string; ariaLabel?: string; className?: string; [clave: string]: any }): ReactElement
 export function AvisoPrivacidad(props: { finalidad?: ReactNode; detalle?: ReactNode; politicaUrl?: string; politicaTexto?: string; onPolitica?: (evento: any) => void; derechosUrl?: string; derechosTexto?: string; onDerechos?: (evento: any) => void; tono?: 'info' | 'neutro' | 'warn'; compact?: boolean; className?: string; children?: ReactNode }): ReactElement | null
 export function ConsentimientoDatos(props: { checked?: boolean; onChange?: (event: any) => void; finalidad?: ReactNode; detalle?: ReactNode; politicaUrl?: string; politicaTexto?: string; onPolitica?: (evento: any) => void; version?: string | number; error?: ReactNode; disabled?: boolean; required?: boolean; id?: string; className?: string; [clave: string]: any }): ReactElement
 export function AjustesImpresion(props: Record<string, any> & { impresoras?: any[]; onGuardar?: (ajustes: any) => void }): ReactElement
@@ -1121,7 +1174,7 @@ export function estadoPaleta(props?: { listo?: boolean; cargando?: boolean; erro
 export function AyudaModulo(props: { titulo?: ReactNode; resumen?: ReactNode; puntos?: ReactNode[]; enlaces?: Array<{ href: string; etiqueta: ReactNode; onClick?: () => void }>; abierta?: boolean; onAbrir?: () => void; onCerrar?: () => void; className?: string }): ReactElement | null
 export function BarraInferior(props: { items?: Array<{ id: string; etiqueta: ReactNode; icono?: string; href?: string }>; activo?: string; onSelect?: (item: any) => void; onMas?: () => void; masEtiqueta?: string; menuAbierto?: boolean; menuId?: string; maxItems?: number; className?: string }): ReactElement | null
 export const ESPACIO_BARRA_INFERIOR: string
-export function Avatar(props: { nombre?: string; src?: string | null; tamano?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'; forma?: 'redondo' | 'cuadrado'; empresa?: boolean | string; title?: string; ariaLabel?: string; decorativo?: boolean; onError?: (event: any) => void; className?: string }): ReactElement
+export function Avatar(props: { nombre?: string; src?: string | null; tamano?: 'xs' | 'sm' | 'md' | 'lg' | 'xl'; forma?: 'redondo' | 'cuadrado'; empresa?: boolean | string; title?: string; ariaLabel?: string; decorativo?: boolean; paleta?: 'sobria'; onError?: (event: any) => void; className?: string }): ReactElement
 export function PersonaChip(props: {
   user?: string | { name?: string; nombre?: string; email?: string; id?: string; picture?: string; foto?: string; avatarUrl?: string; photoURL?: string; hasAvatar?: boolean; tieneFoto?: boolean; scope?: string; [clave: string]: any }
   foto?: string
@@ -1154,9 +1207,10 @@ export function PeriodoTabs(props: { periodo: string; setPeriodo: (id: string) =
 export function NumericKeypad(props: { value?: string; onChange: (valor: string) => void; max?: number; className?: string; ariaLabel?: string }): ReactElement
 export const TAMANOS_AVATAR: Record<string, string>
 export const COLORES_AVATAR: Record<string, string>
+export const COLORES_AVATAR_SOBRIOS: Record<string, string>
 export function inicialesDeNombre(nombre: string): string
-export function claveColorDeNombre(nombre: string): string
-export function colorDeNombre(nombre: string): string
+export function claveColorDeNombre(nombre: string, paleta?: 'sobria'): string
+export function colorDeNombre(nombre: string, paleta?: 'sobria'): string
 
 export function ImporteDelta(props: { valor?: number | string | null; moneda?: Moneda; formato?: 'moneda' | 'porcentaje'; invertir?: boolean; vacio?: string; simbolo?: string; className?: string }): ReactElement
 export function tonoDelta(valor: unknown, opciones?: { invertir?: boolean }): TonoCanonico
