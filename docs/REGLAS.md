@@ -74,6 +74,20 @@ servidor revalida siempre. El interruptor booleano es **`Switch`** (un solo
 objeto; #186 retiró el alias `Toggle` y la librería no expone alias de
 compatibilidad).
 
+**Aspecto de los campos.** `Input`, `Select`, `Textarea`, `MoneyInput`,
+`PasswordInput` y `PinInput` salen de **una sola fuente** (`utils/campo.js`,
+`CLASES_CAMPO`); no se copian sus clases en una pantalla. Los estados se
+resuelven por CSS y tokens, en claro y oscuro: reposo (borde `interactivo`
+≥3:1), hover (borde `mute`), foco (borde de marca + anillo de 3 px, sin
+contorno extra), inválido (**`aria-invalid="true"`** pinta borde y anillo
+`bad`; `FormField` y `MoneyInput` ya lo ponen), deshabilitado (superficie
+hundida, no solo opacidad) y `readOnly` (sin relleno, borde punteado). El
+placeholder usa `--c-placeholder` (≥4.5:1). `Select` dibuja su propio chevron
+(`Icon`) y sigue siendo el `<select>` nativo; sus clases de ancho/margen van al
+envoltorio. `Label` es de 13 px, sin mayúsculas forzadas; `FormField` acepta
+`requerido` (asterisco visual + `aria-required`) y muestra el error con ícono.
+Alturas sin cambios: `h-11` en mobile y `md:h-9`.
+
 **Datos personales (Ley 7593/2025):** todo formulario que recolecte datos
 personales muestra la **finalidad** y el enlace a la **política de privacidad**
 en el propio punto de recolección; el consentimiento va explícito, por

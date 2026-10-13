@@ -4,6 +4,21 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **Campos de formulario rediseñados:** `Input`, `Select`, `Textarea`,
+  `MoneyInput`, `PasswordInput` y `PinInput` comparten una sola fuente de estilo
+  (`utils/campo.js`: `CLASES_CAMPO`, `CAMPO_ESTADOS`) con hover, foco (borde de
+  marca + anillo de 3 px), inválido por `aria-invalid="true"`, deshabilitado y
+  `readOnly` distintos, en claro y oscuro. Nuevo token `--c-placeholder`
+  (≥4.5:1; reemplaza el `#8197a5` fijo de `base.css`) y color `placeholder` en el
+  preset. `Select` oculta la flecha nativa y dibuja un chevron con `Icon` (ahora
+  acepta `ref`; las clases de ancho/margen van a un envoltorio `<span>`).
+  `Label` pasa a 13 px sin mayúsculas. `FormField` suma `requerido` (opt-in) y
+  el error lleva ícono. `CountryPhoneSelect` usa los mismos estados. Alturas
+  sin cambios (`h-11` / `md:h-9`). La escena «campos» de la galería muestra todos
+  los estados.
+
 ## v0.67.2 — 2026-10-10
 
 - **Operación unificada `hd` (2026-10-10):** `docs/COMANDOS.md`,

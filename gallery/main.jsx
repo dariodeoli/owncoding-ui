@@ -1,4 +1,4 @@
-import React, { Component, useDeferredValue, useMemo, useState } from 'react'
+import React, { Component, useDeferredValue, useId, useMemo, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import packageJson from '../package.json'
 import { galleryStateUrl, useGalleryUrlState } from './url-state.js'
@@ -25,11 +25,13 @@ import {
   EmailField,
   EmptyState,
   ErrorState,
+  FormField,
   Input,
   Label,
   MedioPagoLogo,
   Money,
   MoneyInput,
+  PasswordInput,
   PercentField,
   PhoneField,
   ProductFooter,
@@ -564,6 +566,51 @@ export function OtrosCamposInteligentes() {
   )
 }
 
+// Escena de la galería para Input, Select y Textarea: todos los estados de los
+// campos en una sola vista (reposo, error con mensaje, deshabilitado, solo
+// lectura, con ayuda y obligatorio). Datos locales, sin envío.
+function FormControlsScene() {
+  const base = useId()
+  const [correo, setCorreo] = useState('maria@ejemplo')
+  const [monto, setMonto] = useState(1250000)
+  const id = (nombre) => `${base}-${nombre}`
+  const correoInvalido = correo.includes('@') && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(correo)
+  return (
+    <div data-form-controls className="grid gap-4 sm:grid-cols-2">
+      <FormField label="Nombre" htmlFor={id('nombre')} requerido hint="Como figura en el documento">
+        <Input id={id('nombre')} required defaultValue="Operación demo" />
+      </FormField>
+      <FormField label="Correo" htmlFor={id('correo')} error={correoInvalido ? 'Falta el dominio, por ejemplo ejemplo.com' : undefined}>
+        <Input id={id('correo')} type="email" value={correo} onChange={(evento) => setCorreo(evento.target.value)} placeholder="nombre@dominio.com" />
+      </FormField>
+      <FormField label="Estado" htmlFor={id('estado')}>
+        <Select id={id('estado')} defaultValue="activo">
+          <option value="activo">Activo</option>
+          <option value="pausado">Pausado</option>
+        </Select>
+      </FormField>
+      <FormField label="Monto" htmlFor={id('monto')}>
+        <MoneyInput id={id('monto')} value={monto} onValueChange={setMonto} className="w-full" />
+      </FormField>
+      <FormField label="Deshabilitado" htmlFor={id('off')}>
+        <Input id={id('off')} disabled defaultValue="No editable ahora" />
+      </FormField>
+      <FormField label="Solo lectura" htmlFor={id('ro')}>
+        <Input id={id('ro')} readOnly defaultValue="Código asignado: A-0042" />
+      </FormField>
+      <FormField label="Contraseña" htmlFor={id('clave')}>
+        <PasswordInput id={id('clave')} defaultValue="clave-de-muestra" />
+      </FormField>
+      <FormField label="Sin dato" htmlFor={id('vacio')}>
+        <Input id={id('vacio')} placeholder="Escribí acá" />
+      </FormField>
+      <FormField label="Nota" htmlFor={id('nota')} className="sm:col-span-2" error="La nota no puede quedar vacía.">
+        <Textarea id={id('nota')} rows={2} />
+      </FormField>
+    </div>
+  )
+}
+
 function Presentacion({ id }) {
   const [activo, setActivo] = useState(true)
   const [porcentaje, setPorcentaje] = useState('18')
@@ -582,7 +629,7 @@ function Presentacion({ id }) {
     case 'acciones':
       return <div className="flex flex-wrap gap-2"><Button>Primaria</Button><Button variant="outline">Secundaria</Button><Button variant="danger">Eliminar</Button></div>
     case 'campos':
-      return <div className="grid gap-3"><Input aria-label="Nombre" defaultValue="Operación demo" /><Select aria-label="Estado" defaultValue="activo"><option value="activo">Activo</option><option value="pausado">Pausado</option></Select><Textarea aria-label="Nota" defaultValue="Información de ejemplo" /></div>
+      return <FormControlsScene />
     case 'datos':
       return <div className="grid gap-3"><div className="flex flex-wrap items-center gap-2"><Badge color="green">Operativo</Badge><Badge color="orange">Pendiente</Badge><Dot color="green" pulse /><Money value={1250000} /></div><Stat label="Componentes" valor={METRICAS_CATALOGO.visuales} delta={12.5} sub="visuales" /></div>
     case 'estados':
