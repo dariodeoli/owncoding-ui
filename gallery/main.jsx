@@ -55,6 +55,7 @@ import {
   telefonoInternacionalValido,
 } from '../src/index.js'
 import { ComponentPreview, EmailPreview } from './component-previews.jsx'
+import { FormulariosShowcase } from './forms-showcase.jsx'
 import { CATALOGO_EXPORTS, CATEGORIAS_CATALOGO, DESTACADOS_CATALOGO } from './catalog.js'
 import { COMPACT_SCENES, galleryCardIsWide, galleryEntryTier, hasInlineGalleryPreview, orderGalleryEntries } from './catalog-order.js'
 import {
@@ -604,6 +605,21 @@ function FormControlsScene() {
       <FormField label="Sin dato" htmlFor={id('vacio')}>
         <Input id={id('vacio')} placeholder="Escribí acá" />
       </FormField>
+      <FormField label="Validado" htmlFor={id('ok')} hint="Estado ok con check dibujado">
+        <Input id={id('ok')} estado="ok" defaultValue="80012345-6" />
+      </FormField>
+      <FormField label="Consultando" htmlFor={id('carga')}>
+        <Input id={id('carga')} cargando defaultValue="Buscando en el registro" />
+      </FormField>
+      <FormField label="Sitio web" htmlFor={id('web')}>
+        <Input id={id('web')} inicio="https://" placeholder="tu-sitio.com" />
+      </FormField>
+      <FormField label="Descuento" htmlFor={id('desc')}>
+        <Input id={id('desc')} fin="%" inputMode="decimal" defaultValue="12,5" />
+      </FormField>
+      <FormField label="Estado de carga del select" htmlFor={id('sel-carga')}>
+        <Select id={id('sel-carga')} cargando defaultValue="a"><option value="a">Cargando opciones…</option></Select>
+      </FormField>
       <FormField label="Nota" htmlFor={id('nota')} className="sm:col-span-2" error="La nota no puede quedar vacía.">
         <Textarea id={id('nota')} rows={2} />
       </FormField>
@@ -782,6 +798,8 @@ export function App() {
           <PriorityPreviews />
           <OtrosCamposInteligentes />
         </section>
+
+        <FormulariosShowcase />
 
         <section className="gallery-blog" aria-labelledby="titulo-blog">
           <div className="section-heading"><div><p>Del componente al producto</p><h2 id="titulo-blog">Guías para construir mejor</h2></div><a href="/blog/">Ver las 10 guías →</a></div>

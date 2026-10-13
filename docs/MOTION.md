@@ -34,6 +34,34 @@ múltiples hijos ni otra transformación en la misma raíz.
 <MotionSurface press><Button disabled={saving} onClick={save}>Guardar</Button></MotionSurface>
 ```
 
+## Campos de formulario
+
+Mismos tokens (`--oc-motion-fast` 160 ms, `--oc-motion-feedback` 240 ms,
+`--oc-motion-ease`) y mismo interruptor: `data-motion="on|off"` en el control
+(prop `motion`, default `true`). Los keyframes viven en `base.css` (opt-in);
+sin ese archivo los estados siguen funcionando, solo sin animación.
+
+| Pieza | Movimiento | Se apaga con |
+| --- | --- | --- |
+| Input, Select, Textarea, PinInput | borde y anillo de foco con transición; hover de borde | `motion={false}`, reduced-motion |
+| `FormField` | el label toma el tono de marca con `:focus-within` (en error, `bad`); el mensaje de error entra con fundido + 4 px | `motion={false}` del FormField |
+| Campo inválido | una sacudida de ±6 px / 300 ms **solo** al pasar de válido a inválido (no al montar ni en cada render) | `motion={false}`, reduced-motion |
+| `estado="ok"` | check dibujado con `oc-status-draw` | `motion={false}`, reduced-motion |
+| `cargando` | spinner al final + `aria-busy` | reduced-motion lo deja estático |
+| SearchField | el × aparece con fundido y escala | `motion={false}` |
+| Select | el chevron gira 180° con foco; hover de fondo | `motion={false}` |
+| Checkbox | trazo del check que se dibuja, escala al presionar | `motion={false}` |
+| Switch | pulgar con curva de rebote leve, pista que cambia de color, pulgar que se ensancha presionado | `motion={false}` |
+| SegmentedField | indicador único que se desliza (`transform`, medido con ref y recalculado al redimensionar); la primera posición no «viaja» | `motion={false}` |
+| Button `cargando`/`exito` | spinner que conserva el ancho; destello `ok` y check dibujado | `motion={false}` |
+
+Reglas: ninguna animación retrasa foco, callbacks, `onChange` ni el envío;
+`cargando` bloquea el clic sin deshabilitar (el foco se conserva) y el
+resultado se anuncia con texto, no solo con color o ícono. Verificación:
+`test/campos-premium.test.jsx` (reglas de `base.css` bajo reduced-motion y
+`data-motion="off"`) y estilos computados en Chromium con
+`reducedMotion: 'reduce'` (transiciones y animaciones a 0).
+
 Movimiento reducido: mismos iconos/texto, sin giro, trazo ni transformaciones.
 Hover exige puntero fino; foco visible y disabled no se transforman. Nunca
 esperar animación para ejecutar callbacks, foco o navegación. Tokens:

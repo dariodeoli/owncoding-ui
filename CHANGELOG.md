@@ -6,6 +6,24 @@ documenta acá y en el README).
 
 ## Unreleased
 
+- **Formularios premium (ola 2):** sistema de adornos único `inicio`/`fin` en
+  `Input` (también `PasswordInput`, `MoneyInput`, `SearchField`,
+  `RucField`/`TaxIdField` con `BotonDentroCampo integrado`, `InstagramField`,
+  `PercentField simbolo`), `cargando` (Input/Select/SearchField/Button) y
+  `estado="ok"`; foco con anillo animado, label que toma la marca con
+  `:focus-within`, error con entrada suave y sacudida única al pasar a inválido;
+  `Textarea` `autoCrecer` + `contador`; `Checkbox` con trazo animado e
+  `indeterminate`; `Switch` con resorte y pulgar que se ensancha;
+  `SegmentedField` con indicador deslizante; `Select` con chevron que gira;
+  `Button` `cargando`/`exito` sin salto de ancho. Autofill con la superficie del
+  campo, cursor y selección de marca. Todo opt-in y apagable con
+  `motion={false}`/reduced-motion (`docs/MOTION.md`). `Select` y `Textarea` son
+  `forwardRef` con tipos; `MoneyInput` ya no pisa el `aria-invalid` de
+  `FormField`. Ajustes de QA de la ola 1: reparto de clases de posición/z/
+  visibilidad al envoltorio del `Select`, `block`, borde de solo lectura
+  `interactivo` (≥3:1) y `--c-placeholder` en `.consola`. El `<select>` de
+  `TableroKanban` usa la fuente compartida. Escena «Formularios» en la galería.
+
 - **Campos de formulario rediseñados:** `Input`, `Select`, `Textarea`,
   `MoneyInput`, `PasswordInput` y `PinInput` comparten una sola fuente de estilo
   (`utils/campo.js`: `CLASES_CAMPO`, `CAMPO_ESTADOS`) con hover, foco (borde de
