@@ -223,6 +223,7 @@ html.dark {
   --c-on-ok: 255 255 255;
   --c-on-bad: 255 255 255;
   --c-interactivo: 124 135 155;
+  --c-placeholder: 168 176 190;
 
   --oc-canvas: rgb(var(--c-paper));
   --oc-surface: rgb(var(--c-ink));

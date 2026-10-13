@@ -76,6 +76,105 @@ input::placeholder, textarea::placeholder {
   caret-color: transparent;
 }
 
+/* ── Campos de formulario: color y selección ────────────────────────────────
+   Cursor de marca y selección tenue dentro de los campos. El autofill del
+   navegador pinta su propio fondo (amarillo/azul): se lo tapa con la
+   superficie del campo y se conservan los anillos de foco/error (variables de
+   Tailwind) para no perder el estado. */
+input, textarea {
+  caret-color: rgb(var(--c-fono-dark));
+}
+input::selection, textarea::selection {
+  background: rgb(var(--c-fono) / .28);
+}
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: rgb(var(--c-fore));
+  caret-color: rgb(var(--c-fore));
+  box-shadow: 0 0 0 1000px rgb(var(--c-ink-800)) inset, var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000);
+}
+
+/* ── Campos de formulario: movimiento ───────────────────────────────────────
+   Todo con los tokens --oc-motion-* (docs/MOTION.md). El interruptor es
+   `data-motion="on|off"` del propio control (prop `motion`); con "off" y con
+   prefers-reduced-motion no hay animaciones ni transiciones. Nada de esto
+   retrasa foco, eventos ni envíos. */
+@keyframes oc-campo-sacude {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(5px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(2px); }
+}
+@keyframes oc-campo-mensaje {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes oc-campo-aparece {
+  from { opacity: 0; transform: scale(.7); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes oc-boton-exito {
+  from { box-shadow: 0 0 0 0 rgb(var(--c-ok) / .5); }
+  to { box-shadow: 0 0 0 8px rgb(var(--c-ok) / 0); }
+}
+[data-oc-sacude][data-motion="on"] {
+  animation: oc-campo-sacude 300ms var(--oc-motion-ease);
+}
+[data-motion="on"] .oc-campo-mensaje {
+  animation: oc-campo-mensaje var(--oc-motion-feedback) var(--oc-motion-ease) both;
+}
+.oc-campo-aparece[data-motion="on"] {
+  animation: oc-campo-aparece var(--oc-motion-fast) var(--oc-motion-ease) both;
+}
+[data-motion="on"] .oc-campo-ok path {
+  stroke-dasharray: 32;
+  animation: oc-status-draw var(--oc-motion-feedback) var(--oc-motion-ease);
+}
+[data-oc-exito][data-motion="on"] {
+  animation: oc-boton-exito var(--oc-motion-feedback) var(--oc-motion-ease);
+}
+/* Trazo del check de Checkbox: se dibuja al marcar. */
+[data-oc-checkbox][data-motion="on"] .oc-check-trazo {
+  stroke-dasharray: 24;
+  stroke-dashoffset: 24;
+  transition: stroke-dashoffset var(--oc-motion-feedback) var(--oc-motion-ease) 40ms;
+}
+[data-oc-checkbox][data-motion="on"] input:checked + svg .oc-check-trazo {
+  stroke-dashoffset: 0;
+}
+/* `motion={false}`: el control y todo lo que contiene queda estático. */
+[data-motion="off"],
+[data-motion="off"] *,
+[data-motion="off"]::before,
+[data-motion="off"]::after {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-oc-sacude],
+  [data-motion] .oc-campo-mensaje,
+  .oc-campo-aparece,
+  .oc-campo-ok path,
+  [data-oc-exito] {
+    animation: none !important;
+  }
+  .oc-check-trazo {
+    stroke-dashoffset: 0 !important;
+    transition: none !important;
+  }
+  [data-oc-segmentado] [data-oc-indicador],
+  [data-oc-switch] *,
+  [data-oc-checkbox] *,
+  [data-oc-campo] *,
+  [data-oc-select] * {
+    transition: none !important;
+  }
+}
+
 /* Animaciones de la pantalla de carga (respetan reduced-motion) */
 @keyframes oc-respira {
   0%, 100% { transform: scale(1); }
