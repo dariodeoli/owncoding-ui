@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **Itaú:** la marca pasa a cuadro naranja `#EC7000` con letras blancas sobre placa blanca; antes se veía invertida (cuadro blanco con letras naranjas sobre placa naranja).
+
 ## v0.68.1 — 2026-10-13
 
 - **Correo:** identidad editorial e idioma opcionales en los correos transaccionales (`idioma`, `tema`), integrados desde `codex/owndata-mail-theme` (32d04d2).

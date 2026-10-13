@@ -520,7 +520,7 @@
         "width": 340.0,
         "height": 340.0
       },
-      "sha256": "68f4a9b8a8dc1c0ee15906c3f309d6261b73eb4e05f9a5da34fe59fc73f22f85",
+      "sha256": "f2d8cbb291dd47c79371964d9efb1e1bc6ccd5eb16ffde7cd29b472ea674b58c",
       "authorization": {
         "basis": "User-provided written authorization",
         "confirmedAt": "2026-10-01",
@@ -531,8 +531,8 @@
         "note": "Project-surface authorization; not represented as an open license or universal redistribution grant."
       },
       "presentation": {
-        "compacto": "Published square mark, unchanged, on a contrasting orange surface.",
-        "horizontal": "The same square mark contained in the horizontal slot; not an independent horizontal lockup."
+        "compacto": "Official squircle recolored on request of the owner (2026-10-13): orange #EC7000 mark with white letters, on a white surface.",
+        "horizontal": "The same square mark contained in the horizontal slot on a white surface; not an independent horizontal lockup."
       }
     },
     {

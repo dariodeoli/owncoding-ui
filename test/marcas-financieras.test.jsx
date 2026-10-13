@@ -88,7 +88,7 @@ describe('catálogo de instituciones financieras', () => {
     for (const [name, file] of [['Banco GNB Paraguay', 'gnb-compacto.png'], ['San Cristóbal', 'san-cristobal-compacto.png']]) {
       expect(logoDeBanco(name, 'compacto').visual).toMatchObject({ tipo: 'archivo', estado: 'aportado-usuario', empaquetado: `bancos/${file}` })
     }
-    expect(logoDeBanco('Itaú', 'horizontal').visual).toMatchObject({ fondo: '#EC7000', padding: true })
+    expect(logoDeBanco('Itaú', 'horizontal').visual).toMatchObject({ fondo: '#FFFFFF', padding: true })
   })
 
   test('el catálogo ofrecido excluye Banco do Brasil y conserva lookup histórico', () => {

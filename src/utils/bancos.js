@@ -150,8 +150,8 @@ export const LOGOS_BANCOS = {
     categoria: 'banco', alias: ['itau', 'banco itau', 'itau paraguay', 'banco itaú paraguay'], monograma: 'I', color: '#EC7000', archivo: 'itau-compacto.svg',
     fuenteOficial: 'https://www.itau.com.py/', estado: 'verificado', redistribucion: AUTORIZACION_ASSETS_FINANCIEROS,
     variantes: {
-      compacto: EMPAQUETADO('itau-compacto.svg', 'oficial', { fondo: '#EC7000', padding: true }),
-      horizontal: MARCA_CONTENIDA('itau-compacto.svg', { fondo: '#EC7000', padding: true, descripcion: 'Marca cuadrada oficial contenida en el espacio horizontal; no es un lockup horizontal independiente.' }),
+      compacto: EMPAQUETADO('itau-compacto.svg', 'oficial', { fondo: '#FFFFFF', padding: true }),
+      horizontal: MARCA_CONTENIDA('itau-compacto.svg', { fondo: '#FFFFFF', padding: true, descripcion: 'Marca cuadrada oficial contenida en el espacio horizontal; no es un lockup horizontal independiente.' }),
     },
   }),
   'Banco Nacional de Fomento': entrada({
