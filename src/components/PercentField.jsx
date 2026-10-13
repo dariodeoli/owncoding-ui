@@ -5,6 +5,7 @@ import { TAMANOS_CAMPO } from '../utils/tamanos.js'
 // Porcentaje 0–100 con coma decimal y hasta 2 decimales (0,2 / 12,5). El valor
 // viaja como string formateado con coma; '' representa el campo vacío. Los
 // formularios convierten a número con parsePercent antes de guardar.
+// `simbolo` (opt-in) dibuja el «%» como adorno final del campo.
 
 export function parsePercent(valor) {
   const texto = String(valor ?? '').trim().replace(',', '.')
@@ -39,6 +40,7 @@ export default function PercentField({
   max = 100,
   className,
   id,
+  simbolo = false,
   ...props
 }) {
   function notificar(siguiente) {
@@ -51,6 +53,7 @@ export default function PercentField({
       id={id}
       className={cn(TAMANOS_CAMPO.porcentaje, className)}
       type="text"
+      fin={simbolo ? <span aria-hidden="true" className="pr-2.5">%</span> : undefined}
       inputMode="decimal"
       autoComplete="off"
       maxLength={6}

@@ -1,7 +1,6 @@
 import { useId, useState } from 'react'
 import BotonDentroCampo from './BotonDentroCampo.jsx'
 import { FormField, Input } from './ui.jsx'
-import { cn } from '../utils/cn.js'
 import {
   limpiarTaxId,
   MENSAJE_RUC,
@@ -78,7 +77,7 @@ export default function TaxIdField({
 
   return (
     <FormField label={label} hint={hint} error={errorVisible} htmlFor={inputId} descripcionId={descripcionId}>
-      <div className="relative">
+      <div>
         <Input
           id={inputId}
           name={name}
@@ -96,18 +95,19 @@ export default function TaxIdField({
             setConsulta({ estado: 'inicial' })
             onChange?.(limpiarTaxId(event.target.value, maxLength))
           }}
-          className={cn(onBuscarRazonSocial && (consultando ? 'pr-32' : 'pr-11'), className)}
+          className={className}
+          fin={onBuscarRazonSocial ? (
+            <BotonDentroCampo
+              integrado
+              etiqueta={etiquetaConsulta}
+              titulo={etiquetaConsulta}
+              ocupado={consultando}
+              disabled={disabled || !consultable}
+              onClick={() => void consultar()}
+            />
+          ) : undefined}
           {...props}
         />
-        {onBuscarRazonSocial ? (
-          <BotonDentroCampo
-            etiqueta={etiquetaConsulta}
-            titulo={etiquetaConsulta}
-            ocupado={consultando}
-            disabled={disabled || !consultable}
-            onClick={() => void consultar()}
-          />
-        ) : null}
       </div>
       {consulta.estado === 'encontrada' ? (
         <div role="status" className="mt-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-ink-600 bg-ink-800/60 px-3 py-2 text-xs">

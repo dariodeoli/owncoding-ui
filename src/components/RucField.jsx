@@ -110,14 +110,24 @@ export default function RucField({
 
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="relative">
+      <div>
         <Input
           {...inputProps}
           id={inputId}
           aria-label={ariaLabel}
           aria-describedby={[inputProps['aria-describedby'], puedeExtraer && textoAyuda ? ayudaId : null, error ? errorId : null].filter(Boolean).join(' ') || undefined}
           aria-invalid={inputProps['aria-invalid'] ?? (error ? true : undefined)}
-          className={puedeExtraer ? (consultando ? 'pr-32' : 'pr-11') : undefined}
+          fin={puedeExtraer ? (
+            <BotonDentroCampo
+              integrado
+              etiqueta="Extraer los datos del RUC"
+              titulo={hayRuc ? 'Extraer los datos del RUC' : 'Ingresá el RUC para extraer los datos'}
+              etiquetaOcupada="Consultando…"
+              disabled={disabled || consultarDisabled || !hayRuc}
+              ocupado={consultando}
+              onClick={extraer}
+            />
+          ) : undefined}
           type="text"
           inputMode="numeric"
           pattern={strictNine ? "[1-9][0-9]{0,8}(-[0-9])?" : "[0-9]{0,8}(-[0-9]?)?"}
@@ -139,16 +149,6 @@ export default function RucField({
           }}
           placeholder={placeholder}
         />
-        {puedeExtraer && (
-          <BotonDentroCampo
-            etiqueta="Extraer los datos del RUC"
-            titulo={hayRuc ? 'Extraer los datos del RUC' : 'Ingresá el RUC para extraer los datos'}
-            etiquetaOcupada="Consultando…"
-            disabled={disabled || consultarDisabled || !hayRuc}
-            ocupado={consultando}
-            onClick={extraer}
-          />
-        )}
       </div>
       {puedeExtraer && textoAyuda && <span id={ayudaId} className="block text-xs text-mute">{textoAyuda}</span>}
       {resultado && (

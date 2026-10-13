@@ -7,6 +7,10 @@ import { cn } from '../utils/cn.js'
 // `pr-32` mientras `ocupado`). `title` + `aria-label` sostienen el tooltip y el
 // lector de pantalla, porque adentro del input no hay texto visible.
 //
+// Con `integrado` no se posiciona solo: va como `fin` de Input (mismo sistema de
+// adornos que el ojo de PasswordInput) y el campo reserva su ancho, también
+// mientras `ocupado`.
+//
 // Portable: no consulta nada; la pantalla decide qué hace `onClick`.
 export default function BotonDentroCampo({
   etiqueta,
@@ -16,6 +20,7 @@ export default function BotonDentroCampo({
   ocupado = false,
   disabled = false,
   onClick,
+  integrado = false,
   className = '',
 }) {
   return (
@@ -27,9 +32,10 @@ export default function BotonDentroCampo({
       aria-busy={ocupado || undefined}
       title={ocupado ? etiquetaOcupada : titulo || etiqueta}
       className={cn(
-        'absolute inset-y-0 right-0 flex items-center rounded-r-lg text-mute transition hover:text-fore focus-visible:z-10',
+        integrado ? 'flex h-full items-center rounded-r-lg' : 'absolute inset-y-0 right-0 flex items-center rounded-r-lg',
+        'text-mute transition-colors hover:text-fore focus-visible:z-10',
         'disabled:cursor-not-allowed disabled:opacity-40',
-        ocupado ? 'gap-2 bg-ink-700 px-3 text-xs font-semibold text-fono-light' : 'w-11 justify-center',
+        ocupado ? 'gap-2 bg-ink-700 px-3 text-xs font-semibold text-fono-text' : 'w-11 justify-center hover:bg-fore/5',
         className,
       )}
     >
