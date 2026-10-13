@@ -4,6 +4,19 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **Shell para paneles (OwnData, 2026-10-13):** cambios aditivos y opt-in, sin
+  renombrar ni quitar props. `NavLateral` acepta ítems con `href` (enlace con
+  `aria-current`, vía `componenteEnlace` o `<a>`), `chip` por ítem y `tactil`
+  (filas de 44 px). Nuevo `SelectorEspacio` (avatar + nombre, check en el
+  activo, pie `acciones`, `estado` listo/cargando/error con `onReintentar`,
+  `cambiando` con `aria-busy`, teclado y `Esc`). `Avatar` suma
+  `paleta="sobria"` (azules y grises, nunca tonos semánticos;
+  `COLORES_AVATAR_SOBRIOS`). `ProductFooter` suma `modelo="panel"` (49 px a
+  1280 y 69 px a 375, frente a 97/117 px de `compacto`). Tipos, vistas de
+  galería, tests (`test/espacio-shell.test.jsx`) y `docs/SHELL.md` al día.
+
 ## v0.67.2 — 2026-10-10
 
 - **Operación unificada `hd` (2026-10-10):** `docs/COMANDOS.md`,
