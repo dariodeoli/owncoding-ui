@@ -1,13 +1,17 @@
 import { createRef, useState } from 'react'
 import {
   BancoCombobox,
+  Button,
   CityAutocomplete,
   CurrencyConversion,
+  Input,
   Money,
   MoneyInput,
   PercentField,
   ProductFooter,
   ProductPrefooter,
+  Select,
+  Textarea,
   crearIdentidadApp,
 } from 'owncoding-ui'
 import { resolveInstitution, resolveLocality, INSTITUTIONS_PARAGUAY, LOCALITIES_PARAGUAY, formatGs } from 'owncoding-ui/utils'
@@ -43,11 +47,16 @@ motorIA({ esquema: { tipos: [] } })
 export function ConsumerFixture() {
   const [valor, setValor] = useState('')
   const ref = createRef<HTMLInputElement>()
+  const selectRef = createRef<HTMLSelectElement>()
   return (
     <>
       <CurrencyConversion originalAmount="1.25" originalCurrency="EUR" convertedAmount={6.75} convertedCurrency="BRL" rate={5.4} source="Fixture" asOf="2026-10-07T12:00:00Z" status="stale" locale="de-DE" labels={{ stale: 'Veraltet' }} />
       <Money value={null} currency="BRL" locale="pt-BR" numberFormatOptions={{ maximumFractionDigits: 4 }} />
       <MoneyInput ref={ref} value={1000} onValueChange={(monto) => String(monto)} />
+      <Select ref={selectRef} cargando estado="ok" motion={false}><option>a</option></Select>
+      <Input inicio="https://" fin={<span>.com</span>} cargando estado="ok" />
+      <Textarea autoCrecer contador maxLength={100} />
+      <Button cargando exito motion={false}>Guardar</Button>
       <PercentField value={valor} onChange={setValor} onValueChange={setValor} />
       <BancoCombobox value={valor} onChange={setValor} onSelect={setValor} onIdentitySelect={result => setValor(result.record?.id || '')} />
       <CityAutocomplete value={valor} onChange={setValor} onSelect={(ciudad, departamento) => setValor(`${ciudad}${departamento || ''}`)} onIdentitySelect={result => setValor(result.record?.id || '')} />

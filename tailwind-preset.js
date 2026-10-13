@@ -81,6 +81,7 @@ export default {
         },
         accion: 'rgb(var(--c-accion) / <alpha-value>)',
         interactivo: 'rgb(var(--c-interactivo) / <alpha-value>)',
+        placeholder: 'rgb(var(--c-placeholder) / <alpha-value>)',
         mute: 'rgb(var(--c-mute) / <alpha-value>)',
         // Texto sobre el color de marca (en ambos temas)
         onbrand: 'rgb(var(--c-onbrand) / <alpha-value>)',

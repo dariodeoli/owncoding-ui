@@ -3,6 +3,10 @@ import { createPortal } from 'react-dom'
 import { cn } from '../utils/cn.js'
 import { formatMoney, formatGs, formatGsInput, formatUsdInput, normalizarMontoInput, caretTrasDigitos, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
 import { TAMANOS_CAMPO } from '../utils/tamanos.js'
+import { useFormulariosPro } from './FormulariosPro.jsx'
+import { CLASES_CAMPO, esInvalido, nivelContador, separarClasesDeLayout } from '../utils/campo.js'
+import useSacudida from '../hooks/useSacudida.js'
+import { CheckOk, SlotFin, SlotInicio, Spinner, rellenoAdornos, useReservaAdornos, usaAdornos } from './CampoAdornos.jsx'
 import { CIERRE_CON_CAMBIOS, TAMANO_MODAL_PREDETERMINADO, TAMANOS_MODAL } from '../utils/modal.js'
 import { mensajeFallo, mensajeResultado } from '../utils/resultado.js'
 import { textoDeTono } from '../utils/tonos.js'
@@ -24,55 +28,112 @@ const VARIANTS = {
   outline: 'bg-transparent text-fore border border-interactivo hover:border-fono hover:bg-fono/10',
   ghost: 'bg-transparent text-mute hover:bg-ink-700 hover:text-fore',
 }
-export function Button({ className, variant = 'primary', ...props }) {
+//
+// Opt-in en acciones de formulario (pasar `cargando`, aunque sea `false`):
+// - `cargando`: spinner centrado, `aria-busy` y clic bloqueado (también el
+//   submit) sin deshabilitar: conserva el foco y el ancho exacto, porque la
+//   etiqueta sigue ocupando su lugar (invisible). Usar la misma etiqueta en
+//   todos los estados para que el ancho no cambie.
+// - `exito`: destello `ok`, check dibujado y relleno `ok`; la pantalla decide
+//   cuánto dura y anuncia el resultado con texto (`AnimatedStatus`/`Aviso`).
+// - `motion={false}` apaga el destello, el trazo y la escala al presionar.
+export function Button({ className, variant = 'primary', cargando, exito = false, motion = true, children, onClick, ...props }) {
+  const clase = cn(
+    'inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 font-semibold transition',
+    'h-11 md:h-9 text-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-[.98]',
+    VARIANTS[variant],
+    exito && 'bg-ok text-on-ok',
+    className,
+  )
+  if (cargando === undefined && !exito) return <button className={clase} onClick={onClick} {...props}>{children}</button>
+  const ocupado = Boolean(cargando)
   return (
     <button
-      className={cn(
-        'inline-flex select-none items-center justify-center gap-2 rounded-lg px-4 font-semibold transition',
-        'h-11 md:h-9 text-sm disabled:opacity-30 disabled:cursor-not-allowed active:scale-[.98]',
-        VARIANTS[variant],
-        className,
-      )}
+      className={cn(clase, 'relative')}
+      aria-busy={ocupado || undefined}
+      aria-disabled={ocupado || undefined}
+      data-motion={motion ? 'on' : 'off'}
+      data-oc-cargando={ocupado ? '' : undefined}
+      data-oc-exito={exito && !ocupado ? '' : undefined}
+      onClick={(evento) => {
+        if (ocupado) { evento.preventDefault(); return }
+        onClick?.(evento)
+      }}
       {...props}
-    />
+    >
+      <span className={cn('inline-flex items-center justify-center gap-2 transition-opacity [transition-duration:var(--oc-motion-fast,160ms)]', (ocupado || exito) && 'opacity-0')}>{children}</span>
+      {ocupado ? <span className="absolute inset-0 grid place-items-center"><Spinner /></span> : null}
+      {exito && !ocupado ? <span className="absolute inset-0 grid place-items-center"><CheckOk className="text-current" /></span> : null}
+    </button>
   )
 }
 
 // ── Input ───────────────────────────────────────────────────────────
 // forwardRef: la búsqueda global y el catálogo enfocan el campo por ref.
-export const Input = forwardRef(function Input({ className, ...props }, ref) {
+// El aspecto y los estados (hover, foco, `aria-invalid`, deshabilitado,
+// `readOnly`) salen de `CLASES_CAMPO` (utils/campo.js), igual que Select,
+// Textarea, MoneyInput y PinInput.
+//
+// Opt-in (todo aditivo; sin ellos el DOM es el <input> pelado de siempre):
+// - `inicio` / `fin`: adornos (ícono, unidad, prefijo, botón) con relleno
+//   reservado. Un único sistema de posición: lo usan PasswordInput (ojo),
+//   MoneyInput (moneda), SearchField, RucField/TaxIdField (BotonDentroCampo).
+// - `cargando`: spinner al final + `aria-busy`.
+// - `estado="ok"`: borde ok + check dibujado; `estado="error"` equivale a
+//   `aria-invalid`. Sin `estado`, el inválido sale de `aria-invalid="true"`.
+// - `motion` (default true): `false` apaga la sacudida y las transiciones.
+// La sacudida de un solo disparo corre al pasar de válido a inválido.
+export const Input = forwardRef(function Input({ className, inicio, fin, cargando = false, estado, motion = true, style, ...props }, ref) {
+  const ariaInvalid = props['aria-invalid'] ?? (estado === 'error' ? true : undefined)
+  const invalido = esInvalido(ariaInvalid)
+  const ok = estado === 'ok' && !invalido
+  const sacude = useSacudida(invalido, motion)
+  const adornos = { inicio, fin, cargando, ok }
+  const conAdornos = usaAdornos(adornos)
+  const { refInicio, refFin, medido } = useReservaAdornos([inicio, fin, cargando, ok])
+  const comunes = {
+    'aria-invalid': ariaInvalid,
+    'aria-busy': cargando || props['aria-busy'] || undefined,
+    'data-oc-control': '',
+    'data-oc-estado': ok ? 'ok' : undefined,
+    'data-motion': motion ? 'on' : 'off',
+    'data-oc-sacude': sacude ? '' : undefined,
+  }
+  if (!conAdornos) return <input ref={ref} className={cn(CLASES_CAMPO.input, className)} style={style} {...props} {...comunes} />
+  const { layout, control, tieneAncho } = separarClasesDeLayout(className)
+  const relleno = rellenoAdornos(adornos, medido)
   return (
-    <input
-      ref={ref}
-      className={cn(
-        'w-full rounded-lg border border-interactivo bg-ink-800 px-3.5 text-fore',
-        'h-11 md:h-9 text-base md:text-sm outline-none transition',
-        'focus:border-fono focus:ring-1 focus:ring-fono/40 placeholder:text-mute/60',
-        className,
-      )}
-      {...props}
-    />
+    <span hidden={props.hidden} className={cn('relative block', !tieneAncho && 'w-full', layout)} data-oc-campo="" data-motion={motion ? 'on' : 'off'} data-oc-sacude={sacude ? '' : undefined}>
+      <input ref={ref} className={cn(CLASES_CAMPO.input, 'peer', relleno.clases, control)} style={{ ...relleno.estilo, ...style }} {...props} {...comunes} data-oc-sacude={undefined} />
+      {inicio !== undefined && inicio !== null && inicio !== false && inicio !== '' ? <SlotInicio refSlot={refInicio}>{inicio}</SlotInicio> : null}
+      <SlotFin refSlot={refFin} cargando={cargando} ok={ok}>{fin}</SlotFin>
+    </span>
   )
 })
 
 // Campo de contraseña reutilizable: mantiene el valor oculto por defecto y
-// permite comprobarlo puntualmente sin perder foco ni accesibilidad.
+// permite comprobarlo puntualmente sin perder foco ni accesibilidad. El ojo es
+// el `fin` de Input (mismo sistema de adornos).
 export function PasswordInput({ className, ...props }) {
   const [visible, setVisible] = useState(false)
   return (
-    <div className="relative">
-      <Input {...props} type={visible ? 'text' : 'password'} className={cn('pr-11', className)} />
-      <button
-        type="button"
-        onClick={() => setVisible(current => !current)}
-        className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-lg text-mute transition hover:text-fore focus-visible:z-10"
-        aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-        aria-pressed={visible}
-        title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-      >
-        <Icon name={visible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
-      </button>
-    </div>
+    <Input
+      {...props}
+      type={visible ? 'text' : 'password'}
+      className={className}
+      fin={(
+        <button
+          type="button"
+          onClick={() => setVisible(current => !current)}
+          className="grid h-full w-11 place-items-center rounded-r-lg text-mute transition-colors hover:text-fore focus-visible:z-10 focus-visible:text-fore"
+          aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+          aria-pressed={visible}
+          title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+        >
+          <Icon name={visible ? 'eyeOff' : 'eye'} className="h-4 w-4" />
+        </button>
+      )}
+    />
   )
 }
 
@@ -80,7 +141,8 @@ export function PasswordInput({ className, ...props }) {
 // foco y avance automático al completar. Los dígitos no se dibujan (ver
 // .pin-oculto en index.css): el componente pinta un punto por dígito, sin
 // depender de -webkit-text-security ni de glifos de la fuente.
-export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, disabled = false, inputRef, ariaLabel, className, id, masked = true, ...inputProps }) {
+export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = false, disabled = false, inputRef, ariaLabel, className, id, masked = true, motion = true, ...inputProps }) {
+  const sacude = useSacudida(esInvalido(inputProps['aria-invalid']), motion)
   const largoMax = Math.min(6, Math.max(4, Number(length) || 4))
   const largo = String(value || '').length
   function actualizar(raw) {
@@ -90,7 +152,7 @@ export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = 
     if (next.length === largoMax) onComplete?.()
   }
   return (
-    <span className={cn('relative mx-auto block h-16 transition-transform duration-150 focus-within:scale-[1.03]', masked ? 'w-44' : 'w-full max-w-xs', disabled && 'opacity-50', className)}>
+    <span data-motion={motion ? 'on' : 'off'} data-oc-sacude={sacude ? '' : undefined} className={cn('relative mx-auto block h-16 transition-transform [transition-duration:var(--oc-motion-fast,160ms)] focus-within:scale-[1.03]', masked ? 'w-44' : 'w-full max-w-xs', className)}>
       <input
         {...inputProps}
         ref={inputRef}
@@ -115,13 +177,14 @@ export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = 
         }}
         placeholder=""
         aria-label={ariaLabel || `PIN de ${largoMax} dígitos`}
-        className="pin-oculto h-full w-full rounded-2xl border border-interactivo bg-paper text-center text-3xl font-bold tracking-[.45em] shadow-card transition-all duration-150 focus:border-fono focus:ring-2 focus:ring-fono/30 focus:outline-none"
+        className={cn('pin-oculto', CLASES_CAMPO.pin)}
+        data-oc-control=""
       />
       <span aria-hidden="true" className={cn("pointer-events-none absolute inset-0 flex items-center justify-center", masked ? "gap-[.5em]" : "gap-2 px-3")}>
         {Array.from({ length: largoMax }, (_, indice) => (
           <span
             key={indice}
-            className={cn(masked ? 'h-2.5 w-2.5 rounded-full transition-colors' : 'flex h-10 min-w-0 max-w-8 flex-1 items-center justify-center rounded-lg border border-interactivo text-xl font-semibold tabular-nums', masked && (indice < largo ? 'bg-fore' : 'bg-mute/25'))}
+            className={cn(masked ? 'h-2.5 w-2.5 rounded-full transition-[background-color,transform] [transition-duration:var(--oc-motion-fast,160ms)]' : 'flex h-10 min-w-0 max-w-8 flex-1 items-center justify-center rounded-lg border border-interactivo text-xl font-semibold tabular-nums', masked && (indice < largo ? 'scale-125 bg-fore' : 'bg-mute/25'))}
           >{!masked && String(value || '')[indice]}</span>
         ))}
       </span>
@@ -157,14 +220,12 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
   // entra completo y no se puede escribir de más; se puede pisar por prop.
   const topeLargo = maxLength ?? largoMaximoMonto(max, { decimales: !soloEnteros })
   return (
-    <div className="relative">
-      <span className="pointer-events-none absolute left-3.5 top-1/2 z-10 -translate-y-1/2 text-xs font-semibold text-mute">
-        {prefix}
-      </span>
+    <>
       <Input
         {...props}
+        inicio={<span className="text-xs font-semibold">{prefix}</span>}
         ref={establecerRef}
-        aria-invalid={excede || undefined}
+        aria-invalid={excede || props['aria-invalid'] || undefined}
         title={excede ? `El monto supera el máximo permitido (${max.toLocaleString('es-PY')})` : props.title}
         inputMode={soloEnteros ? 'numeric' : 'decimal'}
         maxLength={topeLargo}
@@ -189,9 +250,9 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
             nodo.setSelectionRange?.(caret, caret)
           })
         }}
-        className={cn(TAMANOS_CAMPO.moneda, prefix.length > 3 ? 'pl-14' : 'pl-12', 'tabular-nums', className)}
+        className={cn(TAMANOS_CAMPO.moneda, 'tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none', className)}
       />
-    </div>
+    </>
   )
 })
 
@@ -216,44 +277,116 @@ export function Money({ value, currency = 'PYG', simbolo, className, locale, cur
 }
 
 // ── Select (nativo, estilizado) ─────────────────────────────────────
-export function Select({ className, children, ...props }) {
+// Sin la flecha nativa (`appearance-none`): un envoltorio dibuja el chevron con
+// `Icon`. El <select> sigue siendo el nativo (teclado, lectores, formularios).
+// Las clases de ancho/margen del `className` van al envoltorio para que
+// `className="w-36"` dimensione el campo entero y el chevron quede en su borde.
+// `/* @__PURE__ */`: sin la marca, esbuild conserva el Select (y el set de íconos
+// que arrastra) en bundles que solo importan Input, como `dist/phone.js`.
+export const Select = /* @__PURE__ */ forwardRef(function Select({ className, children, cargando = false, estado, motion = true, style, hidden, ...props }, ref) {
+  const { layout, control, tieneAncho } = separarClasesDeLayout(className)
+  const ariaInvalid = props['aria-invalid'] ?? (estado === 'error' ? true : undefined)
+  const invalido = esInvalido(ariaInvalid)
+  const sacude = useSacudida(invalido, motion)
   return (
-    <select
-      className={cn(
-        'w-full rounded-lg border border-interactivo bg-ink-800 px-3 text-fore',
-        'h-11 md:h-9 text-base md:text-sm outline-none transition cursor-pointer',
-        'focus:border-fono focus:ring-1 focus:ring-fono/40',
-        '[&>option]:bg-ink-800 [&>option]:text-fore',
-        className,
-      )}
-      {...props}
-    >
-      {children}
-    </select>
+    <span style={style} hidden={hidden} className={cn('group/select relative block', !tieneAncho && 'w-full', layout)} data-oc-select="" data-motion={motion ? 'on' : 'off'} data-oc-sacude={sacude ? '' : undefined}>
+      <select
+        ref={ref}
+        className={cn(CLASES_CAMPO.select, 'peer [&>option]:bg-ink-800 [&>option]:text-fore', control)}
+        {...props}
+        aria-invalid={ariaInvalid}
+        aria-busy={cargando || props['aria-busy'] || undefined}
+        data-oc-control=""
+        data-oc-estado={estado === 'ok' && !invalido ? 'ok' : undefined}
+      >
+        {children}
+      </select>
+      {cargando ? <span className="pointer-events-none absolute right-9 top-1/2 -translate-y-1/2 text-mute"><Spinner /></span> : null}
+      {estado === 'ok' && !invalido && !cargando ? <span className="pointer-events-none absolute right-9 top-1/2 -translate-y-1/2"><CheckOk /></span> : null}
+      <Icon
+        name="chevron"
+        className="oc-select-chevron pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute peer-disabled:opacity-50"
+      />
+    </span>
   )
-}
+})
 
 // ── Textarea ────────────────────────────────────────────────────────
-export function Textarea({ className, ...props }) {
-  return (
+// Opt-in: `autoCrecer` (la altura sigue al contenido, hasta `filasMax` filas) y
+// `contador` (con `maxLength`: «120/500», aviso al 90 %, tope al 100 %; el
+// lector de pantalla se entera solo al cruzar un umbral, no en cada letra).
+const MENSAJES_CONTADOR = { aviso: (resta) => `Quedan ${resta} caracteres`, tope: () => 'Límite de caracteres alcanzado' }
+const TONO_CONTADOR = { normal: 'text-mute', aviso: 'text-warn-text', tope: 'text-bad-text' }
+
+export const Textarea = /* @__PURE__ */ forwardRef(function Textarea({ className, autoCrecer = false, filasMax = 12, contador = false, motion = true, estado, onChange, onInput, ...props }, ref) {
+  const idContador = useId()
+  const nodo = useRef(null)
+  const establecerRef = useCallback((el) => {
+    nodo.current = el
+    if (typeof ref === 'function') ref(el)
+    else if (ref) ref.current = el
+  }, [ref])
+  const [largo, setLargo] = useState(() => String(props.value ?? props.defaultValue ?? '').length)
+  const largoActual = props.value !== undefined ? String(props.value ?? '').length : largo
+  const max = Number(props.maxLength) || 0
+  // Sin un maxLength positivo no hay tope que contar: el contador no se dibuja.
+  const conContador = Boolean(contador) && max > 0
+  const nivel = conContador ? nivelContador(largoActual, max) : 'normal'
+  const ariaInvalid = props['aria-invalid'] ?? (estado === 'error' ? true : undefined)
+  const sacude = useSacudida(esInvalido(ariaInvalid), motion)
+
+  const ajustar = useCallback(() => {
+    const el = nodo.current
+    if (!autoCrecer || !el || typeof getComputedStyle !== 'function') return
+    el.style.height = 'auto'
+    const estilo = getComputedStyle(el)
+    const linea = parseFloat(estilo.lineHeight) || 20
+    const bordes = (parseFloat(estilo.borderTopWidth) || 0) + (parseFloat(estilo.borderBottomWidth) || 0)
+    if (!el.scrollHeight) return
+    const tope = linea * filasMax + (parseFloat(estilo.paddingTop) || 0) + (parseFloat(estilo.paddingBottom) || 0) + bordes
+    el.style.height = `${Math.min(el.scrollHeight + bordes, tope)}px`
+    el.style.overflowY = el.scrollHeight + bordes > tope ? 'auto' : 'hidden'
+  }, [autoCrecer, filasMax])
+  useEfectoLayout(ajustar, [ajustar, props.value])
+
+  const campo = (
     <textarea
-      className={cn(
-        'w-full rounded-lg border border-interactivo bg-ink-800 px-3.5 py-2.5 text-fore',
-        'text-base md:text-sm outline-none transition focus:border-fono focus:ring-1 focus:ring-fono/40',
-        'placeholder:text-mute/60 resize-none',
-        className,
-      )}
+      ref={establecerRef}
+      className={cn(CLASES_CAMPO.textarea, autoCrecer && 'overflow-hidden', conContador ? undefined : className)}
       {...props}
+      aria-invalid={ariaInvalid}
+      aria-describedby={conContador ? mergeIds(props['aria-describedby'], idContador) : props['aria-describedby']}
+      data-oc-control=""
+      data-oc-estado={estado === 'ok' && !esInvalido(ariaInvalid) ? 'ok' : undefined}
+      data-motion={motion ? 'on' : 'off'}
+      data-oc-sacude={sacude ? '' : undefined}
+      onChange={(evento) => { setLargo(evento.target.value.length); onChange?.(evento); ajustar() }}
+      onInput={(evento) => { onInput?.(evento); ajustar() }}
     />
   )
-}
+  if (!conContador) return campo
+  const resta = Math.max(0, max - largoActual)
+  const { layout, control, tieneAncho } = separarClasesDeLayout(className)
+  return (
+    <div className={cn('block', !tieneAncho && 'w-full', layout)} data-oc-contador-nivel={nivel}>
+      {cloneElement(campo, { className: cn(campo.props.className, control) })}
+      <div id={idContador} className="mt-1 flex justify-end">
+        <span aria-hidden="true" data-oc-contador="" className={cn('text-xs tabular-nums transition-colors [transition-duration:var(--oc-motion-fast,160ms)]', TONO_CONTADOR[nivel])}>{largoActual}/{max}</span>
+        <span className="sr-only" role="status" aria-live="polite" aria-atomic="true">{nivel === 'normal' ? '' : MENSAJES_CONTADOR[nivel](resta)}</span>
+      </div>
+    </div>
+  )
+})
 
 // ── Label ───────────────────────────────────────────────────────────
 export function Label({ className, ...props }) {
+  const pro = useFormulariosPro()
   return (
     <label
       className={cn(
-        'block text-[11px] font-medium uppercase tracking-wider text-mute mb-1.5',
+        'mb-1.5 block text-[13px] font-medium leading-5 text-fore',
+        // Segunda ola (`FormulariosPro`): con foco dentro de su FormField (`group/campo`) el label toma el tono de marca; en error pasa a `bad`.
+        pro && 'transition-colors [transition-duration:var(--oc-motion-fast,160ms)] group-focus-within/campo:text-fono-text group-has-[[aria-invalid=true]]/campo:text-bad-text',
         className,
       )}
       {...props}
@@ -1024,7 +1157,7 @@ function mergeIds(...values) {
   return [...new Set(values.flatMap((value) => String(value || '').split(/\s+/)).filter(Boolean))].join(' ') || undefined
 }
 
-function relacionarControl(children, { htmlFor, mensajeId, error }, estado = { aplicado: false }) {
+function relacionarControl(children, { htmlFor, mensajeId, error, requerido }, estado = { aplicado: false }) {
   return Children.map(children, (child) => {
     if (!isValidElement(child) || estado.aplicado) return child
     const esNativo = ['input', 'select', 'textarea'].includes(child.type)
@@ -1035,23 +1168,34 @@ function relacionarControl(children, { htmlFor, mensajeId, error }, estado = { a
       return cloneElement(child, {
         'aria-describedby': mensajeId ? mergeIds(child.props['aria-describedby'], mensajeId) : child.props['aria-describedby'],
         'aria-invalid': error ? true : child.props['aria-invalid'],
+        ...(requerido && child.props['aria-required'] === undefined && !child.props.required ? { 'aria-required': true } : null),
       })
     }
     if (child.props.children) {
-      return cloneElement(child, undefined, relacionarControl(child.props.children, { htmlFor, mensajeId, error }, estado))
+      return cloneElement(child, undefined, relacionarControl(child.props.children, { htmlFor, mensajeId, error, requerido }, estado))
     }
     return child
   })
 }
 
-export function FormField({ label, hint, error, children, htmlFor, descripcionId, accion, className }) {
+//
+// `requerido` (opt-in) dibuja el asterisco junto al label y marca el control
+// con `aria-required` si no trae `required`; el asterisco es solo visual
+// (`aria-hidden`), el lector de pantalla lo recibe por el atributo del control.
+// El error lleva ícono (`alert`) y `role="alert"`; el hint queda como texto.
+export function FormField({ label, hint, error, children, htmlFor, descripcionId, accion, className, requerido = false, motion = true }) {
   const mensajeId = descripcionId || (htmlFor ? `${htmlFor}-descripcion` : undefined)
-  const control = (error || hint) && mensajeId
-    ? relacionarControl(children, { htmlFor, mensajeId, error })
+  const control = ((error || hint) && mensajeId) || requerido
+    ? relacionarControl(children, { htmlFor, mensajeId: (error || hint) ? mensajeId : undefined, error, requerido })
     : children
   return (
-    <div className={className}>
-      {label && <Label htmlFor={htmlFor}>{label}</Label>}
+    <div className={cn('group/campo', className)} data-oc-formfield="" data-motion={motion ? 'on' : 'off'}>
+      {label && (
+        <Label htmlFor={htmlFor}>
+          {label}
+          {requerido && <span aria-hidden="true" data-oc-requerido="" className="ml-0.5 text-bad-text">*</span>}
+        </Label>
+      )}
       {accion ? (
         <div className="flex flex-wrap items-stretch gap-2">
           <div className="min-w-0 flex-1">{control}</div>
@@ -1060,7 +1204,12 @@ export function FormField({ label, hint, error, children, htmlFor, descripcionId
       ) : (
         control
       )}
-      {error ? <p id={mensajeId} role="alert" className="mt-1.5 text-xs text-bad-text">{error}</p> : hint ? <p id={mensajeId} className="mt-1.5 text-xs text-mute">{hint}</p> : null}
+      {error ? (
+        <p id={mensajeId} role="alert" data-oc-mensaje="" className="oc-campo-mensaje mt-1.5 flex items-start gap-1.5 text-xs leading-4 text-bad-text">
+          <Icon name="alert" className="mt-px h-3.5 w-3.5" />
+          <span className="min-w-0">{error}</span>
+        </p>
+      ) : hint ? <p id={mensajeId} className="mt-1.5 text-xs leading-4 text-mute">{hint}</p> : null}
     </div>
   )
 }

@@ -74,6 +74,50 @@ servidor revalida siempre. El interruptor booleano es **`Switch`** (un solo
 objeto; #186 retiró el alias `Toggle` y la librería no expone alias de
 compatibilidad).
 
+**Aspecto de los campos.** `Input`, `Select`, `Textarea`, `MoneyInput`,
+`PasswordInput` y `PinInput` salen de **una sola fuente** (`utils/campo.js`,
+`CLASES_CAMPO`); no se copian sus clases en una pantalla (tampoco para un
+`<select>` suelto: `CAMPO_ESTADOS`). Los estados se resuelven por CSS y tokens,
+en claro y oscuro: reposo (borde `interactivo` ≥3:1), hover, foco (borde +
+anillo de 3 px con transición, sin contorno extra), inválido
+(**`aria-invalid="true"`** pinta borde y anillo `bad`; `FormField` y
+`MoneyInput` ya lo ponen), deshabilitado (superficie hundida, no solo
+opacidad) y `readOnly` (sin relleno, borde punteado `interactivo`). El
+placeholder usa `--c-placeholder` (≥4.5:1). Alturas: `h-11` en mobile y
+`md:h-9`.
+
+Opt-in (todo aditivo, el default no cambia): `inicio`/`fin` en `Input` son el
+**único sistema de adornos** (ícono, unidad, prefijo como `Gs` o `https://`,
+`BotonDentroCampo integrado`, el ojo de `PasswordInput`, el × de `SearchField`)
+y reservan su espacio midiendo el slot; `cargando` (spinner + `aria-busy`) en
+Input/Select/SearchField; `estado="ok"` (borde ok + check); `Textarea`
+`autoCrecer` y `contador` (aviso al 90 %, tope al 100 %); `Checkbox`
+`indeterminate`; `SearchField` `limpiable` (Esc limpia); `Button` `cargando` y
+`exito` (sin salto de ancho); `FormField` `requerido`. `Select` dibuja su
+chevron (`Icon`) y sigue siendo el `<select>` nativo: las clases de
+ancho/margen/posición/z/visibilidad del `className` (y `style`/`hidden`) van al
+envoltorio; `min-h-*` se queda en el control. El movimiento (foco, error con
+sacudida única, éxito, switch, segmentado) sale de los tokens `--oc-motion-*`
+y se apaga con `motion={false}` o `prefers-reduced-motion` (ver
+`docs/MOTION.md`). `Label` es de 13 px.
+
+**Segunda ola «pro» (opt-in por app):** sin activarla, las apps se ven y se
+comportan como en la primera ola. Se activa con **un** interruptor: envolver la
+app (o la pantalla) en `<FormulariosPro>` —pone `data-oc-formularios="pro"` en
+un contenedor `display: contents` y entrega el contexto a
+`useFormulariosPro()`—. Con portales (Modal, Drawer) conviene además poner
+`data-oc-formularios="pro"` en `<html>` y usar `<FormulariosPro contenedor={false}>`
+para que las reglas CSS también alcancen lo que se dibuja fuera del contenedor.
+Activa: tinte del `Label` con foco/error, entrada animada del mensaje de error,
+sacudida única, fondo de hover y giro del chevron del `Select`, `Checkbox` con
+dibujo propio (sin el interruptor es el nativo con `accent-fono` de 16 px;
+`indeterminate` funciona en ambos), resorte del `Switch`, indicador deslizante de
+`SegmentedField` y Esc que limpia `SearchField` (también con `limpiable`). Las
+props de cada componente ganan sobre el interruptor (`motion={false}` lo apaga
+en ese campo). Las correcciones de accesibilidad (contraste y área táctil de 44 px
+del `Switch`, caret/autofill acotados a los campos de la librería) rigen para
+todos, con o sin interruptor.
+
 **Datos personales (Ley 7593/2025):** todo formulario que recolecte datos
 personales muestra la **finalidad** y el enlace a la **política de privacidad**
 en el propio punto de recolección; el consentimiento va explícito, por

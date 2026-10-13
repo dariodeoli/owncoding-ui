@@ -6,7 +6,7 @@ import {
   EmailField, MoneyInput, Money, CurrencyConversion, SerialField, RangoFecha, Label, ThemeToggle,
   BuscadorCliente, DataTable, SegmentedField, ListGridToggle, PageHeader,
   Modal, Drawer, ConfirmDialog, EstadoGuardado, BarraProgreso, ProgresoChecklist,
-  ProductFooter, ProductPrefooter, Button, crearIdentidadApp,
+  ProductFooter, ProductPrefooter, Button, crearIdentidadApp, FormulariosPro, Checkbox, Switch, Select,
 } from '../src/index.js'
 import { crearCorreoTransaccional, renderCorreoHtml, renderCorreoTexto } from '../src/email/index.js'
 import packageJson from '../package.json'
@@ -47,6 +47,7 @@ function BasicPreview({ name }) {
     case 'RangoFecha': return <RangoFecha periodoPorDefecto="este-mes" />
     case 'Label': return field('Etiqueta vinculada', <input id={id} className="min-h-11 rounded-lg border border-ink-600 bg-ink px-3" defaultValue="Campo de muestra" />)
     case 'ThemeToggle': return <ThemeToggle />
+    case 'FormulariosPro': return <FormulariosPro><div className="grid gap-3"><p className="text-sm text-mute">Segunda ola de formularios activa para este bloque (fixture local).</p><Checkbox label="Checkbox con trazo animado" checked={value === 'on'} onChange={event => setValue(event.target.checked ? 'on' : '')} /><Switch ariaLabel="Interruptor de muestra" checked={value === 'on'} onChange={event => setValue(event.target.checked ? 'on' : '')} /><Select aria-label="Select de muestra"><option>Uno</option><option>Dos</option></Select></div></FormulariosPro>
     case 'BuscadorCliente': return <BuscadorCliente clientes={[{ id: 'demo', name: 'Cliente ficticio', document: '4567890' }]} selectedId={value} onSelect={cliente => setValue(cliente?.id || '')} placeholder="Buscar 4567890 (fixture)" />
     case 'DataTable':
     case 'SegmentedField':

@@ -1,5 +1,7 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Input } from './ui.jsx'
+import { CAMPO_ESTADOS } from '../utils/campo.js'
+import { cn } from '../utils/cn.js'
 import { buscarPaisesTelefono, paisTelefonoPorIso, resolverPaisesTelefono } from '../utils/paisesTelefono.js'
 
 export default function CountryPhoneSelect({
@@ -116,11 +118,13 @@ export default function CountryPhoneSelect({
             openPicker()
           }
         }}
-        className="flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-ink-500 bg-ink-800 px-2 text-sm text-fore outline-none transition hover:border-interactivo focus:border-fono focus:ring-1 focus:ring-fono/40 disabled:cursor-not-allowed disabled:opacity-50"
+        data-oc-control=""
+        className={cn('flex h-11 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-sm', CAMPO_ESTADOS)}
       >
         <span aria-hidden="true" className="text-base leading-none">{selected.flag}</span>
         <span className="tabular-nums">{selected.countryCode}</span>
-        <span aria-hidden="true" className="text-[10px] text-mute">▾</span>
+        {/* SVG propio, sin `Icon` (presupuesto de dist/phone.js); el carácter de triángulo se dibujaba como punto si la fuente no lo trae. */}
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 shrink-0 text-mute"><path d="M6 9l6 6 6-6" /></svg>
       </button>
 
       {open ? (

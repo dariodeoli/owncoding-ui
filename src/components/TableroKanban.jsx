@@ -4,6 +4,7 @@ import { Money } from './ui.jsx'
 import { chipDeTono, puntoDeTono } from '../utils/tonos.js'
 import { fechaDia } from '../utils/fecha.js'
 import { cn } from '../utils/cn.js'
+import { CAMPO_ESTADOS } from '../utils/campo.js'
 
 // Tablero kanban de un pipeline por estados (portado del `AdminBoard` de
 // LedBox): columnas con título, tono y contador; tarjetas con identidad,
@@ -312,8 +313,9 @@ export default function TableroKanban({
                           }}
                           title={etiquetaMover}
                           className={cn(
-                            'h-8 w-full cursor-pointer rounded-lg border border-ink-500 bg-ink-800 px-2 text-xs text-fore',
-                            'outline-none transition focus:border-fono focus:ring-1 focus:ring-fono/40 [&>option]:bg-ink-800 [&>option]:text-fore',
+                            CAMPO_ESTADOS,
+                            'h-8 w-full cursor-pointer rounded-lg px-2 text-xs',
+                            '[&>option]:bg-ink-800 [&>option]:text-fore',
                           )}
                         >
                           <option value="">{etiquetaMover}</option>

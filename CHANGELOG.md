@@ -4,6 +4,52 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **Formularios pro, opt-in por app:** nuevo `FormulariosPro` /
+  `useFormulariosPro` (atributo `data-oc-formularios="pro"` + contexto). Sin él
+  las apps se ven como en la ola 1: `Label` sin tinte, mensaje sin animación,
+  sin sacudida, `Select` sin hover de fondo ni giro, `Checkbox` nativo con
+  `accent-fono`, `Switch` sin resorte, `SegmentedField` sin indicador y
+  `SearchField` sin Esc que limpia (salvo `limpiable`). El envoltorio de
+  adornos de `SearchField`/`PasswordInput`/`MoneyInput`/`RucField`/`TaxIdField`/
+  `InstagramField` se mantiene (ojo de 44 px, relleno medido). Rigen para todos:
+  contraste del `Switch` (≥3:1 con tokens), área táctil de 44 px sin z-index,
+  caret/selección/autofill acotados con `data-oc-control`, `tabular-nums` solo en
+  campos numéricos, spinners visibles con `motion={false}`, `.consola`
+  `ok`/`bad` con tinta oscura (≥4.5:1), `contador` sin `maxLength` no se dibuja
+  y chevron SVG en `CountryPhoneSelect`.
+- **Formularios premium (ola 2):** sistema de adornos único `inicio`/`fin` en
+  `Input` (también `PasswordInput`, `MoneyInput`, `SearchField`,
+  `RucField`/`TaxIdField` con `BotonDentroCampo integrado`, `InstagramField`,
+  `PercentField simbolo`), `cargando` (Input/Select/SearchField/Button) y
+  `estado="ok"`; foco con anillo animado, label que toma la marca con
+  `:focus-within`, error con entrada suave y sacudida única al pasar a inválido;
+  `Textarea` `autoCrecer` + `contador`; `Checkbox` con trazo animado e
+  `indeterminate`; `Switch` con resorte y pulgar que se ensancha;
+  `SegmentedField` con indicador deslizante; `Select` con chevron que gira;
+  `Button` `cargando`/`exito` sin salto de ancho. Autofill con la superficie del
+  campo, cursor y selección de marca. Todo opt-in y apagable con
+  `motion={false}`/reduced-motion (`docs/MOTION.md`). `Select` y `Textarea` son
+  `forwardRef` con tipos; `MoneyInput` ya no pisa el `aria-invalid` de
+  `FormField`. Ajustes de QA de la ola 1: reparto de clases de posición/z/
+  visibilidad al envoltorio del `Select`, `block`, borde de solo lectura
+  `interactivo` (≥3:1) y `--c-placeholder` en `.consola`. El `<select>` de
+  `TableroKanban` usa la fuente compartida. Escena «Formularios» en la galería.
+
+- **Campos de formulario rediseñados:** `Input`, `Select`, `Textarea`,
+  `MoneyInput`, `PasswordInput` y `PinInput` comparten una sola fuente de estilo
+  (`utils/campo.js`: `CLASES_CAMPO`, `CAMPO_ESTADOS`) con hover, foco (borde de
+  marca + anillo de 3 px), inválido por `aria-invalid="true"`, deshabilitado y
+  `readOnly` distintos, en claro y oscuro. Nuevo token `--c-placeholder`
+  (≥4.5:1; reemplaza el `#8197a5` fijo de `base.css`) y color `placeholder` en el
+  preset. `Select` oculta la flecha nativa y dibuja un chevron con `Icon` (ahora
+  acepta `ref`; las clases de ancho/margen van a un envoltorio `<span>`).
+  `Label` pasa a 13 px sin mayúsculas. `FormField` suma `requerido` (opt-in) y
+  el error lleva ícono. `CountryPhoneSelect` usa los mismos estados. Alturas
+  sin cambios (`h-11` / `md:h-9`). La escena «campos» de la galería muestra todos
+  los estados.
+
 ## v0.67.2 — 2026-10-10
 
 - **Operación unificada `hd` (2026-10-10):** `docs/COMANDOS.md`,

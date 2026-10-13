@@ -65,6 +65,10 @@
      superficies (WCAG 1.4.11). */
   --c-interactivo: 116 131 154;
 
+  /* Placeholder de los campos: ≥4.5:1 sobre ink-800 / ink / paper (el 60% de
+     opacidad de `mute` y el #8197a5 fijo no llegaban). */
+  --c-placeholder: 94 107 126;
+
   /* Tokens de superficie */
   --oc-brand: rgb(var(--c-fono));
   --oc-canvas: rgb(var(--c-paper));
@@ -182,6 +186,7 @@ html.dark {
   --c-fono-text: 124 255 201;
   --c-pass-text: 34 197 94;
   --c-interactivo: 124 135 155;
+  --c-placeholder: 148 158 175;
 
   --oc-canvas: rgb(var(--c-paper));
   --oc-surface: rgb(var(--c-ink));

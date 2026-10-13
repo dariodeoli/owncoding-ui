@@ -1,5 +1,4 @@
 import { Input } from './ui.jsx'
-import { cn } from '../utils/cn.js'
 
 // Instagram con "@" fijo, sin espacios: se guarda el usuario pelado para armar
 // el link directo (https://instagram.com/<usuario>). Portable: el adorno no
@@ -25,16 +24,16 @@ export function normalizarInstagram(value) {
 
 export default function InstagramField({ value = '', onChange, disabled = false, placeholder = 'usuario', className, inputClassName, ...props }) {
   return (
-    <div className={cn('relative', className)}>
-      <span aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-mute">@</span>
+    <div className={className}>
       <Input
         {...props}
+        inicio={<span aria-hidden="true" className="font-semibold">@</span>}
         maxLength={MAX_USERNAME}
         disabled={disabled}
         value={normalizarInstagram(value)}
         onChange={(event) => onChange?.(normalizarInstagram(event.target.value))}
         placeholder={placeholder}
-        className={cn('pl-8', inputClassName)}
+        className={inputClassName}
       />
     </div>
   )
