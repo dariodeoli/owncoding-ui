@@ -29,7 +29,11 @@ h1, h2, h3 {
   letter-spacing: -.035em;
   text-wrap: balance;
 }
-input, td, [data-money] {
+/* Cifras tabulares solo donde se alinean números. En un campo de texto libre
+   (nombre, correo) la fuente ensancha también el punto y la arroba y el
+   placeholder se ve espaciado («dominio . com»). */
+input[inputmode="numeric"], input[inputmode="decimal"], input[inputmode="tel"],
+input[type="number"], input[type="tel"], td, [data-money] {
   font-variant-numeric: tabular-nums;
 }
 /* Identificadores (IMEI, serial, códigos): siempre monoespaciados */
@@ -77,21 +81,23 @@ input::placeholder, textarea::placeholder {
 }
 
 /* ── Campos de formulario: color y selección ────────────────────────────────
-   Cursor de marca y selección tenue dentro de los campos. El autofill del
+   Cursor de marca y selección tenue dentro de los campos de la librería
+   (los que llevan `data-oc-control`; los <input> de la app consumidora quedan
+   intactos). El autofill del
    navegador pinta su propio fondo (amarillo/azul): se lo tapa con la
    superficie del campo y se conservan los anillos de foco/error (variables de
    Tailwind) para no perder el estado. */
-input, textarea {
+input[data-oc-control], textarea[data-oc-control] {
   caret-color: rgb(var(--c-fono-dark));
 }
-input::selection, textarea::selection {
+input[data-oc-control]::selection, textarea[data-oc-control]::selection {
   background: rgb(var(--c-fono) / .28);
 }
-input:-webkit-autofill,
-input:-webkit-autofill:hover,
-input:-webkit-autofill:focus,
-textarea:-webkit-autofill,
-select:-webkit-autofill {
+input[data-oc-control]:-webkit-autofill,
+input[data-oc-control]:-webkit-autofill:hover,
+input[data-oc-control]:-webkit-autofill:focus,
+textarea[data-oc-control]:-webkit-autofill,
+select[data-oc-control]:-webkit-autofill {
   -webkit-text-fill-color: rgb(var(--c-fore));
   caret-color: rgb(var(--c-fore));
   box-shadow: 0 0 0 1000px rgb(var(--c-ink-800)) inset, var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000);
@@ -124,10 +130,10 @@ select:-webkit-autofill {
 [data-oc-sacude][data-motion="on"] {
   animation: oc-campo-sacude 300ms var(--oc-motion-ease);
 }
-[data-motion="on"] .oc-campo-mensaje {
+[data-oc-formularios="pro"] [data-motion="on"] .oc-campo-mensaje {
   animation: oc-campo-mensaje var(--oc-motion-feedback) var(--oc-motion-ease) both;
 }
-.oc-campo-aparece[data-motion="on"] {
+[data-oc-formularios="pro"] .oc-campo-aparece[data-motion="on"] {
   animation: oc-campo-aparece var(--oc-motion-fast) var(--oc-motion-ease) both;
 }
 [data-motion="on"] .oc-campo-ok path {
@@ -146,13 +152,48 @@ select:-webkit-autofill {
 [data-oc-checkbox][data-motion="on"] input:checked + svg .oc-check-trazo {
   stroke-dashoffset: 0;
 }
-/* `motion={false}`: el control y todo lo que contiene queda estático. */
-[data-motion="off"],
-[data-motion="off"] *,
-[data-motion="off"]::before,
-[data-motion="off"]::after {
+/* Select (segunda ola, `data-oc-formularios="pro"`): fondo de hover y chevron
+   que gira con foco dentro. Sin el interruptor el Select queda como en la
+   primera ola. */
+[data-oc-formularios="pro"] [data-oc-select] > select:hover:not(:disabled) {
+  background-color: rgb(var(--c-ink-700) / .6);
+}
+[data-oc-formularios="pro"] .oc-select-chevron {
+  transition: transform var(--oc-motion-fast, 160ms) var(--oc-motion-ease, cubic-bezier(.2,.8,.2,1)), color var(--oc-motion-fast, 160ms) var(--oc-motion-ease, cubic-bezier(.2,.8,.2,1));
+}
+[data-oc-formularios="pro"] [data-oc-select]:focus-within .oc-select-chevron {
+  --tw-rotate: 180deg;
+  color: rgb(var(--c-fore));
+}
+/* `motion={false}`: el control y lo suyo (adornos, mensaje, pulgar) queda
+   estático. Los spinners de carga se excluyen: apagar el movimiento no puede
+   dejar un «cargando» congelado. */
+[data-motion="off"]:not([data-oc-formfield], [data-oc-spinner]),
+[data-motion="off"]:not([data-oc-formfield]) *:not([data-oc-spinner]),
+[data-motion="off"]:not([data-oc-formfield])::before,
+[data-motion="off"]:not([data-oc-formfield])::after {
   animation: none !important;
   transition: none !important;
+}
+/* `FormField motion={false}` solo alcanza a su etiqueta, su control y su
+   mensaje; el resto de sus descendientes (acciones, contenido libre) conserva
+   su movimiento. */
+[data-oc-formfield][data-motion="off"] :is(label, .oc-campo-mensaje, [data-oc-control], [data-oc-campo], [data-oc-select]),
+[data-oc-formfield][data-motion="off"] :is(label, .oc-campo-mensaje, [data-oc-control], [data-oc-campo], [data-oc-select]) *:not([data-oc-spinner]) {
+  animation: none !important;
+  transition: none !important;
+}
+/* Contraste forzado (Windows): el relleno y el trazo del Checkbox dependen de
+   colores que el sistema reemplaza. Se devuelve el control nativo y se oculta
+   el trazo propio, así la marca (check o raya) la dibuja el navegador. */
+@media (forced-colors: active) {
+  [data-oc-checkbox] input {
+    appearance: auto;
+    forced-color-adjust: auto;
+  }
+  [data-oc-checkbox] > svg {
+    display: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   [data-oc-sacude],

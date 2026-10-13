@@ -46,9 +46,11 @@ export function useReservaAdornos(dependencias) {
       setMedido((actual) => (actual.izquierda === izquierda && actual.derecha === derecha ? actual : { izquierda, derecha }))
     }
     medir()
-    if (typeof ResizeObserver === 'undefined') return undefined
+    const nodos = [refInicio.current, refFin.current].filter(Boolean)
+    // Sin adornos no hay nada que observar: no se crea el ResizeObserver.
+    if (nodos.length === 0 || typeof ResizeObserver === 'undefined') return undefined
     const observador = new ResizeObserver(medir)
-    for (const nodo of [refInicio.current, refFin.current]) if (nodo) observador.observe(nodo)
+    for (const nodo of nodos) observador.observe(nodo)
     return () => observador.disconnect()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, dependencias)
@@ -82,7 +84,8 @@ export function rellenoAdornos({ inicio, fin, cargando, ok }, medido) {
     if (medido.izquierda > 0) estilo.paddingLeft = medido.izquierda
   }
   if (presente(fin) || cargando || ok) {
-    clases.push('pr-10')
+    // 3.25rem = botón de 44 px (w-11) + el pr-1.5 del slot.
+    clases.push(presente(fin) ? 'pr-[3.25rem]' : 'pr-10')
     if (medido.derecha > 0) estilo.paddingRight = medido.derecha
   }
   return { clases: clases.join(' '), estilo }

@@ -238,6 +238,10 @@ describe('ronda 13 de a11y (#13)', () => {
     const consola = { ...efectiva(PALETAS.claro), ...tokensDe('.consola {') }
     expect(contraste(consola['on-ok'], consola.ok), 'consola: success').toBeGreaterThanOrEqual(4.5)
     expect(contraste(consola['on-bad'], consola.bad), 'consola: danger').toBeGreaterThanOrEqual(4.5)
+    // Y dentro de html.dark (donde `--c-ok` es el verde claro): el botón exito de .consola.
+    const consolaOscuro = { ...efectiva(PALETAS.oscuro), ...tokensDe('.consola {') }
+    expect(contraste(consolaOscuro['on-ok'], consolaOscuro.ok), 'consola sobre oscuro: success').toBeGreaterThanOrEqual(4.5)
+    expect(contraste(consolaOscuro['on-bad'], consolaOscuro.bad), 'consola sobre oscuro: danger').toBeGreaterThanOrEqual(4.5)
     const fuente = readFileSync(new URL('../src/components/ui.jsx', import.meta.url), 'utf8')
     expect(fuente).toContain("primary: 'bg-fono text-onbrand hover:brightness-110'")
     expect(fuente).toContain("success: 'bg-ok text-on-ok hover:brightness-110'")
@@ -272,5 +276,18 @@ describe('ronda 13 de a11y (#13)', () => {
     // La app mapea `--c-warn-text` sin tocar los rellenos.
     expect(contraste([138, 98, 7], [231, 224, 212])).toBeLessThan(4.5)
     expect(contraste([126, 90, 6], [231, 224, 212])).toBeGreaterThanOrEqual(4.5)
+  })
+})
+
+describe('Switch (WCAG 1.4.11)', () => {
+  test('pista, borde y pulgar ≥3:1 en claro y oscuro', () => {
+    for (const [tema, paleta] of [['claro', efectiva(PALETAS.claro)], ['oscuro', efectiva(PALETAS.oscuro)]]) {
+      // Apagado: pista e `interactivo` contra el fondo y la superficie; pulgar `ink` contra la pista.
+      for (const fondo of ['paper', 'ink']) expect(contraste(paleta.interactivo, paleta[fondo]), `${tema}: pista apagada vs ${fondo}`).toBeGreaterThanOrEqual(3)
+      expect(contraste(paleta.ink, paleta.interactivo), `${tema}: pulgar vs pista apagada`).toBeGreaterThanOrEqual(3)
+      // Encendido: `fono-dark` contra el fondo y pulgar `ink` contra la pista.
+      for (const fondo of ['paper', 'ink']) expect(contraste(paleta['fono-dark'], paleta[fondo]), `${tema}: pista encendida vs ${fondo}`).toBeGreaterThanOrEqual(3)
+      expect(contraste(paleta.ink, paleta['fono-dark']), `${tema}: pulgar vs pista encendida`).toBeGreaterThanOrEqual(3)
+    }
   })
 })

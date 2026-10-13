@@ -118,11 +118,13 @@ export default function CountryPhoneSelect({
             openPicker()
           }
         }}
+        data-oc-control=""
         className={cn('flex h-11 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-sm', CAMPO_ESTADOS)}
       >
         <span aria-hidden="true" className="text-base leading-none">{selected.flag}</span>
         <span className="tabular-nums">{selected.countryCode}</span>
-        <span aria-hidden="true" className="text-[10px] text-mute">▾</span>
+        {/* SVG propio, sin `Icon` (presupuesto de dist/phone.js); el carácter de triángulo se dibujaba como punto si la fuente no lo trae. */}
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3 shrink-0 text-mute"><path d="M6 9l6 6 6-6" /></svg>
       </button>
 
       {open ? (

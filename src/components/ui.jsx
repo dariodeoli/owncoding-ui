@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { cn } from '../utils/cn.js'
 import { formatMoney, formatGs, formatGsInput, formatUsdInput, normalizarMontoInput, caretTrasDigitos, excedeMonto, LIMITE_MONTO_GENERAL, largoMaximoMonto, SIMBOLOS_MONEDA } from '../utils/moneda.js'
 import { TAMANOS_CAMPO } from '../utils/tamanos.js'
+import { useFormulariosPro } from './FormulariosPro.jsx'
 import { CLASES_CAMPO, esInvalido, nivelContador, separarClasesDeLayout } from '../utils/campo.js'
 import useSacudida from '../hooks/useSacudida.js'
 import { CheckOk, SlotFin, SlotInicio, Spinner, rellenoAdornos, useReservaAdornos, usaAdornos } from './CampoAdornos.jsx'
@@ -93,6 +94,7 @@ export const Input = forwardRef(function Input({ className, inicio, fin, cargand
   const comunes = {
     'aria-invalid': ariaInvalid,
     'aria-busy': cargando || props['aria-busy'] || undefined,
+    'data-oc-control': '',
     'data-oc-estado': ok ? 'ok' : undefined,
     'data-motion': motion ? 'on' : 'off',
     'data-oc-sacude': sacude ? '' : undefined,
@@ -123,7 +125,7 @@ export function PasswordInput({ className, ...props }) {
         <button
           type="button"
           onClick={() => setVisible(current => !current)}
-          className="grid h-full w-9 place-items-center rounded-r-lg text-mute transition-colors hover:text-fore focus-visible:z-10 focus-visible:text-fore"
+          className="grid h-full w-11 place-items-center rounded-r-lg text-mute transition-colors hover:text-fore focus-visible:z-10 focus-visible:text-fore"
           aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
           aria-pressed={visible}
           title={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
@@ -176,6 +178,7 @@ export function PinInput({ value, onChange, onComplete, length = 4, autoFocus = 
         placeholder=""
         aria-label={ariaLabel || `PIN de ${largoMax} dígitos`}
         className={cn('pin-oculto', CLASES_CAMPO.pin)}
+        data-oc-control=""
       />
       <span aria-hidden="true" className={cn("pointer-events-none absolute inset-0 flex items-center justify-center", masked ? "gap-[.5em]" : "gap-2 px-3")}>
         {Array.from({ length: largoMax }, (_, indice) => (
@@ -293,6 +296,7 @@ export const Select = /* @__PURE__ */ forwardRef(function Select({ className, ch
         {...props}
         aria-invalid={ariaInvalid}
         aria-busy={cargando || props['aria-busy'] || undefined}
+        data-oc-control=""
         data-oc-estado={estado === 'ok' && !invalido ? 'ok' : undefined}
       >
         {children}
@@ -301,7 +305,7 @@ export const Select = /* @__PURE__ */ forwardRef(function Select({ className, ch
       {estado === 'ok' && !invalido && !cargando ? <span className="pointer-events-none absolute right-9 top-1/2 -translate-y-1/2"><CheckOk /></span> : null}
       <Icon
         name="chevron"
-        className={cn('pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute transition-transform [transition-duration:var(--oc-motion-fast,160ms)] [transition-timing-function:var(--oc-motion-ease,cubic-bezier(.2,.8,.2,1))] group-focus-within/select:rotate-180 group-focus-within/select:text-fore peer-disabled:opacity-50')}
+        className="oc-select-chevron pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mute peer-disabled:opacity-50"
       />
     </span>
   )
@@ -325,7 +329,9 @@ export const Textarea = /* @__PURE__ */ forwardRef(function Textarea({ className
   const [largo, setLargo] = useState(() => String(props.value ?? props.defaultValue ?? '').length)
   const largoActual = props.value !== undefined ? String(props.value ?? '').length : largo
   const max = Number(props.maxLength) || 0
-  const nivel = contador ? nivelContador(largoActual, max) : 'normal'
+  // Sin un maxLength positivo no hay tope que contar: el contador no se dibuja.
+  const conContador = Boolean(contador) && max > 0
+  const nivel = conContador ? nivelContador(largoActual, max) : 'normal'
   const ariaInvalid = props['aria-invalid'] ?? (estado === 'error' ? true : undefined)
   const sacude = useSacudida(esInvalido(ariaInvalid), motion)
 
@@ -346,10 +352,11 @@ export const Textarea = /* @__PURE__ */ forwardRef(function Textarea({ className
   const campo = (
     <textarea
       ref={establecerRef}
-      className={cn(CLASES_CAMPO.textarea, autoCrecer && 'overflow-hidden', contador ? undefined : className)}
+      className={cn(CLASES_CAMPO.textarea, autoCrecer && 'overflow-hidden', conContador ? undefined : className)}
       {...props}
       aria-invalid={ariaInvalid}
-      aria-describedby={contador ? mergeIds(props['aria-describedby'], idContador) : props['aria-describedby']}
+      aria-describedby={conContador ? mergeIds(props['aria-describedby'], idContador) : props['aria-describedby']}
+      data-oc-control=""
       data-oc-estado={estado === 'ok' && !esInvalido(ariaInvalid) ? 'ok' : undefined}
       data-motion={motion ? 'on' : 'off'}
       data-oc-sacude={sacude ? '' : undefined}
@@ -357,7 +364,7 @@ export const Textarea = /* @__PURE__ */ forwardRef(function Textarea({ className
       onInput={(evento) => { onInput?.(evento); ajustar() }}
     />
   )
-  if (!contador) return campo
+  if (!conContador) return campo
   const resta = Math.max(0, max - largoActual)
   const { layout, control, tieneAncho } = separarClasesDeLayout(className)
   return (
@@ -373,12 +380,13 @@ export const Textarea = /* @__PURE__ */ forwardRef(function Textarea({ className
 
 // ── Label ───────────────────────────────────────────────────────────
 export function Label({ className, ...props }) {
+  const pro = useFormulariosPro()
   return (
     <label
       className={cn(
-        'mb-1.5 block text-[13px] font-medium leading-5 text-fore transition-colors [transition-duration:var(--oc-motion-fast,160ms)]',
-        // Con foco dentro de su FormField (`group/campo`) el label toma el tono de marca; en error se queda en `bad`.
-        'group-focus-within/campo:text-fono-text group-has-[[aria-invalid=true]]/campo:text-bad-text',
+        'mb-1.5 block text-[13px] font-medium leading-5 text-fore',
+        // Segunda ola (`FormulariosPro`): con foco dentro de su FormField (`group/campo`) el label toma el tono de marca; en error pasa a `bad`.
+        pro && 'transition-colors [transition-duration:var(--oc-motion-fast,160ms)] group-focus-within/campo:text-fono-text group-has-[[aria-invalid=true]]/campo:text-bad-text',
         className,
       )}
       {...props}
@@ -1181,7 +1189,7 @@ export function FormField({ label, hint, error, children, htmlFor, descripcionId
     ? relacionarControl(children, { htmlFor, mensajeId: (error || hint) ? mensajeId : undefined, error, requerido })
     : children
   return (
-    <div className={cn('group/campo', className)} data-motion={motion ? 'on' : 'off'}>
+    <div className={cn('group/campo', className)} data-oc-formfield="" data-motion={motion ? 'on' : 'off'}>
       {label && (
         <Label htmlFor={htmlFor}>
           {label}

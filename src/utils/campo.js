@@ -66,7 +66,7 @@ export const CAMPO_LINEA = `w-full rounded-lg px-3.5 ${CAMPO_ALTURA} text-base m
 /** Clases completas por tipo de control. */
 export const CLASES_CAMPO = Object.freeze({
   input: `${CAMPO_LINEA} ${CAMPO_ESTADOS} ${SOLO_LECTURA}`,
-  select: `block ${CAMPO_LINEA} ${CAMPO_ESTADOS} cursor-pointer appearance-none pr-9 hover:bg-ink-700/60`,
+  select: `block ${CAMPO_LINEA} ${CAMPO_ESTADOS} cursor-pointer appearance-none pr-9`,
   textarea: `w-full rounded-lg px-3.5 py-2.5 text-base md:text-sm resize-none ${CAMPO_ESTADOS} ${SOLO_LECTURA}`,
   // PIN: caja grande; comparte los estados, no la forma.
   pin: `h-full w-full rounded-2xl bg-paper text-center text-3xl font-bold tracking-[.45em] shadow-card ${CAMPO_ESTADOS} ${SOLO_LECTURA}`,

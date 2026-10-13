@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 
-import { BotonDentroCampo, Button, Checkbox, FormField, Input, MoneyInput, PasswordInput, SearchField, SegmentedField, Select, Switch, Textarea } from '../src/index.js'
+import { PinInput } from '../src/index.js'
+import { BotonDentroCampo, Button, Checkbox, FormField, FormulariosPro, Input, MoneyInput, PasswordInput, SearchField, SegmentedField, Select, Switch, Textarea } from '../src/index.js'
 import { CLASES_CAMPO, nivelContador, separarClasesDeLayout } from '../src/utils/campo.js'
 
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
@@ -13,6 +14,7 @@ let host, root
 beforeEach(() => { host = document.createElement('div'); document.body.append(host); root = createRoot(host) })
 afterEach(() => { act(() => root.unmount()); host.remove(); vi.useRealTimers() })
 const montar = (nodo) => act(() => root.render(nodo))
+const pro = (nodo) => <FormulariosPro>{nodo}</FormulariosPro>
 const html = (nodo) => renderToStaticMarkup(nodo).replaceAll('&amp;', '&')
 
 describe('separarClasesDeLayout (posición, z, visibilidad)', () => {
@@ -109,7 +111,7 @@ describe('Input: estado, cargando y adornos', () => {
     expect(host.querySelector('[data-oc-fin]').textContent).toBe('.com')
     const clase = host.querySelector('input').className
     expect(clase).toContain('pl-12')
-    expect(clase).toContain('pr-10')
+    expect(clase).toContain('pr-[3.25rem]')
   })
   test('el relleno medido se aplica por style', () => {
     const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth')
@@ -144,7 +146,7 @@ describe('SearchField', () => {
   test('Esc limpia y no sube; sin texto Esc sigue su camino', () => {
     const alto = vi.fn()
     document.body.addEventListener('keydown', alto)
-    montar(<Buscador />)
+    montar(pro(<Buscador />))
     const input = host.querySelector('input')
     act(() => { input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })) })
     expect(input.value).toBe('')
@@ -215,27 +217,44 @@ describe('Textarea: contador y auto-crecer', () => {
 })
 
 describe('Checkbox, Switch y SegmentedField', () => {
-  test('indeterminate: propiedad del DOM, aria-checked="mixed" y raya', () => {
+  test('indeterminate nativo: propiedad del DOM, sin aria-checked ni SVG', () => {
     montar(<Checkbox label="Todos" checked={false} indeterminate onChange={() => {}} />)
     const input = host.querySelector('input')
     expect(input.indeterminate).toBe(true)
-    expect(input.getAttribute('aria-checked')).toBe('mixed')
-    expect(host.querySelector('svg path').getAttribute('d')).toBe('M6 12h12')
+    expect(input.hasAttribute('aria-checked')).toBe(false)
+    expect(host.querySelector('svg')).toBeNull()
+    expect(input.className).toContain('accent-fono')
     montar(<Checkbox label="Todos" checked onChange={() => {}} />)
+    expect(host.querySelector('input').indeterminate).toBe(false)
+  })
+  test('indeterminate con FormulariosPro: raya, check y sin aria-checked', () => {
+    montar(pro(<Checkbox label="Todos" checked={false} indeterminate onChange={() => {}} />))
+    const input = host.querySelector('input')
+    expect(input.indeterminate).toBe(true)
+    expect(input.hasAttribute('aria-checked')).toBe(false)
+    expect(host.querySelector('svg path').getAttribute('d')).toBe('M6 12h12')
+    montar(pro(<Checkbox label="Todos" checked onChange={() => {}} />))
     expect(host.querySelector('input').indeterminate).toBe(false)
     expect(host.querySelector('svg path').className.baseVal).toContain('oc-check-trazo')
   })
   test('Checkbox conserva input real y motion={false} lo marca', () => {
-    montar(<Checkbox label="A" checked onChange={() => {}} motion={false} />)
+    montar(pro(<Checkbox label="A" checked onChange={() => {}} motion={false} />))
     expect(host.querySelector('input[type="checkbox"]')).not.toBeNull()
     expect(host.querySelector('[data-oc-checkbox]').dataset.motion).toBe('off')
   })
   test('Switch: rol, resorte, pulgar que se ensancha y área táctil de 44 px', () => {
-    const marcado = html(<Switch checked ariaLabel="x" onChange={() => {}} />)
+    const marcado = html(pro(<Switch checked ariaLabel="x" onChange={() => {}} />))
     expect(marcado).toContain('role="switch"')
     expect(marcado).toContain('cubic-bezier(.34,1.56,.64,1)')
     expect(marcado).toContain('peer-active:w-5')
-    expect(marcado).toContain('h-11 w-11')
+    // Área de 44 px solo en vertical y sin z-index: no pisa a los vecinos.
+    expect(marcado).toContain('h-11 w-full')
+    expect(/<input[^>]*class="([^"]*)"/.exec(marcado)[1]).not.toMatch(/\bz-\d+/)
+    // Sin el interruptor no hay resorte ni ensanche.
+    const base = html(<Switch checked ariaLabel="x" onChange={() => {}} />)
+    expect(base).not.toContain('cubic-bezier(.34,1.56,.64,1)')
+    expect(base).not.toContain('peer-active:w-5')
+    expect(base).toContain('h-11 w-full')
     expect(html(<Switch ariaLabel="x" motion={false} />)).toContain('data-motion="off"')
   })
   test('SegmentedField: el indicador se posiciona sobre la opción activa y sigue al cambio', () => {
@@ -244,7 +263,7 @@ describe('Checkbox, Switch y SegmentedField', () => {
     o.forEach(([p], i) => Object.defineProperty(HTMLElement.prototype, p, { configurable: true, get() { const id = this.getAttribute('title') === 'Bi' ? 'b' : this.getAttribute('title') === 'Ai' ? 'a' : null; return id ? geometria[id][i] : 0 } }))
     try {
       function Seg() { const [v, setV] = useState('a'); return <SegmentedField value={v} onChange={setV} options={[['a', 'Ai'], ['b', 'Bi']]} ariaLabel="p" /> }
-      montar(<Seg />)
+      montar(pro(<Seg />))
       const ind = () => host.querySelector('[data-oc-indicador]')
       expect(ind().style.transform).toBe('translate3d(0px, 0px, 0)')
       expect(ind().style.width).toBe('80px')
@@ -301,29 +320,29 @@ describe('FormField y sacudida', () => {
     expect(marcado).toContain('group/campo')
   })
   test('el label toma el tono de marca con foco dentro y bad en error', () => {
-    const marcado = html(<FormField label="A" htmlFor="a"><Input id="a" /></FormField>)
+    const marcado = html(pro(<FormField label="A" htmlFor="a"><Input id="a" /></FormField>))
     expect(marcado).toContain('group-focus-within/campo:text-fono-text')
     expect(marcado).toContain('group-has-[[aria-invalid=true]]/campo:text-bad-text')
   })
   test('sacude solo al pasar de válido a inválido, no al montar ni con motion={false}', () => {
     vi.useFakeTimers()
-    montar(<Input aria-invalid="true" aria-label="x" />)
+    montar(pro(<Input aria-invalid="true" aria-label="x" />))
     expect(host.querySelector('input').hasAttribute('data-oc-sacude')).toBe(false)
-    montar(<Input aria-label="x" />)
-    montar(<Input aria-invalid="true" aria-label="x" />)
+    montar(pro(<Input aria-label="x" />))
+    montar(pro(<Input aria-invalid="true" aria-label="x" />))
     expect(host.querySelector('input').hasAttribute('data-oc-sacude')).toBe(true)
     act(() => { vi.advanceTimersByTime(400) })
     expect(host.querySelector('input').hasAttribute('data-oc-sacude')).toBe(false)
-    montar(<Input aria-label="x" motion={false} />)
-    montar(<Input aria-invalid="true" aria-label="x" motion={false} />)
+    montar(pro(<Input aria-label="x" motion={false} />))
+    montar(pro(<Input aria-invalid="true" aria-label="x" motion={false} />))
     expect(host.querySelector('input').hasAttribute('data-oc-sacude')).toBe(false)
   })
   test('un re-render inválido no vuelve a sacudir', () => {
     vi.useFakeTimers()
-    montar(<Input aria-label="x" />)
-    montar(<Input aria-invalid="true" aria-label="x" />)
+    montar(pro(<Input aria-label="x" />))
+    montar(pro(<Input aria-invalid="true" aria-label="x" />))
     act(() => { vi.advanceTimersByTime(400) })
-    montar(<Input aria-invalid="true" aria-label="x" placeholder="otra" />)
+    montar(pro(<Input aria-invalid="true" aria-label="x" placeholder="otra" />))
     expect(host.querySelector('input').hasAttribute('data-oc-sacude')).toBe(false)
   })
 })
@@ -349,9 +368,138 @@ describe('movimiento reducido', () => {
     expect(bloques).toContain('[data-oc-switch] *')
   })
   test('motion off apaga animación y transición del control y su contenido', () => {
-    expect(css).toMatch(/\[data-motion="off"\],\s*\[data-motion="off"\] \*[\s\S]*?animation: none !important;\s*transition: none !important/)
+    expect(css).toMatch(/\[data-motion="off"\]:not\(\[data-oc-formfield\][^{]*\{\s*animation: none !important;\s*transition: none !important/)
   })
   test('las animaciones solo corren con data-motion="on"', () => {
     for (const regla of ['[data-oc-sacude][data-motion="on"]', '[data-motion="on"] .oc-campo-mensaje', '.oc-campo-aparece[data-motion="on"]', '[data-oc-exito][data-motion="on"]']) expect(css).toContain(regla)
+  })
+})
+
+describe('Ronda de correcciones del QA', () => {
+  const css = readFileSync('src/styles/base.css', 'utf8')
+  test('caret, selección y autofill solo aplican a los campos de la librería', () => {
+    const bloque = css.slice(css.indexOf('Campos de formulario: color y selección'), css.indexOf('Campos de formulario: movimiento'))
+    expect(bloque).toContain('input[data-oc-control], textarea[data-oc-control]')
+    expect(bloque).toContain('input[data-oc-control]:-webkit-autofill')
+    expect(bloque).not.toMatch(/^input, textarea \{/m)
+    expect(bloque).not.toMatch(/^input::selection/m)
+    montar(<><Input aria-label="a" /><Select aria-label="b"><option>x</option></Select><Textarea aria-label="c" /><PinInput value="" onChange={() => {}} /><input aria-label="crudo" /></>)
+    const crudo = host.querySelector('input[aria-label="crudo"]')
+    expect(crudo.matches('[data-oc-control]')).toBe(false)
+    for (const nodo of host.querySelectorAll('input:not([aria-label="crudo"]), select, textarea')) expect(nodo.matches('[data-oc-control]')).toBe(true)
+  })
+  test('tabular-nums no se aplica a los campos de texto libre', () => {
+    expect(css).toMatch(/input\[inputmode="numeric"\][^{]*\{\s*font-variant-numeric: tabular-nums/)
+    expect(css).not.toMatch(/^input, td, \[data-money\]/m)
+  })
+  test('el spinner sobrevive a motion off y FormField no cascada fuera de su campo', () => {
+    expect(css).toContain('*:not([data-oc-spinner])')
+    expect(css).toMatch(/\[data-oc-formfield\]\[data-motion="off"\] :is\(label, \.oc-campo-mensaje/)
+  })
+  test('modo contraste forzado: el Checkbox vuelve al control nativo', () => {
+    expect(css).toMatch(/@media \(forced-colors: active\) \{[\s\S]*?\[data-oc-checkbox\] input \{\s*appearance: auto/)
+  })
+  test('PasswordInput: ojo de 44 px de ancho', () => {
+    montar(<PasswordInput aria-label="clave" />)
+    expect(host.querySelector('[data-oc-fin] button').className).toContain('w-11')
+  })
+  test('Textarea contador sin maxLength positivo no dibuja nada', () => {
+    montar(<Textarea contador aria-label="n" defaultValue="abc" />)
+    expect(host.querySelector('[data-oc-contador]')).toBeNull()
+    expect(host.textContent).not.toContain('/0')
+    expect(host.querySelector('textarea').hasAttribute('aria-describedby')).toBe(false)
+    montar(<Textarea contador maxLength={0} aria-label="n" defaultValue="abc" />)
+    expect(host.querySelector('[data-oc-contador]')).toBeNull()
+  })
+  test('sin adornos no se crea ResizeObserver; con adornos sí', () => {
+    const original = globalThis.ResizeObserver
+    const creados = []
+    globalThis.ResizeObserver = class { constructor() { creados.push(this) } observe() {} disconnect() {} }
+    try {
+      montar(<Input aria-label="x" />)
+      expect(creados).toHaveLength(0)
+      montar(<Input aria-label="x" inicio="Gs" />)
+      expect(creados.length).toBeGreaterThan(0)
+    } finally { globalThis.ResizeObserver = original }
+  })
+  test('Enter en un campo no envía el formulario si el botón submit está cargando', () => {
+    // El envío implícito del navegador (Enter) dispara un clic sintético sobre el
+    // botón submit por defecto: si Button lo cancela, no hay envío.
+    const alEnviar = vi.fn((e) => e.preventDefault())
+    montar(<form onSubmit={alEnviar}><Input aria-label="x" /><Button type="submit" cargando>Guardar</Button></form>)
+    const clic = new MouseEvent('click', { bubbles: true, cancelable: true })
+    act(() => { host.querySelector('button[type="submit"]').dispatchEvent(clic) })
+    expect(clic.defaultPrevented).toBe(true)
+    expect(alEnviar).not.toHaveBeenCalled()
+  })
+  test('Switch en claro: pista, borde y pulgar usan tokens con contraste', () => {
+    const marcado = html(<><Switch checked ariaLabel="a" /><Switch ariaLabel="b" /></>)
+    expect(marcado).toContain('border-interactivo bg-interactivo')
+    expect(marcado).toContain('border-fono-dark bg-fono-dark')
+    expect(marcado).toContain('bg-ink shadow')
+    expect(marcado).not.toContain('bg-ink-600')
+    expect(marcado).not.toContain('bg-white')
+  })
+  test('CountryPhoneSelect no usa el carácter ▾', () => {
+    expect(readFileSync('src/components/CountryPhoneSelect.jsx', 'utf8')).not.toContain('▾')
+  })
+})
+
+describe('FormulariosPro: sin interruptor se ve como la primera ola', () => {
+  test('Label, Checkbox, Select y SegmentedField sin el interruptor', () => {
+    const base = html(<><FormField label="A" htmlFor="a"><Input id="a" /></FormField><Checkbox label="C" checked onChange={() => {}} /><Select><option>x</option></Select><SegmentedField value="a" onChange={() => {}} options={[['a', 'A'], ['b', 'B']]} /></>)
+    expect(base).not.toContain('group-focus-within/campo')
+    expect(base).not.toContain('data-oc-checkbox')
+    expect(base).not.toContain('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"')
+    expect(base).toContain('accent-fono')
+    expect(base).not.toContain('hover:bg-ink-700/60')
+    expect(base).not.toContain('group-focus-within/select')
+    expect(base).not.toContain('data-oc-segmentado')
+    expect(base).not.toContain('data-oc-indicador')
+    expect(base).not.toContain('data-oc-formularios')
+  })
+  test('con el interruptor se activan; el atributo CSS lo pone el proveedor', () => {
+    const marcado = html(pro(<Checkbox label="C" checked onChange={() => {}} />))
+    expect(marcado).toContain('data-oc-formularios="pro"')
+    expect(marcado).toContain('data-oc-checkbox')
+    expect(html(<FormulariosPro contenedor={false}><Checkbox label="C" onChange={() => {}} /></FormulariosPro>)).not.toContain('data-oc-formularios')
+  })
+  test('las reglas CSS de la segunda ola cuelgan del atributo', () => {
+    const css = readFileSync('src/styles/base.css', 'utf8')
+    for (const regla of ['[data-oc-formularios="pro"] [data-motion="on"] .oc-campo-mensaje', '[data-oc-formularios="pro"] [data-oc-select] > select:hover', '[data-oc-formularios="pro"] [data-oc-select]:focus-within .oc-select-chevron']) expect(css).toContain(regla)
+  })
+  test('sin interruptor no hay sacudida ni Esc que limpia', () => {
+    vi.useFakeTimers()
+    montar(<Input aria-label="x" />)
+    montar(<Input aria-invalid="true" aria-label="x" />)
+    expect(host.querySelector('input').hasAttribute('data-oc-sacude')).toBe(false)
+    const alto = vi.fn()
+    document.body.addEventListener('keydown', alto)
+    let valor = 'hola'
+    montar(<SearchField value={valor} onChange={() => {}} onClear={() => { valor = '' }} placeholder="Buscar" />)
+    act(() => { host.querySelector('input').dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })) })
+    expect(valor).toBe('hola')
+    expect(alto).toHaveBeenCalledTimes(1)
+    document.body.removeEventListener('keydown', alto)
+  })
+  test('SegmentedField: sin ResizeObserver sigue funcionando con el interruptor', () => {
+    const original = globalThis.ResizeObserver
+    globalThis.ResizeObserver = undefined
+    try {
+      montar(pro(<SegmentedField value="a" onChange={() => {}} options={[['a', 'A'], ['b', 'B']]} />))
+      expect(host.querySelectorAll('button')).toHaveLength(2)
+      expect(host.querySelector('button[aria-pressed="true"]').title).toBe('A')
+    } finally { globalThis.ResizeObserver = original }
+  })
+  test('SegmentedField: cambiar la etiqueta de la opción activa vuelve a medir', () => {
+    const geometria = { Ai: [0, 0, 80, 44], 'Ai largo': [0, 0, 140, 44] }
+    const o = ['offsetLeft', 'offsetTop', 'offsetWidth', 'offsetHeight'].map((p) => [p, Object.getOwnPropertyDescriptor(HTMLElement.prototype, p)])
+    o.forEach(([p], i) => Object.defineProperty(HTMLElement.prototype, p, { configurable: true, get() { const g = geometria[this.getAttribute('title')]; return g ? g[i] : 0 } }))
+    try {
+      montar(pro(<SegmentedField value="a" onChange={() => {}} options={[['a', 'Ai'], ['b', 'Bi']]} />))
+      expect(host.querySelector('[data-oc-indicador]').style.width).toBe('80px')
+      montar(pro(<SegmentedField value="a" onChange={() => {}} options={[['a', 'Ai largo'], ['b', 'Bi']]} />))
+      expect(host.querySelector('[data-oc-indicador]').style.width).toBe('140px')
+    } finally { o.forEach(([p, d]) => Object.defineProperty(HTMLElement.prototype, p, d)) }
   })
 })
