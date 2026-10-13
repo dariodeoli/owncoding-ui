@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.0 — 2026-10-13
 
 - **Formularios pro, opt-in por app:** nuevo `FormulariosPro` /
   `useFormulariosPro` (atributo `data-oc-formularios="pro"` + contexto). Sin él
