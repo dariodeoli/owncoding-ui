@@ -238,3 +238,14 @@ describe('PhoneField internacional', () => {
     expect(trigger.getAttribute('aria-expanded')).toBe('false')
   })
 })
+
+test('el selector de país usa la misma altura que el campo del número', () => {
+  const host = document.createElement('div')
+  host.innerHTML = renderToStaticMarkup(<PhoneField phone="981123456" />)
+  const trigger = host.querySelector('button[aria-haspopup]') || host.querySelector('button')
+  const input = host.querySelector('input')
+  for (const clase of ['h-11', 'md:h-9']) {
+    expect(trigger.className.split(/\s+/)).toContain(clase)
+    expect(input.className.split(/\s+/)).toContain(clase)
+  }
+})

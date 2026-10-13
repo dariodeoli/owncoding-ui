@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Input } from './ui.jsx'
-import { CAMPO_ESTADOS } from '../utils/campo.js'
+import { CAMPO_ALTURA, CAMPO_ESTADOS } from '../utils/campo.js'
 import { cn } from '../utils/cn.js'
 import { buscarPaisesTelefono, paisTelefonoPorIso, resolverPaisesTelefono } from '../utils/paisesTelefono.js'
 
@@ -119,7 +119,7 @@ export default function CountryPhoneSelect({
           }
         }}
         data-oc-control=""
-        className={cn('flex h-11 w-full items-center justify-center gap-1.5 rounded-lg px-2 text-sm', CAMPO_ESTADOS)}
+        className={cn('flex w-full items-center justify-center gap-1.5 rounded-lg px-2 text-sm', CAMPO_ALTURA, CAMPO_ESTADOS)}
       >
         <span aria-hidden="true" className="text-base leading-none">{selected.flag}</span>
         <span className="tabular-nums">{selected.countryCode}</span>

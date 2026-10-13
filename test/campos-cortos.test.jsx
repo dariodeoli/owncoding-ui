@@ -33,9 +33,10 @@ describe('campos cortos sin truncar', () => {
     const html = renderToStaticMarkup(<PhoneField phone="981 123 456" onChange={() => {}} />)
     expect(claseDeFila(html)).toContain('flex-wrap')
     // El contenedor del combobox conserva 96 px y no se comprime; el trigger
-    // mantiene además el target táctil de 44 px (`h-11`).
+    // mantiene el target táctil de 44 px en móvil (`h-11`) y baja con el campo
+    // a `md:h-9` para alinear la altura con el número.
     expect(html).toContain('relative w-24 shrink-0')
-    expect(html).toContain('h-11 w-full')
+    expect(html).toMatch(/<button[^>]*class="[^"]*\bh-11 md:h-9\b/)
   })
 
   test('con el ancho recomendado (TAMANOS_CAMPO.telefono = w-44) el número no se recorta', () => {
