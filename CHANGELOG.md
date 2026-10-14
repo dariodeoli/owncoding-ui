@@ -4,6 +4,11 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **Formularios (#27):** `FormField` suma `etiquetaFlotante` (opt-in): el label vive dentro del campo y sube al enfocar, con valor, con autocompletado (`:-webkit-autofill`/`:autofill`) o siempre con adorno `inicio` y en `Select`. Mismo `<label for>`, mismas alturas, sin transición con movimiento reducido. Sin la prop no cambia nada. Galería: bloque «Etiqueta flotante» en Formularios.
+- **Accesibilidad (#30):** el foco del `Switch` pasa a un anillo sólido `fono-dark` (antes `fono/50` en la primera ola y `fono-dark/25` en `FormulariosPro`, 1,4–2,5:1; ahora 6,5–8:1 en la galería). Verificado en WebKit (autofill y `:has()`), medido el spinner con movimiento reducido (anillo parcial quieto + `aria-busy`) y decidido aceptar los colores oficiales claros de logos financieros (docs/REGLAS.md §19).
+
 ## v0.68.8 — 2026-10-14
 
 - **Agentes:** `AGENTS.md` y `CLAUDE.md` en la raíz explican roles y modelos, flujo, sala de agentes, publicación y deploy; los roles de `.claude/agents/` quedan versionados.

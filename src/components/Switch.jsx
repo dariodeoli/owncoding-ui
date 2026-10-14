@@ -10,6 +10,9 @@ import { useFormulariosPro } from './FormulariosPro.jsx'
 // primera ola, con transición lineal de color y pulgar): el pulgar se desliza con una curva con rebote leve, la pista
 // cambia de color y, presionado, el pulgar se ensancha. Todo es CSS con los
 // tokens `--oc-motion-*`; `motion={false}` o `prefers-reduced-motion` lo apagan.
+// Foco (WCAG 1.4.11, #30): el anillo es el único indicador del interruptor, así que va
+// sólido en `fono-dark` (≥3:1 contra el fondo en claro y oscuro). Antes `fono/50` y
+// `fono-dark/25` medían entre 1,4:1 y 2,5:1.
 // El área táctil del input mide 44 px de alto (crece solo en vertical, 12 px por
 // lado, sin z-index): no pisa a los controles vecinos de la fila.
 const RESORTE = '[transition-timing-function:cubic-bezier(.34,1.56,.64,1)]'
@@ -35,8 +38,8 @@ export default function Switch({ checked, onChange, disabled = false, id, ariaLa
         className={cn(
           'pointer-events-none absolute inset-0 rounded-full border',
           pro
-            ? 'transition-[background-color,border-color,box-shadow] [transition-duration:var(--oc-motion-feedback,240ms)] [transition-timing-function:var(--oc-motion-ease,cubic-bezier(.2,.8,.2,1))] peer-focus-visible:ring-[3px] peer-focus-visible:ring-fono-dark/25 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-paper'
-            : 'transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-fono/50 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-paper',
+            ? 'transition-[background-color,border-color,box-shadow] [transition-duration:var(--oc-motion-feedback,240ms)] [transition-timing-function:var(--oc-motion-ease,cubic-bezier(.2,.8,.2,1))] peer-focus-visible:ring-2 peer-focus-visible:ring-fono-dark peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-paper'
+            : 'transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-fono-dark peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-paper',
           // Contraste (WCAG 1.4.11): pista y borde ≥3:1 contra el fondo (`interactivo`
           // apagado, `fono-dark` encendido) y pulgar `ink` ≥3:1 contra la pista.
           checked ? 'border-fono-dark bg-fono-dark' : 'border-interactivo bg-interactivo',
