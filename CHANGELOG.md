@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.10 — 2026-10-14
 
 - **Galería:** la demo «Extracción confirmable» de `RucField` también consulta OwnData real (RUC con o sin dígito verificador) cuando hay clave publicable; sin clave sigue con el proveedor simulado.
 
