@@ -95,7 +95,7 @@ modelo de la tabla y este pedido: "Actuá como el rol X: leé y seguí
 3. Commit `release: v<x.y.z> — <resumen>`, tag anotado `v<x.y.z>`, push de `main` y del tag.
 4. **Deploy de la galería (manual por ahora, issue #26):** Coolify en
    https://hub.owncoding.dev → proyecto **Owncoding UI** → `production` →
-   aplicación **owncoding-ui** → botón **Deploy**. El push no lo dispara solo.
+   aplicación **owncoding-ui-production** → botón **Deploy**. El push no lo dispara solo.
    El build tarda de 5 a 14 minutos.
 5. Verificar en producción: `curl -s https://controlaria.online/status.json`
    debe mostrar la versión y el SHA40 del commit de release.
