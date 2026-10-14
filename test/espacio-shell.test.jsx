@@ -253,6 +253,114 @@ describe('Avatar paleta sobria', () => {
   })
 })
 
+describe('Shell: textos, disparador, forma, lado y encabezado (#25)', () => {
+  const espacios = [
+    { id: 'a', nombre: 'Acme Distribuidora de Alimentos y Bebidas S.A.', detalle: 'Propietario' },
+    { id: 'p', nombre: 'Ana Pérez', detalle: 'Personal', avatar: 'https://lh3.googleusercontent.com/foto', forma: 'redondo' },
+  ]
+
+  test('SelectorEspacio: locale en traduce el copy y textos lo pisa; el español no cambia', async () => {
+    const reintentar = () => {}
+    await montar(<SelectorEspacio espacios={[]} estado="error" onReintentar={reintentar} defaultAbierto />)
+    expect(contenedor.textContent).toContain('Reintentar')
+    await montar(<SelectorEspacio espacios={[]} estado="error" onReintentar={reintentar} defaultAbierto locale="en" />)
+    expect(contenedor.querySelector('[role="alert"]').textContent).toBe('Workspaces could not be loaded.')
+    expect(contenedor.textContent).toContain('Retry')
+    expect(contenedor.querySelector('button[aria-haspopup="menu"]').getAttribute('aria-label')).toBe('Switch workspace: Choose workspace')
+    await montar(<SelectorEspacio espacios={[]} estado="error" onReintentar={reintentar} defaultAbierto locale="en" textos={{ reintentar: 'Try again' }} />)
+    expect(contenedor.textContent).toContain('Try again')
+    expect(contenedor.textContent).not.toContain('Retry')
+    await montar(<SelectorEspacio espacios={[]} estado="cargando" defaultAbierto locale="en" />)
+    expect(contenedor.querySelector('[role="status"]').textContent).toBe('Loading workspaces…')
+    await montar(<SelectorEspacio espacios={[]} locale="xx" defaultAbierto />)
+    expect(contenedor.textContent).toContain('Todavía no hay espacios.')
+    await montar(<SelectorEspacio espacios={[]} locale="en" ariaLabel="Mi etiqueta" />)
+    expect(contenedor.querySelector('button').getAttribute('aria-label')).toBe('Mi etiqueta: Choose workspace')
+  })
+
+  test('SelectorEspacio: el disparador muestra el detalle (opt-in) y title con el nombre completo', async () => {
+    await montar(<SelectorEspacio espacios={espacios} valor="a" />)
+    const base = contenedor.querySelector('button[aria-haspopup="menu"]')
+    expect(base.getAttribute('title')).toBe(espacios[0].nombre)
+    expect(base.textContent).not.toContain('Propietario')
+    await montar(<SelectorEspacio espacios={espacios} valor="a" mostrarDetalle />)
+    const con = contenedor.querySelector('button[aria-haspopup="menu"]')
+    const detalle = [...con.querySelectorAll('span')].find((nodo) => nodo.textContent === 'Propietario')
+    expect(detalle.className).toContain('truncate')
+    expect(con.querySelector('span.truncate').textContent).toBe(espacios[0].nombre)
+  })
+
+  test('SelectorEspacio: formaAvatar/espacio.forma redondo llena el círculo; por defecto sigue cuadrado', async () => {
+    await montar(<SelectorEspacio espacios={espacios} valor="p" defaultAbierto />)
+    const foto = contenedor.querySelector('button[aria-haspopup="menu"] img')
+    expect(foto.parentElement.className).toContain('rounded-full')
+    expect(foto.className).toContain('object-cover')
+    await montar(<SelectorEspacio espacios={[{ id: 'e', nombre: 'Empresa', avatar: 'https://x.test/logo.png' }]} valor="e" />)
+    const logo = contenedor.querySelector('button[aria-haspopup="menu"] img')
+    expect(logo.parentElement.className).toContain('rounded-lg')
+    expect(logo.className).toContain('object-contain')
+    await montar(<SelectorEspacio espacios={[{ id: 'e', nombre: 'Empresa', avatar: 'https://x.test/logo.png' }]} valor="e" formaAvatar="redondo" />)
+    expect(contenedor.querySelector('button[aria-haspopup="menu"] img').className).toContain('object-cover')
+  })
+
+  test('Avatar: forma redondo usa object-cover y cuadrado object-contain', () => {
+    const redondo = renderToStaticMarkup(<Avatar nombre="Ana" src="https://x.test/a.jpg" forma="redondo" />)
+    expect(redondo).toContain('rounded-full')
+    expect(redondo).toContain('object-cover')
+    const cuadrado = renderToStaticMarkup(<Avatar nombre="Acme" src="https://x.test/a.jpg" empresa />)
+    expect(cuadrado).toContain('object-contain')
+  })
+
+  test('SelectorEspacio: lado arriba abre hacia arriba, sin min-w-64 fijo, y conserva teclado y Esc', async () => {
+    await montar(<SelectorEspacio espacios={espacios} valor="a" lado="arriba" />)
+    await abrirMenu()
+    const panel = contenedor.querySelector('[id][tabindex="-1"]')
+    expect(panel.className).toContain('bottom-full')
+    expect(panel.className).not.toContain('mt-1')
+    expect(panel.className).not.toContain('min-w-64')
+    expect(panel.className).toContain('min-w-[min(16rem,calc(100vw-2rem))]')
+    const filas = contenedor.querySelectorAll('[role="menuitemradio"]')
+    expect(document.activeElement).toBe(filas[0])
+    await tecla(panel, 'ArrowDown')
+    expect(document.activeElement).toBe(filas[1])
+    await tecla(panel, 'Escape')
+    await act(async () => new Promise((resolver) => requestAnimationFrame(() => resolver())))
+    expect(contenedor.querySelector('[role="menu"]')).toBeNull()
+    expect(document.activeElement).toBe(contenedor.querySelector('button[aria-haspopup="menu"]'))
+    await montar(<SelectorEspacio espacios={espacios} valor="a" />)
+    await abrirMenu()
+    expect(contenedor.querySelector('[id][tabindex="-1"]').className).toContain('mt-1')
+  })
+
+  test('NavLateral: sin cabecera ni onToggle no dibuja la franja de encabezado', async () => {
+    await montar(<NavLateral items={[{ id: 'a', label: 'Inicio' }]} />)
+    expect(contenedor.querySelector('nav').firstElementChild.tagName).toBe('DIV')
+    expect(contenedor.querySelector('nav').firstElementChild.className).toContain('overflow-y-auto')
+    await montar(<NavLateral items={[{ id: 'a', label: 'Inicio' }]} cabecera={<b>Logo</b>} />)
+    expect(contenedor.querySelector('nav').firstElementChild.className).toContain('py-3')
+    await montar(<NavLateral items={[{ id: 'a', label: 'Inicio' }]} onToggle={() => {}} />)
+    expect(contenedor.querySelector('nav button[aria-expanded]')).not.toBeNull()
+  })
+
+  test('NavLateral: locale en y textos; los rótulos de grupo miden 44 px con tactil', async () => {
+    const grupos = [{ titulo: 'Ventas', items: [{ id: 'a', label: 'Pedidos' }] }]
+    await montar(<NavLateral grupos={grupos} onToggle={() => {}} />)
+    expect(contenedor.querySelector('nav').getAttribute('aria-label')).toBe('Navegación principal')
+    expect(contenedor.querySelector('button[aria-label="Contraer menú"]')).not.toBeNull()
+    expect(contenedor.querySelector('button[title="Ocultar Ventas"]').className).not.toContain('min-h-11')
+    await montar(<NavLateral grupos={grupos} onToggle={() => {}} locale="en" tactil />)
+    expect(contenedor.querySelector('nav').getAttribute('aria-label')).toBe('Main navigation')
+    expect(contenedor.querySelector('button[aria-label="Collapse menu"]')).not.toBeNull()
+    const grupo = contenedor.querySelector('button[title="Hide Ventas"]')
+    expect(grupo.className).toContain('min-h-11')
+    await montar(<NavLateral grupos={grupos} onToggle={() => {}} locale="en" textos={{ ocultarGrupo: 'Fold {titulo}', contraer: 'Fold menu' }} />)
+    expect(contenedor.querySelector('button[title="Fold Ventas"]')).not.toBeNull()
+    expect(contenedor.querySelector('button[aria-label="Fold menu"]')).not.toBeNull()
+    await montar(<NavLateral grupos={grupos} locale="en" ariaLabel="Principal" />)
+    expect(contenedor.querySelector('nav').getAttribute('aria-label')).toBe('Principal')
+  })
+})
+
 describe('ProductFooter modelo panel', () => {
   test('la variante panel es delgada (opt-in) y el modelo compacto no cambia', () => {
     const panel = renderToStaticMarkup(<ProductFooter nombre="Demo" modelo="panel" anio={2026} />)
