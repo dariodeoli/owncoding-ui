@@ -71,7 +71,7 @@ export default function Checkbox({
         className={cn(
           'peer h-full w-full cursor-pointer appearance-none rounded-[5px] border border-interactivo bg-ink-800 outline-none',
           'transition-[background-color,border-color,box-shadow,transform] [transition-duration:var(--oc-motion-fast,160ms)] [transition-timing-function:var(--oc-motion-ease,cubic-bezier(.2,.8,.2,1))]',
-          'hover:border-mute focus-visible:ring-[3px] focus-visible:ring-fono-dark/25 active:scale-90',
+          'hover:border-mute focus-visible:ring-2 focus-visible:ring-fono-dark focus-visible:ring-offset-2 focus-visible:ring-offset-paper active:scale-90',
           malo
             ? 'checked:border-bad checked:bg-bad data-[oc-indeterminado]:border-bad data-[oc-indeterminado]:bg-bad'
             : 'checked:border-fono-dark checked:bg-fono data-[oc-indeterminado]:border-fono-dark data-[oc-indeterminado]:bg-fono',
