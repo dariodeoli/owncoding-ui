@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.9 — 2026-10-14
 
 - **Shell (#25, pedido de OwnData), todo aditivo y opt-in:** `SelectorEspacio` y `NavLateral` aceptan `locale` (`'es'` por defecto, `'en'`) y `textos` parcial para el copy incorporado («Reintentar», «Cargando espacios…», «Cambiar de espacio», «Expandir menú»…). `SelectorEspacio` suma `mostrarDetalle` (el `detalle` del espacio activo en el disparador, que además lleva `title` con el nombre completo), `formaAvatar="redondo"` / `espacio.forma` (personas con foto que llena el círculo; empresas siguen cuadradas), y `lado="arriba"` para abrir el menú hacia arriba con un ancho mínimo que no desborda en 375 px. `NavLateral` ya no dibuja la franja de encabezado vacía sin `cabecera` ni `onToggle` (cambio visible para todas las apps: el menú sube unos píxeles donde antes había un hueco), y con `tactil` los rótulos de grupo plegables y el botón de contraer miden 44 px.
 - **Formularios (#27):** `FormField` suma `etiquetaFlotante` (opt-in): el label vive dentro del campo y sube al enfocar, con valor, con autocompletado (`:-webkit-autofill`/`:autofill`) o siempre con adorno `inicio` y en `Select`. Mismo `<label for>`, mismas alturas, sin transición con movimiento reducido. Sin la prop no cambia nada. Galería: bloque «Etiqueta flotante» en Formularios.
