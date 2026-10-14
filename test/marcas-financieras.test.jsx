@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
+import { createRequire } from 'node:module'
 import { describe, expect, test } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
@@ -329,7 +330,9 @@ describe('manifest y bundles financieros', () => {
   })
 
   test('el bundle visual contiene imágenes locales y metadata permanece sin bytes', async () => {
-    const { BancoLogo: BancoLogoPublicado } = await import('../dist/index.js')
+    // Se carga con el cargador nativo de Node (require de ESM): pasarlo por la transformación de
+    // Vite tarda ~5 s en un bundle con imágenes embebidas y agotaba el timeout bajo carga.
+    const { BancoLogo: BancoLogoPublicado } = createRequire(import.meta.url)('../dist/index.js')
     const html = renderToStaticMarkup(<BancoLogoPublicado banco="ueno bank" variante="compacto" />)
     expect(html).toContain('<img')
     expect(html).toContain('src="data:image/')

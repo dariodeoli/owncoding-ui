@@ -2,6 +2,8 @@
 import { afterEach, expect, test, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import BancoCombobox from '../src/components/BancoCombobox.jsx'
+// La primera prueba paga el primer render (compilación JIT en frío): ~0,3-0,5 s solo, pero >2 s con la suite completa en paralelo; el timeout de 5 s no mide una regresión.
+vi.setConfig({ testTimeout: 30000 })
 afterEach(cleanup)
 
 test('shows actual selected and option logos without changing accessible names or callbacks', () => {
