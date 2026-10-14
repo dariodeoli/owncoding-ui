@@ -9,6 +9,7 @@ import assetnemby_horizontal from '../assets/financial/bancos/nemby-horizontal.p
 import assetnemby_compacto from '../assets/financial/bancos/nemby-compacto.png'
 import assetlambare_horizontal from '../assets/financial/bancos/lambare-horizontal.gif'
 import assetcoodene_horizontal from '../assets/financial/bancos/coodene-horizontal.png'
+import assetcoodene_compacto from '../assets/financial/bancos/coodene-compacto.png'
 import assetmburicao_horizontal from '../assets/financial/bancos/mburicao-horizontal.png'
 import assetmercado_n4_horizontal from '../assets/financial/bancos/mercado-n4-horizontal.png'
 import assetsan_lorenzo_compacto from '../assets/financial/bancos/san-lorenzo-compacto.png'
@@ -100,6 +101,7 @@ export const ASSETS_FINANCIEROS = Object.freeze({
   'bancos/nemby-compacto.png': assetnemby_compacto,
   'bancos/lambare-horizontal.gif': assetlambare_horizontal,
   'bancos/coodene-horizontal.png': assetcoodene_horizontal,
+  'bancos/coodene-compacto.png': assetcoodene_compacto,
   'bancos/mburicao-horizontal.png': assetmburicao_horizontal,
   'bancos/mercado-n4-horizontal.png': assetmercado_n4_horizontal,
   'bancos/san-lorenzo-compacto.png': assetsan_lorenzo_compacto,

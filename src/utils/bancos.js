@@ -263,7 +263,7 @@ export const LOGOS_BANCOS = {
   'Capiatá': cooperativaOriginal('Capiatá', 'https://www.capiata.coop.py/', 'capiata-horizontal.png', false),
   'Ñemby': cooperativaOriginal('Ñemby', 'https://coopnemby.coop.py/', 'nemby-horizontal.png', true, 'nemby-compacto.png'),
   'Lambaré': cooperativaOriginal('Lambaré', 'https://www.lambare.coop.py/', 'lambare-horizontal.gif', true),
-  'Coodeñe': cooperativaOriginal('Coodeñe', 'https://coodene.coop.py/', 'coodene-horizontal.png', false),
+  'Coodeñe': cooperativaOriginal('Coodeñe', 'https://coodene.coop.py/', 'coodene-horizontal.png', false, 'coodene-compacto.png'),
   'Mburicaó': cooperativaOriginal('Mburicaó', 'https://mburicao.coop.py/', 'mburicao-horizontal.png', false),
   'Mercado Nº 4': cooperativaOriginal('Mercado Nº 4', 'https://coopmer4.coop.py/', 'mercado-n4-horizontal.png', true),
   'San Lorenzo': cooperativaOriginal('San Lorenzo', 'https://www.sanlorenzo.coop.py/', 'san-lorenzo-compacto.png', true),

@@ -74,7 +74,7 @@ for (const asset of manifest.assets) {
     if (asset.sourceIdentity.sha256 === asset.sha256) errors.push(`${asset.file}: fuente original y derivado runtime no están diferenciados`)
     if (!asset.transformation) errors.push(`${asset.file}: derivado runtime sin transformación documentada`)
   }
-  if (!['2026-10-01', '2026-10-02'].includes(asset.retrievedAt) || asset.authorization?.confirmedAt !== '2026-10-01') errors.push(`${asset.file}: fecha de evidencia incorrecta`)
+  if (!['2026-10-01', '2026-10-02', '2026-10-14'].includes(asset.retrievedAt) || asset.authorization?.confirmedAt !== '2026-10-01') errors.push(`${asset.file}: fecha de evidencia incorrecta`)
   if (asset.authorization?.basis !== 'User-provided written authorization') errors.push(`${asset.file}: base de autorización ausente`)
   if (!asset.authorization?.scope?.includes('Public GitHub repository dariodeoli/owncoding-ui') || !asset.authorization?.scope?.includes('Own UI / OwnCoding website and gallery')) errors.push(`${asset.file}: alcance incompleto`)
   if (!referenced.has(asset.file)) errors.push(`${asset.file}: asset sin variante real referenciada`)
