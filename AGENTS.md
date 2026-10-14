@@ -137,7 +137,9 @@ archivo pasa 5 MB. Las evidencias de QA no se commitean (`.gitignore`).
 ## 9. Estado y pendientes
 
 - Estado vivo y próximos pasos: `.claude/handoff.md`.
-- Pendientes: issues abiertos en GitHub (`gh issue list`). Al 14-10-2026:
-  #25 (ajustes de shell pedidos por OwnData), #26 (deploy automático en Coolify),
-  #27 (etiquetas flotantes), #28 (timeouts de tests), #29 (logos de Bancard y
-  Coodeñe), #30 (verificaciones de accesibilidad), además de #10, #14, #22 y #23.
+- Pendientes: issues abiertos en GitHub (`gh issue list`). Al 14-10-2026 (v0.68.9):
+  - #26: deploy automático. Coolify ya usa la GitHub App `owncoding-dev`, pero
+    la app no está instalada en la cuenta `dariodeoli`. Hasta que se instale, el
+    Deploy en Coolify es manual.
+  - #30: solo falta probar en un Firefox real.
+  - #10, #14, #22 (idioma de `ProductFooter`) y #23.

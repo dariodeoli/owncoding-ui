@@ -11,14 +11,12 @@ Short handoff so a new session can continue without the long thread.
 - Live board: unified sala https://claude.ai/artifact/NvU6kwMEAoTv4cUqw4KLHx (since 2026-10-13). Write only to `apps/owncoding-ui/{agents,events,releases,meta}` and the `apps/owncoding-ui` doc; optional `model` and `tokens` per agent. Format: agendese/.claude/traspaso/GUIA-EQUIPO-DE-AGENTES.md §4. The old owncoding-ui sala (9CPHoiA6...) is no longer used.
 
 ## Last release
-- v0.68.0 (tag, main 7105f01) published 2026-10-13: forms redesign + opt-in `FormulariosPro`, shell objects for OwnData. CI green; gallery serving 0.68.0/7105f01 after a manual Coolify redeploy (the push did not trigger it).
-- Slot worktrees and branches removed. OwnData was sent the tag and SHA.
+- v0.68.9 (tag, main 5eb9451) published and verified 2026-10-14: #25 shell es/en, #27 floating label, #28 tests without timeouts, #29 Bancard/Coodeñe logos, #30 solid focus. Full suite 1291/1291.
+- The gallery's real OwnData RUC lookup is live (publishable key in `gallery/owndata-config.js`, header `X-API-Key`).
+- No slot worktrees are open.
 
-## Follow-ups (GitHub issues, 2026-10-13)
-- #24 OwnData real RUC in the gallery: migration 016, pk_ key, revoke the exposed od_test key.
-- #25 Shell gaps reported by OwnData (es/en texts, SelectorEspacio, person Avatar, NavLateral).
-- #26 Gallery deploy does not fire on push (Coolify).
-- #27 Opt-in floating labels.
-- #28 Load-sensitive 5s test timeouts.
-- #29 Bancard and Coodeñe compact logos illegible with current official assets.
-- #30 Pending accessibility checks (autofill/:has() in Safari/Firefox, Switch focus, spinners, light brand colors).
+## Follow-ups
+- #26: Coolify source switched to the GitHub App `owncoding-dev`, but the app is not installed on the `dariodeoli` account, so pushes don't trigger deploys. Deploy manually in Coolify until the owner installs it.
+- #30: test in a real Firefox (Playwright Firefox does not start on macOS 27).
+- #22: ProductFooter language (can reuse `src/utils/textos-shell.js`).
+- Option to evaluate: the round Avatar and NavLateral without header changed defaults slightly; see the v0.68.9 CHANGELOG.
