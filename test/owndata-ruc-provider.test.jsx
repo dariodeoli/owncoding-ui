@@ -240,13 +240,14 @@ function respuesta(body, { status = 200, headers = {} } = {}) {
   return { status, headers: { get: name => headers[name] ?? null }, json: async () => body }
 }
 
-it('real lookup sends the publishable key as Bearer without cookies and maps a valid envelope', async () => {
+it('real lookup sends the publishable key in X-API-Key (never Bearer) without cookies and maps a valid envelope', async () => {
   const fetchImpl = vi.fn(async () => respuesta(simulatedOwnDataEnvelope('80012345-6')))
   const lookup = createOwnDataRucProvider({ lookup: ruc => realOwnDataLookup(ruc, { key: 'pk_test_galeria', fetchImpl }) })
   const result = await lookup('80012345-6')
   const [url, init] = fetchImpl.mock.calls[0]
   expect(url).toBe('https://app.controlaria.online/api/v1/ruc/80012345-6')
-  expect(init).toMatchObject({ method: 'GET', credentials: 'omit', headers: { Authorization: 'Bearer pk_test_galeria' } })
+  expect(init).toMatchObject({ method: 'GET', credentials: 'omit', headers: { 'X-API-Key': 'pk_test_galeria' } })
+  expect(init.headers.Authorization).toBeUndefined()
   expect(result).toMatchObject({ name: 'EMPRESA DEMO — COMERCIO', reviewRequired: true })
 })
 

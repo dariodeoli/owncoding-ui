@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **OwnData RUC en la galería:** la clave publicable va en la cabecera `X-API-Key` (OwnData rechaza `Authorization: Bearer pk_` con 403 `PUBLISHABLE_KEY_FORBIDDEN`).
+
 ## v0.68.6 — 2026-10-14
 
 - **Build de la galería:** `.dockerignore` deja el contexto de Coolify en ~4 MB (antes, todo el repo: 12,4 MB). `scripts/verificar-contexto-build.mjs` corre antes de `gallery:build` y falla si el contexto pasa 400 MB o algún archivo 5 MB. Nuevo `test/build-context.test.js` y `.gitignore` para evidencias de QA (`*.har`, `*.har.gz`, `*.zip`, reportes de Playwright).

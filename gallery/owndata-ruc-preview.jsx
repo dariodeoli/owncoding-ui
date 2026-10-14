@@ -20,7 +20,7 @@ export function simulatedOwnDataEnvelope(requested = ownDataDemoCompanies[0].ful
 // createOwnDataRucProvider valida identidad y mapea errores.
 export async function realOwnDataLookup(requested, { key = OWNDATA_PUBLISHABLE_KEY, fetchImpl = globalThis.fetch } = {}) {
   const response = await fetchImpl(OWNDATA_API_RUC_URL + encodeURIComponent(requested), {
-    method: 'GET', headers: { Accept: 'application/json', Authorization: `Bearer ${key}` }, credentials: 'omit',
+    method: 'GET', headers: { Accept: 'application/json', 'X-API-Key': key }, credentials: 'omit',
   })
   let envelope
   try { envelope = await response.json() } catch { envelope = { error: { code: 'COMMERCIAL_API_UNAVAILABLE' } } }

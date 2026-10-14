@@ -134,8 +134,8 @@ Estado paraguayo; no se habilitan exportación masiva ni enriquecimiento.
 ## Clave publicable para la galería (contrato 1.4.0)
 
 La galería pública (`https://controlaria.online`) puede consultar el mismo
-`GET /api/v1/ruc/{ruc}` con una clave publicable `pk_…` en
-`Authorization: Bearer`. OwnData solo la acepta con `Origin`
+`GET /api/v1/ruc/{ruc}` con una clave publicable `pk_…` en la cabecera
+`X-API-Key` (con `Authorization: Bearer` OwnData responde 403 `PUBLISHABLE_KEY_FORBIDDEN`). OwnData solo la acepta con `Origin`
 `https://controlaria.online`, alcance RUC, 10 consultas por IP por día y 500
 por clave por día (429 `DAILY_QUOTA_REACHED` con `Retry-After`). Cada clave
 atribuye el uso a su app. La clave se configura en `gallery/owndata-config.js`
