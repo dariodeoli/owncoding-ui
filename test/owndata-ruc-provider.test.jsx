@@ -13,6 +13,7 @@ afterEach(() => { cleanup(); vi.restoreAllMocks() })
 it.each([
   ['API_KEY_ENVIRONMENT_MISMATCH', 401, 'La clave de OwnData no corresponde al ambiente configurado. Complete los datos manualmente.'],
   ['FREE_API_DISABLED', 503, 'La API gratuita de OwnData está deshabilitada. Complete los datos manualmente.'],
+  ['INVALID_RUC_DV', 400, 'El dígito verificador no corresponde a ese RUC. Revise el número.'],
   ['PUBLISHABLE_KEY_UNAVAILABLE', 503, 'La consulta pública de OwnData todavía no está disponible. Complete los datos manualmente.'],
 ])('maps current contract code %s to safe actionable text', (code, status, message) => {
   const error = mapOwnDataRucError({ error: { code, message: 'unsafe-provider-detail', retryAfter: 9 }, requestId: 'req-safe' })

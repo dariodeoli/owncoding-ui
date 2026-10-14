@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **OwnData RUC:** mensajes propios para `INVALID_RUC_DV` (400), `ORIGIN_NOT_ALLOWED` y `PUBLISHABLE_KEY_FORBIDDEN` (403). En la galería, el modo real arranca con el campo vacío en lugar del RUC de ejemplo.
+
 ## v0.68.7 — 2026-10-14
 
 - **OwnData RUC en la galería:** la clave publicable va en la cabecera `X-API-Key` (OwnData rechaza `Authorization: Bearer pk_` con 403 `PUBLISHABLE_KEY_FORBIDDEN`).

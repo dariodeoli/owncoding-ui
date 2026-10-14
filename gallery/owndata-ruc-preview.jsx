@@ -32,7 +32,7 @@ export async function realOwnDataLookup(requested, { key = OWNDATA_PUBLISHABLE_K
 export function OwnDataIntegrationPreview() {
   const conClave = OWNDATA_PUBLISHABLE_KEY.startsWith('pk_')
   const [modo, setModo] = useState(conClave ? 'real' : 'demo')
-  const [value, setValue] = useState('80012345-6')
+  const [value, setValue] = useState(OWNDATA_PUBLISHABLE_KEY.startsWith('pk_') ? '' : '80012345-6')
   const [blocked, setBlocked] = useState(false)
   const [result, setResult] = useState(null)
   const provider = useMemo(() => {
@@ -58,7 +58,7 @@ export function OwnDataIntegrationPreview() {
     <div className="preview-panel__heading"><div><p className="preview-kicker">OwnData + RucField</p><h4>Extracción y confirmación de datos de empresa</h4></div><span className="fixture-label">{modo === 'real' ? 'Consulta real · OwnData' : 'Demo local interactiva'}</span></div>
     {conClave && <div role="radiogroup" aria-label="Origen de los datos" className="flex flex-wrap gap-2">
       {[['real', 'Datos reales'], ['demo', 'Datos de prueba']].map(([id, etiqueta]) => <label key={id} className="flex min-h-11 items-center gap-2 text-sm">
-        <input type="radio" name="owndata-modo" value={id} checked={modo === id} onChange={() => { setModo(id); setResult(null) }} />{etiqueta}</label>)}
+        <input type="radio" name="owndata-modo" value={id} checked={modo === id} onChange={() => { setModo(id); setResult(null); setValue(id === 'real' ? '' : '80012345-6') }} />{etiqueta}</label>)}
     </div>}
     <p className="preview-note">{modo === 'real'
       ? 'Consulta el snapshot DNIT de OwnData con una clave publicable de la galería: hasta 10 consultas por día. Los datos se confirman antes de aplicarse.'
