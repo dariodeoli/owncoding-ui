@@ -93,13 +93,31 @@ y reservan su espacio midiendo el slot; `cargando` (spinner + `aria-busy`) en
 Input/Select/SearchField; `estado="ok"` (borde ok + check); `Textarea`
 `autoCrecer` y `contador` (aviso al 90 %, tope al 100 %); `Checkbox`
 `indeterminate`; `SearchField` `limpiable` (Esc limpia); `Button` `cargando` y
-`exito` (sin salto de ancho); `FormField` `requerido`. `Select` dibuja su
+`exito` (sin salto de ancho); `FormField` `requerido` y `etiquetaFlotante`. `Select` dibuja su
 chevron (`Icon`) y sigue siendo el `<select>` nativo: las clases de
 ancho/margen/posición/z/visibilidad del `className` (y `style`/`hidden`) van al
 envoltorio; `min-h-*` se queda en el control. El movimiento (foco, error con
 sacudida única, éxito, switch, segmentado) sale de los tokens `--oc-motion-*`
 y se apaga con `motion={false}` o `prefers-reduced-motion` (ver
 `docs/MOTION.md`). `Label` es de 13 px.
+
+**Etiqueta flotante (`FormField etiquetaFlotante`, #27, opt-in):** el label
+(el mismo `<label for>`, nombre accesible intacto) se dibuja dentro del campo
+como un placeholder y sube —escala .75, pegado al borde superior— al enfocar, al
+tener valor, con autocompletado (`:-webkit-autofill` en Safari/Chrome y
+`:autofill` en Firefox) y siempre en un `Select` o con adorno `inicio` (la
+moneda de `MoneyInput`, un ícono): ahí no tiene dónde reposar sin pisarlo. Todo
+es CSS (`:focus-within`, `:placeholder-shown`, `:has()` en `base.css`); sin
+`:has()` el label queda arriba, nunca sobre el valor. Reglas: requiere `htmlFor`
+(sin él avisa por consola y deja el label de siempre); el control conserva su
+altura (44 px mobile, 36 px desde `md`) porque el relleno superior reserva el
+renglón; el `fin` (ojo, spinner, botón) no se mueve y conserva su área táctil;
+un placeholder propio solo se lee con el label arriba; `requerido`, `error` y
+`hint` siguen igual. Soporta `Input`, `Select`, `Textarea` y los campos que los
+envuelven (`MoneyInput`, `PasswordInput`, `EmailField`); no
+sirve para controles compuestos (`PhoneField`, `PinInput`, `SegmentedField`). El
+color del label en reposo usa `--c-placeholder` (≥4,5:1); con foco toma
+`fono-text` y con error `bad-text`. Sin la prop no cambia ni un atributo del DOM.
 
 **Segunda ola «pro» (opt-in por app):** sin activarla, las apps se ven y se
 comportan como en la primera ola. Se activa con **un** interruptor: envolver la
@@ -116,7 +134,8 @@ dibujo propio (sin el interruptor es el nativo con `accent-fono` de 16 px;
 props de cada componente ganan sobre el interruptor (`motion={false}` lo apaga
 en ese campo). Las correcciones de accesibilidad (contraste y área táctil de 44 px
 del `Switch`, caret/autofill acotados a los campos de la librería) rigen para
-todos, con o sin interruptor.
+todos, con o sin interruptor. El foco del `Switch` es un anillo sólido `fono-dark`
+(≥3:1 en claro y oscuro, #30; el `fono/50` anterior medía entre 1,4:1 y 2,5:1).
 
 **Datos personales (Ley 7593/2025):** todo formulario que recolecte datos
 personales muestra la **finalidad** y el enlace a la **política de privacidad**
@@ -1293,6 +1312,14 @@ de `docs/ADOPCION-V2.md` §10 y el checklist de arriba.
   licencia o autorización de redistribución explícita y auditable. Sin esa
   evidencia, todos los subpaths y la galería usan fallback tipográfico;
   metadatos, alias, procedencia y estados siguen disponibles sin cargar bytes.
+- **Colores oficiales de marca sobre placa blanca (decidido 2026-10-14, #30):**
+  se **aceptan tal cual** los colores oficiales claros de las marcas financieras
+  (verde de ueno y upay, naranja de Itaú, verde de Tu Financiera) aunque queden
+  por debajo de 3:1 contra la placa blanca. Un logo es una marca registrada, no
+  un componente de interfaz (WCAG 1.4.11 exceptúa los logotipos): no se
+  recolorea ni se cambia la placa. El nombre de la institución sigue siempre en
+  texto (`alt`/etiqueta), así que ninguna información depende del color del
+  logo. Vale para `BancoLogo` y `MedioPagoLogo`; ver `docs/MARCAS-FINANCIERAS.md`.
 - Un componente controlado se decide por **presencia de prop**, no por verdad
   del valor ni por presencia del callback. En modo controlado emite intención y
   espera el nuevo prop; en modo no controlado usa `default*` y estado interno.

@@ -4,6 +4,7 @@ import {
   Button,
   CityAutocomplete,
   CurrencyConversion,
+  FormField,
   Input,
   Money,
   MoneyInput,
@@ -56,6 +57,7 @@ export function ConsumerFixture() {
       <Select ref={selectRef} cargando estado="ok" motion={false}><option>a</option></Select>
       <Input inicio="https://" fin={<span>.com</span>} cargando estado="ok" />
       <Textarea autoCrecer contador maxLength={100} />
+      <FormField etiquetaFlotante requerido label="Usuario" htmlFor="usuario"><Input id="usuario" /></FormField>
       <Button cargando exito motion={false}>Guardar</Button>
       <PercentField value={valor} onChange={setValor} onValueChange={setValor} />
       <BancoCombobox value={valor} onChange={setValor} onSelect={setValor} onIdentitySelect={result => setValor(result.record?.id || '')} />

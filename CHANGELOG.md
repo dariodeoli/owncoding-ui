@@ -7,6 +7,8 @@ documenta acá y en el README).
 ## Unreleased
 
 - **Shell (#25, pedido de OwnData), todo aditivo y opt-in:** `SelectorEspacio` y `NavLateral` aceptan `locale` (`'es'` por defecto, `'en'`) y `textos` parcial para el copy incorporado («Reintentar», «Cargando espacios…», «Cambiar de espacio», «Expandir menú»…). `SelectorEspacio` suma `mostrarDetalle` (el `detalle` del espacio activo en el disparador, que además lleva `title` con el nombre completo), `formaAvatar="redondo"` / `espacio.forma` (personas con foto que llena el círculo; empresas siguen cuadradas), y `lado="arriba"` para abrir el menú hacia arriba con un ancho mínimo que no desborda en 375 px. `NavLateral` ya no dibuja la franja de encabezado vacía sin `cabecera` ni `onToggle` (cambio visible para todas las apps: el menú sube unos píxeles donde antes había un hueco), y con `tactil` los rótulos de grupo plegables y el botón de contraer miden 44 px.
+- **Formularios (#27):** `FormField` suma `etiquetaFlotante` (opt-in): el label vive dentro del campo y sube al enfocar, con valor, con autocompletado (`:-webkit-autofill`/`:autofill`) o siempre con adorno `inicio` y en `Select`. Mismo `<label for>`, mismas alturas, sin transición con movimiento reducido. Sin la prop no cambia nada. Galería: bloque «Etiqueta flotante» en Formularios.
+- **Accesibilidad (#30):** el foco del `Switch` pasa a un anillo sólido `fono-dark` (antes `fono/50` en la primera ola y `fono-dark/25` en `FormulariosPro`, 1,4–2,5:1; ahora 6,5–8:1 en la galería). Verificado en WebKit (autofill y `:has()`), medido el spinner con movimiento reducido (anillo parcial quieto + `aria-busy`) y decidido aceptar los colores oficiales claros de logos financieros (docs/REGLAS.md §19).
 
 ## v0.68.8 — 2026-10-14
 

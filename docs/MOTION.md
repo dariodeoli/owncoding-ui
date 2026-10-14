@@ -53,6 +53,7 @@ sin ese archivo los estados siguen funcionando, solo sin animación.
 | --- | --- | --- |
 | Input, Select, Textarea, PinInput | borde y anillo de foco con transición; hover de borde | `motion={false}`, reduced-motion |
 | `FormField` | el label toma el tono de marca con `:focus-within` (en error, `bad`); el mensaje de error entra con fundido + 4 px | `motion={false}` del FormField |
+| `FormField etiquetaFlotante` | el label sube de reposo a flotado con `transform` + color (`--oc-motion-fast`); opt-in por prop | `motion={false}` del FormField, reduced-motion |
 | Campo inválido | una sacudida de ±6 px / 300 ms **solo** al pasar de válido a inválido (no al montar ni en cada render) | `motion={false}`, reduced-motion |
 | `estado="ok"` | check dibujado con `oc-status-draw` | `motion={false}`, reduced-motion |
 | `cargando` | spinner al final + `aria-busy` | reduced-motion lo deja estático |
@@ -71,6 +72,19 @@ resultado se anuncia con texto, no solo con color o ícono. Verificación:
 `reducedMotion: 'reduce'` (transiciones y animaciones a 0).
 
 Movimiento reducido: mismos iconos/texto, sin giro, trazo ni transformaciones.
+La etiqueta flotante cambia de posición al instante, sin transición.
+
+**Spinners con movimiento reducido (#30, medido 2026-10-14).** El bloque global
+de `prefers-reduced-motion` pone `animation-duration: .01ms` y una sola
+iteración: el `Spinner` (`[data-oc-spinner]`, `animate-spin`) termina enseguida y
+queda un anillo de 16 px con el cuarto superior transparente, quieto, en `mute`
+(≥3:1). Verificado en Chromium y WebKit con `reducedMotion: 'reduce'`: el
+cálculo da `animation-iteration-count: 1`, `transform: none` y borde superior
+transparente. Sigue leyéndose como «cargando» porque el anillo abierto es el
+glifo de carga y porque el estado no depende del giro: el control lleva
+`aria-busy="true"` (el spinner es `aria-hidden`) y los flujos de guardado dicen
+«Guardando…» con `AnimatedStatus`. Quien use `cargando` sin texto cerca debe
+agregar uno (hint o estado).
 Hover exige puntero fino; foco visible y disabled no se transforman. Nunca
 esperar animación para ejecutar callbacks, foco o navegación. Tokens:
 `--oc-motion-fast`, `--oc-motion-feedback`, `--oc-motion-ease`; sombra sin animar.
