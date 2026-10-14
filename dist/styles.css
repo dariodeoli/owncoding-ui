@@ -363,6 +363,104 @@ select[data-oc-control]:-webkit-autofill {
   box-shadow: 0 0 0 1000px rgb(var(--c-ink-800)) inset, var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000);
 }
 
+/* ── Etiqueta flotante (opt-in: `FormField etiquetaFlotante`, #27) ───────────
+   El <label for> real se posiciona dentro del campo como un placeholder y sube
+   (escala .75, pegado al borde superior) cuando:
+   - hay foco dentro del envoltorio (`:focus-within`);
+   - el control tiene valor (`:not(:placeholder-shown)`; FormField le pone un
+     placeholder de un espacio si no trae uno);
+   - el navegador lo autocompletó (`:-webkit-autofill` en Safari/Chrome y
+     `:autofill` en Firefox; `[data-oc-autofill]` es el gancho para pruebas o
+     para un detector propio);
+   - hay adorno `inicio` (Gs, ícono…) o es un <select>: el label no tiene dónde
+     reposar sin pisarlos, así que queda siempre arriba.
+   `:where()` perdona los selectores que un motor no conoce (ninguno anula al
+   resto) y no suma especificidad, así foco y error pintan encima. Sin `:has()` el label queda siempre arriba (nunca encima del valor).
+   La altura del control no cambia: el relleno superior reserva el renglón del
+   label y los adornos `inicio` bajan lo mismo para seguir centrados con el texto. */
+[data-oc-flotante] {
+  --oc-flota-top: .6875rem;
+  --oc-flota-dy: -.4375rem;
+  --oc-flota-lh: 1.375rem;
+  --oc-flota-pt: 1rem;
+}
+@media (min-width: 768px) {
+  [data-oc-flotante] {
+    --oc-flota-top: .5rem;
+    --oc-flota-dy: -.3125rem;
+    --oc-flota-lh: 1.25rem;
+    --oc-flota-pt: .75rem;
+  }
+}
+.oc-etiqueta-flotante {
+  position: absolute;
+  z-index: 1;
+  top: var(--oc-flota-top);
+  left: calc(.875rem + 1px);
+  max-width: calc(100% - 1.75rem - 2px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  transform-origin: left top;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: var(--oc-flota-lh);
+  color: rgb(var(--c-placeholder));
+  transition: transform var(--oc-motion-fast, 160ms) var(--oc-motion-ease, cubic-bezier(.2,.8,.2,1)), color var(--oc-motion-fast, 160ms) var(--oc-motion-ease, cubic-bezier(.2,.8,.2,1));
+}
+@media (min-width: 768px) {
+  .oc-etiqueta-flotante { font-size: .875rem; }
+}
+/* Con el botón del ojo, el × o el spinner a la derecha, el label reposado no los pisa. */
+[data-oc-flotante]:has([data-oc-fin]) > .oc-etiqueta-flotante {
+  max-width: calc(100% - 4.25rem);
+}
+[data-oc-flotante] :is(input, select)[data-oc-control] {
+  padding-top: var(--oc-flota-pt);
+}
+[data-oc-flotante] textarea[data-oc-control] {
+  padding-top: 1.375rem;
+}
+[data-oc-flotante] [data-oc-inicio] {
+  padding-top: var(--oc-flota-pt);
+}
+/* El placeholder propio solo se lee con el label arriba (con foco). */
+[data-oc-flotante] [data-oc-control]::placeholder {
+  color: transparent;
+}
+[data-oc-flotante] [data-oc-control]:focus::placeholder {
+  color: rgb(var(--c-placeholder));
+}
+[data-oc-flotante]:where(
+  :focus-within,
+  :has([data-oc-control]:not(:placeholder-shown)),
+  :has([data-oc-control]:-webkit-autofill),
+  :has([data-oc-control]:autofill),
+  :has([data-oc-control][data-oc-autofill]),
+  :has([data-oc-inicio]),
+  :has(select[data-oc-control])
+) > .oc-etiqueta-flotante {
+  --oc-flota: 1;
+  transform: translateY(var(--oc-flota-dy)) scale(.75);
+  color: rgb(var(--c-mute));
+}
+@supports not selector(:has(*)) {
+  .oc-etiqueta-flotante {
+    transform: translateY(var(--oc-flota-dy)) scale(.75);
+    color: rgb(var(--c-mute));
+  }
+}
+[data-oc-flotante]:focus-within > .oc-etiqueta-flotante {
+  color: rgb(var(--c-fono-text));
+}
+[data-oc-flotante]:has([data-oc-control][aria-invalid="true"]) > .oc-etiqueta-flotante {
+  color: rgb(var(--c-bad-text));
+}
+@media (prefers-reduced-motion: reduce) {
+  .oc-etiqueta-flotante { transition: none !important; }
+}
+
 /* ── Campos de formulario: movimiento ───────────────────────────────────────
    Todo con los tokens --oc-motion-* (docs/MOTION.md). El interruptor es
    `data-motion="on|off"` del propio control (prop `motion`); con "off" y con

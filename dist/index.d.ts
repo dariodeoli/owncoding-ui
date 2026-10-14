@@ -202,7 +202,7 @@ export function ErrorState(props: { title?: string; description?: ReactNode; onR
 export function Aviso(props: HTMLAttributes<HTMLElement> & { tono?: 'error' | 'ok' | 'warn'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function Nota(props: HTMLAttributes<HTMLElement> & { tono?: 'warn' | 'info' | 'neutro'; como?: 'p' | 'div'; compact?: boolean }): ReactElement
 export function PageHeader(props: { title?: ReactNode; subtitle?: ReactNode; actions?: ReactNode; backTo?: () => void; eyebrow?: ReactNode; migas?: Array<{ etiqueta: ReactNode; href?: string }> }): ReactElement
-export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string; descripcionId?: string; accion?: ReactNode; className?: string; requerido?: boolean; motion?: boolean }): ReactElement
+export function FormField(props: { label?: ReactNode; hint?: ReactNode; error?: ReactNode; children?: ReactNode; htmlFor?: string; descripcionId?: string; accion?: ReactNode; className?: string; requerido?: boolean; motion?: boolean; etiquetaFlotante?: boolean }): ReactElement
 export function SectionState(props: { estado?: 'vacio' | 'cargando' | 'error'; title?: ReactNode; description?: ReactNode; icon?: string; action?: ReactNode; compact?: boolean; onRetry?: () => void; className?: string }): ReactElement
 
 export type DataTableColumn<Row = Record<string, unknown>> = {
@@ -966,7 +966,11 @@ export function NavLateral(props: {
     ariaLabel?: string
     className?: string
   } & Record<string, any>): ReactElement
-export type EspacioSelector = { id: string; nombre: string; detalle?: ReactNode; avatar?: string | null }
+/** Textos incorporados de `SelectorEspacio` (parcial; se mezcla sobre el `locale`). */
+export type TextosSelectorEspacio = Partial<Record<'etiqueta' | 'ariaLabel' | 'cargandoNombre' | 'cargandoEspacios' | 'cambiando' | 'errorCarga' | 'reintentar' | 'sinEspacios' | 'acciones', string>>
+/** Textos incorporados de `NavLateral`; `mostrarGrupo`/`ocultarGrupo` llevan `{titulo}`. */
+export type TextosNavLateral = Partial<Record<'ariaLabel' | 'expandir' | 'contraer' | 'mostrarGrupo' | 'ocultarGrupo', string>>
+export type EspacioSelector = { id: string; nombre: string; detalle?: ReactNode; avatar?: string | null; /** Forma del avatar de este espacio (gana sobre `formaAvatar`). */ forma?: 'cuadrado' | 'redondo' }
 export type AccionSelectorEspacio = { id?: string; label: ReactNode; icono?: string; onClick?: () => void; href?: string; disabled?: boolean }
 export function SelectorEspacio(props: {
   espacios?: EspacioSelector[]
@@ -983,6 +987,16 @@ export function SelectorEspacio(props: {
   alineacion?: 'left' | 'right'
   defaultAbierto?: boolean
   paletaAvatar?: 'sobria'
+  /** Juego de textos incorporados. Predeterminado `'es'`. */
+  locale?: 'es' | 'en'
+  /** Textos que reemplazan a los del `locale` (parcial). */
+  textos?: TextosSelectorEspacio
+  /** Muestra el `detalle` del espacio activo bajo el nombre en el disparador. */
+  mostrarDetalle?: boolean
+  /** `'redondo'` para personas (la foto llena el círculo). Predeterminado `'cuadrado'`. */
+  formaAvatar?: 'cuadrado' | 'redondo'
+  /** `'arriba'` abre el menú hacia arriba (pie de barra lateral). Predeterminado `'abajo'`. */
+  lado?: 'abajo' | 'arriba'
   className?: string
 }): ReactElement
 export function MenuDesplegable(props: Record<string, any> & { trigger?: ReactNode; items?: any[]; ariaLabel?: string; alineacion?: 'left' | 'right'; className?: string }): ReactElement
