@@ -29,6 +29,7 @@ export const OPTICA_ASSETS_FINANCIEROS = Object.freeze({
   'bancos/citi-horizontal.svg': [204, 118, 0, 0, 1, 1],
   'bancos/continental-compacto.png': [156, 153, 0, 0, 1, 1],
   'bancos/continental-horizontal.svg': [201, 40, 0, 0, 1, 1],
+  'bancos/coodene-compacto.png': [84, 95, 0.02, 0.017, 1, 0.993],
   'bancos/coodene-horizontal.png': [443, 95, 0, 0, 1, 1],
   'bancos/coomecipar-compacto.png': [256, 255, 0, 0, 1, 1],
   'bancos/coomecipar-horizontal.png': [562, 118, 0, 0.0103, 0.984, 0.9564],
@@ -70,7 +71,7 @@ export const OPTICA_ASSETS_FINANCIEROS = Object.freeze({
   'bancos/zeta-horizontal.png': [778, 207, 0.034, 0.1389, 0.966, 0.8611],
   'pagos/amex-compacto.svg': [45, 45, 0, 0, 1, 1],
   'pagos/amex-horizontal.svg': [100, 28, 0, 0, 1, 1],
-  'pagos/bancard-compacto.png': [512, 512, 0, 0, 1, 1],
+  'pagos/bancard-compacto.png': [114, 114, 0.224, 0.207, 0.846, 0.802, BLANCO],
   'pagos/bancard-horizontal.png': [192, 60, 0, 0, 1, 1],
   'pagos/cabal-horizontal.png': [546, 186, 0, 0, 1, 1],
   'pagos/dinelco-compacto.png': [180, 180, 0.051, 0.198, 0.943, 0.794, BLANCO],
@@ -119,10 +120,6 @@ export const REFERENCIA_OPTICA = Object.freeze({
 export const ESCALA_MAXIMA_CON_PLACA = 0.94
 export const ESCALA_MINIMA = 0.55
 
-// Marcas cuyo único asset oficial compacto trae texto diminuto: se muestran a
-// slot completo en vez de reducirse al área común.
-const ESCALA_FIJA = Object.freeze({ 'pagos/bancard-compacto.png': 1 })
-
 const redondear = (n) => Math.round(n * 1000) / 1000
 
 // Relación ancho/alto del rectángulo de tinta.
@@ -140,8 +137,7 @@ export function opticaDeAsset(clave, variante = 'horizontal', { placa = false } 
   const ancho = Math.min(ref.ancho, relacion)
   const area = ancho * (ancho / relacion)
   let escala = Math.min(1, Math.sqrt(ref.area / area))
-  if (Object.hasOwn(ESCALA_FIJA, clave) && variante === 'compacto') escala = ESCALA_FIJA[clave]
-  else if (placa) escala = Math.min(escala, ESCALA_MAXIMA_CON_PLACA)
+  if (placa) escala = Math.min(escala, ESCALA_MAXIMA_CON_PLACA)
   escala = redondear(Math.max(ESCALA_MINIMA, escala))
   const [, , x0, y0, x1, y1] = fila
   return Object.freeze({

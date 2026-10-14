@@ -94,7 +94,7 @@ describe('metadatos ópticos de logos financieros', () => {
   })
 
   test('las marcas compactas pesan lo mismo (±15 % de área) salvo wordmarks contenidos muy anchos', () => {
-    const marcas = visuales().filter((fila) => fila.variante === 'compacto' && fila.visual.optica.relacion <= 2.5 && fila.visual.empaquetado !== 'pagos/bancard-compacto.png')
+    const marcas = visuales().filter((fila) => fila.variante === 'compacto' && fila.visual.optica.relacion <= 2.5)
     const areas = marcas.map(({ visual }) => {
       const caja = cajaOptica(visual.optica, SLOT.compacto)
       return caja.ancho * caja.alto
@@ -146,7 +146,12 @@ describe('placa clara en tema oscuro', () => {
     expect(sinPlaca).toBeGreaterThan(40)
   }, 30000)
 
-  test('Bancard compacto no se reduce al área común', () => {
-    expect(opticaDeAsset('pagos/bancard-compacto.png', 'compacto').escala).toBe(1)
+  test('Bancard y Coodeñe compactos usan su isotipo oficial y se leen a 48 px', () => {
+    for (const [clave, minimo] of [['pagos/bancard-compacto.png', 24], ['bancos/coodene-compacto.png', 24]]) {
+      const optica = opticaDeAsset(clave, 'compacto')
+      expect(optica.relacion, clave).toBeLessThan(1.3)
+      const caja = cajaOptica(optica, SLOT.compacto)
+      expect(Math.min(caja.ancho, caja.alto), clave).toBeGreaterThanOrEqual(minimo)
+    }
   })
 })

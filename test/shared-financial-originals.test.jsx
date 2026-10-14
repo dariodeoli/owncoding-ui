@@ -12,7 +12,7 @@ test.each(names)('%s has genuine local variants, aliases and limited authorizati
     const record = logoDeBanco(name,variant)
     const asset = manifest.assets.find(asset => asset.file === record.visual.empaquetado)
     expect(asset.sourceUrl).toMatch(/^https:/)
-    expect(asset.retrievedAt).toBe('2026-10-02')
+    expect(asset.retrievedAt).toBe(asset.file === 'bancos/coodene-compacto.png' ? '2026-10-14' : '2026-10-02')
     expect(createHash('sha256').update(readFileSync('src/assets/financial/'+asset.file)).digest('hex')).toBe(asset.sha256)
     expect(record.redistribucion.permitida).toBe(true)
     expect(asset.authorization.note).toContain('not represented as an open license')
@@ -52,7 +52,7 @@ test('Mastercard original CRLF and source hash survive Git normalization policy'
 test('published data URL payloads decode to the exact new original source bytes', async () => {
   const published = await import('../dist/financial.js')
   const originalFiles = manifest.assets.filter(asset => /capiata|nemby|lambare|coodene|mburicao|mercado-n4|san-lorenzo|visa-marca|mastercard-marca/.test(asset.file))
-  expect(originalFiles).toHaveLength(10)
+  expect(originalFiles).toHaveLength(11)
   for (const asset of originalFiles) {
     const url = published.obtenerAssetFinanciero(asset.file)
     const comma = url.indexOf(',')

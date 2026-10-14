@@ -4,6 +4,8 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { ProductVariantSelector } from '../src/index.js'
 import { ProductVariantSelectorPreview } from '../gallery/variants-previews.jsx'
+// La primera prueba paga el primer render (compilación JIT en frío): ~0,3-0,5 s solo, pero >2 s con la suite completa en paralelo; el timeout de 5 s no mide una regresión.
+vi.setConfig({ testTimeout: 30000 })
 afterEach(cleanup)
 const groups = [{ id: 'color', label: 'Color', options: [{ id: 'a', label: 'Azul' }, { id: 'b', label: 'Negro' }] }, { id: 'size', label: 'Tamaño', options: [{ id: 's', label: 'Pequeño' }, { id: 'l', label: 'Grande' }] }]
 const variants = [{ id: 'as', values: { color: 'a', size: 's' }, available: true }, { id: 'bl', values: { color: 'b', size: 'l' }, available: true }]

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
+import { createRequire } from 'node:module'
 import { describe, expect, test } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
@@ -218,7 +219,7 @@ describe('marcas y productos de pago', () => {
     })
   })
 
-  test('Bancard usa el compacto de alta resolución sin doble fondo ni padding', () => {
+  test('Bancard usa su isotipo oficial compacto sin doble fondo ni padding', () => {
     expect(MARCAS_MEDIOS_PAGO.Bancard.variantes.compacto).toMatchObject({
       archivo: 'bancard-compacto.png',
       empaquetado: 'pagos/bancard-compacto.png',
@@ -229,21 +230,18 @@ describe('marcas y productos de pago', () => {
 
     const manifestAsset = manifest.assets.find((asset) => asset.file === 'pagos/bancard-compacto.png')
     expect(manifestAsset).toMatchObject({
-      sourceKind: 'user-provided-reference',
-      sourceRef: 'codex-clipboard-3d5d5ba4-bancard-compact.png',
-      sourceIdentity: {
-        sha256: '809a55d06848da60375d11634c9ac6189c807bcd704c74dd9fc64d1fb932a7b6',
-        pixelWidth: 2500,
-        pixelHeight: 2500,
-      },
-      sha256: '32ef3cdce8798c3143c2d06dc72dee8cac95b2a16c8d39625a0ac8faad1fba5f',
+      sourceKind: 'official-first-party',
+      sourceUrl: 'https://www.bancard.com.py/themes/default/assets/images/apple-touch-icon-114x114-precomposed.png',
+      sha256: 'feee82b21301ceccbc7db448f26632dabe0e1a78b4c766759bb283d92338146b',
+      dimensions: { width: 114, height: 114 },
     })
 
     const runtimeAsset = readFileSync(join(process.cwd(), 'src/assets/financial/pagos/bancard-compacto.png'))
-    expect([runtimeAsset.readUInt32BE(16), runtimeAsset.readUInt32BE(20)]).toEqual([512, 512])
+    expect([runtimeAsset.readUInt32BE(16), runtimeAsset.readUInt32BE(20)]).toEqual([114, 114])
 
     const html = htmlLogo(MedioPagoLogo, 'marca', 'Bancard', 'compacto')
-    expect(html).not.toContain('background-color')
+    // El isotipo oficial es opaco sobre blanco: el único color de fondo es el blanco del propio archivo (caja óptica), sin placa extra.
+    expect(html.match(/background-color:[^;"]+/g)).toEqual(['background-color:#ffffff'])
     expect(html).not.toContain('p-1.5')
   })
 
@@ -285,7 +283,7 @@ describe('marcas y productos de pago', () => {
 describe('manifest y bundles financieros', () => {
   test('el API visual coincide con el manifest autorizado y cada archivo tiene una variante', () => {
     expect([...ASSET_KEYS_FINANCIEROS].sort()).toEqual(manifest.assets.map((asset) => asset.file).sort())
-    expect(manifest.assets).toHaveLength(88)
+    expect(manifest.assets).toHaveLength(89)
     const referencias = new Set([
       ...coberturaBancos().flatMap(variantesEmpaquetadas),
       ...coberturaMediosPago().flatMap(variantesEmpaquetadas),
@@ -329,7 +327,9 @@ describe('manifest y bundles financieros', () => {
   })
 
   test('el bundle visual contiene imágenes locales y metadata permanece sin bytes', async () => {
-    const { BancoLogo: BancoLogoPublicado } = await import('../dist/index.js')
+    // Se carga con el cargador nativo de Node (require de ESM): pasarlo por la transformación de
+    // Vite tarda ~5 s en un bundle con imágenes embebidas y agotaba el timeout bajo carga.
+    const { BancoLogo: BancoLogoPublicado } = createRequire(import.meta.url)('../dist/index.js')
     const html = renderToStaticMarkup(<BancoLogoPublicado banco="ueno bank" variante="compacto" />)
     expect(html).toContain('<img')
     expect(html).toContain('src="data:image/')
