@@ -7,6 +7,7 @@ documenta acá y en el README).
 ## Unreleased
 
 - **OwnData RUC en la galería:** la clave publicable va en la cabecera `X-API-Key` (OwnData rechaza `Authorization: Bearer pk_` con 403 `PUBLISHABLE_KEY_FORBIDDEN`).
+- **OwnData RUC en la galería:** consulta real activa con la clave publicable de la galería (`gallery/owndata-config.js`); el modo de prueba sigue disponible.
 
 ## v0.68.6 — 2026-10-14
 

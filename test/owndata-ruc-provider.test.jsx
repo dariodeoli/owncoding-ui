@@ -4,6 +4,11 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { RucField, createOwnDataRucProvider, mapOwnDataRucResponse, mapOwnDataRucError } from '../src/index.js'
 import { OwnDataIntegrationPreview, realOwnDataLookup, simulatedOwnDataEnvelope } from '../gallery/owndata-ruc-preview.jsx'
+
+// La galería trae una clave publicable real; estos tests prueban el modo de prueba,
+// así que la configuración se simula sin clave salvo en el test que la cambia.
+const configOwnData = vi.hoisted(() => ({ OWNDATA_API_RUC_URL: 'https://app.controlaria.online/api/v1/ruc/', OWNDATA_PUBLISHABLE_KEY: '' }))
+vi.mock('../gallery/owndata-config.js', () => configOwnData)
 afterEach(() => { cleanup(); vi.restoreAllMocks() })
 it.each([
   ['API_KEY_ENVIRONMENT_MISMATCH', 401, 'La clave de OwnData no corresponde al ambiente configurado. Complete los datos manualmente.'],
@@ -265,4 +270,13 @@ it('without a publishable key the gallery preview stays on fixture data', () => 
   render(<OwnDataIntegrationPreview />)
   expect(screen.getByText('Demo local interactiva')).toBeTruthy()
   expect(screen.queryByRole('radiogroup', { name: 'Origen de los datos' })).toBeNull()
+})
+
+it('with a publishable key the gallery preview starts on real OwnData data and offers the fixture switch', () => {
+  configOwnData.OWNDATA_PUBLISHABLE_KEY = 'pk_test_galeria'
+  try {
+    render(<OwnDataIntegrationPreview />)
+    expect(screen.getByText('Consulta real · OwnData')).toBeTruthy()
+    expect(screen.getByRole('radiogroup', { name: 'Origen de los datos' })).toBeTruthy()
+  } finally { configOwnData.OWNDATA_PUBLISHABLE_KEY = '' }
 })
