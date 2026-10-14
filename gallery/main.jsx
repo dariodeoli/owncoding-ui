@@ -2,7 +2,7 @@ import React, { Component, useDeferredValue, useId, useMemo, useState } from 're
 import { createRoot } from 'react-dom/client'
 import packageJson from '../package.json'
 import { galleryStateUrl, useGalleryUrlState } from './url-state.js'
-import { OwnDataIntegrationPreview } from './owndata-ruc-preview.jsx'
+import { OwnDataIntegrationPreview, consultarRucOwnData, ownDataRealDisponible } from './owndata-ruc-preview.jsx'
 import { BLOG_POSTS, articlePath } from './blog/metadata.js'
 import '../src/styles/tokens.css'
 import '../src/styles/base.css'
@@ -506,8 +506,9 @@ function ResumenCliente({ cliente, titulo }) {
 
 function VistaClienteDocumento() {
   const [cliente, setCliente] = useState(CLIENTES_DEMO[0])
-  const [ruc, setRuc] = useState('80012345-6')
+  const [ruc, setRuc] = useState(() => (ownDataRealDisponible() ? '' : '80012345-6'))
   const [extraido, setExtraido] = useState(null)
+  const rucReal = ownDataRealDisponible()
 
   return (
     <div className="preview-layout preview-layout--customer">
@@ -536,16 +537,18 @@ function VistaClienteDocumento() {
             <p className="preview-kicker">RucField</p>
             <h4>Extracción confirmable</h4>
           </div>
-          <EtiquetaFixture>Proveedor simulado</EtiquetaFixture>
+          <EtiquetaFixture>{rucReal ? 'OwnData real' : 'Proveedor simulado'}</EtiquetaFixture>
         </div>
         <Label htmlFor="gallery-ruc">RUC</Label>
         <RucField
           id="gallery-ruc"
           value={ruc}
           onChange={setRuc}
-          consultar={consultarRucDemo}
+          consultar={rucReal ? consultarRucOwnData : consultarRucDemo}
           onAplicar={setExtraido}
-          textoAyuda="Fixture local: probá 80012345-6, 80054321-2 o 80123456-7. Revisá el resultado antes de aplicarlo."
+          textoAyuda={rucReal
+            ? 'Escribí un RUC, con o sin dígito verificador. Se consulta OwnData (hasta 10 por día); revisá el resultado antes de aplicarlo.'
+            : 'Fixture local: probá 80012345-6, 80054321-2 o 80123456-7. Revisá el resultado antes de aplicarlo.'}
         />
         <ResumenCliente cliente={extraido} titulo="Datos aplicados con confirmación" />
         <p className="preview-note">CI y RUC son búsquedas independientes: la demo nunca afirma que una CI se convierta universalmente en RUC.</p>

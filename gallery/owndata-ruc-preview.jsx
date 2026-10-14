@@ -29,6 +29,10 @@ export async function realOwnDataLookup(requested, { key = OWNDATA_PUBLISHABLE_K
   return envelope
 }
 
+// Proveedor real para cualquier RucField de la galería (acepta RUC con o sin DV).
+export function ownDataRealDisponible() { return OWNDATA_PUBLISHABLE_KEY.startsWith('pk_') }
+export const consultarRucOwnData = createOwnDataRucProvider({ lookup: requested => realOwnDataLookup(requested) })
+
 export function OwnDataIntegrationPreview() {
   const conClave = OWNDATA_PUBLISHABLE_KEY.startsWith('pk_')
   const [modo, setModo] = useState(conClave ? 'real' : 'demo')
