@@ -1,6 +1,6 @@
 import React, { useId, useRef, useState } from 'react'
 import {
-  AnimatedStatus, BotonDentroCampo, Button, Checkbox, EmailField, FormField, FormulariosPro, Input, MoneyInput, PhoneField,
+  AnimatedStatus, BotonDentroCampo, Button, Checkbox, EmailField, FormField, FormulariosPro, Input, MoneyInput, PasswordInput, PhoneField,
   SearchField, SegmentedField, Select, Switch, Textarea,
 } from '../src/index.js'
 
@@ -30,6 +30,7 @@ export function FormulariosShowcase() {
   const [buscando, setBuscando] = useState(false)
   const [intento, setIntento] = useState(false)
   const [guardado, setGuardado] = useState('idle')
+  const [flotante, setFlotante] = useState({ usuario: '', clave: '', monto: '', zona: 'centro', nota: '' })
   const temporizadores = useRef([])
 
   const errorNombre = intento && nombre.trim().length < 3 ? 'Escribí al menos tres letras.' : undefined
@@ -141,6 +142,40 @@ export function FormulariosShowcase() {
           </AnimatedStatus>
           <Button type="submit" cargando={guardado === 'cargando'} exito={guardado === 'exito'} className="min-w-32">Guardar cliente</Button>
         </div>
+      </form>
+
+      <form data-forms-flotante noValidate onSubmit={(evento) => evento.preventDefault()} className="mx-auto mt-6 grid max-w-3xl gap-5 rounded-2xl border border-ink-600 bg-ink p-5 sm:p-7">
+        <div>
+          <h3 className="text-lg font-bold tracking-tight">Etiqueta flotante</h3>
+          <p className="mt-1 text-sm text-mute">Opt-in con <code>etiquetaFlotante</code> en <code>FormField</code>: el label descansa dentro del campo y sube al enfocar, al escribir o con autocompletado. Mismas alturas y mismo <code>label for</code>.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField etiquetaFlotante label="Usuario o correo" htmlFor={id('f-usuario')}>
+            <Input id={id('f-usuario')} name="username" autoComplete="username" value={flotante.usuario} onChange={(evento) => setFlotante({ ...flotante, usuario: evento.target.value })} />
+          </FormField>
+          <FormField etiquetaFlotante label="Contraseña" htmlFor={id('f-clave')} hint="El ojo conserva su espacio">
+            <PasswordInput id={id('f-clave')} name="password" autoComplete="current-password" value={flotante.clave} onChange={(evento) => setFlotante({ ...flotante, clave: evento.target.value })} />
+          </FormField>
+          <FormField etiquetaFlotante label="Anticipo" htmlFor={id('f-monto')}>
+            <MoneyInput id={id('f-monto')} value={flotante.monto} onValueChange={(valor) => setFlotante({ ...flotante, monto: valor })} className="w-full" />
+          </FormField>
+          <FormField etiquetaFlotante label="Zona" htmlFor={id('f-zona')}>
+            <Select id={id('f-zona')} value={flotante.zona} onChange={(evento) => setFlotante({ ...flotante, zona: evento.target.value })}>
+              <option value="centro">Centro</option>
+              <option value="norte">Norte</option>
+              <option value="sur">Sur</option>
+            </Select>
+          </FormField>
+          <FormField etiquetaFlotante requerido label="Con error" htmlFor={id('f-error')} error="Este campo es obligatorio.">
+            <Input id={id('f-error')} defaultValue="" />
+          </FormField>
+          <FormField etiquetaFlotante label="Con placeholder" htmlFor={id('f-ph')}>
+            <Input id={id('f-ph')} placeholder="Ej. Taller San José" />
+          </FormField>
+        </div>
+        <FormField etiquetaFlotante label="Notas" htmlFor={id('f-nota')}>
+          <Textarea id={id('f-nota')} rows={2} value={flotante.nota} onChange={(evento) => setFlotante({ ...flotante, nota: evento.target.value })} />
+        </FormField>
       </form>
     </section>
     </FormulariosPro>

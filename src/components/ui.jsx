@@ -1157,7 +1157,7 @@ function mergeIds(...values) {
   return [...new Set(values.flatMap((value) => String(value || '').split(/\s+/)).filter(Boolean))].join(' ') || undefined
 }
 
-function relacionarControl(children, { htmlFor, mensajeId, error, requerido }, estado = { aplicado: false }) {
+function relacionarControl(children, { htmlFor, mensajeId, error, requerido, flotante }, estado = { aplicado: false }) {
   return Children.map(children, (child) => {
     if (!isValidElement(child) || estado.aplicado) return child
     const esNativo = ['input', 'select', 'textarea'].includes(child.type)
@@ -1169,10 +1169,12 @@ function relacionarControl(children, { htmlFor, mensajeId, error, requerido }, e
         'aria-describedby': mensajeId ? mergeIds(child.props['aria-describedby'], mensajeId) : child.props['aria-describedby'],
         'aria-invalid': error ? true : child.props['aria-invalid'],
         ...(requerido && child.props['aria-required'] === undefined && !child.props.required ? { 'aria-required': true } : null),
+        // Etiqueta flotante: `:placeholder-shown` necesita un placeholder; sin uno propio va un espacio (el Select no lo usa).
+        ...(flotante && child.type !== Select && child.props.placeholder === undefined ? { placeholder: ' ' } : null),
       })
     }
     if (child.props.children) {
-      return cloneElement(child, undefined, relacionarControl(child.props.children, { htmlFor, mensajeId, error, requerido }, estado))
+      return cloneElement(child, undefined, relacionarControl(child.props.children, { htmlFor, mensajeId, error, requerido, flotante }, estado))
     }
     return child
   })
@@ -1183,26 +1185,48 @@ function relacionarControl(children, { htmlFor, mensajeId, error, requerido }, e
 // con `aria-required` si no trae `required`; el asterisco es solo visual
 // (`aria-hidden`), el lector de pantalla lo recibe por el atributo del control.
 // El error lleva ícono (`alert`) y `role="alert"`; el hint queda como texto.
-export function FormField({ label, hint, error, children, htmlFor, descripcionId, accion, className, requerido = false, motion = true }) {
+//
+// `etiquetaFlotante` (opt-in, #27): el label se dibuja **dentro** del campo como
+// un placeholder y sube al enfocar, al tener valor, con autocompletado o cuando
+// hay adorno `inicio`. Es el mismo <label for> (nombre accesible intacto) y la
+// altura del control no cambia. Requiere `htmlFor` y un control de una sola
+// pieza (Input, Select, Textarea y los campos que los envuelven: MoneyInput,
+// PasswordInput, EmailField…); sin `htmlFor` queda el label de siempre. Las
+// reglas viven en `base.css` (`:placeholder-shown`, `:focus-within`, `:has()`).
+export function FormField({ label, hint, error, children, htmlFor, descripcionId, accion, className, requerido = false, motion = true, etiquetaFlotante = false }) {
   const mensajeId = descripcionId || (htmlFor ? `${htmlFor}-descripcion` : undefined)
-  const control = ((error || hint) && mensajeId) || requerido
-    ? relacionarControl(children, { htmlFor, mensajeId: (error || hint) ? mensajeId : undefined, error, requerido })
+  const flotante = Boolean(etiquetaFlotante && label && htmlFor)
+  if (etiquetaFlotante && label && !htmlFor && typeof console !== 'undefined') {
+    console.warn('FormField: `etiquetaFlotante` necesita `htmlFor` para asociar el label al control; se muestra el label de siempre.')
+  }
+  const control = ((error || hint) && mensajeId) || requerido || flotante
+    ? relacionarControl(children, { htmlFor, mensajeId: (error || hint) ? mensajeId : undefined, error, requerido, flotante })
     : children
+  const asterisco = requerido && <span aria-hidden="true" data-oc-requerido="" className="ml-0.5 text-bad-text">*</span>
+  const campo = flotante ? (
+    <div className="relative" data-oc-flotante="">
+      <label htmlFor={htmlFor} data-oc-etiqueta-flotante="" className="oc-etiqueta-flotante">
+        {label}
+        {asterisco}
+      </label>
+      {control}
+    </div>
+  ) : control
   return (
     <div className={cn('group/campo', className)} data-oc-formfield="" data-motion={motion ? 'on' : 'off'}>
-      {label && (
+      {label && !flotante && (
         <Label htmlFor={htmlFor}>
           {label}
-          {requerido && <span aria-hidden="true" data-oc-requerido="" className="ml-0.5 text-bad-text">*</span>}
+          {asterisco}
         </Label>
       )}
       {accion ? (
         <div className="flex flex-wrap items-stretch gap-2">
-          <div className="min-w-0 flex-1">{control}</div>
+          <div className="min-w-0 flex-1">{campo}</div>
           <div className="flex shrink-0 items-stretch">{accion}</div>
         </div>
       ) : (
-        control
+        campo
       )}
       {error ? (
         <p id={mensajeId} role="alert" data-oc-mensaje="" className="oc-campo-mensaje mt-1.5 flex items-start gap-1.5 text-xs leading-4 text-bad-text">
