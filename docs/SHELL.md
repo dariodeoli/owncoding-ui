@@ -36,8 +36,8 @@ permisos; el shell solo dibuja y navega.
 | Objeto | Props |
 | --- | --- |
 | `PageHeader` | `title` (único `h1`), `migas` `[{ etiqueta, href? }]`, `eyebrow`, `subtitle`, `actions`, `backTo` |
-| `NavLateral` | `items` `[{ id, label, icono?, contador? }]` o `grupos` `[{ titulo, items }]`, controlado con `gruposPlegados`/`colapsado`, no controlado con `defaultGruposPlegados`/`defaultColapsado`, `onToggleGrupo(titulo, plegado)`, `onToggle(colapsado)`, `activeId`, `onSelect(id)`, `cabecera`, `pie`, `ancho` (`w-64`), `ariaLabel`, `componenteEnlace` (enlace de la app, p. ej. `Link` de Next; `<a>` por defecto), `tactil` (filas de 44 px); un ítem puede traer `href` (enlace con `aria-current`) y `chip` (p. ej. «Próximamente») |
-| `SelectorEspacio` | `espacios` `[{ id, nombre, detalle?, avatar? }]`, `valor`, `onCambiar(id)`, `acciones` (pie: `[{ label, icono?, onClick?, href? }]` o un nodo), `estado` (`listo`/`cargando`/`error`), `onReintentar`, `cambiando` (bloquea la lista con `aria-busy`), `etiqueta`, `ariaLabel`, `alineacion`, `defaultAbierto`, `paletaAvatar` (`sobria`), `className` |
+| `NavLateral` | `items` `[{ id, label, icono?, contador? }]` o `grupos` `[{ titulo, items }]`, controlado con `gruposPlegados`/`colapsado`, no controlado con `defaultGruposPlegados`/`defaultColapsado`, `onToggleGrupo(titulo, plegado)`, `onToggle(colapsado)`, `activeId`, `onSelect(id)`, `cabecera`, `pie`, `ancho` (`w-64`), `ariaLabel`, `locale` (`es`/`en`), `textos` (parcial: `ariaLabel`, `expandir`, `contraer`, `mostrarGrupo`/`ocultarGrupo` con `{titulo}`), `componenteEnlace` (enlace de la app, p. ej. `Link` de Next; `<a>` por defecto), `tactil` (filas de 44 px); un ítem puede traer `href` (enlace con `aria-current`) y `chip` (p. ej. «Próximamente») |
+| `SelectorEspacio` | `espacios` `[{ id, nombre, detalle?, avatar? }]`, `valor`, `onCambiar(id)`, `acciones` (pie: `[{ label, icono?, onClick?, href? }]` o un nodo), `estado` (`listo`/`cargando`/`error`), `onReintentar`, `cambiando` (bloquea la lista con `aria-busy`), `etiqueta`, `ariaLabel`, `alineacion`, `defaultAbierto`, `paletaAvatar` (`sobria`), `locale` (`es`/`en`), `textos` (parcial), `mostrarDetalle`, `formaAvatar` (`cuadrado`/`redondo`, o `forma` por espacio), `lado` (`abajo`/`arriba`), `className` |
 | `MenuDesplegable` | `trigger`, `items` `[{ id?, label, icono?, onClick?, peligro?, disabled?, separador? }]`, `alineacion` (`right`/`left`), `ariaLabel` |
 | `PaletaComandos` | `abierta`/`onAbrir`/`onCerrar`, `buscar(consulta)` async, `onElegir(resultado)`, `etiquetasTipo`, `iconosTipo`, `atajo`, `atajoTexto`, `conAtajo`, `minimo` (2), `espera` (220 ms), `boton`, `textoBoton` |
 | `AyudaModulo` | `titulo`, `resumen`, `puntos` (3–5), `enlaces` `[{ href, etiqueta, onClick? }]`, `abierta`/`onAbrir`/`onCerrar` |
@@ -69,6 +69,22 @@ Pensado para paneles (p. ej. OwnData); todo es opt-in y no cambia el render por 
   (`onReintentar`). Con `cambiando` la lista y las acciones quedan bloqueadas
   (`aria-busy`, `aria-disabled`) hasta que la app termine de guardar. No
   reemplaza a `AccountSwitcher`, que queda igual.
+  Opt-in (#25): `locale="en"` y `textos` (parcial, gana sobre el `locale`:
+  `etiqueta`, `ariaLabel`, `cargandoNombre`, `cargandoEspacios`, `cambiando`,
+  `errorCarga`, `reintentar`, `sinEspacios`, `acciones`); `etiqueta` y
+  `ariaLabel` explícitos ganan sobre ambos. El disparador lleva `title` con el
+  nombre completo y, con `mostrarDetalle`, el `detalle` del espacio activo en
+  una segunda línea truncada. `formaAvatar="redondo"` (o `forma` en un espacio)
+  dibuja personas con la foto llenando el círculo (`object-cover`); los
+  logos de empresa siguen cuadrados con `object-contain`. `lado="arriba"` abre
+  el menú sobre el disparador (pie de barra lateral) y el ancho mínimo
+  `min(16rem, 100vw - 2rem)` ya no desborda en pantallas angostas; teclado y
+  `Esc` no cambian.
+- **`NavLateral` (#25)**: `locale="en"` y `textos` (`ariaLabel`, `expandir`,
+  `contraer`, `mostrarGrupo`, `ocultarGrupo`, estos dos con `{titulo}`).
+  Sin `cabecera` ni `onToggle` ya no se dibuja la franja de encabezado
+  vacía. Con `tactil`, los rótulos de grupo plegables y el botón de contraer
+  miden al menos 44 px.
 - **`Avatar paleta="sobria"`**: el color generado sale de cuatro tonos azules y
   grises (`COLORES_AVATAR_SOBRIOS`), nunca de `ok`/`bad`/`warn`/`pass`; iniciales
   ≥4.5:1 en claro y oscuro (verificado en `test/espacio-shell.test.jsx`).

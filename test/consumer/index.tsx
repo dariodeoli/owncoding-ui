@@ -125,6 +125,8 @@ const EnlaceDemo = (props: { href: string; children?: React.ReactNode }) => <a {
 const shellPanelContract = <>
   <NavLateral items={[{ id: 'a', label: 'Inicio', href: '/', chip: 'Próximamente' }]} componenteEnlace={EnlaceDemo} tactil activeId="a" />
   <SelectorEspacio espacios={[{ id: 'a', nombre: 'Acme', detalle: 'Propietario', avatar: null }]} valor="a" onCambiar={(id: string) => { void id }} acciones={[{ label: 'Crear empresa', onClick: () => {} }]} estado="listo" onReintentar={() => {}} cambiando={false} />
+  <SelectorEspacio espacios={[{ id: 'p', nombre: 'Ana', detalle: 'Personal', forma: 'redondo' }]} valor="p" locale="en" textos={{ reintentar: 'Try again' }} mostrarDetalle formaAvatar="redondo" lado="arriba" />
+  <NavLateral items={[{ id: 'a', label: 'Home' }]} locale="en" textos={{ expandir: 'Open', mostrarGrupo: 'Show {titulo}' }} />
   <Avatar nombre="Acme" paleta="sobria" />
 </>
 const claseSobria: string = colorDeNombre('Acme', 'sobria')

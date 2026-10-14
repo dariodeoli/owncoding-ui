@@ -1,6 +1,7 @@
 import { Fragment, useState } from 'react'
 import Icon from './Icon.jsx'
 import { cn } from '../utils/cn.js'
+import { resolverTextosShell, textoShell, TEXTOS_NAV_LATERAL } from '../utils/textos-shell.js'
 
 // Navegación lateral colapsable. Modelo de items portable:
 //   [{ id, label, icono, contador? }]
@@ -17,6 +18,10 @@ import { cn } from '../utils/cn.js'
 // pase la app, p. ej. el `Link` de Next) con `aria-current="page"` si está
 // activo; sin `href` sigue siendo un `<button>`. `chip` (p. ej. «Próximamente»)
 // es una etiqueta chica junto al texto. `tactil` sube las filas a 44 px.
+// Opt-in (#25): `locale` ('es' | 'en') y `textos` (objeto parcial) cambian el
+// copy incorporado («Expandir menú», «Mostrar {titulo}»…); `ariaLabel` explícito
+// gana. Sin `cabecera` ni `onToggle` no se dibuja la franja de encabezado, y
+// con `tactil` los rótulos de grupo plegables también miden 44 px.
 // Dentro del scope `tema-v2` el activo usa el azul de acción AA y los rótulos
 // van en verde sólido (`styles.css`); la app no repite esas reglas.
 
@@ -87,9 +92,13 @@ export default function NavLateral(props) {
     cabecera,
     pie,
     ancho = 'w-64',
-    ariaLabel = 'Navegación principal',
+    ariaLabel: ariaLabelProp,
+    locale = 'es',
+    textos,
     className,
   } = props
+  const t = resolverTextosShell(TEXTOS_NAV_LATERAL, locale, textos)
+  const ariaLabel = ariaLabelProp ?? t.ariaLabel
   const gruposControlados = Object.prototype.hasOwnProperty.call(props, 'gruposPlegados')
   const colapsoControlado = Object.prototype.hasOwnProperty.call(props, 'colapsado')
   const [plegadosInterno, setPlegadosInterno] = useState(defaultGruposPlegados)
@@ -140,20 +149,22 @@ export default function NavLateral(props) {
       aria-label={ariaLabel}
       className={cn('flex h-dvh flex-col border-r border-ink-600 bg-ink-900 transition-[width] duration-200', colapsado ? 'w-[4.5rem]' : ancho, className)}
     >
+      {cabecera || onToggle ? (
       <div className={cn('flex items-center gap-2 px-3 py-3', colapsado && 'justify-center')}>
         {cabecera && <div className="min-w-0 flex-1">{cabecera}</div>}
         {onToggle && (
           <button
             type="button"
             onClick={alternarColapso}
-            aria-label={colapsado ? 'Expandir menú' : 'Contraer menú'}
+            aria-label={colapsado ? t.expandir : t.contraer}
             aria-expanded={!colapsado}
-            className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-lg text-mute transition hover:bg-ink-700 hover:text-fore', colapsado && 'w-full')}
+            className={cn('grid h-9 w-9 shrink-0 place-items-center rounded-lg text-mute transition hover:bg-ink-700 hover:text-fore', colapsado && 'w-full', tactil && 'min-h-11 min-w-11')}
           >
             <Icon name="back" className={cn('h-4 w-4 transition-transform', colapsado && 'rotate-180')} />
           </button>
         )}
       </div>
+      ) : null}
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-2 py-2">
         {grupos
@@ -167,8 +178,8 @@ export default function NavLateral(props) {
                       type="button"
                       onClick={() => alternarGrupo(titulo)}
                       aria-expanded={!plegado}
-                      title={plegado ? `Mostrar ${titulo}` : `Ocultar ${titulo}`}
-                      className="mb-0.5 flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-0.5 text-left transition hover:bg-fore/5"
+                      title={textoShell(plegado ? t.mostrarGrupo : t.ocultarGrupo, { titulo })}
+                      className={cn('mb-0.5 flex w-full items-center justify-between gap-1 rounded-md px-2.5 py-0.5 text-left transition hover:bg-fore/5', tactil && 'min-h-11')}
                     >
                       <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[.16em] text-mute">
                         {titulo}
