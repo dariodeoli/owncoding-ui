@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **Build de la galería:** `.dockerignore` deja el contexto de Coolify en ~4 MB (antes, todo el repo: 12,4 MB). `scripts/verificar-contexto-build.mjs` corre antes de `gallery:build` y falla si el contexto pasa 400 MB o algún archivo 5 MB. Nuevo `test/build-context.test.js` y `.gitignore` para evidencias de QA (`*.har`, `*.har.gz`, `*.zip`, reportes de Playwright).
+
 ## v0.68.5 — 2026-10-13
 
 - **Galería:** el build se frena si `VITE_OWNDATA_PUBLISHABLE_KEY` trae algo que no sea una clave publicable `pk_`, para no publicar claves secretas en el JavaScript.

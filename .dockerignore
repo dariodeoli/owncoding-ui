@@ -1,0 +1,29 @@
+# Contexto de build de la galería (Coolify/Nixpacks). El build solo usa
+# package*.json, src/, gallery/, scripts/, types/, tailwind-preset.js y
+# vite.gallery.config.js. Todo lo demás se excluye para que el contexto no crezca.
+.git
+node_modules
+dist
+site-dist
+docs/**
+# blog-check (en el build) verifica que exista este archivo citado como fuente.
+!docs/financial-assets-manifest.json
+design/
+test/
+tests/
+e2e/
+coverage/
+playwright-report/
+test-results/
+tools/
+.claude/
+.atl/
+.github/
+**/*.har
+**/*.har.gz
+**/*.zip
+**/*.png.orig
+**/qa/
+**/capturas/
+**/evidencias/
+*.log

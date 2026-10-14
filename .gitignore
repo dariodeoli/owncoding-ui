@@ -4,3 +4,12 @@ node_modules
 *.tgz
 site-dist/
 gallery/public/status.json
+
+# Evidencias y artefactos de QA: van a artefactos de CI, no al repo.
+*.har
+*.har.gz
+*.zip
+coverage/
+playwright-report/
+test-results/
+.atl/
