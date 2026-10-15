@@ -561,7 +561,12 @@ export function TarjetaCuentaCobro(props: {
 export function BuscadorProveedor(props: {
   proveedores?: Array<{ id: string; name?: string; nombre?: string; code?: string | null; city?: string | null; phone?: string | null }>
   selectedId?: string
+  /** Valor controlado (id o texto libre); prevalece sobre selectedId. */
+  value?: string
   onSelect?: (proveedor: any) => void
+  onLibre?: (texto: string) => void
+  confirmarAlSalir?: boolean
+  confirmarAlTipear?: boolean
   onCreate?: (nombre: string) => Promise<any> | any
   onQueryChange?: (texto: string) => void
   recientes?: Array<string | any>
@@ -635,6 +640,8 @@ export function RucField<TResult extends RucFieldResult = RucFieldResult>(props:
   value?: string
   onChange: (valor: string) => void
   onAplicar?: (resultado: TResult) => void
+  variante?: 'normal' | 'compacta'
+  onDescartar?: () => void
   consultar?: (ruc: string) => Promise<TResult>
   disabled?: boolean
   consultarDisabled?: boolean

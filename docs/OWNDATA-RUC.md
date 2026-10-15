@@ -142,3 +142,13 @@ atribuye el uso a su app. La clave se configura en `gallery/owndata-config.js`
 o con `VITE_OWNDATA_PUBLISHABLE_KEY` al construir la galería; sin clave, la
 vista usa datos de prueba. Mientras OwnData no habilite las claves publicables,
 la API responde 503 `PUBLISHABLE_KEY_UNAVAILABLE`.
+
+### Resultado compacto para POS
+
+`<RucField variante="compacta" onDescartar={cerrarSugerencia} ... />` ofrece una
+fila adaptable con razón social completa, RUC y acciones «Usar estos datos» y
+«Descartar». Descartar limpia únicamente la sugerencia y llama `onDescartar()`;
+no cambia el RUC ni aplica datos. La consulta sigue siendo explícita y solo
+«Usar estos datos» llama `onAplicar(resultado)`. El modo predeterminado
+`variante="normal"` conserva la tarjeta existente. Los resultados simulados
+mantienen su aviso en ambos modos.
