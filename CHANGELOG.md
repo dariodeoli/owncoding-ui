@@ -4,6 +4,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.68.11 — 2026-10-15
+
+- **Impresión (MobOS #432):** `paginaDePrueba` acepta encabezado y pie opcionales para reutilizar el comprobante de la tienda; conserva el diagnóstico y la salida anterior cuando no se configuran.
+- **RUC (MobOS #362):** variante compacta opcional y descarte explícito de sugerencias, sin aplicar datos sin confirmación.
+- **Proveedores (MobOS #363):** valor controlado por identidad o texto, confirmación opcional al salir o escribir y soporte de texto libre; evita confirmaciones duplicadas y respeta solo lectura.
+
 ## v0.68.10 — 2026-10-14
 
 - **Galería:** la demo «Extracción confirmable» de `RucField` también consulta OwnData real (RUC con o sin dígito verificador) cuando hay clave publicable; sin clave sigue con el proveedor simulado.
