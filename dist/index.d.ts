@@ -561,7 +561,12 @@ export function TarjetaCuentaCobro(props: {
 export function BuscadorProveedor(props: {
   proveedores?: Array<{ id: string; name?: string; nombre?: string; code?: string | null; city?: string | null; phone?: string | null }>
   selectedId?: string
+  /** Valor controlado (id o texto libre); prevalece sobre selectedId. */
+  value?: string
   onSelect?: (proveedor: any) => void
+  onLibre?: (texto: string) => void
+  confirmarAlSalir?: boolean
+  confirmarAlTipear?: boolean
   onCreate?: (nombre: string) => Promise<any> | any
   onQueryChange?: (texto: string) => void
   recientes?: Array<string | any>
@@ -635,6 +640,8 @@ export function RucField<TResult extends RucFieldResult = RucFieldResult>(props:
   value?: string
   onChange: (valor: string) => void
   onAplicar?: (resultado: TResult) => void
+  variante?: 'normal' | 'compacta'
+  onDescartar?: () => void
   consultar?: (ruc: string) => Promise<TResult>
   disabled?: boolean
   consultarDisabled?: boolean
@@ -1654,8 +1661,35 @@ export function repartirLinea(izquierda: string, derecha: string, ancho: number)
 export function bloqueFirma(opciones?: any): string
 export const AVANCES_FIRMA: any
 export const VARIANTES_CORTE: any
-export function paginaDePrueba(opciones?: any): { base64: () => string; lineas: () => string[]; ref: string; validacion: string; sufijo: string; validador: string; corte: string }
-export function paginaDePruebaSimple(opciones?: any): { base64: () => string; lineas: () => string[]; ref: string; validacion: string; sufijo: string; validador: string; corte: string }
+/** Constructor ESC/POS compartido con los callbacks síncronos de la prueba. */
+export interface TicketDePrueba {
+  columnas: number
+  iniciar(): TicketDePrueba
+  texto(texto?: string): TicketDePrueba
+  linea(caracter?: string): TicketDePrueba
+  par(izquierda: string, derecha?: string): TicketDePrueba
+  centrado(texto?: string): TicketDePrueba
+  negrita(activo?: boolean): TicketDePrueba
+  doble(activo?: boolean): TicketDePrueba
+  qr(datos: string, opciones?: { tamano?: number; etiqueta?: string }): TicketDePrueba
+  barcode(datos: string, opciones?: { etiqueta?: string; formato?: string }): TicketDePrueba
+  imagenRaster(bytes: Uint8Array | number[], opciones?: { ancho?: number; alto?: number }): TicketDePrueba
+  avanza(lineas?: number): TicketDePrueba
+  corte(variante?: string): TicketDePrueba
+  corteEnviado(): boolean
+  bytes(): Uint8Array
+  base64(): string
+  lineas(): string[]
+}
+export interface OpcionesPaginaDePrueba {
+  /** Reemplaza el título/marca por el encabezado de la app; conserva la validación. */
+  encabezado?: ((ticket: TicketDePrueba) => unknown) | null
+  /** Se agrega después de la trazabilidad, antes del avance y corte final. */
+  pie?: ((ticket: TicketDePrueba) => unknown) | null
+  [opcion: string]: any
+}
+export function paginaDePrueba(opciones?: OpcionesPaginaDePrueba): { base64: () => string; lineas: () => string[]; ref: string; validacion: string; sufijo: string; validador: string; corte: string }
+export function paginaDePruebaSimple(opciones?: OpcionesPaginaDePrueba): { base64: () => string; lineas: () => string[]; ref: string; validacion: string; sufijo: string; validador: string; corte: string }
 export const TIPOS_PRUEBA: Record<string, string>
 export const TIPOS_TICKET_PRUEBA: Record<string, string>
 export const ANCHOS_PRUEBA: number[]
