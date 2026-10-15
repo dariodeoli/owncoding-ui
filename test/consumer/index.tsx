@@ -147,3 +147,6 @@ import { BuscadorProveedor } from 'owncoding-ui'
 const supplierContracts = <BuscadorProveedor value="Libre" onLibre={(texto: string) => void texto} confirmarAlSalir confirmarAlTipear />
 const compactRucContract = <RucField value="80012345-6" onChange={() => {}} variante="compacta" onDescartar={() => {}} />
 void supplierContracts; void compactRucContract
+
+const supplierFormattedContract = <BuscadorProveedor selectedId="p1" value="p1" formatearValor={proveedor => [proveedor.code, proveedor.name || proveedor.nombre].filter(Boolean).join(' · ')} onSelect={proveedor => void proveedor.id} confirmarAlSalir onLibre={texto => void texto} />
+void supplierFormattedContract

@@ -4,6 +4,11 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.68.12 — 2026-10-15
+
+- **Proveedor seleccionado:** `formatearValor(proveedor)` permite mostrar sigla y nombre en el campo sin modificar la presentación habitual ni duplicar el chip de las opciones.
+- El formato conserva IDs, alta y eco controlado, confirmación única y modo de solo lectura; resetear el valor o cambiar de catálogo descarta proveedores recordados del contexto anterior.
+
 ## v0.68.11 — 2026-10-15
 
 - **Impresión (MobOS #432):** `paginaDePrueba` acepta encabezado y pie opcionales para reutilizar el comprobante de la tienda; conserva el diagnóstico y la salida anterior cuando no se configuran.
