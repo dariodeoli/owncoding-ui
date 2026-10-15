@@ -142,3 +142,8 @@ paginaDePrueba({ encabezado: t => t.negrita().centrado('MobOS').negrita(false), 
 paginaDePruebaSimple({ pie: t => t.imagenRaster(new Uint8Array(8), { ancho: 8, alto: 8 }) })
 // @ts-expect-error El callback recibe el constructor ESC/POS, no una cadena.
 paginaDePrueba({ encabezado: (ticket: string) => ticket.toUpperCase() })
+
+import { BuscadorProveedor } from 'owncoding-ui'
+const supplierContracts = <BuscadorProveedor value="Libre" onLibre={(texto: string) => void texto} confirmarAlSalir confirmarAlTipear />
+const compactRucContract = <RucField value="80012345-6" onChange={() => {}} variante="compacta" onDescartar={() => {}} />
+void supplierContracts; void compactRucContract

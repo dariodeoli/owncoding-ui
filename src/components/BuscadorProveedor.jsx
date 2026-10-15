@@ -65,7 +65,11 @@ export function resolverRecientes(proveedores = [], recientes = [], { limite = M
 export default function BuscadorProveedor({
   proveedores = [],
   selectedId = '',
+  value,
   onSelect,
+  onLibre,
+  confirmarAlSalir = false,
+  confirmarAlTipear = false,
   onCreate,
   onQueryChange,
   recientes = [],
@@ -88,6 +92,7 @@ export default function BuscadorProveedor({
   const listaId = useId()
   const raiz = useRef(null)
   const lista = useRef(null)
+  const confirmado = useRef(null)
 
   useEffect(() => {
     const cerrarFuera = (event) => {
@@ -100,10 +105,14 @@ export default function BuscadorProveedor({
 
   // El proveedor elegido se refleja en el campo (nombre visible).
   useEffect(() => {
-    if (!selectedId) return
-    const elegido = (Array.isArray(proveedores) ? proveedores : []).find((proveedor) => proveedor.id === selectedId)
+    const valor = value === undefined ? selectedId : value
+    // selectedId conserva el contrato original; value permite texto libre y reset.
+    if (value === undefined && !valor) return
+    const elegido = (Array.isArray(proveedores) ? proveedores : []).find((proveedor) => proveedor.id === valor)
     if (elegido) setQuery(nombreProveedor(elegido))
-  }, [selectedId, proveedores])
+    else if (value !== undefined) setQuery(String(valor ?? ''))
+    confirmado.current = null
+  }, [selectedId, value, proveedores])
 
   const termino = query.trim()
   const usados = useMemo(() => resolverRecientes(proveedores, recientes), [proveedores, recientes])
@@ -119,7 +128,8 @@ export default function BuscadorProveedor({
     [proveedores, termino],
   )
   const puedeCrear = Boolean(termino.length >= 2 && onCreate && !exacto)
-  const opciones = puedeCrear ? [...enFoco, { crear: termino }] : enFoco
+  const puedeLibre = Boolean(termino && onLibre && !onCreate && !exacto)
+  const opciones = puedeCrear || puedeLibre ? [...enFoco, { crear: termino }] : enFoco
   const listaVisible = abierto && !disabled && (opciones.length > 0 || Boolean(termino))
 
   // La opción resaltada con el teclado queda a la vista.
@@ -135,10 +145,30 @@ export default function BuscadorProveedor({
 
   function elegir(opcion) {
     if (!opcion) return
-    if (opcion.crear) return crearProveedor()
+    if (opcion.crear) {
+      if (onCreate) return crearProveedor()
+      cerrar()
+      confirmado.current = termino
+      onLibre?.(termino)
+      return
+    }
     setQuery(nombreProveedor(opcion))
     cerrar()
+    confirmado.current = nombreProveedor(opcion)
     onSelect?.(opcion)
+  }
+
+  function confirmarTexto() {
+    if (disabled || creando || !termino || confirmado.current === termino) return
+    const catalogo = Array.isArray(proveedores) ? proveedores : []
+    const exacto = catalogo.find(proveedor => proveedor.id === termino)
+      || catalogo.find(proveedor => [nombreProveedor(proveedor), proveedor.code].some(valor => valor && normalizarProveedor(valor) === normalizarProveedor(termino)))
+    confirmado.current = termino
+    if (exacto) {
+      setQuery(nombreProveedor(exacto))
+      confirmado.current = nombreProveedor(exacto)
+      if (exacto.id !== (value === undefined ? selectedId : value)) onSelect?.(exacto)
+    } else onLibre?.(termino)
   }
 
   async function crearProveedor() {
@@ -148,6 +178,7 @@ export default function BuscadorProveedor({
       const creado = await onCreate?.(termino)
       if (creado?.id) {
         setQuery(nombreProveedor(creado))
+        confirmado.current = nombreProveedor(creado)
         cerrar()
         onSelect?.(creado)
       } else {
@@ -168,9 +199,15 @@ export default function BuscadorProveedor({
       setResaltado((actual) => (actual + paso + opciones.length) % opciones.length)
       return
     }
-    if (event.key === 'Enter' && abierto && opciones[resaltado]) {
-      event.preventDefault()
-      elegir(opciones[resaltado])
+    if (event.key === 'Enter') {
+      if (abierto && opciones[resaltado]) {
+        event.preventDefault()
+        elegir(opciones[resaltado])
+      } else if (onLibre || confirmarAlSalir || confirmarAlTipear) {
+        event.preventDefault()
+        confirmarTexto()
+        cerrar()
+      }
     }
   }
 
@@ -189,7 +226,20 @@ export default function BuscadorProveedor({
         disabled={disabled}
         value={query}
         placeholder={placeholder}
-        onChange={(event) => { setQuery(event.target.value); onQueryChange?.(event.target.value); setAbierto(true); setResaltado(0) }}
+        onChange={(event) => {
+          const siguiente = event.target.value
+          confirmado.current = null
+          setQuery(siguiente)
+          onQueryChange?.(siguiente)
+          if (confirmarAlTipear) onLibre?.(siguiente)
+          setAbierto(true)
+          setResaltado(0)
+        }}
+        onBlur={(event) => {
+          if (!confirmarAlSalir || raiz.current?.contains(event.relatedTarget)) return
+          cerrar()
+          confirmarTexto()
+        }}
         onFocus={() => setAbierto(true)}
         onKeyDown={alTeclear}
         {...inputProps}
@@ -221,6 +271,7 @@ export default function BuscadorProveedor({
                 onClick={() => elegir(opcion)}
                 className={cn(
                   'flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition',
+                  (onLibre || confirmarAlSalir || confirmarAlTipear) && 'min-h-11',
                   indice === resaltado ? 'bg-fono/10 text-fore' : 'text-mute hover:bg-ink-700/60 hover:text-fore',
                 )}
               >
@@ -228,7 +279,7 @@ export default function BuscadorProveedor({
                   <>
                     <Icon name="plus" className="h-4 w-4 shrink-0 text-fono-light" />
                     <span className="min-w-0 flex-1 truncate">
-                      {creando ? textoCreando : `${textoCrear} «${opcion.crear}»`}
+                      {creando ? textoCreando : `${puedeCrear ? textoCrear : 'Usar'} «${opcion.crear}»`}
                     </span>
                   </>
                 ) : (
