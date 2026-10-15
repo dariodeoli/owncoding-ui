@@ -30,3 +30,7 @@
 
 Las flechas, Enter y Escape mantienen la navegación del combobox. Las opciones
 recientes y el filtro sin acentos por nombre/abreviatura siguen disponibles.
+
+`inputProps={{ readOnly: true }}` permite revisar el valor sin abrir sugerencias,
+confirmar texto, crear ni seleccionar proveedores. El eco de `value` después de
+una confirmación no vuelve a llamar `onLibre` al perder el foco.

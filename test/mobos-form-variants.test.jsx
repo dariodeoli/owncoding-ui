@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import { useState } from 'react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { BuscadorProveedor, RucField } from '../src/index.js'
@@ -123,6 +124,37 @@ describe('proveedor con texto libre opt-in', () => {
     fireEvent.blur(proveedorInput())
     expect(onCreate).toHaveBeenCalledExactlyOnceWith('Nuevo')
     expect(onLibre).not.toHaveBeenCalled()
+  })
+
+  test.each([false, true])('Enter y blur confirman una sola vez después del eco controlado (catálogo omitido: %s)', omitido => {
+    const onLibre = vi.fn()
+    const catalogoEstable = []
+    function Controlado() {
+      const [value, setValue] = useState(' Libre ')
+      return <BuscadorProveedor {...(omitido ? {} : { proveedores: catalogoEstable })} value={value} confirmarAlSalir onLibre={texto => { onLibre(texto); setValue(texto) }} />
+    }
+    render(<Controlado />)
+    fireEvent.focus(proveedorInput())
+    fireEvent.keyDown(proveedorInput(), { key: 'Enter' })
+    expect(proveedorInput().value).toBe('Libre')
+    fireEvent.blur(proveedorInput())
+    expect(onLibre.mock.calls).toEqual([['Libre']])
+  })
+
+  test('readOnly no confirma ni permite selección, alta o edición al enfocar y salir', () => {
+    const onLibre = vi.fn(), onSelect = vi.fn(), onCreate = vi.fn(), onQueryChange = vi.fn()
+    render(<BuscadorProveedor proveedores={proveedores} value="Libre" confirmarAlSalir confirmarAlTipear onLibre={onLibre} onSelect={onSelect} onCreate={onCreate} onQueryChange={onQueryChange} inputProps={{ readOnly: true }} />)
+    fireEvent.focus(proveedorInput())
+    expect(screen.queryByRole('listbox')).toBeNull()
+    fireEvent.keyDown(proveedorInput(), { key: 'ArrowDown' })
+    fireEvent.keyDown(proveedorInput(), { key: 'Enter' })
+    fireEvent.blur(proveedorInput())
+    expect(onLibre).not.toHaveBeenCalled()
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(onCreate).not.toHaveBeenCalled()
+    expect(onQueryChange).not.toHaveBeenCalled()
+    expect(proveedorInput().value).toBe('Libre')
+    expect(proveedorInput().readOnly).toBe(true)
   })
 
   test('al deshabilitar no confirma texto pendiente', () => {

@@ -17,6 +17,7 @@ import { cn } from '../utils/cn.js'
 //     onCreate={(nombre) => suppliersApi.create({ name: nombre })}
 //   />
 const MAX_RESULTADOS = 8
+const PROVEEDORES_VACIOS = []
 
 /** Normaliza para comparar: minúsculas y sin acentos. */
 export function normalizarProveedor(valor) {
@@ -63,7 +64,7 @@ export function resolverRecientes(proveedores = [], recientes = [], { limite = M
 }
 
 export default function BuscadorProveedor({
-  proveedores = [],
+  proveedores = PROVEEDORES_VACIOS,
   selectedId = '',
   value,
   onSelect,
@@ -93,6 +94,7 @@ export default function BuscadorProveedor({
   const raiz = useRef(null)
   const lista = useRef(null)
   const confirmado = useRef(null)
+  const soloLectura = Boolean(inputProps?.readOnly)
 
   useEffect(() => {
     const cerrarFuera = (event) => {
@@ -109,9 +111,12 @@ export default function BuscadorProveedor({
     // selectedId conserva el contrato original; value permite texto libre y reset.
     if (value === undefined && !valor) return
     const elegido = (Array.isArray(proveedores) ? proveedores : []).find((proveedor) => proveedor.id === valor)
-    if (elegido) setQuery(nombreProveedor(elegido))
-    else if (value !== undefined) setQuery(String(valor ?? ''))
-    confirmado.current = null
+    const siguiente = elegido ? nombreProveedor(elegido) : value !== undefined ? String(valor ?? '') : null
+    if (siguiente !== null) {
+      setQuery(siguiente)
+      // El eco controlado de una confirmación no habilita otra al salir.
+      if (normalizarProveedor(confirmado.current) !== normalizarProveedor(siguiente)) confirmado.current = null
+    }
   }, [selectedId, value, proveedores])
 
   const termino = query.trim()
@@ -130,7 +135,7 @@ export default function BuscadorProveedor({
   const puedeCrear = Boolean(termino.length >= 2 && onCreate && !exacto)
   const puedeLibre = Boolean(termino && onLibre && !onCreate && !exacto)
   const opciones = puedeCrear || puedeLibre ? [...enFoco, { crear: termino }] : enFoco
-  const listaVisible = abierto && !disabled && (opciones.length > 0 || Boolean(termino))
+  const listaVisible = abierto && !disabled && !soloLectura && (opciones.length > 0 || Boolean(termino))
 
   // La opción resaltada con el teclado queda a la vista.
   useEffect(() => {
@@ -144,7 +149,7 @@ export default function BuscadorProveedor({
   }
 
   function elegir(opcion) {
-    if (!opcion) return
+    if (disabled || soloLectura || !opcion) return
     if (opcion.crear) {
       if (onCreate) return crearProveedor()
       cerrar()
@@ -159,7 +164,7 @@ export default function BuscadorProveedor({
   }
 
   function confirmarTexto() {
-    if (disabled || creando || !termino || confirmado.current === termino) return
+    if (disabled || soloLectura || creando || !termino || normalizarProveedor(confirmado.current) === normalizarProveedor(termino)) return
     const catalogo = Array.isArray(proveedores) ? proveedores : []
     const exacto = catalogo.find(proveedor => proveedor.id === termino)
       || catalogo.find(proveedor => [nombreProveedor(proveedor), proveedor.code].some(valor => valor && normalizarProveedor(valor) === normalizarProveedor(termino)))
@@ -172,7 +177,7 @@ export default function BuscadorProveedor({
   }
 
   async function crearProveedor() {
-    if (creando || !puedeCrear) return
+    if (disabled || soloLectura || creando || !puedeCrear) return
     setCreando(true)
     try {
       const creado = await onCreate?.(termino)
@@ -190,6 +195,7 @@ export default function BuscadorProveedor({
   }
 
   function alTeclear(event) {
+    if (disabled || soloLectura) return
     if (event.key === 'Escape') { cerrar(); return }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault()
@@ -227,6 +233,7 @@ export default function BuscadorProveedor({
         value={query}
         placeholder={placeholder}
         onChange={(event) => {
+          if (disabled || soloLectura) return
           const siguiente = event.target.value
           confirmado.current = null
           setQuery(siguiente)
@@ -240,7 +247,7 @@ export default function BuscadorProveedor({
           cerrar()
           confirmarTexto()
         }}
-        onFocus={() => setAbierto(true)}
+        onFocus={() => { if (!disabled && !soloLectura) setAbierto(true) }}
         onKeyDown={alTeclear}
         {...inputProps}
       />
