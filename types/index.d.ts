@@ -563,6 +563,8 @@ export function BuscadorProveedor(props: {
   selectedId?: string
   /** Valor controlado (id o texto libre); prevalece sobre selectedId. */
   value?: string
+  /** Texto del campo al elegir/resolver un proveedor; no cambia nombre ni sigla de las opciones. */
+  formatearValor?: (proveedor: { id: string; name?: string; nombre?: string; code?: string | null; city?: string | null; phone?: string | null }) => string
   onSelect?: (proveedor: any) => void
   onLibre?: (texto: string) => void
   confirmarAlSalir?: boolean
