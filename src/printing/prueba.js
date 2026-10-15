@@ -70,6 +70,8 @@ export function paginaDePrueba({
   incluyeFecha = false,
   corte = PLANTILLA_PRUEBA.corte,
   qr = null,
+  encabezado = null,
+  pie = null,
 } = {}) {
   const metodoReal = metodo || (/^(usb|cups):/.test(String(impresora || '')) ? 'CUPS (cola local)' : 'LAN (TCP directo)')
   const conexionReal = /^(usb|cups)/.test(String(conexion || '')) ? 'Cola CUPS local' : 'LAN (TCP directo)'
@@ -85,7 +87,7 @@ export function paginaDePrueba({
   const minimo = tipo === 'corta'
 
   // Pie común: todo lo que hace auditable la prueba desde el papel.
-  const pie = () => {
+  const trazabilidad = () => {
     t.linea()
     t.negrita().centrado(`VALIDACIÓN ${validador}`).negrita(false)
     t.linea()
@@ -116,15 +118,19 @@ export function paginaDePrueba({
 
   if (minimo) {
     // Ticket corto (#277): solo título + validación (+ fecha/hora opcional).
-    t.negrita().centrado(`TICKET DE PRUEBA ${nombreApp}`).negrita(false)
+    if (encabezado) encabezado(t)
+    else t.negrita().centrado(`TICKET DE PRUEBA ${nombreApp}`).negrita(false)
     t.linea()
     t.negrita().doble().centrado(`VALIDACIÓN ${validador}`).doble(false).negrita(false)
     if (incluyeFecha) t.par('Fecha', fechaCorta(ahora))
     t.linea()
   } else {
-    t.centrado(nombreApp).negrita().doble().centrado('TICKET DE PRUEBA').doble(false).negrita(false)
-    t.centrado(TIPOS_PRUEBA[tipo] || 'Prueba')
-    if (marca) t.centrado(`Comparativa ${marca}`)
+    if (encabezado) encabezado(t)
+    else {
+      t.centrado(nombreApp).negrita().doble().centrado('TICKET DE PRUEBA').doble(false).negrita(false)
+      t.centrado(TIPOS_PRUEBA[tipo] || 'Prueba')
+      if (marca) t.centrado(`Comparativa ${marca}`)
+    }
     t.linea()
     t.negrita().doble().centrado(`VALIDACIÓN ${validador}`).doble(false).negrita(false)
     t.linea()
@@ -213,7 +219,10 @@ export function paginaDePrueba({
     codigos('CORTE')
   }
 
-  if (!minimo) pie()
+  if (!minimo) trazabilidad()
+  // El pie de la app se imprime una sola vez, después del diagnóstico y antes
+  // del avance/corte final (los cortes intermedios del tipo corte son pruebas).
+  if (pie) pie(t)
   t.avanza(2).corte(corte)
   return { base64: () => t.base64(), lineas: () => t.lineas(), ref, validacion, sufijo, validador, corte: t.corteEnviado() }
 }

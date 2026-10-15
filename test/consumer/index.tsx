@@ -134,3 +134,11 @@ const shellPanelContract = <>
 const claseSobria: string = colorDeNombre('Acme', 'sobria')
 void shellPanelContract
 void claseSobria
+
+// Callbacks de impresión con el mismo constructor en root y utils.
+import { paginaDePrueba } from 'owncoding-ui'
+import { paginaDePruebaSimple } from 'owncoding-ui/utils'
+paginaDePrueba({ encabezado: t => t.negrita().centrado('MobOS').negrita(false), pie: t => t.texto('Gracias') })
+paginaDePruebaSimple({ pie: t => t.imagenRaster(new Uint8Array(8), { ancho: 8, alto: 8 }) })
+// @ts-expect-error El callback recibe el constructor ESC/POS, no una cadena.
+paginaDePrueba({ encabezado: (ticket: string) => ticket.toUpperCase() })
