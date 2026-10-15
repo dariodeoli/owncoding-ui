@@ -70,3 +70,27 @@ cups:<cola>           → cola local del sistema (USB o compartida)
 - Agente: `print-agent/` (artefacto versionado en `backend/public/print-agent/`).
 - Backend: rutas de impresión + `lib/printing/*` (tickets, documentos,
   etiquetas) y el reparto por tipo de documento.
+
+### Encabezado y pie de la app en la página de prueba
+
+`paginaDePrueba` y `paginaDePruebaSimple` aceptan callbacks síncronos opt-in
+`encabezado(t)` y `pie(t)`, con el mismo constructor ESC/POS ya iniciado. El
+encabezado reemplaza el título, subtítulo y marca predeterminados; la validación
+sigue en el cuerpo. El pie de la app se agrega una sola vez después de los
+códigos y la trazabilidad diagnóstica, antes del avance y corte final. El corto
+conserva su cuerpo mínimo y también acepta ambos callbacks. El tipo `corte`
+mantiene sus cuatro cortes de diagnóstico; el pie va después de esas pruebas
+y antes del último corte.
+
+```js
+paginaDePrueba({
+  tipo: 'completa',
+  encabezado: t => encabezadoTicket(t),
+  pie: t => pieTicket(t),
+})
+```
+
+Los callbacks deben escribir en `t`, restaurar los estilos que activen y dejar
+el avance/corte final a la librería; no deben reiniciar el constructor ni
+concatenar bytes de otro ticket. Sus errores se propagan al consumidor. Si se
+omiten, los bytes y las líneas de la prueba conservan el comportamiento previo.
