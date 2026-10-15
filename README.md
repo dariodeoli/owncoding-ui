@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/dariodeoli/owncoding-ui/actions/workflows/ci.yml"><img alt="CI de la rama principal" src="https://github.com/dariodeoli/owncoding-ui/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="Versión 0.68.11" src="https://img.shields.io/badge/versi%C3%B3n-0.68.11-2340E6" />
+  <img alt="Versión 0.68.12" src="https://img.shields.io/badge/versi%C3%B3n-0.68.12-2340E6" />
   <img alt="React 18 o superior" src="https://img.shields.io/badge/React-18%2B-2340E6" />
   <img alt="Objetivo WCAG 2.1 AA" src="https://img.shields.io/badge/objetivo-WCAG%202.1%20AA-555A63" />
 </p>
@@ -55,10 +55,10 @@ ficha consultable.
 
 ### 1. Instalar una versión fija
 
-La versión del paquete es `v0.68.11`. Al publicar su tag, la instalación fija es:
+La versión del paquete es `v0.68.12`. Al publicar su tag, la instalación fija es:
 
 ```bash
-npm install github:dariodeoli/owncoding-ui#v0.68.11
+npm install github:dariodeoli/owncoding-ui#v0.68.12
 ```
 
 Para probar la rama principal sin fijar un release:
