@@ -37,6 +37,8 @@ export default function RucField({
   value,
   onChange,
   onAplicar,
+  onDescartar,
+  variante = 'normal',
   consultar,
   disabled = false,
   consultarDisabled = false,
@@ -152,16 +154,23 @@ export default function RucField({
       </div>
       {puedeExtraer && textoAyuda && <span id={ayudaId} className="block text-xs text-mute">{textoAyuda}</span>}
       {resultado && (
-        <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fono/25 bg-fono/5 p-3 text-sm">
-          <span className="min-w-0">
+        <div role="status" className={variante === 'compacta' ? 'flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-xl border border-fono/25 bg-fono/5 px-3 py-1.5 text-sm' : 'flex flex-wrap items-center justify-between gap-3 rounded-xl border border-fono/25 bg-fono/5 p-3 text-sm'}>
+          <span className={variante === 'compacta' ? 'min-w-0 flex-1 basis-40' : 'min-w-0'}>
             <span className="flex flex-wrap items-center gap-2">
-              <b className="truncate">{resultado.name}</b>
+              <b className={variante === 'compacta' ? 'break-words' : 'truncate'}>{resultado.name}</b>
               {resultado.simulado && <Badge color="blue">Simulada en demo</Badge>}
             </span>
             <span className="block text-mute">RUC {resultado.fullRuc}</span>
             {resultado.simulado && <span className="block text-xs text-mute">Resultado ficticio: la demo no consulta registros reales.</span>}
           </span>
-          <button type="button" className="min-h-11 rounded-lg px-2 font-semibold text-fono-light" onClick={() => { onAplicar?.(resultado); setResultado(null) }}>Usar estos datos</button>
+          {variante === 'compacta' ? (
+            <span className="flex flex-wrap items-center gap-1">
+              <button type="button" className="min-h-11 rounded-lg px-2 font-semibold text-fono-light focus-visible:outline focus-visible:outline-2 focus-visible:outline-fono" onClick={() => { onAplicar?.(resultado); setResultado(null) }}>Usar estos datos</button>
+              <button type="button" className="min-h-11 rounded-lg px-2 font-semibold text-mute focus-visible:outline focus-visible:outline-2 focus-visible:outline-fono" onClick={() => { setResultado(null); onDescartar?.() }}>Descartar</button>
+            </span>
+          ) : (
+            <button type="button" className="min-h-11 rounded-lg px-2 font-semibold text-fono-light" onClick={() => { onAplicar?.(resultado); setResultado(null) }}>Usar estos datos</button>
+          )}
         </div>
       )}
       {error && <p id={errorId} role="alert" className="text-sm text-bad-text">{error}</p>}
