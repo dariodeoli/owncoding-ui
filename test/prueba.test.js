@@ -167,10 +167,15 @@ test.each(formatosPredeterminados)('conserva bytes y líneas predeterminados: %s
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-01-01T12:00:00Z'))
   const azar = vi.spyOn(Math, 'random').mockReturnValue(0.123)
+  // El texto de fecha es una entrada estable de estas huellas: zona horaria
+  // e ICU difieren entre macOS y CI. El formato real se sigue solicitando a es-PY.
+  const fecha = vi.spyOn(Date.prototype, 'toLocaleString').mockReturnValue('1/1/26, 9:00 a. m.')
   try {
     const t = paginaDePrueba({ ancho, tipo, incluyeFecha: true, nombreApp: 'MobOS', validacion: '1234' })
     expect(createHash('sha256').update(JSON.stringify([t.base64(), t.lineas()])).digest('hex')).toBe(huella)
+    expect(fecha).toHaveBeenCalledWith('es-PY', { dateStyle: 'short', timeStyle: 'short' })
   } finally {
+    fecha.mockRestore()
     azar.mockRestore()
     vi.useRealTimers()
   }
