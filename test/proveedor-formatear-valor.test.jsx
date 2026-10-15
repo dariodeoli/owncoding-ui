@@ -119,4 +119,30 @@ describe('API pública BuscadorProveedor.formatearValor opt-in', () => {
     render(<BuscadorProveedor proveedores={proveedores} selectedId="p1" />)
     expect(input().value).toBe('Ñandú Importaciones')
   })
+
+  test.each(['reset', 'catálogo', 'catálogo y reset'])('%s invalida el proveedor anterior y no resucita su ID al confirmar texto', cambio => {
+    const onSelect = vi.fn(), onLibre = vi.fn(), vacios = []
+    function Controlado() {
+      const [value, setValue] = useState(''), [selectedId, setSelectedId] = useState(''), [catalogo, setCatalogo] = useState(proveedores)
+      return <><BuscadorProveedor proveedores={catalogo} value={value} selectedId={selectedId} formatearValor={formato} confirmarAlSalir onQueryChange={setValue} onLibre={onLibre} onSelect={p => { onSelect(p); setSelectedId(p.id); setValue(p.id) }} /><button onClick={() => { if (cambio !== 'reset') setCatalogo(vacios); if (cambio !== 'catálogo') { setValue(''); setSelectedId('') } }}>Cambiar contexto</button></>
+    }
+    render(<Controlado />)
+    escribir('NDU')
+    fireEvent.keyDown(input(), { key: 'Enter' })
+    expect(onSelect).toHaveBeenCalledExactlyOnceWith(proveedores[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Cambiar contexto' }))
+    escribir(formato(proveedores[0]))
+    fireEvent.keyDown(input(), { key: 'Escape' })
+    fireEvent.blur(input())
+    // Un reset con el mismo catálogo permite resolver nuevamente su proveedor real.
+    if (cambio === 'reset') {
+      expect(onSelect).toHaveBeenCalledTimes(2)
+      expect(onSelect).toHaveBeenLastCalledWith(proveedores[0])
+      expect(onLibre).not.toHaveBeenCalled()
+    } else {
+      expect(onSelect).toHaveBeenCalledTimes(1)
+      expect(onLibre).toHaveBeenCalledExactlyOnceWith(formato(proveedores[0]))
+    }
+  })
+
 })

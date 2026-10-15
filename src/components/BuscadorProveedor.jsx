@@ -110,13 +110,22 @@ export default function BuscadorProveedor({
 
   // El formato afecta solo al campo: las opciones conservan nombre + chip de sigla.
   const catalogo = Array.isArray(proveedores) ? proveedores : PROVEEDORES_VACIOS
-  const recordado = proveedorRecordado.current
-  const paraResolver = formatearValor && recordado && !catalogo.some(proveedor => proveedor.id === recordado.id)
-    ? [...catalogo, recordado] : catalogo
+  const memoria = proveedorRecordado.current
   const mostrarValor = proveedor => formatearValor ? String(formatearValor(proveedor) ?? nombreProveedor(proveedor)) : nombreProveedor(proveedor)
   const coincideTexto = (proveedor, texto) => [nombreProveedor(proveedor), proveedor?.code, formatearValor ? mostrarValor(proveedor) : null]
     .some(alias => alias && normalizarProveedor(alias) === normalizarProveedor(texto))
   const valor = value === undefined ? selectedId : value
+  // Solo sostiene el eco de una selección vigente mientras llega su catálogo.
+  // Un catálogo reemplazado o un reset nunca puede volver a incorporar el objeto anterior.
+  const recordado = formatearValor && memoria?.catalogo === proveedores && valor
+    && (valor === memoria.proveedor.id || coincideTexto(memoria.proveedor, valor))
+    && (!selectedId || selectedId === memoria.proveedor.id || valor === memoria.proveedor.id)
+    ? memoria.proveedor : null
+  const paraResolver = recordado && !catalogo.some(proveedor => proveedor.id === recordado.id)
+    ? [...catalogo, recordado] : catalogo
+  useEffect(() => {
+    if (!recordado) proveedorRecordado.current = null
+  }, [value, selectedId, proveedores, recordado])
   const elegido = paraResolver.find(proveedor => proveedor.id === valor)
     || (formatearValor && value !== undefined && valor
       ? paraResolver.find(proveedor => proveedor.id === selectedId && coincideTexto(proveedor, valor))
@@ -179,7 +188,7 @@ export default function BuscadorProveedor({
       onLibre?.(termino)
       return
     }
-    proveedorRecordado.current = opcion
+    proveedorRecordado.current = { proveedor: opcion, catalogo: proveedores }
     setQuery(mostrarValor(opcion))
     cerrar()
     confirmado.current = mostrarValor(opcion)
@@ -192,7 +201,7 @@ export default function BuscadorProveedor({
       || paraResolver.find(proveedor => coincideTexto(proveedor, termino))
     confirmado.current = termino
     if (exacto) {
-      proveedorRecordado.current = exacto
+      proveedorRecordado.current = { proveedor: exacto, catalogo: proveedores }
       setQuery(mostrarValor(exacto))
       confirmado.current = mostrarValor(exacto)
       if (exacto.id !== (value === undefined ? selectedId : value) && !(formatearValor && exacto.id === selectedId)) onSelect?.(exacto)
@@ -205,7 +214,7 @@ export default function BuscadorProveedor({
     try {
       const creado = await onCreate?.(termino)
       if (creado?.id) {
-        proveedorRecordado.current = creado
+        proveedorRecordado.current = { proveedor: creado, catalogo: proveedores }
         setQuery(mostrarValor(creado))
         confirmado.current = mostrarValor(creado)
         cerrar()
