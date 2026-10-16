@@ -921,3 +921,26 @@ select[data-oc-control]:-webkit-autofill {
 @media (prefers-reduced-motion: reduce) {
   .oc-carousel-slide { transition: none !important; }
 }
+
+/* Agendese #258: protección móvil opt-in, sin cambiar el viewport ni el zoom.
+   Los atributos se colocan en el diálogo: los portales heredan el contexto JS,
+   y un diálogo anidado con mobileSafe={false} conserva sus controles originales. */
+@media (max-width: 639px) {
+  [data-oc-mobile-safety="true"] :is(input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='range'], [type='color'], [type='file'], [type='submit'], [type='button'], [type='reset'], [type='image']), select, textarea):not([data-oc-mobile-safety="false"] *) {
+    font-size: 16px !important;
+  }
+  [role='dialog'][data-oc-mobile-safety="true"] { max-width: 100%; }
+}
+[data-oc-mobile-safety="true"] { overscroll-behavior: contain; }
+[data-oc-mobile-safety="true"] > * { min-width: 0; }
+[data-oc-mobile-safety="true"] .oc-dialog-safe-body,
+[data-oc-mobile-safety="true"] .overflow-y-auto:not(.overflow-x-auto):not(.overflow-x-scroll):not([data-oc-scroll-x]):not([data-oc-mobile-safety="false"] *) {
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+[data-oc-mobile-safety="true"] :is(input, select, textarea):not([data-oc-mobile-safety="false"] *) { max-width: 100%; min-width: 0; }
+[data-oc-mobile-safety="true"] :is(.grid, .flex) > :not([data-oc-mobile-safety="false"] *) { min-width: 0; }
+[data-oc-mobile-safety="true"] :is(h1, h2, h3, p, label, span, li):not([data-oc-mobile-safety="false"] *) { overflow-wrap: anywhere; }
+
+html:has([role='dialog'][data-oc-mobile-safety="true"]) { overflow: hidden; overscroll-behavior: none; }
+.fixed.inset-0:has(> [role='dialog'][data-oc-mobile-safety="true"]) { overflow-x: hidden; overscroll-behavior: contain; }

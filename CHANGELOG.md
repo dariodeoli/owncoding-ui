@@ -4,6 +4,12 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.68.14 — 2026-10-16
+
+- Diálogos: proveedor `DialogMobileSafety`, prop `mobileSafe` y hook opt-in para proteger formularios móviles del paneo automático al enfocar.
+- Conserva zoom elegido, carruseles horizontales, foco anidado y comportamiento original en aplicaciones que no activan la opción.
+- Galería: demostración móvil y guía de migración desde Agendese.
+
 ## v0.68.13 — 2026-10-15
 
 - **Diálogos anidados (MobOS #499):** al abrir una capa se actualizan también sus padres, para que solo la superior exponga `aria-modal`; se conservan Tab, Escape, retorno de foco y bloqueo de scroll al cerrar o desmontar.
