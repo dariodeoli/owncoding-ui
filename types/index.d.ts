@@ -158,7 +158,11 @@ export function Card(props: HTMLAttributes<HTMLDivElement>): ReactElement
 
 export type TamanoModal = 'corto' | 'formulario' | 'amplio' | 'completo'
 export type TextosDescarte = { titulo?: string; descripcion?: ReactNode; confirmar?: string; seguir?: string }
-export function Modal(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; size?: TamanoModal; className?: string; busy?: boolean; dirty?: boolean; descarte?: TextosDescarte }): ReactElement | null
+export function Modal(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; size?: TamanoModal; className?: string; busy?: boolean; dirty?: boolean; descarte?: TextosDescarte; mobileSafe?: boolean }): ReactElement | null
+/** Opt-in de fuentes móviles y protección de paneo para Modal/Drawer, incluso en portales. */
+export function DialogMobileSafety(props: { children?: ReactNode; enabled?: boolean }): ReactElement
+/** El overlay propio debe marcar data-oc-mobile-safety con el booleano devuelto. */
+export function useDialogMobileSafety(open: boolean, ref: RefObject<HTMLElement>, options?: { enabled?: boolean; topmost?: boolean }): boolean
 export function FormActions(props: { children?: ReactNode; className?: string }): ReactElement
 export function SaveActions(props: { pendiente?: boolean; children?: ReactNode; cancelLabel?: string | false; className?: string }): ReactElement
 export function useDialogClose(): (() => void) | undefined
@@ -180,7 +184,7 @@ export function ConfirmDialog(props: {
 export function Badge(props: HTMLAttributes<HTMLSpanElement> & { color?: 'blue' | 'green' | 'red' | 'orange' | 'yellow' | 'slate' }): ReactElement
 export function Dot(props: { color?: 'green' | 'red' | 'blue' | 'slate' | 'orange'; pulse?: boolean; className?: string }): ReactElement
 export function IconAction(props: { icon: string; label: string; tone?: Tono; onClick?: () => void; disabled?: boolean; size?: 'sm' | 'touch' }): ReactElement
-export function Drawer(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; side?: 'left' | 'right'; className?: string; busy?: boolean; dirty?: boolean; descarte?: TextosDescarte }): ReactElement | null
+export function Drawer(props: { open: boolean; onClose?: () => void; title?: ReactNode; children?: ReactNode; side?: 'left' | 'right'; className?: string; busy?: boolean; dirty?: boolean; descarte?: TextosDescarte; mobileSafe?: boolean }): ReactElement | null
 export type ToastAction = { label: string; onClick: () => void }
 export type ToastOptions = { duration?: number; persistent?: boolean; action?: ToastAction; undo?: ToastAction }
 export type ToastMethod = {

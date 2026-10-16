@@ -11,6 +11,7 @@ import { CIERRE_CON_CAMBIOS, TAMANO_MODAL_PREDETERMINADO, TAMANOS_MODAL } from '
 import { mensajeFallo, mensajeResultado } from '../utils/resultado.js'
 import { textoDeTono } from '../utils/tonos.js'
 import useDialogFocusTrap from '../hooks/useDialogFocusTrap.js'
+import { DialogMobileSafety, useDialogMobileSafety } from '../hooks/useDialogMobileSafety.js'
 import { crearRegistroPendientes } from '../utils/pilaOverlays.js'
 import { PIE_ACCIONES } from '../utils/formulario.js'
 import Icon from './Icon.jsx'
@@ -517,7 +518,7 @@ export function SaveActions({ pendiente = false, children, cancelLabel = 'Cancel
 // Con `dirty` (o con formularios que usan `useDialogDirty`) el cierre pide
 // confirmación en vez de descartar los cambios (#323); el guardado real cierra
 // por `onClose` directo y no pregunta.
-export function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO, busy = false, dirty = false, descarte }) {
+export function Modal({ open, onClose, title, children, className, size = TAMANO_MODAL_PREDETERMINADO, busy = false, dirty = false, descarte, mobileSafe }) {
   const dialog = useRef(null)
   const titleId = useId()
   const [pie, setPie] = useState(null)
@@ -537,6 +538,7 @@ export function Modal({ open, onClose, title, children, className, size = TAMANO
     onClose?.()
   }, [bloqueado, hayCambios, onClose])
   const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, dialog, { busy: bloqueado })
+  const seguridadMovil = useDialogMobileSafety(open, dialog, { enabled: mobileSafe, topmost: esSuperior })
   const registrar = useCallback((id, pendiente) => {
     pendientes.registrar(id, pendiente)
     setHayPendientes(pendientes.bloqueado)
@@ -553,11 +555,13 @@ export function Modal({ open, onClose, title, children, className, size = TAMANO
   const textosDescarte = { ...CIERRE_CON_CAMBIOS, ...descarte }
   if (!open) return null
   return (
+    <DialogMobileSafety enabled={seguridadMovil}>
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 sm:items-center sm:p-6" onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
       <div
         ref={dialog}
         tabIndex={-1}
         role="dialog"
+        data-oc-mobile-safety={seguridadMovil ? 'true' : mobileSafe === false ? 'false' : undefined}
         aria-modal={esSuperior ? 'true' : undefined}
         aria-labelledby={titleId}
         aria-busy={bloqueado || undefined}
@@ -569,7 +573,7 @@ export function Modal({ open, onClose, title, children, className, size = TAMANO
         </div>
         <ContextoDialogo.Provider value={contexto}>
           <ContextoPie.Provider value={pie}>
-            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">{children}</div>
+            <div className={cn('min-h-0 flex-1 overflow-y-auto p-4 sm:p-6', seguridadMovil && 'oc-dialog-safe-body')}>{children}</div>
           </ContextoPie.Provider>
         </ContextoDialogo.Provider>
         <div ref={setPie} className="border-t border-ink-600 p-4 empty:hidden sm:px-6" />
@@ -587,6 +591,7 @@ export function Modal({ open, onClose, title, children, className, size = TAMANO
         />
       )}
     </div>
+    </DialogMobileSafety>
   )
 }
 
@@ -701,7 +706,7 @@ export function IconAction({ icon, label, tone = 'mute', onClick, disabled = fal
 // scroll bloqueado salen del mismo hook que el Modal. Entra deslizándose
 // desde el costado. Igual que el Modal, con `dirty` el cierre confirma antes
 // de descartar los cambios (#323).
-export function Drawer({ open, onClose, title, children, side = 'right', className, busy = false, dirty = false, descarte }) {
+export function Drawer({ open, onClose, title, children, side = 'right', className, busy = false, dirty = false, descarte, mobileSafe }) {
   const panel = useRef(null)
   const titleId = useId()
   const [pie, setPie] = useState(null)
@@ -721,6 +726,7 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
     onClose?.()
   }, [bloqueado, hayCambios, onClose])
   const { esSuperior, requestClose } = useDialogFocusTrap(open, cerrar, panel, { busy: bloqueado })
+  const seguridadMovil = useDialogMobileSafety(open, panel, { enabled: mobileSafe, topmost: esSuperior })
   const registrar = useCallback((id, pendiente) => {
     pendientes.registrar(id, pendiente)
     setHayPendientes(pendientes.bloqueado)
@@ -737,11 +743,13 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
   const textosDescarte = { ...CIERRE_CON_CAMBIOS, ...descarte }
   if (!open) return null
   return (
+    <DialogMobileSafety enabled={seguridadMovil}>
     <div className="fixed inset-0 z-50 bg-black/60" onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
       <div
         ref={panel}
         tabIndex={-1}
         role="dialog"
+        data-oc-mobile-safety={seguridadMovil ? 'true' : mobileSafe === false ? 'false' : undefined}
         aria-modal={esSuperior ? 'true' : undefined}
         aria-labelledby={titleId}
         aria-busy={bloqueado || undefined}
@@ -757,7 +765,7 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
         </div>
         <ContextoDialogo.Provider value={contexto}>
           <ContextoPie.Provider value={pie}>
-            <div className="flex-1 overflow-y-auto p-4 sm:p-5">{children}</div>
+            <div className={cn('flex-1 overflow-y-auto p-4 sm:p-5', seguridadMovil && 'oc-dialog-safe-body')}>{children}</div>
           </ContextoPie.Provider>
         </ContextoDialogo.Provider>
         <div ref={setPie} className="border-t border-ink-600 p-4 empty:hidden" />
@@ -775,6 +783,7 @@ export function Drawer({ open, onClose, title, children, side = 'right', classNa
         />
       )}
     </div>
+    </DialogMobileSafety>
   )
 }
 

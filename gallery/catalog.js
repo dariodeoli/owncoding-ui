@@ -3,6 +3,8 @@
 // aprobados se renderizan en la galería. scripts/gallery-check.mjs exige paridad.
 
 export const CATALOGO_EXPORTS = [
+{"nombre": "DialogMobileSafety", "tipo": "visual", "categoria": "Componentes generales", "presentacion": "individual"},
+{"nombre": "useDialogMobileSafety", "tipo": "api", "categoria": "API y modelos"},
 {"nombre": "FormulariosPro", "tipo": "visual", "categoria": "Campos y formularios", "presentacion": "individual"},
 {"nombre": "useFormulariosPro", "tipo": "api", "categoria": "API y modelos"},
 {"nombre": "mapOwnDataRucResponse", "tipo": "api", "categoria": "API y modelos"},
