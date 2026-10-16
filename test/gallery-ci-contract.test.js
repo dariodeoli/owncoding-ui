@@ -25,7 +25,7 @@ describe('contrato publico de la galeria', () => {
       api,
       curadas,
       categorias: CATEGORIAS_CATALOGO.length,
-    }).toEqual({ total: 602, visuales: 171, api: 431, curadas: 171, categorias: 14 })
+    }).toEqual({ total: 604, visuales: 172, api: 432, curadas: 172, categorias: 14 })
 
     expect(DESTACADOS_CATALOGO.map((item) => item.destacado.id)).toEqual([
       'bancos-pagos',

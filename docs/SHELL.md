@@ -279,3 +279,49 @@ de marca, encabezados de tabla, números en verde y el degradado de los heroes.
 Adopción: subir la dependencia al tag **v0.26.0**, poner `v2-chip` en las filas
 y borrar el bloque local. Referencia real: MobOS `src/index.css` y
 `docs/AUDITORIA-DUPLICACION.md` (lote 32).
+
+
+## Protección móvil de diálogos (opt-in, Agendese #258)
+
+`Modal` y `Drawer` conservan su comportamiento predeterminado. Para evitar el
+zoom automático de Safari al enfocar controles pequeños y el paneo del cursor,
+activá `mobileSafe` en una instancia o un proveedor para la app:
+
+```jsx
+import { DialogMobileSafety, Modal } from 'owncoding-ui'
+<DialogMobileSafety>
+  <Modal open={abierto} onClose={cerrar} title="Cliente">{formulario}</Modal>
+</DialogMobileSafety>
+```
+
+El proveedor pasa por los portales de React y se hereda en confirmaciones
+anidadas. `mobileSafe={false}` permite una excepción. Requiere importar
+`owncoding-ui/base.css` o `owncoding-ui/styles.css`; solo los diálogos opt-in
+reciben fuente de 16 px bajo 640 px, contención de scroll y cuerpos sin paneo X.
+El viewport no cambia: el zoom manual sigue disponible y, mientras la escala
+visual difiere de 1, el guard no repone el scroll.
+
+Las tablas/carruseles conservan su `overflow-x: auto/scroll`. Para un contenedor
+propio usá `data-oc-scroll-x` junto con su estilo de scroll horizontal. No pongas
+un ancho mínimo mayor al diálogo en el contenedor exterior: el contenido ancho
+va dentro del carrusel. El foco y Esc continúan a cargo de la pila existente;
+solo la capa superior repara el paneo y todos los timers/listeners se liberan
+al cerrar, desmontar o desactivar.
+
+Para un overlay propio, `useDialogMobileSafety(open, ref, { enabled: true,
+topmost })` devuelve el booleano que se coloca como
+`data-oc-mobile-safety={String(enabled)}` en su `role="dialog"`. Pasá el estado
+superior de tu pila: este hook no reemplaza la trampa de foco.
+
+Migración de Agendese: tras actualizar la dependencia, envolver la app en el
+proveedor, adaptar los diálogos propios con el hook y verificar foco/teclado,
+zoom y carruseles. Luego quitar `GuardaPaneoModal` y las reglas equivalentes de
+`globals.css`; no duplicar ambos guards. Los controles fuera de diálogos que
+necesiten 16 px pueden conservar su regla local. No se cambia ninguna app al
+actualizar la dependencia hasta activar este opt-in.
+
+Verificación en Chromium real (4 capturas en el directorio temporal): iniciar
+`npm run gallery:dev -- --host 127.0.0.1 --port 5198`, después ejecutar
+`node scripts/qa-dialog-mobile-safety.mjs` con Playwright disponible. El script
+comprueba fuentes calculadas, ancho de página, carrusel X y foco/Esc anidado;
+`QA_GALLERY_URL` y `PLAYWRIGHT_MODULE` permiten usar el entorno de QA existente.

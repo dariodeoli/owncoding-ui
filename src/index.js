@@ -46,6 +46,7 @@ export {
   CeldaMoneda,
   BarraProgreso,
 } from './components/ui.jsx'
+export { DialogMobileSafety, useDialogMobileSafety } from './hooks/useDialogMobileSafety.js'
 export { default as useComboboxNavigation } from './hooks/useComboboxNavigation.js'
 
 // Campos y objetos compartidos

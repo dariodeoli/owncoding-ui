@@ -5,7 +5,7 @@ import {
   PasswordInput, PinInput, SearchField, IconAction, Card, ErrorState, Nota, Input,
   EmailField, MoneyInput, Money, CurrencyConversion, SerialField, RangoFecha, Label, ThemeToggle,
   BuscadorCliente, DataTable, SegmentedField, ListGridToggle, PageHeader,
-  Modal, Drawer, ConfirmDialog, EstadoGuardado, BarraProgreso, ProgresoChecklist,
+  DialogMobileSafety, Modal, Drawer, ConfirmDialog, EstadoGuardado, BarraProgreso, ProgresoChecklist,
   ProductFooter, ProductPrefooter, Button, crearIdentidadApp, FormulariosPro, Checkbox, Switch, Select,
 } from '../src/index.js'
 import { crearCorreoTransaccional, renderCorreoHtml, renderCorreoTexto } from '../src/email/index.js'
@@ -32,6 +32,7 @@ function BasicPreview({ name }) {
   const [muestra, setMuestra] = useState('')
   const field = (label, element) => <div><Label htmlFor={id}>{label}</Label>{element}</div>
   switch (name) {
+    case 'DialogMobileSafety': return <MobileSafetyPreview />
     case 'PasswordInput': return field('Contraseña de muestra', <PasswordInput id={id} defaultValue="demo-only" />)
     case 'PinInput': return field('PIN de muestra', <PinInput id={id} ariaLabel="PIN de muestra" value={value} onChange={setValue} />)
     case 'SearchField': return <SearchField ariaLabel="Búsqueda de muestra" value={value} onChange={event => setValue(event.target.value)} />
@@ -74,4 +75,25 @@ export function EmailPreview() {
   const [format, setFormat] = useState('html')
   const email = useMemo(() => crearCorreoTransaccional({ identidad: identity, asunto: 'Operación de muestra', motivo: 'Tu operación ficticia está lista para revisar.', detalles: [{ etiqueta: 'Referencia', valor: 'DEMO-001' }], cierre: 'Preview local. No se envió ningún correo.' }), [])
   return <details open className="rounded-2xl border border-ink-600 bg-ink p-4"><summary className="min-h-11 cursor-pointer font-bold">Correo transaccional · HTML y texto</summary><div className="grid gap-3 pt-3"><p className="text-sm text-mute">Renderer existente del subpath owncoding-ui/email. Fixture local, sin envío ni API.</p><SegmentedField ariaLabel="Formato del correo" value={format} onChange={setFormat} options={[[ 'html', 'HTML' ], ['text', 'Texto']]} />{format === 'html' ? <iframe title="Correo HTML de muestra" sandbox="" srcDoc={renderCorreoHtml(email)} className="h-96 w-full rounded-xl border border-ink-600 bg-white" /> : <pre className="whitespace-pre-wrap break-words text-sm">{renderCorreoTexto(email)}</pre>}</div></details>
+}
+
+function MobileSafetyPreview() {
+  const [open, setOpen] = useState(false)
+  const [nested, setNested] = useState(false)
+  return <DialogMobileSafety>
+    <Button onClick={() => setOpen(true)}>Probar diálogo móvil</Button>
+    <Modal open={open} title="Formulario móvil" onClose={() => setOpen(false)}>
+      <div className="grid gap-4">
+        <p className="text-sm text-mute">Los campos conservan 16 px en móvil; podés ampliar la página. La lista de horarios se desplaza dentro del diálogo.</p>
+        <Label htmlFor="mobile-safe-input">Nombre</Label><Input id="mobile-safe-input" className="text-sm" defaultValue="Cliente de muestra" />
+        <Label htmlFor="mobile-safe-select">Servicio</Label><Select id="mobile-safe-select" className="text-sm"><option>Atención</option></Select>
+        <Label htmlFor="mobile-safe-textarea">Referencia</Label><textarea id="mobile-safe-textarea" className="text-sm w-full rounded-lg border border-ink-600 bg-ink p-3" defaultValue="Texto de muestra" />
+        <div aria-label="Horarios" tabIndex={0} className="flex gap-3 overflow-x-auto" data-oc-scroll-x>
+          {Array.from({ length: 12 }, (_, index) => <Button key={index} className="shrink-0">{8 + index}:00</Button>)}
+        </div>
+        <Button variant="outline" onClick={() => setNested(true)}>Abrir diálogo anidado</Button>
+        <Drawer open={nested} title="Diálogo anidado" onClose={() => setNested(false)}><Label htmlFor="mobile-safe-nested">Detalle</Label><Input id="mobile-safe-nested" className="text-sm" defaultValue="Campo del diálogo superior" /></Drawer>
+      </div>
+    </Modal>
+  </DialogMobileSafety>
 }

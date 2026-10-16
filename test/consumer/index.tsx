@@ -150,3 +150,10 @@ void supplierContracts; void compactRucContract
 
 const supplierFormattedContract = <BuscadorProveedor selectedId="p1" value="p1" formatearValor={proveedor => [proveedor.code, proveedor.name || proveedor.nombre].filter(Boolean).join(' · ')} onSelect={proveedor => void proveedor.id} confirmarAlSalir onLibre={texto => void texto} />
 void supplierFormattedContract
+
+import { Modal, Drawer, DialogMobileSafety, useDialogMobileSafety } from 'owncoding-ui'
+export function MobileSafeConsumer() {
+  const ref = createRef<HTMLDivElement>()
+  const enabled = useDialogMobileSafety(false, ref, { enabled: true, topmost: true })
+  return <DialogMobileSafety><Modal open={false} mobileSafe title="Formulario" /><Drawer open={false} mobileSafe={false} /><div ref={ref} role="dialog" data-oc-mobile-safety={String(enabled)} /></DialogMobileSafety>
+}
