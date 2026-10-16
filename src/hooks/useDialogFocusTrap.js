@@ -78,7 +78,9 @@ export default function useDialogFocusTrap(open, onClose, ref, { initialFocus, b
     }
     const actualizar = () => setEsSuperior(pila.esSuperior(id))
     oyentes.add(actualizar)
-    actualizar()
+    // Al abrir otra capa también cambia el estado accesible de las anteriores.
+    // Avisar antes del foco mantiene una única capa modal tras cada montaje.
+    avisar()
     const inicial = opciones.current.initialFocus?.() ?? contenedor
     if (pila.esSuperior(id)) inicial?.focus?.()
 

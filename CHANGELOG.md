@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.68.13 — 2026-10-15
+
+- **Diálogos anidados (MobOS #499):** al abrir una capa se actualizan también sus padres, para que solo la superior exponga `aria-modal`; se conservan Tab, Escape, retorno de foco y bloqueo de scroll al cerrar o desmontar.
+
 ## v0.68.12 — 2026-10-15
 
 - **Proveedor seleccionado:** `formatearValor(proveedor)` permite mostrar sigla y nombre en el campo sin modificar la presentación habitual ni duplicar el chip de las opciones.
