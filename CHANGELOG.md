@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.13 — 2026-10-15
 
 - **Diálogos anidados (MobOS #499):** al abrir una capa se actualizan también sus padres, para que solo la superior exponga `aria-modal`; se conservan Tab, Escape, retorno de foco y bloqueo de scroll al cerrar o desmontar.
 
