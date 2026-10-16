@@ -162,7 +162,7 @@ export function Modal(props: { open: boolean; onClose?: () => void; title?: Reac
 /** Opt-in de fuentes móviles y protección de paneo para Modal/Drawer, incluso en portales. */
 export function DialogMobileSafety(props: { children?: ReactNode; enabled?: boolean }): ReactElement
 /** El overlay propio debe marcar data-oc-mobile-safety con el booleano devuelto. */
-export function useDialogMobileSafety(open: boolean, ref: RefObject<HTMLElement>, options?: { enabled?: boolean; topmost?: boolean }): boolean
+export function useDialogMobileSafety(open: boolean, ref: RefObject<HTMLElement | null>, options?: { enabled?: boolean; topmost?: boolean }): boolean
 export function FormActions(props: { children?: ReactNode; className?: string }): ReactElement
 export function SaveActions(props: { pendiente?: boolean; children?: ReactNode; cancelLabel?: string | false; className?: string }): ReactElement
 export function useDialogClose(): (() => void) | undefined

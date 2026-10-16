@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.68.15 — 2026-10-16
+
+- Tipos: el hook de seguridad móvil acepta refs inicialmente nulas en consumidores React 19 y React 18.
+
 ## v0.68.14 — 2026-10-16
 
 - Diálogos: proveedor `DialogMobileSafety`, prop `mobileSafe` y hook opt-in para proteger formularios móviles del paneo automático al enfocar.
