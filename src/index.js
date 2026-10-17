@@ -569,3 +569,5 @@ export { default as ProductVariantSelector } from './components/ProductVariantSe
 export { default as PricingCard } from './components/PricingCard.jsx'
 
 export { mapOwnDataRucResponse, mapOwnDataRucError, createOwnDataRucProvider } from './utils/ownDataRuc.js'
+
+export { default as TimeInput } from './components/TimeInput.jsx'

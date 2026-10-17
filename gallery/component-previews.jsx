@@ -2,11 +2,11 @@ import { previewGroup } from './preview-registry.js'
 import { DeferredPreview } from './deferred-preview.jsx'
 import React, { useId, useMemo, useState } from 'react'
 import {
-  PasswordInput, PinInput, SearchField, IconAction, Card, ErrorState, Nota, Input,
+  TimeInput, PasswordInput, PinInput, SearchField, IconAction, Card, ErrorState, Nota, Input,
   EmailField, MoneyInput, Money, CurrencyConversion, SerialField, RangoFecha, Label, ThemeToggle,
   BuscadorCliente, DataTable, SegmentedField, ListGridToggle, PageHeader,
   DialogMobileSafety, Modal, Drawer, ConfirmDialog, EstadoGuardado, BarraProgreso, ProgresoChecklist,
-  ProductFooter, ProductPrefooter, Button, crearIdentidadApp, FormulariosPro, Checkbox, Switch, Select,
+  ProductFooter, ProductPrefooter, FormField, Button, crearIdentidadApp, FormulariosPro, Checkbox, Switch, Select,
 } from '../src/index.js'
 import { crearCorreoTransaccional, renderCorreoHtml, renderCorreoTexto } from '../src/email/index.js'
 import packageJson from '../package.json'
@@ -33,6 +33,7 @@ function BasicPreview({ name }) {
   const field = (label, element) => <div><Label htmlFor={id}>{label}</Label>{element}</div>
   switch (name) {
     case 'DialogMobileSafety': return <MobileSafetyPreview />
+    case 'TimeInput': return <div className="grid gap-3"><FormField label="Hora de muestra" htmlFor={id} hint="Escribí 8, 830 u 08:30; ↑↓ cambia un minuto."><TimeInput id={id} value={value} onValueChange={setValue} /></FormField><FormField label="Horario de atención (09:00–18:00)" htmlFor={`${id}-rango`}><TimeInput id={`${id}-rango`} min="09:00" max="18:00" stepMinutes={15} defaultValue="09:00" /></FormField><FormField label="Hora deshabilitada" htmlFor={`${id}-disabled`}><TimeInput id={`${id}-disabled`} disabled defaultValue="12:30" /></FormField></div>
     case 'PasswordInput': return field('Contraseña de muestra', <PasswordInput id={id} defaultValue="demo-only" />)
     case 'PinInput': return field('PIN de muestra', <PinInput id={id} ariaLabel="PIN de muestra" value={value} onChange={setValue} />)
     case 'SearchField': return <SearchField ariaLabel="Búsqueda de muestra" value={value} onChange={event => setValue(event.target.value)} />
