@@ -212,6 +212,8 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
   const display = soloEnteros ? formatGsInput(String(value ?? '').split('.')[0]) : formatUsdInput(value)
   const excede = excedeMonto(value, max)
   const inputRef = useRef(null)
+  const restaurarCaret = useRef(null)
+  useLayoutEffect(() => { restaurarCaret.current?.() })
   const establecerRef = useCallback((node) => {
     inputRef.current = node
     if (typeof ref === 'function') ref(node)
@@ -234,22 +236,71 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
         onKeyDown={(evento) => {
           onKeyDown?.(evento)
           if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return
+          const input = evento.currentTarget
           const permitidos = soloEnteros ? '0123456789' : '0123456789.,'
           if (evento.key.length === 1 && !permitidos.includes(evento.key)) evento.preventDefault()
+          // El separador escrito elige la fracción ya dibujada por el formato;
+          // no se inserta delante de «,00», donde perdería su posición al
+          // normalizar. Seleccionarla permite reemplazar los centavos existentes.
+          if (!soloEnteros && (evento.key === '.' || evento.key === ',')) {
+            if (input.selectionStart === 0 && input.selectionEnd === input.value.length) {
+              evento.preventDefault()
+              restaurarCaret.current = () => {
+                restaurarCaret.current = null
+                input.setSelectionRange(2, input.value.length)
+              }
+              onValueChange?.('0')
+              input.setSelectionRange(2, input.value.length)
+            }
+            else if (input.value && input.selectionStart === input.selectionEnd) {
+              evento.preventDefault()
+              const coma = input.value.lastIndexOf(',')
+              if (coma >= 0) input.setSelectionRange(coma + 1, input.value.length)
+            }
+          }
+          // La fracción tiene dos posiciones fijas: reemplazar el dígito que
+          // sigue al caret evita producir «,250» (ambiguo con miles al pegar).
+          if (!soloEnteros && /^\d$/.test(evento.key)) {
+            const coma = input.value.lastIndexOf(',')
+            const inicio = input.selectionStart
+            if (coma >= 0 && inicio > coma && inicio === input.selectionEnd && inicio < input.value.length) {
+              input.setSelectionRange(inicio, inicio + 1)
+            } else if (coma >= 0 && inicio === input.value.length && inicio === input.selectionEnd) {
+              evento.preventDefault()
+            }
+          }
+          if (!soloEnteros && (evento.key === 'Backspace' || evento.key === 'Delete')) {
+            const coma = input.value.lastIndexOf(',')
+            const inicio = input.selectionStart
+            if (coma >= 0 && inicio === input.selectionEnd &&
+              ((evento.key === 'Backspace' && inicio === coma + 1) || (evento.key === 'Delete' && inicio === coma))) {
+              evento.preventDefault()
+              const caret = evento.key === 'Backspace' ? coma : coma + 1
+              input.setSelectionRange(caret, caret)
+            }
+          }
         }}
         onChange={(evento) => {
           const input = evento.currentTarget ?? evento.target
           const antes = input.value.slice(0, input.selectionStart ?? input.value.length)
           const digitosAntes = (antes.match(/\d/g) || []).length
+          const coma = input.value.lastIndexOf(',')
+          const fraccionAntes = !soloEnteros && coma >= 0 && (input.selectionStart ?? 0) > coma
+            ? (antes.slice(coma + 1).match(/\d/g) || []).length : null
           const normalizado = normalizarMontoInput(input.value, currency, { integerOnly })
-          onValueChange?.(soloEnteros ? (normalizado ? Number(normalizado) : '') : normalizado)
-          if (typeof requestAnimationFrame !== 'function') return
-          requestAnimationFrame(() => {
+          restaurarCaret.current = () => {
+            restaurarCaret.current = null
             const nodo = inputRef.current
             if (!nodo || document.activeElement !== nodo) return
-            const caret = caretTrasDigitos(nodo.value, digitosAntes)
+            const caret = fraccionAntes !== null
+              ? nodo.value.lastIndexOf(',') + 1 + Math.min(fraccionAntes, 2)
+              : caretTrasDigitos(nodo.value, digitosAntes)
             nodo.setSelectionRange?.(caret, caret)
-          })
+          }
+          onValueChange?.(soloEnteros ? (normalizado ? Number(normalizado) : '') : normalizado)
+          // Si el padre conserva el mismo valor no habrá commit; restaurar
+          // también en ese caso, sin retrasar el caret del siguiente teclado.
+          if (typeof requestAnimationFrame === 'function') requestAnimationFrame(() => restaurarCaret.current?.())
         }}
         className={cn(TAMANOS_CAMPO.moneda, 'tabular-nums [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none', className)}
       />
