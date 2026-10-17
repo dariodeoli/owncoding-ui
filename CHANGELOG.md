@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.68.18 — 2026-10-17
+
+- **Carga de consumidores comunes (#57, Scale #252):** separar `cn` en un chunk compartido sin arte financiero mediante una entrada privada de build. El consumidor medido Button/cn/normalizarNombre pasa de2,68MB a65,8KB sin imágenes bancarias; el resultado no representa el tamaño completo de una aplicación. API, CSS, logos, resolvers, identidad y SSR financieros conservados.
+
 ## v0.68.17 — 2026-10-17
 
 - **Controles RAW (#55, Scale #241):** primitivas opt-in InputBase/TextareaBase y motor único NumericControl/NumberInput/PercentageInput, refs/eventos nativos, validación decimal exacta y subpath puro `number-utils`. API existente y CSS sin cambios. Véase `docs/NUMERIC-RAW.md`.
