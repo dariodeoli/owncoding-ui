@@ -1259,9 +1259,10 @@ export function FormField({ label, hint, error, children, htmlFor, descripcionId
   if (etiquetaFlotante && label && !htmlFor && typeof console !== 'undefined') {
     console.warn('FormField: `etiquetaFlotante` necesita `htmlFor` para asociar el label al control; se muestra el label de siempre.')
   }
-  const control = ((error || hint) && mensajeId) || requerido || flotante
-    ? relacionarControl(children, { htmlFor, mensajeId: (error || hint) ? mensajeId : undefined, error, requerido, flotante })
-    : children
+  // Recorrer siempre conserva los mismos keys cuando aparece/desaparece la
+  // validación. Alternar Children.map y el hijo directo remonta el input y
+  // pierde foco, selección y edición en curso (por ejemplo, escribir «0.10»).
+  const control = relacionarControl(children, { htmlFor, mensajeId: (error || hint) ? mensajeId : undefined, error, requerido, flotante })
   const asterisco = requerido && <span aria-hidden="true" data-oc-requerido="" className="ml-0.5 text-bad-text">*</span>
   const campo = flotante ? (
     <div className="relative" data-oc-flotante="">
