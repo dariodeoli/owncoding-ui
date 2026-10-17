@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.17 — 2026-10-17
 
 - **Controles RAW (#55, Scale #241):** primitivas opt-in InputBase/TextareaBase y motor único NumericControl/NumberInput/PercentageInput, refs/eventos nativos, validación decimal exacta y subpath puro `number-utils`. API existente y CSS sin cambios. Véase `docs/NUMERIC-RAW.md`.
 
