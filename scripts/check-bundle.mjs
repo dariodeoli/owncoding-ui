@@ -11,12 +11,14 @@ const budgets = {
   'dist/financial.js': { raw: 2_669_000, gzip: 1_844_000 },
   'dist/financial-metadata.js': { raw: 43_216, gzip: 8_109 },
   'dist/app-identity.js': { raw: 3_000, gzip: 1_500 },
+  'dist/numeric.js': { raw: 15_000, gzip: 6_000 },
+  'dist/number-utils.js': { raw: 7_000, gzip: 3_000 },
   'dist/email.js': { raw: 9_000, gzip: 3_500 },
 }
 
 let fallo = false
 for (const [archivo, limite] of Object.entries(budgets)) {
-  const { raw, gzip, files } = await measureClosure(archivo, { pure: !['dist/index.js', 'dist/financial.js', 'dist/phone.js'].includes(archivo) })
+  const { raw, gzip, files } = await measureClosure(archivo, { pure: !['dist/index.js', 'dist/financial.js', 'dist/phone.js', 'dist/numeric.js'].includes(archivo) })
   const tamanos = { raw, gzip }
   const excedidos = Object.entries(tamanos).filter(([tipo, bytes]) => bytes > limite[tipo])
   console.log(`${archivo} (${files.length} reachable files): ${tamanos.raw} B raw / ${tamanos.gzip} B gzip (budget ${limite.raw}/${limite.gzip})`)

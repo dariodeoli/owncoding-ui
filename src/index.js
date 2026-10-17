@@ -569,3 +569,6 @@ export { default as ProductVariantSelector } from './components/ProductVariantSe
 export { default as PricingCard } from './components/PricingCard.jsx'
 
 export { mapOwnDataRucResponse, mapOwnDataRucError, createOwnDataRucProvider } from './utils/ownDataRuc.js'
+
+// Primitivas RAW opt-in; no reemplazan Input, PercentField ni MoneyInput.
+export {InputBase,TextareaBase,NumericControl,NumberInput,PercentageInput,numberInputProblem,numberInputValid,nativeNumberSettings} from './numeric/index.js'

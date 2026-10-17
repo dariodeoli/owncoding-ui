@@ -41,6 +41,13 @@ export async function runPackageSmoke() {
       import * as metadata from 'owncoding-ui/financial-metadata'
       import * as identity from 'owncoding-ui/app-identity'
       import * as email from 'owncoding-ui/email'
+      import * as numeric from 'owncoding-ui/numeric'
+      import * as numberUtils from 'owncoding-ui/number-utils'
+      for (const name of ['InputBase','TextareaBase','NumericControl','NumberInput','PercentageInput','numberInputProblem','numberInputValid','nativeNumberSettings']) {
+        if (!numeric[name] || root[name] !== numeric[name]) throw new Error('numeric identity changed: '+name)
+      }
+      for (const name of ['numberInputProblem','numberInputValid','nativeNumberSettings']) if (numeric[name] !== numberUtils[name]) throw new Error('pure identity changed: '+name)
+      if (numberUtils.numberInputProblem('9007199254740993','integer',{max:'9007199254740992'}) !== 'El valor máximo es 9007199254740992.') throw new Error('exact integer validation changed')
       if (!root.Button || !root.CargaIA || !utils.formatGs || !phone.PhoneField || !financial.BancoLogo) throw new Error('exports visuales ausentes')
       if (!ia.motorIA || !metadata.LOGOS_BANCOS || !identity.crearIdentidadApp || !email.renderCorreoHtml) throw new Error('exports puros ausentes')
       if (metadata.logoDeBanco('ueno bank')?.visual?.asset) throw new Error('financial-metadata no debe incluir bytes visuales')
@@ -64,12 +71,15 @@ export async function runPackageSmoke() {
     execFileSync(process.execPath, ['smoke.mjs'], { cwd: app, stdio: 'inherit' })
 
     const paquete = resolve(app, 'node_modules/owncoding-ui')
-    for (const archivo of ['dist/index.d.ts', 'dist/utils.d.ts', 'dist/ia.d.ts', 'dist/phone.d.ts', 'dist/financial.d.ts', 'dist/financial-metadata.d.ts', 'dist/app-identity.d.ts', 'dist/email.d.ts']) {
+    for (const archivo of ['dist/index.d.ts', 'dist/utils.d.ts', 'dist/ia.d.ts', 'dist/phone.d.ts', 'dist/financial.d.ts', 'dist/financial-metadata.d.ts', 'dist/app-identity.d.ts', 'dist/email.d.ts', 'dist/numeric.d.ts', 'dist/number-utils.d.ts']) {
       readFileSync(join(paquete, archivo))
     }
     const visualClosure = await measureClosure(join(paquete, 'dist/financial.js'), { distRoot: join(paquete, 'dist') })
     await measureClosure(join(paquete, 'dist/index.js'), { distRoot: join(paquete, 'dist') })
     await measureClosure(join(paquete, 'dist/financial-metadata.js'), { distRoot: join(paquete, 'dist'), pure: true })
+    await measureClosure(join(paquete, 'dist/number-utils.js'), { distRoot: join(paquete, 'dist'), pure: true })
+    const numericClosure = await measureClosure(join(paquete, 'dist/numeric.js'), { distRoot: join(paquete, 'dist') })
+    if (numericClosure.files.some(file => /data:image|react-dom|@base-ui/.test(file.source))) throw new Error('numeric closure reached unrelated visual dependencies')
     if (!visualClosure.files.some(file => file.source.includes('data:image/'))) throw new Error('financial closure has no artwork')
     const manifest = JSON.parse(readFileSync(join(paquete, 'docs/financial-assets-manifest.json'), 'utf8'))
     for (const asset of manifest.assets) {

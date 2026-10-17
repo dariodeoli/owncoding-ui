@@ -157,3 +157,30 @@ export function MobileSafeConsumer() {
   const enabled = useDialogMobileSafety(false, ref, { enabled: true, topmost: true })
   return <DialogMobileSafety><Modal open={false} mobileSafe title="Formulario" /><Drawer open={false} mobileSafe={false} /><div ref={ref} role="dialog" data-oc-mobile-safety={String(enabled)} /></DialogMobileSafety>
 }
+
+// Piloto RAW: refs nativos/eventos originales y subpaths tipados reales.
+import {InputBase, TextareaBase, NumericControl, NumberInput, PercentageInput} from 'owncoding-ui'
+import {NumericControl as NumericSubpath, type NumberInputProps} from 'owncoding-ui/numeric'
+import {numberInputProblem, numberInputValid, nativeNumberSettings, type NumberRules} from 'owncoding-ui/number-utils'
+export function NumericConsumer() {
+  const [value, setValue] = useState('')
+  const input = createRef<HTMLInputElement>()
+  const textarea = createRef<HTMLTextAreaElement>()
+  const rules: NumberRules = {min: '-1.25', step: '0.01', precision: 2}
+  const props: NumberInputProps = {value, onChange: setValue, policy: 'decimal'}
+  numberInputProblem(value, 'decimal')
+  numberInputValid(value, 'decimal', rules)
+  return <>
+    <InputBase ref={input} onChange={event => setValue(event.currentTarget.value)} pending describedBy="hint" />
+    <TextareaBase ref={textarea} onChange={event => setValue(event.currentTarget.value)} invalid />
+    <NumericControl ref={input} policy="integer" defaultValue="10" onChange={event => setValue(event.currentTarget.value)} />
+    <NumericSubpath {...nativeNumberSettings({min: '0.2'})} ref={input} notation="native" />
+    <NumberInput {...props} ref={input} />
+    <PercentageInput ref={input} policy="ratio" value={value} onChange={setValue} />
+  </>
+}
+// @ts-expect-error El facade string no fabrica eventos nativos.
+const invalidNumericCallback = <NumberInput policy="decimal" value="" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {}} />
+// @ts-expect-error El ref apunta a un input, no a un contenedor.
+const invalidNumericRef = <NumericControl policy="integer" ref={createRef<HTMLDivElement>()} />
+void invalidNumericCallback; void invalidNumericRef

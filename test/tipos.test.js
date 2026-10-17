@@ -7,7 +7,15 @@ import { existsSync, readFileSync } from 'node:fs'
 import * as runtime from '../src/index.js'
 
 const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
-const dts = readFileSync(new URL('../types/index.d.ts', import.meta.url), 'utf8')
+const rootDts = readFileSync(new URL('../types/index.d.ts', import.meta.url), 'utf8')
+// Seguir reexports reales: la API aditiva no necesita duplicar declaraciones.
+function declarations(url, seen = new Set()) {
+  if (seen.has(url.href)) return ''
+  seen.add(url.href)
+  const source = readFileSync(url, 'utf8')
+  return source + [...source.matchAll(/export \* from ['"](.+?)\.js['"]/g)].map(match => declarations(new URL(match[1] + '.d.ts', url), seen)).join('\n')
+}
+const dts = declarations(new URL('../types/index.d.ts', import.meta.url))
 const dist = new URL('../dist/index.d.ts', import.meta.url)
 const presetDts = readFileSync(new URL('../types/tailwind-preset.d.ts', import.meta.url), 'utf8')
 
@@ -24,7 +32,7 @@ describe('tipos publicados (.d.ts)', () => {
 
   test('el build copia las declaraciones al paquete (dist/index.d.ts)', () => {
     expect(existsSync(dist)).toBe(true)
-    expect(readFileSync(dist, 'utf8')).toBe(dts)
+    expect(readFileSync(dist, 'utf8')).toBe(rootDts)
   })
 
   test('los objetos principales y sus props están declarados', () => {

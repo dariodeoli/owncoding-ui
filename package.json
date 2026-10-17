@@ -48,7 +48,15 @@
       "types": "./types/tailwind-preset.d.ts",
       "default": "./tailwind-preset.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./numeric": {
+      "types": "./dist/numeric.d.ts",
+      "default": "./dist/numeric.js"
+    },
+    "./number-utils": {
+      "types": "./dist/number-utils.d.ts",
+      "default": "./dist/number-utils.js"
+    }
   },
   "engines": {
     "node": ">=24.15.0 <25"
