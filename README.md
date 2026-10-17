@@ -11,7 +11,7 @@
 
 <p align="center">
   <a href="https://github.com/dariodeoli/owncoding-ui/actions/workflows/ci.yml"><img alt="CI de la rama principal" src="https://github.com/dariodeoli/owncoding-ui/actions/workflows/ci.yml/badge.svg" /></a>
-  <img alt="Versión 0.68.18" src="https://img.shields.io/badge/versi%C3%B3n-0.68.18-2340E6" />
+  <img alt="Versión 0.68.19" src="https://img.shields.io/badge/versi%C3%B3n-0.68.19-2340E6" />
   <img alt="React 18 o superior" src="https://img.shields.io/badge/React-18%2B-2340E6" />
   <img alt="Objetivo WCAG 2.1 AA" src="https://img.shields.io/badge/objetivo-WCAG%202.1%20AA-555A63" />
 </p>
@@ -34,7 +34,7 @@
 
 La [identidad visual de la galería](docs/IDENTITY.md) es independiente de los tokens predeterminados de las aplicaciones consumidoras.
 
-La versión del paquete preparada en esta entrega es `v0.68.18`. El 17/10/2026,
+La versión del paquete preparada en esta entrega es `v0.68.19`. Incluye `owncoding-ui/financial-lazy` para cargar logos por institución visible, conservando el selector y los activos originales; ver [carga financiera diferida](docs/FINANCIAL-LAZY.md). El 17/10/2026,
 la comprobación pública de la galería desde el entorno cloud respondió HTTP 403;
 la evidencia histórica anterior no acredita un deploy de esta versión.
 
@@ -59,10 +59,10 @@ ficha consultable.
 
 ### 1. Instalar una versión fija
 
-La versión del paquete es `v0.68.18`. Al publicar su tag, la instalación fija es:
+La versión del paquete es `v0.68.19`. Al publicar su tag, la instalación fija es:
 
 ```bash
-npm install github:dariodeoli/owncoding-ui#v0.68.18
+npm install github:dariodeoli/owncoding-ui#v0.68.19
 ```
 
 Para probar la rama principal sin fijar un release:

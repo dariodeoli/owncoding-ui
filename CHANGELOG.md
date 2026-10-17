@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## v0.68.19 — 2026-10-17
+
+- **Recursos financieros diferidos (#61, Scale #254):** entrada opt-in `financial-lazy` con BancoLogoLazy y BancoComboboxLazy. Conserva el motor del selector y los activos originales compartidos; carga sólo las variantes de una institución visible, con fallback SSR, control de respuestas tardías y error terminal. No altera las APIs ni los datos de root/financial ni amplía presupuestos de bundle. Véase docs/FINANCIAL-LAZY.md.
+
 ## v0.68.18 — 2026-10-17
 
 - **Entrada cliente `core` (#59):** 55 componentes/helpers existentes sin arte financiero, con identidad compartida y tipos de la entrada pública raíz. Clausura completa146,9KB raw/42,9KB gzip sin depender de tree-shaking; pensada para referencias cliente de Next/RSC. Root y objetos financieros conservan compatibilidad.
