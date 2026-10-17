@@ -38,6 +38,9 @@ const compartido = await build({
   ...opciones,
   entryPoints: {
     index: 'src/index.js', financial: 'src/financial/index.js',
+    // Private partition seed: common class helpers must not share a chunk with
+    // financial artwork. No public package subpath/API is added.
+    'class-utils': 'src/utils/cn.js',
     numeric: 'src/numeric/index.js', 'number-utils': 'src/numeric/number-utils.js',
   },
   outdir: 'dist',
