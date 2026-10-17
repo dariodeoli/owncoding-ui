@@ -41,6 +41,9 @@ test('all resource data URLs and 108 legacy SSR cases remain byte-identical to s
 test('SSR fallback never requests a relative asset and hydrated/preloaded Continental preserves crop/a11y',async()=>{
  const lazy=await import('../dist/financial-lazy.js')
  expect(renderToStaticMarkup(React.createElement(lazy.BancoLogoLazy,{banco:''}))).toBe('')
+ const unknown=renderToStaticMarkup(React.createElement(lazy.BancoLogoLazy,{banco:'Banco manual sin catálogo'}))
+ expect(unknown).toContain('data-logo-carga="no-disponible"')
+ expect(unknown).not.toContain('<img')
  const fallback=renderToStaticMarkup(React.createElement(lazy.BancoLogoLazy,{banco:'Banco Continental',variante:'compacto'}))
  expect(fallback).not.toContain('<img')
  expect(fallback).toContain('Banco Continental')

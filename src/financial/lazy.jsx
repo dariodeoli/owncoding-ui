@@ -39,7 +39,7 @@ export function BancoLogoLazy({banco,variante='horizontal',recursoInicial,...pro
   if(!registro || (props.soloCatalogo && registro.generico))return null
   const visual = registro.visual || {}
   const resuelto = {...registro,visual:asset?{...visual,asset}:{...visual,archivo:undefined,asset:undefined,tipo:variante==='compacto'?'monograma':'texto'}}
-  return <span ref={slot} className="inline-flex min-w-0 max-w-full" data-logo-carga={asset?'listo':mismaCarga?carga.estado:'pendiente'}><LogoFinanciero nombre={banco} registro={resuelto} {...props} /></span>
+  return <span ref={slot} className="inline-flex min-w-0 max-w-full" data-logo-carga={asset?'listo':!clave?'no-disponible':mismaCarga?carga.estado:'pendiente'}><LogoFinanciero nombre={banco} registro={resuelto} {...props} /></span>
 }
 
 export function BancoComboboxLazy(props) {
