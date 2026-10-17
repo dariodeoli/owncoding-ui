@@ -1,0 +1,960 @@
+{
+  "baseline": "v0.68.18 legacy before financial-lazy",
+  "assets": {
+    "pagos/pix-compacto.svg": "49419f39b3f62c2cd9cbf5af87cc550c79f35ff0a35213ce2a0bcab58709158f",
+    "pagos/pix-horizontal.svg": "f43ad76eb8838d88a5afd616af3c9ad4139a26f0630841ba2338173831ae9ab5",
+    "pagos/infonet-marca.png": "fd9f46abfa7e7ab0eda9cd946300ca2705e3e9cc98c730e5c283e2037bcb4032",
+    "pagos/panal-marca.png": "2a2cf40556cb7d84490ed8900ad9aa200e6ed7e2935820b5c55e46681b7cfd20",
+    "pagos/mastercard-marca.svg": "f6766934c46bd2c1234eb46d32bc42e9498d632326599b540d62783785a68bf8",
+    "pagos/visa-marca.png": "d249c6ccf35092a03b8059151b0ce051cfc87c2358f608c1d5993500342ef18a",
+    "bancos/capiata-horizontal.png": "5414b0bfd0ae8aed648eb2884743880bb23c06c4110b2b160832e7784112ab28",
+    "bancos/nemby-horizontal.png": "a62c9f716e2f4a691b97f14b1f367838d3b35c73c6b1295cee9ea93c1a443e53",
+    "bancos/nemby-compacto.png": "844db94af81b320943d5297f43ccc58e575efbba36de00c796dc9276a0f6ee10",
+    "bancos/lambare-horizontal.gif": "a10dd5e12bd26a29ecdaf275d2d07f6e1874889be45affd4501d8b9d3228a749",
+    "bancos/coodene-horizontal.png": "f691a9e94948527d554a1a95858edc9e1a6d3b6f788e74255fcc52e3cb3e993b",
+    "bancos/coodene-compacto.png": "f231867d12ba37ccd1d4bc33250d29b6698924883a06ea62eafdfed72509a971",
+    "bancos/mburicao-horizontal.png": "c5d4d2eb3e63a2ac7125e2a75c067b216f3aa022523a3450e6ee657fb3aff41e",
+    "bancos/mercado-n4-horizontal.png": "6e8d6ce266b6f40d77c33829b92986f86345d68fb8bd437e08603304830a31dc",
+    "bancos/san-lorenzo-compacto.png": "5bdd9c0fb97beb07f0486cb1741c4879f6f948641b5e6ef8e59fc3927875a0cc",
+    "bancos/atlas-compacto.png": "7acdd4c005b500d04763e9af1ffcc0a3915e9002c38fbaec627d44a0e6b94989",
+    "bancos/atlas-horizontal-blanco.svg": "37f3eae09ab39a91d7c60c80878ed7748d95939a4f972688b82298ff331f2e2c",
+    "bancos/bancop-compacto.png": "faad78616b8892cced8eea83d6051bc5d3eb39d3a0e02a650c662b53a7fdacd1",
+    "bancos/bancop-horizontal.png": "be3eea8f5c1f51a45cb7916f43e46a843326187760eabdf7a7dd0ea1cb018814",
+    "bancos/basa-compacto.svg": "f58f56ac0d6325724b56c91ae16aec1ffceb61a128608a97f56e93162dcfe98d",
+    "bancos/basa-horizontal.svg": "3f301727f9de608c9eac482863a67e8751eeeec8cac0838a8b61869280ab7e5e",
+    "bancos/bna-compacto.svg": "4ede9814fe8df816f5cec1e68dac6e4258b0a9094b7a90a3243efb3563050129",
+    "bancos/bna-horizontal.svg": "0440817fe5dea4562e9c78588f480f3b073cc4d15db55c883a244ba7493771ed",
+    "bancos/bnf-compacto.png": "92599c46a7ac01e1e3dd19f00fe314d55fb42642d90b183614493d17f8de41e1",
+    "bancos/bnf-horizontal.svg": "97ef747c9b73e997d81284ede154c870ea083979999ccd55dd3541f3448caf49",
+    "bancos/continental-compacto.png": "184cf9a0eef3095f0f990ede5fb14e40de9249e37ee243784e537fe247638c1b",
+    "bancos/coomecipar-compacto.png": "628ea8b4a5a926cb893ca773fe976fd60db080e926a121e66d28592c104fccb1",
+    "bancos/coomecipar-horizontal.png": "82eef5fc246a28a7e7de4cc4e3e9c72f46fe6869f259e06356eb1186e1bfc620",
+    "bancos/familiar-compacto.png": "8348781cb299a9e2755cd2dd5c43d13df8c258dc11478630175561d38bb663b0",
+    "bancos/familiar-horizontal.webp": "cee2ba85d0297172ac3cd60320c490a477193fe35ba23903b10ca4b63e7f9d26",
+    "bancos/fic-compacto.png": "547ffda0a48d6c6ef3625b1b3b2d0ef1f600a56a185e87b5a642195cb346074d",
+    "bancos/fic-horizontal.png": "33b8c91d07559a00d2d576fb0847ef030d8f85c59d21fd64d7e1b6e1c93bd2ce",
+    "bancos/finlatina-compacto.png": "8fafcb4f06d99fac0b0423d8f2afb9618c7b72f329ac8bba814a7d74c69c96bf",
+    "bancos/finlatina-horizontal.png": "8aa0a987d4bf0b643a1cc09a7382fbfde80b44b64cd99f8a27ad2baf8cb59486",
+    "bancos/fpj-compacto.png": "66018ef4ac53c3735be138041cca7a2efd1debd76376927241633d671a07fb1d",
+    "bancos/fpj-horizontal.png": "4b81551b9c0fad3ae8dd021ad2e36756cceb9943865e9acc4c826b16c269216f",
+    "bancos/interfisa-compacto.png": "de4d1c8a36bb8f9f2c8092df6d824797a99fa57005c3623f04cd5bc496a4562c",
+    "bancos/interfisa-horizontal.png": "1315855c1ee2bad1c3252880dfd2f8181a73a35321e89a55a6848ee600844f62",
+    "bancos/itau-compacto.svg": "0aa4bdacfa861f71e4fb5e5d4b062aebb45b76ef73ef524c20031358250e4207",
+    "bancos/medalla-compacto.webp": "b3f94bc76bfa9c5c97abcc29355cc1510d290e1f8ca20c8ca1908caa76d235de",
+    "bancos/medalla-horizontal.png": "432721a8ea6d71d1394d3e2660ef255293fad7eef793b57ff559806e49247154",
+    "bancos/san-cristobal-horizontal.png": "52d9e9e415de4d7d1a52b9f24aefde37dc4bcc90f0d9aabe717630fc3dab5634",
+    "bancos/solar-compacto.png": "7aba71d625635b9d93ee8033620f4487126fbac502b9b289dfce2f6d9b40185f",
+    "bancos/solar-horizontal.svg": "0a53a657d948cea7a1cc8d3db5bd3a09fb359e5159ef1e13c4d5fefd543241cc",
+    "bancos/sudameris-compacto.svg": "738f1bc32496b49391d72b285bb6b09e2830b091d979f9b123c6d14da96f6dc3",
+    "bancos/sudameris-horizontal.svg": "091b61564e1305881d2698e48e573700ce930ade4458a23caa65c2709a6a95bb",
+    "bancos/tu-financiera-compacto.svg": "a44a6fe33f48008eabf40fcb660f5b5cdef92f2791b2cb0bdf608a38193ae234",
+    "bancos/ueno-compacto.svg": "1b22b45568476692acb679bba6b772252ef57c15897906d1e8bc58253fca91a3",
+    "bancos/ueno-horizontal.svg": "c4013df56df9730fe0d1c42621ae6c405850bd00af4d94d1514966833df831f5",
+    "bancos/zeta-compacto.png": "439c53eedd1851a1006876396c210cd7f0095a0c1bb4e55aab010fc7e02565a3",
+    "bancos/zeta-horizontal.png": "2e701b493707bb6d27bf201bb7451576fe1f750b380fd15788534523e31d085d",
+    "pagos/amex-compacto.svg": "b30eeb953e4c1dab64f5585a29760c30a0e2d4c4b3ae6edd7176527951bcf569",
+    "pagos/amex-horizontal.svg": "a11a7ab30fe4e6cdd1746034c30c40c145a369587f1546719fcbf9c6b922eb56",
+    "pagos/bancard-compacto.png": "a1cf82b81e88e57ddf6f56e46c401b09f83762892fdeba3d62e5ea7c9a43c7a1",
+    "pagos/bancard-horizontal.png": "6ab06448e9175579616a247c628b876b27e93b1ba83128898e42ae8ec8c13158",
+    "pagos/cabal-horizontal.png": "6daf7f341bb7716f0be44a4655e665c7fd7b827358bd9f8aa84ffab2f428c506",
+    "pagos/dinelco-compacto.png": "066dad09499b19cc48070390787dd33632271f2202765169e0dbc69d5acb3d7f",
+    "pagos/dinelco-horizontal.svg": "96118f84ffaedddaeaad06bd4227d6a4a1559daea1859e2457f4279b9308fcc5",
+    "pagos/eclub-compacto.svg": "938736c2d6eeb142196a147e8f6dac95e6110d514049e232e229de11b79908df",
+    "pagos/eclub-horizontal.svg": "c7bae0e95fcd581e76409bb8add22f80042657ccec30dd33e059c4da68474cc1",
+    "pagos/eko-compacto.svg": "e2f8330e631004cb16198687a0c43efa03495f287d2d91a1377b23c178b1aa08",
+    "pagos/eko-horizontal.svg": "2491204c10b5227b4f57b7aecec73d46d7c1ca6336f299dd1c4a39c95a62ab9d",
+    "pagos/mango-compacto.png": "8ab3d4b2285a6e5e9ddce6b6e1a83b6b22c74b6d618a953d03c182d591b71718",
+    "pagos/mango-horizontal.svg": "2eb149fd08728ef8f76f8dad6bfafdc789f2296690fa1fa4a40186db0797b421",
+    "pagos/pagopar-horizontal.svg": "2be2ba2fba463682b86d486ba98c709c3f6b6b87c600f4995d815bc85469e56a",
+    "pagos/paypro-horizontal.png": "a58d01d84568d10cb2f2ddf207cef11af73937c5ed4d8cef8934b4f54adab628",
+    "pagos/personal-pay-compacto.png": "34ad63a946d32eb3ec21b66c9fad12c9728cd43619ffe32ae8546b047bfab5b5",
+    "pagos/personal-pay-horizontal.svg": "eecb6f0e5c39f27812422d86ec08ec92cb557823c60b850cfc05bd7326480674",
+    "pagos/pik-compacto.png": "7b6a6a8517e30b2a985f0c3277fa0f4caa3ab74ff1f0f307be15f9fbe7cc0005",
+    "pagos/pik-horizontal.svg": "911ae56ce7b1b00326196031e3a4e7473548791d822062e426cb77906680cda6",
+    "pagos/procard-compacto.png": "e99023cde8b24bc449e541bdfdf5a0de3400f8430f75a50d4937cb8fad1d289e",
+    "pagos/procard-horizontal.png": "b7d63a3ec6ddda05861ae9d644f34468604282150b81fd5da5122f31e9893afa",
+    "pagos/upay-compacto.svg": "fb31b0391771a97fb9f0ca2d238b87c543fd967e5c819f0a8fd21457320cac33",
+    "pagos/upay-horizontal.svg": "0d1c1444ce62019f85539505daf7dd89085e0d4c65a37785433a0401592569da",
+    "pagos/vaquita-compacto.png": "b2edcc277d7066e8d4dbcc3328449994c4e19fc096ebec7125d75af0680257cf",
+    "pagos/vaquita-horizontal.png": "e13a9739d18ea38cd3d6b77007c58213a7402e1ab6ca00b15c6eb5f626628378",
+    "pagos/wally-compacto.ico": "2aa12ff7871e2029d05b2780d1e3c3625ed1e7629b563cf96df6f7976b018a9d",
+    "pagos/wally-horizontal.svg": "da4a460581d5be0f622e69f1e31819ffac4ba912e3534e719f9773c7a94c9cb1",
+    "pagos/zimple-compacto.ico": "148df7ff9622cf6b3d3f73f9fb6cd63b17b3a92895ef7304b4ce94562d4aaeb5",
+    "pagos/zimple-horizontal.png": "6e48b5d0334e8d64638fd3fcaed731ff074494f8149220bbd832241ab2e8085a",
+    "bancos/continental-horizontal.svg": "91fcf492210dbe978b1954ac9de4d61afe0e7520b9402d092cc4ef1aa76b5822",
+    "bancos/gnb-compacto.png": "8e1e091c65ae900aaa68fa709579b2cb64362e9b381cb53c60118ec7ce6e00cf",
+    "bancos/san-cristobal-compacto.png": "993bc3f51e96aaceed187afcdf4d3b652a660ade581cb2d01d8f625bce7a060b",
+    "bancos/luque-horizontal.svg": "9a1cf9c2ff2b94b629bcc5ec4ccc88cb672d534f5c5ad2d75da6249d743ec1d9",
+    "bancos/coopeduc-horizontal.png": "a12518edf2ae0de5fbc76b145c1a64432d80bdd51a61bd720189367d92600a13",
+    "bancos/gnb-horizontal.svg": "ecc0a86c7c29ce23bd21419fa0e8bc90c5df6f4a86e902287154a203e99dcae8",
+    "bancos/universitaria-compacto.png": "584ce438008f75614685862aea486fdc34bd8b970d2e924ec2e91c033db11dd0",
+    "bancos/universitaria-horizontal.svg": "e7a92966cc26183fef5cd1e1c823d38e688d657ce6498f07ced8dab68f252f84",
+    "bancos/citi-horizontal.svg": "5267bc2eb66fe7dc69d7dfdda81134abb5896fd78a8bc08a5fa294051ecbc667"
+  },
+  "ssr": [
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Atlas",
+        "variante": "compacto"
+      },
+      "sha256": "c593263ba8d63a2f50d2d86223c92b62d7ecf720de327befca8864880a842ffd"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Atlas",
+        "variante": "horizontal"
+      },
+      "sha256": "742ec42cfa63b97950f26bc0fe06ed9b1fdfa66b12f131638c90b30ed252ca6e"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Basa",
+        "variante": "compacto"
+      },
+      "sha256": "1fdd4aa0b7fe6780a60eb52c1b2391a3da4993bb621270874c6dfd561ff9403f"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Basa",
+        "variante": "horizontal"
+      },
+      "sha256": "1ea3461205d620acabeddd4ed5ababa0a1ff49add6ba2a9aeeccfab98a00f53f"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Continental",
+        "variante": "compacto"
+      },
+      "sha256": "888c1fca67ec6d19fac1d8a370b9905415e5419bf216a42b7a39d6598b210f88"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Continental",
+        "variante": "horizontal"
+      },
+      "sha256": "9f6b7418c8c235da42bdeb9554541291e71bb5de334525af8c50b02e72ecb0c7"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco de la Nación Argentina",
+        "variante": "compacto"
+      },
+      "sha256": "81fb2be59ba1d979e2942f4e6029b4bb5284cda81f67a627938952e160617ecc"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco de la Nación Argentina",
+        "variante": "horizontal"
+      },
+      "sha256": "ae27176c087f9a1381fa7be9ecede0dd4323b5f7b38c7a39f3286b0d563e12ac"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Familiar",
+        "variante": "compacto"
+      },
+      "sha256": "35e572947cec1c169d6d9f409e43b13bd9b8a65ff36e6e719f38bdeda462f5ec"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Familiar",
+        "variante": "horizontal"
+      },
+      "sha256": "a99ba9d80a507f2f3fb42f590aabb80c10e34d92eb16ca9cc40bf9279117b4bb"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco GNB Paraguay",
+        "variante": "compacto"
+      },
+      "sha256": "c0ed20a507db954357a275b63e62fa5e28a5ef55ac6bda34900813c115b44a95"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco GNB Paraguay",
+        "variante": "horizontal"
+      },
+      "sha256": "6df2b7988c4401e6745e868371ad3aff5ab175e07b7606d07237eff3952cfa5b"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Interfisa Banco",
+        "variante": "compacto"
+      },
+      "sha256": "2245862ba475aaa00a169948c1a5d01210e95a2319fe150b238029b55caa0cbd"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Interfisa Banco",
+        "variante": "horizontal"
+      },
+      "sha256": "5fb2e0197e77c0abadbb87ef8a83d79e45bb73bcdf40f6ee6ecdfea8464b4636"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Itaú",
+        "variante": "compacto"
+      },
+      "sha256": "45767f72fa0f1d2242dd44ad358b173dab74297e98ed4025af71a3d6871fc277"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Itaú",
+        "variante": "horizontal"
+      },
+      "sha256": "74da4f47c68a18e0f5c0135e3d90977a1ea77b488e07d64a28f23e0f58483e49"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Nacional de Fomento",
+        "variante": "compacto"
+      },
+      "sha256": "5c1a99e86847b10d304e2f5993c195da12d76daf0463e33b080e360cb881a390"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Banco Nacional de Fomento",
+        "variante": "horizontal"
+      },
+      "sha256": "639e714ba9ef03e2585b57d8dd5549d5bf85a55f2307e5ea1439feec5d6db07a"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Sudameris",
+        "variante": "compacto"
+      },
+      "sha256": "6be11b4b6b2c71a8249520f6ba41d0549d5f88e52667aa28380886fcb8df9f73"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Sudameris",
+        "variante": "horizontal"
+      },
+      "sha256": "b2fb685d195a9fb33c761ef94895ce71f46934807e33a4d8e3af3c3fdf55f163"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Bancop",
+        "variante": "compacto"
+      },
+      "sha256": "ae16000b811d4f6cdd2a1d46fab4f0990cb8ec0d82a0154a9067573e8b80bbc4"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Bancop",
+        "variante": "horizontal"
+      },
+      "sha256": "361f162d1615f7c4fcf0e9544ed6f98425b177a543fbdc502a150439cd4e99c8"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Citi",
+        "variante": "compacto"
+      },
+      "sha256": "c308b591a8325f838694538263d48c6ae76c57d058829e1caf208f1bbbd6d040"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Citi",
+        "variante": "horizontal"
+      },
+      "sha256": "acbc5a0e2180f039cf54146a13ac9c24e22ea0a2295ca82c1c11011fafab8740"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Financiera FIC",
+        "variante": "compacto"
+      },
+      "sha256": "cc573ed1841aee080aee229b25c7df30134ff67e24bbfba7c0dfb387dc9903a3"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Financiera FIC",
+        "variante": "horizontal"
+      },
+      "sha256": "eabc7952d6cee756bf568d8448fc5a4db8327dd38d520d1e3a810cf7b742c97c"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Financiera Paraguayo Japonesa",
+        "variante": "compacto"
+      },
+      "sha256": "848ff90c5e28e7a28b400ba068f4778f1bb4778b7ed21e73e7d11fcbf4da38b6"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Financiera Paraguayo Japonesa",
+        "variante": "horizontal"
+      },
+      "sha256": "a13569a020665980a141807fd8ce9b099085944f1357a854cc5e062accfcf7a1"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Finlatina",
+        "variante": "compacto"
+      },
+      "sha256": "d7cd44ece4d4deffb9a465a16028ab5c72024a27fb8a3767c68ff3a97dc76f6c"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Finlatina",
+        "variante": "horizontal"
+      },
+      "sha256": "adbb7e9b3e32d8dfac14c953600fe74b5246c123ae726295e4e0a3c5acc3831a"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Solar Banco",
+        "variante": "compacto"
+      },
+      "sha256": "7193af2d90be03dc046963bf682d443642ece94cd360634f15096445a8dd739e"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Solar Banco",
+        "variante": "horizontal"
+      },
+      "sha256": "8ddfcfff115e4238bf2e9bab795b80555e042879a6feb8517a87b79cda5a853a"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Tu Financiera",
+        "variante": "compacto"
+      },
+      "sha256": "2800398ee64edb81ed6dd3b4116a232b55f734af9bba64b83e6f419c62b6b7cf"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Tu Financiera",
+        "variante": "horizontal"
+      },
+      "sha256": "b340b7c74f398f866672dec031e5cbe1edf5ff27b791cb1eef4f6a585efe2989"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "ueno bank",
+        "variante": "compacto"
+      },
+      "sha256": "73a4375005e69ac53ef17e6850553588ddbf784292328b82e5b0dc97b3fe8e6f"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "ueno bank",
+        "variante": "horizontal"
+      },
+      "sha256": "a5e39daf66fc77593d8857add8b43564856a6a764859a6bfe1344dbd051ddd74"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Zeta Banco",
+        "variante": "compacto"
+      },
+      "sha256": "68ffd3fcc949af5c882e867fab92057d2cb67bf1663c78dd8eb003c94196cf0a"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Zeta Banco",
+        "variante": "horizontal"
+      },
+      "sha256": "cbc0505b3dafd4ca58ad07fc7108a6bfb35c881b5d0b22e33e03f34e27145173"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Coomecipar",
+        "variante": "compacto"
+      },
+      "sha256": "fe67a40617bb1d1f462ee9b1b893ad7f1b974b14091ca1dad09dbadfb3b0dd80"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Coomecipar",
+        "variante": "horizontal"
+      },
+      "sha256": "71475c1810c93c5cc6630d4cd0f1b2afee86552576dd769d07d7fae02f23d00e"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Medalla Milagrosa",
+        "variante": "compacto"
+      },
+      "sha256": "28dcc8885c5c8ac42360dfb3c1048347fe447c0f706e4e0e02cdb71b32a9f1ad"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Medalla Milagrosa",
+        "variante": "horizontal"
+      },
+      "sha256": "5773d3008b5d09bdcf27f34047584ca0d35cabcc697c4e26c4a3850ef21ae729"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "San Cristóbal",
+        "variante": "compacto"
+      },
+      "sha256": "2997d871dbb40eda3bfece82d4c5748a1da19197ec38317f6924fd6324b9085c"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "San Cristóbal",
+        "variante": "horizontal"
+      },
+      "sha256": "41ff865094bdec22956917a157da60456e880f67a4bfed7b10bdb504bc7e7897"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Universitaria",
+        "variante": "compacto"
+      },
+      "sha256": "9af7bfa62ac4be1ebcf83c44a8ee0198344639d116cf5d778cbd42a98c598372"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Universitaria",
+        "variante": "horizontal"
+      },
+      "sha256": "c4d3aed9bd7e8ef789bdc082d2888f8e0cc4d17a435f642c487fa26d198630a5"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Luque",
+        "variante": "compacto"
+      },
+      "sha256": "30eac035e371625c83ea7d84bf3e7afa03e306069e6d5d740c34438b676bec2d"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Luque",
+        "variante": "horizontal"
+      },
+      "sha256": "0bd702738363af1f0d7531a051ba522dde2283f99fa684ad1d87a5559d2db8c3"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Coopeduc",
+        "variante": "compacto"
+      },
+      "sha256": "1295dfe000f8d0708dacebde118fc5b59e74c521b77016cf52427b3de3de170e"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Coopeduc",
+        "variante": "horizontal"
+      },
+      "sha256": "a298cbb0005f0c560015c81a60624e33233095afba4c191ab063bb4968cca6a5"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Capiatá",
+        "variante": "compacto"
+      },
+      "sha256": "84e572b1142f6389f1751a0f825c6f5ae2c4dfe5a505c3c55b59ff59aeb2d026"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Capiatá",
+        "variante": "horizontal"
+      },
+      "sha256": "c65ac6e5a3bf97e616d21cabb47dae909944bffbe54337fdba82c8aad000f1a0"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Ñemby",
+        "variante": "compacto"
+      },
+      "sha256": "2143a61eccab12879ebd02e7bc4daeec6ef00ea29abadc4f6c56fb7f21a4e66b"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Ñemby",
+        "variante": "horizontal"
+      },
+      "sha256": "5af1d3f1f8254492cbc773991ad8dbeba88d440a95bfb7694f74f5062c6a85ce"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Lambaré",
+        "variante": "compacto"
+      },
+      "sha256": "fa599d417d85dc26fe219e6c36a45b7e1e4432d668a149054f3d905590a1d952"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Lambaré",
+        "variante": "horizontal"
+      },
+      "sha256": "4f7163ae7efc906f431a849784d59557d2ca7134dd97018accabaaf165affac8"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Coodeñe",
+        "variante": "compacto"
+      },
+      "sha256": "a3f0a1bcfd8d52289f6f170bf6d15130c31621b231f1a505655e9bb964acb912"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Coodeñe",
+        "variante": "horizontal"
+      },
+      "sha256": "80f95239b9090beb3e3b90484c4a6253471e722df4a84680dcd879b17defe689"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Mburicaó",
+        "variante": "compacto"
+      },
+      "sha256": "f4c68f624ac6ef2d7f8c4c09a76929bbd1ca5efb95d5912b45e5b36f9f047f90"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Mburicaó",
+        "variante": "horizontal"
+      },
+      "sha256": "e9fa0443fb1537b482c5bb9382a9c144ed354251cf06ec39c5b53da12dd3e097"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Mercado Nº 4",
+        "variante": "compacto"
+      },
+      "sha256": "ab7b1f6a1bab3b2b9acbc1479ae23aea4b0c8226300a8112117d244939bfec10"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "Mercado Nº 4",
+        "variante": "horizontal"
+      },
+      "sha256": "5015be22c09ce031144b3698d280312ac0166deb29279c2b29fe0709fb3064cf"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "San Lorenzo",
+        "variante": "compacto"
+      },
+      "sha256": "a1ab6b9a99a9484c7b9d874f62aca6ee41f3cfbb0e61a6fe8f2e6b523b6a05a7"
+    },
+    {
+      "kind": "bank",
+      "props": {
+        "banco": "San Lorenzo",
+        "variante": "horizontal"
+      },
+      "sha256": "1e749fcbc558d23fb6d96f7d3bef205374038410f6c5249cffdc86380c0e20a5"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Visa",
+        "variante": "compacto"
+      },
+      "sha256": "aac7372ac752953d5becb1f62423d481c2fd582131a16b333cb25a69b7c401ce"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Visa",
+        "variante": "horizontal"
+      },
+      "sha256": "1a473eca907cb38478e37a8feff5ee00d21c1c5ef28b19d2df274182e598fd4f"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Mastercard",
+        "variante": "compacto"
+      },
+      "sha256": "6c24f9709c200dd72db8af189682de3668550eb8fb936036d9d5c56dd0cc1068"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Mastercard",
+        "variante": "horizontal"
+      },
+      "sha256": "030c35cef21f5e796ae3e2acc291861ee5070a6681edc5857827156955a13878"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "American Express",
+        "variante": "compacto"
+      },
+      "sha256": "4a9f40d462722c484755755345313b9a70dccd7fbb9d2e05e9b6dad11f1767fa"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "American Express",
+        "variante": "horizontal"
+      },
+      "sha256": "bbacdad30e1e7cf6fcdb419630b5c5e03d7ea6038548e83cb76d83b9f72e63cd"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Bancard",
+        "variante": "compacto"
+      },
+      "sha256": "45029e14d23cd7a4b1f0970c81d59547e7c07107435785a96914225dcaaf4261"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Bancard",
+        "variante": "horizontal"
+      },
+      "sha256": "47b353d08168ea87732b01bfdb228ee67a50e35b44aa9768157d89fe79f489db"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Red Infonet",
+        "variante": "compacto"
+      },
+      "sha256": "307433e08208949ff9dd328fef128b144db65a4b601acf594c684150b83117ba"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Red Infonet",
+        "variante": "horizontal"
+      },
+      "sha256": "d94a62d52ff0b01b1a9d816174d43c0e7203f15aa2705c031897031109907caa"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Dinelco",
+        "variante": "compacto"
+      },
+      "sha256": "f73c51796f78d60479ba7435e8a7ca02eb068adc53323f071a43ddabf480210d"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Dinelco",
+        "variante": "horizontal"
+      },
+      "sha256": "d5619c9861d7f096755c65b590440178197008838d51f77b09c8b25a063c3fff"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Pix",
+        "variante": "compacto"
+      },
+      "sha256": "45bae9b338d8304f8e074e20c7090ba6336c4a1beae35945e39bec0beb392d66"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Pix",
+        "variante": "horizontal"
+      },
+      "sha256": "3cb1e51f5d3dde5b27c41dd00ebe945f9eca76b83faa5b275cf79372a6556fc7"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "upay",
+        "variante": "compacto"
+      },
+      "sha256": "5274c7c9bae2968781873dfa0835ad5921a59d96a33371d978d5ef1fd2e9cff0"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "upay",
+        "variante": "horizontal"
+      },
+      "sha256": "d6da708a65d0edc0d8d5d8fc451d43524b35fc96d7e69085b9c1f83c2b797a59"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "uPOS",
+        "variante": "compacto"
+      },
+      "sha256": "7bd3ace7e20de57d8e02e76480261a87e944443a41deb7676384eec5e891e714"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "uPOS",
+        "variante": "horizontal"
+      },
+      "sha256": "561ec6f1b5c6b6ab97a8f6db4c2f7243751d2c42bdbb114bfc746879ccef3ebe"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Pagopar",
+        "variante": "compacto"
+      },
+      "sha256": "559e9855df3d67bfe54805b4cd1e2fc3548198f2b9f8b13f012230063fff903a"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Pagopar",
+        "variante": "horizontal"
+      },
+      "sha256": "eada06dfe6f21db2cec6caf64a9cf90af73d4650583129902b18f3baf9c443b9"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Procard",
+        "variante": "compacto"
+      },
+      "sha256": "2f0c598a6d2c405d66ce90cf3dc961c516a26addf1fcfda38296dee03c8c2f3d"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Procard",
+        "variante": "horizontal"
+      },
+      "sha256": "109c93a85ef0dd8009f9f90ccf8c470052ec0da2af5659f71c8f2a32d22122ef"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "PayPro",
+        "variante": "compacto"
+      },
+      "sha256": "134525a663b870c58007a26f8f385632ded738fc861f43e3181d59bf0bb42f8f"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "PayPro",
+        "variante": "horizontal"
+      },
+      "sha256": "5c446176842da2a7bb5503307fac44324caf165a75abb9555b8b014154ce70f4"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Wally",
+        "variante": "compacto"
+      },
+      "sha256": "a66572839aa9c7b0844b186a1880752904aaa32a18b6f6b87eedbc51a56ddccd"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Wally",
+        "variante": "horizontal"
+      },
+      "sha256": "859e21b9d082761859293bfbc0e281926604dad669618789503607a9e6386b8b"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Zimple",
+        "variante": "compacto"
+      },
+      "sha256": "8a6d608eeee6a9da8f7eccf9d2ee60538adbadb02fdf37a5c50d00e8fdb2218f"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Zimple",
+        "variante": "horizontal"
+      },
+      "sha256": "f284bcd8358695d0418f548ea00d9b8c64751463640f89ab25ef7a91f67bbb0c"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Personal Pay",
+        "variante": "compacto"
+      },
+      "sha256": "90b2bbbff0eef46e220627fad42469df76de09055bfd0cc3f0c9a6f1d479cb6c"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Personal Pay",
+        "variante": "horizontal"
+      },
+      "sha256": "463394bd23aa6bab8e99919d081b2eb2a25255c8c5520555f985f51264fe59a4"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Mango",
+        "variante": "compacto"
+      },
+      "sha256": "bde023f570f05f109cb8c59d383f565777cd805ce4a568cd8ff4dfeae1e40287"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Mango",
+        "variante": "horizontal"
+      },
+      "sha256": "af1ed1550de25f7d487f1973454e7bd42d907685b59828c4dd75317e3b6f6bfa"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Vaquita",
+        "variante": "compacto"
+      },
+      "sha256": "b9f2afc4ae3d8fa69c9347f0103013ddcf71cfc69019bae7260b9760c3b35dde"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Vaquita",
+        "variante": "horizontal"
+      },
+      "sha256": "1c34b3cc5d33a5fef5a05cd0e7efc57074d1dd13722e40173268f52484e31d9a"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "EKO",
+        "variante": "compacto"
+      },
+      "sha256": "0aa3996944e227d9ab2683368cd9a33dedb13c6f5d47a77f57f5c8bad530850c"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "EKO",
+        "variante": "horizontal"
+      },
+      "sha256": "83eb633b71584769f997e01091d59ed216d39259ef7ffcf9d41c52ad4419c525"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "eCLUB",
+        "variante": "compacto"
+      },
+      "sha256": "2d81529f234c6467b7b972d054c69ed0533725d9dc6c6326f09f918998cf73d1"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "eCLUB",
+        "variante": "horizontal"
+      },
+      "sha256": "5718505b5d0ffcf09508201d169e41bf05c7264cad862fe80e5980b6d3d53499"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Pik",
+        "variante": "compacto"
+      },
+      "sha256": "dbcebddc06274b661efb53c36586a9ba34eb892db5beef59290bdd63e8672f2a"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Pik",
+        "variante": "horizontal"
+      },
+      "sha256": "870bd56d4121b23bcccc22dadd51d206663c89b767ea6f9d045b996f07fc5e2c"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Cabal",
+        "variante": "compacto"
+      },
+      "sha256": "d6ec4855e71ceeda6dcdac915e6cc73b8320b143031ddb6fb919103611309476"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Cabal",
+        "variante": "horizontal"
+      },
+      "sha256": "a199ecb50c85e9d94a0a4eb8f382cad57d9e60b9a7e7306021edd86cf7180788"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Panal",
+        "variante": "compacto"
+      },
+      "sha256": "ab849abc19960c722a726eb9617cc77b65289a302a91af541844a658544dd659"
+    },
+    {
+      "kind": "payment",
+      "props": {
+        "marca": "Panal",
+        "variante": "horizontal"
+      },
+      "sha256": "29889e55a1df1a5db46bef548b7ce18375f914fdf810bd776e6c67310d2ba5ae"
+    }
+  ]
+}

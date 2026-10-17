@@ -203,3 +203,8 @@ core.primerNombre({nombre: 'Fixture'})
 compatibleRoot.primerNombre({nombre: 'Fixture'})
 // @ts-expect-error The shared public signature remains strict.
 core.primerNombre(true)
+
+import {BancoLogoLazy, BancoComboboxLazy, cargarAssetFinanciero} from 'owncoding-ui/financial-lazy'
+const deferredAsset: Promise<string | null> = cargarAssetFinanciero('bancos/continental-compacto.png')
+deferredAsset
+export const LazyFinancialFixture = () => <><BancoLogoLazy banco="Banco Continental" variante="compacto" /><BancoComboboxLazy value="Banco Continental" onChange={value => String(value)} /></>

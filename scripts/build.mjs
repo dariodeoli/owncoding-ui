@@ -5,6 +5,7 @@ import { build } from 'esbuild'
 import { DECLARED_EXTERNALS } from './bundle-closure.mjs'
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { dirname } from 'node:path'
+import { financialLazyPlugin } from './financial-lazy-build.mjs'
 import { numericBuildBoundaries } from './numeric-build-boundaries.mjs'
 
 // Los assets financieros solo podrían viajar en los bundles visuales si el
@@ -37,6 +38,8 @@ const opciones = {
 const compartido = await build({
   ...opciones,
   entryPoints: {
+    'financial-resources': 'src/financial/lazy-resources.js',
+    'bank-combobox-base': 'src/components/BancoComboboxBase.jsx',
     index: 'src/index.js', core: 'src/core/index.js', financial: 'src/financial/index.js',
     // Private partition seed: common class helpers must not share a chunk with
     // financial artwork. No public package subpath/API is added.
@@ -45,14 +48,28 @@ const compartido = await build({
   },
   outdir: 'dist',
   splitting: true,
-  chunkNames: 'chunks/[name]-[hash]',
+  chunkNames: 'chunks/[hash]',
   write: false,
   metafile: true,
+  plugins: [financialLazyPlugin()],
 })
 for (const output of numericBuildBoundaries(compartido)) {
   mkdirSync(dirname(output.path), { recursive: true })
   writeFileSync(output.path, output.contents)
 }
+
+// La presentación opt-in usa el mismo recurso compartido; no modifica las
+// particiones de UI de los consumidores legacy ni duplica sus activos.
+await build({
+  ...opciones,
+  entryPoints: ['src/financial/lazy.jsx'],
+  outfile: 'dist/financial-lazy.js',
+  banner: {js: '"use client"'},
+  plugins: [{name: 'shared-financial-resources', setup(build) {
+    build.onResolve({filter: /\/lazy-resources\.js$/},()=>({path:'./financial-resources.js',external:true}))
+    build.onResolve({filter: /\/BancoComboboxBase\.jsx$/},()=>({path:'./bank-combobox-base.js',external:true}))
+  }}],
+})
 
 await build({
   ...opciones,
@@ -107,6 +124,7 @@ copyFileSync('src/styles/base.css', 'dist/base.css')
 writeFileSync('dist/styles.css', `${tokens.trimEnd()}\n\n${base}`)
 copyFileSync('types/index.d.ts', 'dist/index.d.ts')
 copyFileSync('types/core.d.ts', 'dist/core.d.ts')
+copyFileSync('types/financial-lazy.d.ts', 'dist/financial-lazy.d.ts')
 copyFileSync('types/numeric.d.ts', 'dist/numeric.d.ts')
 copyFileSync('types/number-utils.d.ts', 'dist/number-utils.d.ts')
 copyFileSync('types/utils.d.ts', 'dist/utils.d.ts')
