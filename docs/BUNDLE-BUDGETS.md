@@ -166,8 +166,9 @@ an opt-in client boundary suitable for Next, where importing the compatible
 root barrel can retain all of its client references, including bank artwork.
 Root and financial exports, synchronous logos and asset catalogues stay intact;
 no package-wide budgets are increased. Import the existing shared stylesheet as
-before. Core does not export financial objects; use `owncoding-ui/financial`
-where logos or bank selectors are required. No API is copied or replaced.
+before. Core does not export financial objects. Import logos from
+`owncoding-ui/financial`; `BancoCombobox` remains a root export and should be
+used only inside the deferred account/bank feature. No API is copied or replaced.
 
 Core declarations reexport through the public `owncoding-ui` self-reference.
 This shares the root type contract and consumer augmentations instead of
