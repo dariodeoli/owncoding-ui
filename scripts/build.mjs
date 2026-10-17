@@ -37,7 +37,7 @@ const opciones = {
 const compartido = await build({
   ...opciones,
   entryPoints: {
-    index: 'src/index.js', financial: 'src/financial/index.js',
+    index: 'src/index.js', core: 'src/core/index.js', financial: 'src/financial/index.js',
     // Private partition seed: common class helpers must not share a chunk with
     // financial artwork. No public package subpath/API is added.
     'class-utils': 'src/utils/cn.js',
@@ -106,6 +106,7 @@ copyFileSync('src/styles/base.css', 'dist/base.css')
 // concatenando, así ninguna herramienta tiene que resolver `@import`.
 writeFileSync('dist/styles.css', `${tokens.trimEnd()}\n\n${base}`)
 copyFileSync('types/index.d.ts', 'dist/index.d.ts')
+copyFileSync('types/core.d.ts', 'dist/core.d.ts')
 copyFileSync('types/numeric.d.ts', 'dist/numeric.d.ts')
 copyFileSync('types/number-utils.d.ts', 'dist/number-utils.d.ts')
 copyFileSync('types/utils.d.ts', 'dist/utils.d.ts')

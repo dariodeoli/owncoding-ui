@@ -153,3 +153,18 @@ Consumer export parity, representative function names, source maps, utility
 tree-shaking, native Node SSR and packed asset hashes remain checked. Package
 packed/unpacked measurements include this documentation and are reported by
 `npm run check:bundle`; no generated files are excluded from its inventory.
+
+## Opt-in core client entry (issue #59)
+
+`owncoding-ui/core` exports the 54 nonfinancial components/helpers currently
+consumed by Scale plus `Button`, directly from their canonical modules. Root and
+core are built in the same splitting graph, preserving strict export identity.
+Its complete emitted closure (all 55 exports retained, without tree shaking)
+measures 146,912 B raw / 42,933 B gzip, with a finite 150,000 / 44,000 B cap.
+The closure and packed-package smoke tests reject inline image bytes. This is
+an opt-in client boundary suitable for Next, where importing the compatible
+root barrel can retain all of its client references, including bank artwork.
+Root and financial exports, synchronous logos and asset catalogues stay intact;
+no package-wide budgets are increased. Import the existing shared stylesheet as
+before. Core does not export financial objects; use `owncoding-ui/financial`
+where logos or bank selectors are required. No API is copied or replaced.

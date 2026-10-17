@@ -250,6 +250,7 @@ separan UI, metadata pura y renderizadores de servidor:
 import { crearIdentidadApp } from 'owncoding-ui/app-identity'
 import { motorIA } from 'owncoding-ui/ia'
 import { renderCorreoHtml } from 'owncoding-ui/email'
+import { Button, MoneyInput, ProductFooter, cn } from 'owncoding-ui/core'
 import { BancoLogo, MedioPagoLogo } from 'owncoding-ui/financial'
 import { LOGOS_BANCOS } from 'owncoding-ui/financial-metadata'
 import { PhoneField } from 'owncoding-ui/phone'
@@ -261,6 +262,7 @@ import { formatGs, fechaDia } from 'owncoding-ui/utils'
 | `owncoding-ui` | cliente React | superficie compatible completa |
 | `owncoding-ui/ia` | servidor/universal | motor OpenAI-compatible, validación y rate-limit sin React |
 | `owncoding-ui/phone` | cliente React | campo telefónico y UI de países |
+| `owncoding-ui/core` | cliente React | 55 componentes/helpers existentes sin activos financieros, con identidad compartida con root |
 | `owncoding-ui/financial` | cliente React | logos locales, variantes, resolvers y manifest visual autorizado |
 | `owncoding-ui/financial-metadata` | universal | registros puros, sin bytes de imágenes |
 | `owncoding-ui/app-identity` | universal | identidad y versión estricta |
