@@ -175,3 +175,21 @@ This shares the root type contract and consumer augmentations instead of
 creating a second declaration surface. Existing consumer declaration overrides
 keep their existing limits; this entry does not add permissive shims. The
 strict TypeScript fixture also checks an explicit root overload through core.
+
+## Financial lazy groups (#61 / Scale #254)
+
+The opt-in lazy visual entry imports a shared BancoComboboxBase singleton and
+resource loader, with no inline artwork in its initial static closure. Original
+assets are partitioned by institution/brand (its own compact/horizontal variants),
+not duplicated alongside the legacy bundle. The previous 89 canonical keys and
+108 SSR outputs remain byte-identical. Generated loaders derive exclusively from
+the canonical registry. Asset modules contain inert strings, so they do not need
+a React client boundary; module names are compact internal hashes. These build
+changes avoid raising any existing gzip/package cap. The public root/core
+identity and all synchronous legacy data URI contracts remain unchanged.
+
+A real Chromium consumer decoded Continental. Its institution group transferred
+10,819 B of resource JavaScript; Continental plus Atlas transferred 60,919 B,
+with exactly their four original variants and no other institutions. These are
+consumer-group bytes, not the full React application or production Next timing.
+See docs/FINANCIAL-LAZY.md and scripts/financial-lazy-browser.mjs.

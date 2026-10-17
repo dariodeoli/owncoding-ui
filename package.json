@@ -60,6 +60,10 @@
     "./core": {
       "types": "./dist/core.d.ts",
       "default": "./dist/core.js"
+    },
+    "./financial-lazy": {
+      "types": "./dist/financial-lazy.d.ts",
+      "default": "./dist/financial-lazy.js"
     }
   },
   "engines": {

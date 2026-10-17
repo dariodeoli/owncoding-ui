@@ -41,6 +41,10 @@ export async function runPackageSmoke() {
       import * as ia from 'owncoding-ui/ia'
       import * as phone from 'owncoding-ui/phone'
       import * as financial from 'owncoding-ui/financial'
+      import * as lazyFinancial from 'owncoding-ui/financial-lazy'
+      const continentalKey = 'bancos/continental-compacto.png'
+      if (await lazyFinancial.cargarAssetFinanciero(continentalKey) !== financial.obtenerAssetFinanciero(continentalKey)) throw new Error('lazy original resource changed')
+      if (!lazyFinancial.BancoComboboxLazy || !lazyFinancial.BancoLogoLazy) throw new Error('lazy components missing')
       import * as metadata from 'owncoding-ui/financial-metadata'
       import * as identity from 'owncoding-ui/app-identity'
       import * as email from 'owncoding-ui/email'
@@ -74,7 +78,7 @@ export async function runPackageSmoke() {
     execFileSync(process.execPath, ['smoke.mjs'], { cwd: app, stdio: 'inherit' })
 
     const paquete = resolve(app, 'node_modules/owncoding-ui')
-    for (const archivo of ['dist/core.d.ts', 'dist/index.d.ts', 'dist/utils.d.ts', 'dist/ia.d.ts', 'dist/phone.d.ts', 'dist/financial.d.ts', 'dist/financial-metadata.d.ts', 'dist/app-identity.d.ts', 'dist/email.d.ts', 'dist/numeric.d.ts', 'dist/number-utils.d.ts']) {
+    for (const archivo of ['dist/financial-lazy.d.ts', 'dist/core.d.ts', 'dist/index.d.ts', 'dist/utils.d.ts', 'dist/ia.d.ts', 'dist/phone.d.ts', 'dist/financial.d.ts', 'dist/financial-metadata.d.ts', 'dist/app-identity.d.ts', 'dist/email.d.ts', 'dist/numeric.d.ts', 'dist/number-utils.d.ts']) {
       readFileSync(join(paquete, archivo))
     }
     const coreClosure = await measureClosure(join(paquete, 'dist/core.js'), { distRoot: join(paquete, 'dist') })

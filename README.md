@@ -263,6 +263,7 @@ import { formatGs, fechaDia } from 'owncoding-ui/utils'
 | `owncoding-ui/ia` | servidor/universal | motor OpenAI-compatible, validación y rate-limit sin React |
 | `owncoding-ui/phone` | cliente React | campo telefónico y UI de países |
 | `owncoding-ui/core` | cliente React | 55 componentes/helpers existentes sin activos financieros, con identidad compartida con root |
+| `owncoding-ui/financial-lazy` | cliente React | logo y selector opt-in; grupos por institución, fallback SSR y carga visible sin catálogo visual inicial |
 | `owncoding-ui/financial` | cliente React | logos locales, variantes, resolvers y manifest visual autorizado |
 | `owncoding-ui/financial-metadata` | universal | registros puros, sin bytes de imágenes |
 | `owncoding-ui/app-identity` | universal | identidad y versión estricta |

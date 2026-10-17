@@ -26,7 +26,10 @@ const finalized = []
 for (const output of compartido.outputFiles) {
   let contents = output.contents
   const modulePath = output.path.endsWith('.map') ? output.path.slice(0, -4) : output.path
-  if (!puros.has(modulePath)) {
+  const inputs = Object.keys(salidas.get(modulePath)?.inputs || {})
+  // Recursos inertes: sólo strings data URL, sin React ni código de cliente.
+  const recurso = inputs.length > 0 && inputs.every(input => input.startsWith('financial-resource:'))
+  if (!puros.has(modulePath) && !recurso) {
     if (output.path.endsWith('.js')) contents = Buffer.from(`"use client";\n${output.text}`)
     else if (output.path.endsWith('.js.map')) {
       const map = JSON.parse(output.text)
