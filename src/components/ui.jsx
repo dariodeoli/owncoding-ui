@@ -243,7 +243,7 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
           // normalizar. Seleccionarla permite reemplazar los centavos existentes.
           if (!soloEnteros && (evento.key === '.' || evento.key === ',')) {
             const input = evento.currentTarget
-            if (!input.value) {
+            if (!input.value || (input.selectionStart === 0 && input.selectionEnd === input.value.length)) {
               evento.preventDefault()
               restaurarCaret.current = () => {
                 restaurarCaret.current = null
@@ -251,7 +251,7 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
               }
               onValueChange?.('0')
             }
-            if (input.value && input.selectionStart === input.selectionEnd) {
+            else if (input.value && input.selectionStart === input.selectionEnd) {
               evento.preventDefault()
               const coma = input.value.lastIndexOf(',')
               if (coma >= 0) input.setSelectionRange(coma + 1, input.value.length)
