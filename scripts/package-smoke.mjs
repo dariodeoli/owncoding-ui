@@ -34,6 +34,9 @@ export async function runPackageSmoke() {
       import React from 'react'
       import { renderToStaticMarkup } from 'react-dom/server'
       import * as root from 'owncoding-ui'
+      import * as core from 'owncoding-ui/core'
+      for (const [name,value] of Object.entries(core)) if (root[name] !== value) throw new Error('core identity changed: '+name)
+      if (core.BancoLogo || core.BancoCombobox) throw new Error('financial exports reached core')
       import * as utils from 'owncoding-ui/utils'
       import * as ia from 'owncoding-ui/ia'
       import * as phone from 'owncoding-ui/phone'
@@ -71,9 +74,11 @@ export async function runPackageSmoke() {
     execFileSync(process.execPath, ['smoke.mjs'], { cwd: app, stdio: 'inherit' })
 
     const paquete = resolve(app, 'node_modules/owncoding-ui')
-    for (const archivo of ['dist/index.d.ts', 'dist/utils.d.ts', 'dist/ia.d.ts', 'dist/phone.d.ts', 'dist/financial.d.ts', 'dist/financial-metadata.d.ts', 'dist/app-identity.d.ts', 'dist/email.d.ts', 'dist/numeric.d.ts', 'dist/number-utils.d.ts']) {
+    for (const archivo of ['dist/core.d.ts', 'dist/index.d.ts', 'dist/utils.d.ts', 'dist/ia.d.ts', 'dist/phone.d.ts', 'dist/financial.d.ts', 'dist/financial-metadata.d.ts', 'dist/app-identity.d.ts', 'dist/email.d.ts', 'dist/numeric.d.ts', 'dist/number-utils.d.ts']) {
       readFileSync(join(paquete, archivo))
     }
+    const coreClosure = await measureClosure(join(paquete, 'dist/core.js'), { distRoot: join(paquete, 'dist') })
+    if (coreClosure.files.some(file => /data:image\//i.test(file.source))) throw new Error('core closure reached financial artwork')
     const visualClosure = await measureClosure(join(paquete, 'dist/financial.js'), { distRoot: join(paquete, 'dist') })
     await measureClosure(join(paquete, 'dist/index.js'), { distRoot: join(paquete, 'dist') })
     await measureClosure(join(paquete, 'dist/financial-metadata.js'), { distRoot: join(paquete, 'dist'), pure: true })

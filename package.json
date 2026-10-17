@@ -56,6 +56,10 @@
     "./number-utils": {
       "types": "./dist/number-utils.d.ts",
       "default": "./dist/number-utils.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "default": "./dist/core.js"
     }
   },
   "engines": {

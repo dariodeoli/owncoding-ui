@@ -184,3 +184,22 @@ const invalidNumericCallback = <NumberInput policy="decimal" value="" onChange={
 // @ts-expect-error El ref apunta a un input, no a un contenedor.
 const invalidNumericRef = <NumericControl policy="integer" ref={createRef<HTMLDivElement>()} />
 void invalidNumericCallback; void invalidNumericRef
+
+// The opt-in surface preserves every existing root signature.
+import * as core from 'owncoding-ui/core'
+import * as compatibleRoot from 'owncoding-ui'
+import type {ButtonProps as CoreButtonProps} from 'owncoding-ui/core'
+const coreCompatibility: Pick<typeof compatibleRoot, keyof typeof core> = core
+const coreButtonProps: CoreButtonProps = {children: 'Guardar', type: 'button'}
+coreCompatibility.Button(coreButtonProps)
+// @ts-expect-error Financial artwork is deliberately absent from the opt-in entry.
+core.BancoLogo
+
+// Public-root augmentation must also be visible through the opt-in facade.
+declare module 'owncoding-ui' {
+  function primerNombre(value: {nombre: string}): string
+}
+core.primerNombre({nombre: 'Fixture'})
+compatibleRoot.primerNombre({nombre: 'Fixture'})
+// @ts-expect-error The shared public signature remains strict.
+core.primerNombre(true)

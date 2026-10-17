@@ -6,6 +6,8 @@ documenta acá y en el README).
 
 ## v0.68.18 — 2026-10-17
 
+- **Entrada cliente `core` (#59):** 55 componentes/helpers existentes sin arte financiero, con identidad compartida y tipos de la entrada pública raíz. Clausura completa146,9KB raw/42,9KB gzip sin depender de tree-shaking; pensada para referencias cliente de Next/RSC. Root y objetos financieros conservan compatibilidad.
+
 - **Carga de consumidores comunes (#57, Scale #252):** separar `cn` en un chunk compartido sin arte financiero mediante una entrada privada de build. El consumidor medido Button/cn/normalizarNombre pasa de2,68MB a65,8KB sin imágenes bancarias; el resultado no representa el tamaño completo de una aplicación. API, CSS, logos, resolvers, identidad y SSR financieros conservados.
 
 ## v0.68.17 — 2026-10-17
