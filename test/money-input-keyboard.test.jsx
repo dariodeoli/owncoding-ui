@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { MoneyInput } from '../src/components/ui.jsx'
+import { FormField, Input, MoneyInput } from '../src/components/ui.jsx'
 
 let frames
 beforeEach(() => {
@@ -118,4 +118,51 @@ test.each(['1.250,50', '1,250.50'])('pegado %s conserva normalización pública'
   frames.splice(0).forEach((callback) => callback())
   expect(input.value).toBe('1.250,50')
   expect(screen.getByTestId('value').textContent).toBe('1250.50')
+})
+
+function ValidatedMoneyForm() {
+  const [value, setValue] = useState('')
+  return <><FormField label="Importe" htmlFor="validated-money" error={value !== '' && Number(value) <= 0 ? 'Mayor a cero' : undefined}>
+    <MoneyInput id="validated-money" currency="USD" value={value} onValueChange={setValue} />
+  </FormField><output data-testid="value">{String(value)}</output></>
+}
+test.each(['0.10', '0,10', '0.01', '.10', ',10'])('validación durante %s conserva identidad, foco y centavos', (text) => {
+  render(<ValidatedMoneyForm />)
+  const input = screen.getByLabelText('Importe')
+  input.focus()
+  for (const character of text) {
+    key(input, character)
+    expect(screen.getByLabelText('Importe')).toBe(input)
+    expect(document.activeElement).toBe(input)
+  }
+  expect(input.value).toBe(text.includes('01') ? '0,01' : '0,10')
+  expect(Number(screen.getByTestId('value').textContent)).toBe(text.includes('01') ? 0.01 : 0.1)
+  expect(screen.queryByRole('alert')).toBeNull()
+})
+test('FormField conserva el control anidado, ref, selección y asociaciones al variar error/hint/requerido', () => {
+  const ref = React.createRef()
+  const field = (props) => <FormField label="Nombre" htmlFor="name" {...props}><div><Input id="name" ref={ref} defaultValue="Cliente" aria-describedby="externo" /></div></FormField>
+  const view = render(field({}))
+  const input = screen.getByLabelText('Nombre')
+  input.focus()
+  input.setSelectionRange(2, 4)
+  view.rerender(field({ error: 'Revisar' }))
+  expect(screen.getByLabelText('Nombre')).toBe(input)
+  expect(ref.current).toBe(input)
+  expect(document.activeElement).toBe(input)
+  expect(input.selectionStart).toBe(2)
+  expect(input.selectionEnd).toBe(4)
+  expect(input.getAttribute('aria-invalid')).toBe('true')
+  expect(input.getAttribute('aria-describedby')).toBe('externo name-descripcion')
+  view.rerender(field({ hint: 'Ayuda', requerido: true }))
+  expect(ref.current).toBe(input)
+  expect(input.getAttribute('aria-invalid')).toBeNull()
+  expect(input.getAttribute('aria-required')).toBe('true')
+  expect(input.getAttribute('aria-describedby')).toBe('externo name-descripcion')
+  view.rerender(field({}))
+  expect(ref.current).toBe(input)
+  expect(document.activeElement).toBe(input)
+  expect(input.value).toBe('Cliente')
+  expect(input.getAttribute('aria-describedby')).toBe('externo')
+  expect(input.getAttribute('aria-required')).toBeNull()
 })

@@ -6,6 +6,8 @@ documenta acá y en el README).
 
 ## v0.68.16 — 2026-10-17
 
+- **FormField (#51, Scale #234):** mostrar u ocultar validación conserva el input, su foco, selección y ref; escribir importes menores a uno ya no pierde las teclas al aparecer el error temporal del cero.
+
 - **MoneyInput (#49, Scale #234):** escribir punto o coma selecciona los centavos, sin multiplicar el importe. La edición y el borrado conservan el lado decimal del caret; PYG e `integerOnly` siguen enteros y el pegado conserva ambos formatos locales.
 
 ## v0.68.15 — 2026-10-16
