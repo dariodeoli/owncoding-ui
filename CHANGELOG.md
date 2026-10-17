@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **MoneyInput (#49, Scale #234):** escribir punto o coma selecciona los centavos, sin multiplicar el importe. La edición y el borrado conservan el lado decimal del caret; PYG e `integerOnly` siguen enteros y el pegado conserva ambos formatos locales.
+
 ## v0.68.15 — 2026-10-16
 
 - Tipos: el hook de seguridad móvil acepta refs inicialmente nulas en consumidores React 19 y React 18.
