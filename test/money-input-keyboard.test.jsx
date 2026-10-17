@@ -58,6 +58,15 @@ test.each(['.', ','])('selección total y %s25 reemplaza el importe por centavos
   expect(input.value).toBe('0,25')
   expect(screen.getByTestId('value').textContent).toBe('0.25')
 })
+test.each(['.', ','])('cero existente sin RAF pendiente admite selección total y %s25', (separator) => {
+  const input = mount()
+  type(input, '0')
+  expect(frames).toHaveLength(0)
+  input.setSelectionRange(0, input.value.length)
+  type(input, `${separator}25`)
+  expect(input.value).toBe('0,25')
+  expect(screen.getByTestId('value').textContent).toBe('0.25')
+})
 test('restaura caret aunque el padre rechace la actualización y no haya commit', () => {
   render(<MoneyInput aria-label="Importe" currency="USD" value="100.25" onValueChange={() => {}} />)
   const input = screen.getByLabelText('Importe')

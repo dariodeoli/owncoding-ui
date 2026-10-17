@@ -236,20 +236,21 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
         onKeyDown={(evento) => {
           onKeyDown?.(evento)
           if (evento.defaultPrevented || evento.ctrlKey || evento.metaKey || evento.altKey) return
+          const input = evento.currentTarget
           const permitidos = soloEnteros ? '0123456789' : '0123456789.,'
           if (evento.key.length === 1 && !permitidos.includes(evento.key)) evento.preventDefault()
           // El separador escrito elige la fracción ya dibujada por el formato;
           // no se inserta delante de «,00», donde perdería su posición al
           // normalizar. Seleccionarla permite reemplazar los centavos existentes.
           if (!soloEnteros && (evento.key === '.' || evento.key === ',')) {
-            const input = evento.currentTarget
-            if (!input.value || (input.selectionStart === 0 && input.selectionEnd === input.value.length)) {
+            if (input.selectionStart === 0 && input.selectionEnd === input.value.length) {
               evento.preventDefault()
               restaurarCaret.current = () => {
                 restaurarCaret.current = null
                 input.setSelectionRange(2, input.value.length)
               }
               onValueChange?.('0')
+              input.setSelectionRange(2, input.value.length)
             }
             else if (input.value && input.selectionStart === input.selectionEnd) {
               evento.preventDefault()
@@ -260,7 +261,6 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
           // La fracción tiene dos posiciones fijas: reemplazar el dígito que
           // sigue al caret evita producir «,250» (ambiguo con miles al pegar).
           if (!soloEnteros && /^\d$/.test(evento.key)) {
-            const input = evento.currentTarget
             const coma = input.value.lastIndexOf(',')
             const inicio = input.selectionStart
             if (coma >= 0 && inicio > coma && inicio === input.selectionEnd && inicio < input.value.length) {
@@ -270,7 +270,6 @@ export const MoneyInput = forwardRef(function MoneyInput({ currency = 'PYG', sym
             }
           }
           if (!soloEnteros && (evento.key === 'Backspace' || evento.key === 'Delete')) {
-            const input = evento.currentTarget
             const coma = input.value.lastIndexOf(',')
             const inicio = input.selectionStart
             if (coma >= 0 && inicio === input.selectionEnd &&
