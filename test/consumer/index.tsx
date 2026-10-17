@@ -194,3 +194,12 @@ const coreButtonProps: CoreButtonProps = {children: 'Guardar', type: 'button'}
 coreCompatibility.Button(coreButtonProps)
 // @ts-expect-error Financial artwork is deliberately absent from the opt-in entry.
 core.BancoLogo
+
+// Public-root augmentation must also be visible through the opt-in facade.
+declare module 'owncoding-ui' {
+  function primerNombre(value: {nombre: string}): string
+}
+core.primerNombre({nombre: 'Fixture'})
+compatibleRoot.primerNombre({nombre: 'Fixture'})
+// @ts-expect-error The shared public signature remains strict.
+core.primerNombre(true)

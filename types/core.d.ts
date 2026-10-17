@@ -55,5 +55,5 @@ export {
   taxIdValid,
   ventanaDeLista,
   whatsappUrl
-} from "./index.js"
-export type {ButtonProps} from "./index.js"
+} from "owncoding-ui"
+export type {ButtonProps} from "owncoding-ui"

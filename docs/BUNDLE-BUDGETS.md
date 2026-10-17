@@ -168,3 +168,9 @@ Root and financial exports, synchronous logos and asset catalogues stay intact;
 no package-wide budgets are increased. Import the existing shared stylesheet as
 before. Core does not export financial objects; use `owncoding-ui/financial`
 where logos or bank selectors are required. No API is copied or replaced.
+
+Core declarations reexport through the public `owncoding-ui` self-reference.
+This shares the root type contract and consumer augmentations instead of
+creating a second declaration surface. Existing consumer declaration overrides
+keep their existing limits; this entry does not add permissive shims. The
+strict TypeScript fixture also checks an explicit root overload through core.
