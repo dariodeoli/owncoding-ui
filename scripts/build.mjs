@@ -4,6 +4,8 @@
 import { build } from 'esbuild'
 import { DECLARED_EXTERNALS } from './bundle-closure.mjs'
 import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { dirname } from 'node:path'
+import { numericBuildBoundaries } from './numeric-build-boundaries.mjs'
 
 // Los assets financieros solo podrían viajar en los bundles visuales si el
 // registro documenta permiso de redistribución explícito. Limpiamos outputs
@@ -30,14 +32,24 @@ const opciones = {
 // One visual graph shares physical inline artwork while keeping synchronous
 // data URL strings usable in raw Node SSR. Every emitted visual module retains
 // the client boundary; pure entries below are independent, asset-free builds.
-await build({
+// Un solo grafo conserva identidad de componentes/validadores entre root y
+// subpaths. Sólo la clausura pura queda sin frontera cliente (ni React).
+const compartido = await build({
   ...opciones,
-  entryPoints: { index: 'src/index.js', financial: 'src/financial/index.js' },
+  entryPoints: {
+    index: 'src/index.js', financial: 'src/financial/index.js',
+    numeric: 'src/numeric/index.js', 'number-utils': 'src/numeric/number-utils.js',
+  },
   outdir: 'dist',
   splitting: true,
   chunkNames: 'chunks/[name]-[hash]',
-  banner: { js: '"use client"' },
+  write: false,
+  metafile: true,
 })
+for (const output of numericBuildBoundaries(compartido)) {
+  mkdirSync(dirname(output.path), { recursive: true })
+  writeFileSync(output.path, output.contents)
+}
 
 await build({
   ...opciones,
@@ -91,6 +103,8 @@ copyFileSync('src/styles/base.css', 'dist/base.css')
 // concatenando, así ninguna herramienta tiene que resolver `@import`.
 writeFileSync('dist/styles.css', `${tokens.trimEnd()}\n\n${base}`)
 copyFileSync('types/index.d.ts', 'dist/index.d.ts')
+copyFileSync('types/numeric.d.ts', 'dist/numeric.d.ts')
+copyFileSync('types/number-utils.d.ts', 'dist/number-utils.d.ts')
 copyFileSync('types/utils.d.ts', 'dist/utils.d.ts')
 copyFileSync('types/ia.d.ts', 'dist/ia.d.ts')
 copyFileSync('types/email.d.ts', 'dist/email.d.ts')

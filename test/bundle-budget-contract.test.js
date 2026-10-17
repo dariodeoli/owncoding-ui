@@ -13,6 +13,8 @@ test('shared original artwork and pure metadata have finite measured closure cei
     'dist/phone.js': { raw: 35000, gzip: 11000 },
     'dist/financial-metadata.js': { raw: 43216, gzip: 8109 },
     'dist/app-identity.js': { raw: 3000, gzip: 1500 },
+    'dist/numeric.js': { raw: 15000, gzip: 6000 },
+    'dist/number-utils.js': { raw: 7000, gzip: 3000 },
     'dist/email.js': { raw: 9000, gzip: 3500 },
   })
   expect(source).toContain('packed: 5_250_000, unpacked: 10_010_000')

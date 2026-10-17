@@ -82,3 +82,12 @@ test('compact financial marks retain usable height without changing artwork', ()
   act(() => host.querySelector('input').dispatchEvent(new FocusEvent('focusin', { bubbles: true })))
   expect(host.querySelector('[data-logo-variante="compacto"]').className).toContain('h-6')
 })
+
+test.each(['InputBase', 'TextareaBase', 'NumericControl', 'NumberInput', 'PercentageInput'])('piloto RAW %s tiene etiqueta asociada y no cambia a spinner numérico', name => {
+  render(<ComponentPreview name={name} />)
+  const control = host.querySelector('input,textarea')
+  expect(control).not.toBeNull()
+  expect(host.querySelector('label').htmlFor).toBe(control.id)
+  expect(control.getAttribute('class')).toContain('min-h-11')
+  if (name !== 'TextareaBase') expect(control.type).toBe('text')
+})

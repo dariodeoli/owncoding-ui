@@ -1,6 +1,6 @@
 {
   "name": "owncoding-ui",
-  "version": "0.68.16",
+  "version": "0.68.17",
   "description": "Componentes, objetos y reglas de interfaz reutilizables entre las apps de OwnCoding (MobOS, ScaleOS, LedBox, PagaYa).",
   "type": "module",
   "license": "UNLICENSED",
@@ -48,7 +48,15 @@
       "types": "./types/tailwind-preset.d.ts",
       "default": "./tailwind-preset.js"
     },
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./numeric": {
+      "types": "./dist/numeric.d.ts",
+      "default": "./dist/numeric.js"
+    },
+    "./number-utils": {
+      "types": "./dist/number-utils.d.ts",
+      "default": "./dist/number-utils.js"
+    }
   },
   "engines": {
     "node": ">=24.15.0 <25"

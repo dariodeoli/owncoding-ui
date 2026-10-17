@@ -2,6 +2,7 @@ import { previewGroup } from './preview-registry.js'
 import { DeferredPreview } from './deferred-preview.jsx'
 import React, { useId, useMemo, useState } from 'react'
 import {
+  InputBase, TextareaBase, NumericControl, NumberInput, PercentageInput,
   PasswordInput, PinInput, SearchField, IconAction, Card, ErrorState, Nota, Input,
   EmailField, MoneyInput, Money, CurrencyConversion, SerialField, RangoFecha, Label, ThemeToggle,
   BuscadorCliente, DataTable, SegmentedField, ListGridToggle, PageHeader,
@@ -31,7 +32,13 @@ function BasicPreview({ name }) {
   const [cambios, setCambios] = useState(false)
   const [muestra, setMuestra] = useState('')
   const field = (label, element) => <div><Label htmlFor={id}>{label}</Label>{element}</div>
+  const rawClass = 'min-h-11 w-full rounded-lg border border-current bg-ink px-3'
   switch (name) {
+    case 'InputBase': return field('Texto RAW (base sin estilos propios)', <InputBase id={id} className={rawClass} value={value} onChange={event => setValue(event.target.value)} />)
+    case 'TextareaBase': return field('Texto largo RAW', <TextareaBase id={id} className={rawClass} value={value} onChange={event => setValue(event.target.value)} />)
+    case 'NumericControl': return field('Decimal RAW, evento nativo', <NumericControl id={id} className={rawClass} policy="decimal" value={value} onChange={event => setValue(event.target.value)} />)
+    case 'NumberInput': return field('Entero RAW, callback string', <NumberInput id={id} className={rawClass} policy="integer" value={value} onChange={setValue} />)
+    case 'PercentageInput': return field('Ratio RAW, sin conversión ni límites implícitos', <PercentageInput id={id} className={rawClass} policy="ratio" value={value} onChange={setValue} />)
     case 'DialogMobileSafety': return <MobileSafetyPreview />
     case 'PasswordInput': return field('Contraseña de muestra', <PasswordInput id={id} defaultValue="demo-only" />)
     case 'PinInput': return field('PIN de muestra', <PinInput id={id} ariaLabel="PIN de muestra" value={value} onChange={setValue} />)

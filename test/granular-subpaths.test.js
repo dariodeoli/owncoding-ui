@@ -10,6 +10,8 @@ const entradas = {
   './financial': ['financial', true],
   './financial-metadata': ['financial-metadata', false],
   './app-identity': ['app-identity', false],
+  './numeric': ['numeric', true],
+  './number-utils': ['number-utils', false],
   './email': ['email', false],
 }
 
@@ -29,14 +31,17 @@ describe('subpaths granulares publicados', () => {
   test('only visual reachable closures carry authorized artwork, shared once physically', async () => {
     const root = await measureClosure('dist/index.js')
     const financial = await measureClosure('dist/financial.js')
-    for (const entry of ['utils', 'financial-metadata', 'ia', 'app-identity', 'email']) {
+    for (const entry of ['utils', 'financial-metadata', 'ia', 'app-identity', 'email', 'number-utils']) {
       const closure = await measureClosure(`dist/${entry}.js`, { pure: true })
       expect(closure.files.every(file => !file.source.includes('data:image/'))).toBe(true)
     }
     const artwork = financial.files.filter(file => /data:image\/[\w.+-]+;base64,[A-Za-z0-9+/]{16}/.test(file.source))
     expect(artwork).toHaveLength(1)
     expect(root.files.filter(file => /data:image\/[\w.+-]+;base64,[A-Za-z0-9+/]{16}/.test(file.source)).map(file => file.file)).toEqual(artwork.map(file => file.file))
-    for (const file of [...root.files, ...financial.files]) expect(file.source.startsWith('"use client"')).toBe(true)
+    // Excepción derivada de la clausura pura auditada; jamás por nombre de chunk.
+    const pure = await measureClosure('dist/number-utils.js', { pure: true })
+    const purePaths = new Set(pure.files.map(file => file.file))
+    for (const file of [...root.files, ...financial.files]) expect(file.source.startsWith('"use client"')).toBe(!purePaths.has(file.file))
   })
 
   test('los módulos publicados exponen contratos representativos', async () => {

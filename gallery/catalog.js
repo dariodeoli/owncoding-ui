@@ -3,6 +3,14 @@
 // aprobados se renderizan en la galería. scripts/gallery-check.mjs exige paridad.
 
 export const CATALOGO_EXPORTS = [
+{"nombre": "InputBase", "tipo": "visual", "categoria": "Campos y formularios", "presentacion": "individual"},
+{"nombre": "TextareaBase", "tipo": "visual", "categoria": "Campos y formularios", "presentacion": "individual"},
+{"nombre": "NumericControl", "tipo": "visual", "categoria": "Campos y formularios", "presentacion": "individual"},
+{"nombre": "NumberInput", "tipo": "visual", "categoria": "Campos y formularios", "presentacion": "individual"},
+{"nombre": "PercentageInput", "tipo": "visual", "categoria": "Campos y formularios", "presentacion": "individual"},
+{"nombre": "numberInputProblem", "tipo": "api", "categoria": "API y modelos", "presentacion": null},
+{"nombre": "numberInputValid", "tipo": "api", "categoria": "API y modelos", "presentacion": null},
+{"nombre": "nativeNumberSettings", "tipo": "api", "categoria": "API y modelos", "presentacion": null},
 {"nombre": "DialogMobileSafety", "tipo": "visual", "categoria": "Componentes generales", "presentacion": "individual"},
 {"nombre": "useDialogMobileSafety", "tipo": "api", "categoria": "API y modelos"},
 {"nombre": "FormulariosPro", "tipo": "visual", "categoria": "Campos y formularios", "presentacion": "individual"},

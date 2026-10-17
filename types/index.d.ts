@@ -2052,3 +2052,6 @@ export type OwnDataRucError = Error & { code: string; status: number; retryAfter
 export function mapOwnDataRucResponse(envelope: unknown, requestedRuc: string): OwnDataRucResult
 export function mapOwnDataRucError(envelope: unknown): OwnDataRucError
 export function createOwnDataRucProvider(options: { lookup: (ruc: string) => Promise<unknown> }): (ruc: string) => Promise<OwnDataRucResult>
+
+// Primitivas RAW opt-in (#55).
+export * from './numeric.js'
