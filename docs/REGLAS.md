@@ -27,6 +27,7 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 | Serial/IMEI | `SerialField` | mayúsculas, sin espacios ni prefijo; varios seriales con normalización propia (prop `normalizar`) |
 | IMEI (chequeo) | `ImeiField` (+`estadoImei`/`analizarImei`/`normalizarImei`) | 15 dígitos con **Luhn en vivo**: limpia a solo dígitos, avisa cuántos faltan, marca error junto al campo con `role="alert"` si el dígito control no cierra, confirma «IMEI válido» y muestra «Revisando…» con `revisando` para la consulta externa que decida la app |
 | Fechas/horas | `Input type="date"`/`datetime-local` | 24 h; para mostrar, `fechaHora`/`fechaDia`/`fechaCorta` |
+| Hora local | `TimeInput` (opt-in) | valor `HH:mm`; escritura manual, flechas; incremento y límites explícitos de la app; [contrato](TIME-INPUT.md) |
 | Booleano | `Switch` | interruptor estilo iPhone, guarda `onChange(event.target.checked)` |
 | Selección múltiple | `Input type="checkbox"` | para listas con varias filas |
 | Opciones excluyentes (2–5) | `SegmentedField` | `aria-pressed`; opciones `[id, etiqueta, icono?, contador?]` |

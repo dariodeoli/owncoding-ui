@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **TimeInput (#53):** campo de hora local opt-in sobre Input, con escritura manual, teclado, incremento configurable (un minuto por defecto), límites explícitos y validación que conserva el borrador y bloquea envíos inválidos, incluso con `noValidate`. Incluye tipos React 18, contrato y fixture de galería.
+
 ## v0.68.16 — 2026-10-17
 
 - **FormField (#51, Scale #234):** mostrar u ocultar validación conserva el input, su foco, selección y ref; escribir importes menores a uno ya no pierde las teclas al aparecer el error temporal del cero.

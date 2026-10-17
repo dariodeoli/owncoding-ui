@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/readme-hero.svg" width="1200" alt="OwnCoding UI: sistema compartido con 604 exports, 172 exports visuales y 14 categorías" />
+  <img src="docs/assets/readme-hero.svg" width="1200" alt="OwnCoding UI: sistema compartido con 605 exports, 173 exports visuales y 14 categorías" />
 </p>
 
 <h1 align="center">owncoding/ui</h1>
@@ -39,12 +39,14 @@ La [identidad visual de la galería](docs/IDENTITY.md) es independiente de los t
 El inventario se deriva de `src/index.js` y se comprueba contra
 `gallery/catalog.js`; no son números estimados.
 
+`TimeInput` es un aporte opt-in en esta rama, pendiente de publicación. Ver [contrato de hora local](docs/TIME-INPUT.md).
+
 | Cobertura | Cantidad |
 | --- | ---: |
-| Exports de la entrada raíz | **604** |
-| Exports visuales | **172** |
+| Exports de la entrada raíz | **605** |
+| Exports visuales | **173** |
 | API, modelos y utilidades | **432** |
-| Vistas curadas con fixtures controlados | **172** |
+| Vistas curadas con fixtures controlados | **173** |
 | Categorías del catálogo | **14** |
 
 La galería nunca ejecuta un export arbitrario por nombre. Cada vista visual

@@ -8,6 +8,7 @@ import {
   Input,
   Money,
   MoneyInput,
+  TimeInput,
   PercentField,
   ProductFooter,
   ProductPrefooter,
@@ -53,6 +54,7 @@ export function ConsumerFixture() {
     <>
       <CurrencyConversion originalAmount="1.25" originalCurrency="EUR" convertedAmount={6.75} convertedCurrency="BRL" rate={5.4} source="Fixture" asOf="2026-10-07T12:00:00Z" status="stale" locale="de-DE" labels={{ stale: 'Veraltet' }} />
       <Money value={null} currency="BRL" locale="pt-BR" numberFormatOptions={{ maximumFractionDigits: 4 }} />
+      <TimeInput ref={ref} value={valor} onValueChange={setValor} stepMinutes={5} min="09:00" max="18:00" />
       <MoneyInput ref={ref} value={1000} onValueChange={(monto) => String(monto)} />
       <Select ref={selectRef} cargando estado="ok" motion={false}><option>a</option></Select>
       <Input inicio="https://" fin={<span>.com</span>} cargando estado="ok" />

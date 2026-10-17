@@ -2052,3 +2052,15 @@ export type OwnDataRucError = Error & { code: string; status: number; retryAfter
 export function mapOwnDataRucResponse(envelope: unknown, requestedRuc: string): OwnDataRucResult
 export function mapOwnDataRucError(envelope: unknown): OwnDataRucError
 export function createOwnDataRucProvider(options: { lookup: (ruc: string) => Promise<unknown> }): (ruc: string) => Promise<OwnDataRucResult>
+
+/** Hora local HH:mm. Confirma al salir, Enter, flechas o enviar; sin zona horaria. */
+export type TimeInputProps = Omit<InputProps, 'value' | 'defaultValue' | 'type' | 'min' | 'max' | 'step'> & {
+  value?: string
+  defaultValue?: string
+  onValueChange?: (value: string) => void
+  /** Incremento del teclado en minutos; default 1. No redondea la escritura. */
+  stepMinutes?: number
+  min?: string
+  max?: string
+}
+export const TimeInput: ForwardRefExoticComponent<TimeInputProps & RefAttributes<HTMLInputElement>>
