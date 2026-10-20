@@ -17,7 +17,7 @@ vi.mock('../src/index.js', async importOriginal => {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 let host, root
 beforeEach(() => { observed.clear(); host = document.createElement('div'); document.body.append(host); root = createRoot(host) })
-afterEach(() => { act(() => root.unmount()); host.remove() })
+afterEach(() => { act(() => root.unmount()); host.remove(); vi.restoreAllMocks() })
 const render = async name => { await act(async () => root.render(<ComponentPreview key={name} name={name} />)) }
 const click = label => act(() => [...document.querySelectorAll('button')].find(button => button.textContent === label || button.getAttribute('aria-label') === label).click())
 
@@ -35,7 +35,7 @@ test('numeric keypad changes local output and supports deletion', async () => {
   expect(host.querySelector('output').textContent).toBe('7')
 })
 test('menu selection and navigation affect local status only', async () => {
-  await render('MenuDesplegable'); click('Acciones de muestra'); click('Ver detalle local')
+  await render('MenuDesplegable'); const trigger=document.querySelector('[aria-haspopup="menu"]'); vi.spyOn(trigger,'getBoundingClientRect').mockReturnValue({left:16,top:16,right:60,bottom:60,width:44,height:44}); click('Acciones de muestra'); click('Ver detalle local')
   expect(host.textContent).toContain('Detalle local seleccionado.')
   expect(host.querySelector('[role="menu"]')).toBeNull()
   await render('BarraInferior'); click('Actividad')

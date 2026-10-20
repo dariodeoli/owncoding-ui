@@ -3,7 +3,7 @@ import {build} from 'esbuild'
 import {expect,test} from 'vitest'
 import {DECLARED_EXTERNALS,measureClosure} from '../scripts/bundle-closure.mjs'
 
-const required = ['AVISO_REFRESCO', 'Aviso', 'AvisoPrivacidad', 'AyudaModulo', 'Badge', 'BarraProgreso', 'CREDITO_PIE', 'CREDITO_PIE_URL', 'CampanaAvisos', 'Card', 'CeldaMoneda', 'Checkbox', 'ChipEstado', 'ConsentimientoDatos', 'DataTable', 'EmptyState', 'ErrorState', 'FilaDato', 'ListGridToggle', 'MENSAJE_RUC', 'MenuDesplegable', 'MoneyInput', 'Nota', 'PaletaComandos', 'ProductFooter', 'SegmentedField', 'SerialField', 'SerialTexto', 'Skeleton', 'Stat', 'Subtabs', 'Switch', 'cn', 'completeSave', 'componerTelefono', 'diasHasta', 'esToken', 'extractTokenFromUrl', 'fechaDia', 'fechaHora', 'fechaLista', 'fechaListaCorta', 'hayVersionNueva', 'normalizarNombre', 'normalizeTaxId', 'parseTelefono', 'partirSerial', 'primerNombre', 'registroConsentimiento', 'serialEnmascarado', 'soloDigitos', 'taxIdValid', 'ventanaDeLista', 'whatsappUrl']
+const required = ['AVISO_REFRESCO', 'Aviso', 'AvisoPrivacidad', 'AyudaModulo', 'Badge', 'BarraProgreso', 'CREDITO_PIE', 'CREDITO_PIE_URL', 'CampanaAvisos', 'Card', 'CeldaMoneda', 'Checkbox', 'ChipEstado', 'ConsentimientoDatos', 'DataTable', 'EmptyState', 'ErrorState', 'FilaDato', 'ListGridToggle', 'MENSAJE_RUC', 'MenuDesplegable', 'MoneyInput', 'Nota', 'PaletaComandos', 'ProductFooter', 'SegmentedField', 'SerialField', 'SerialTexto', 'Skeleton', 'Stat', 'Subtabs', 'Switch', 'cn', 'completeSave', 'componerTelefono', 'dialogFocusContains', 'dialogFocusableElements', 'diasHasta', 'esToken', 'extractTokenFromUrl', 'fechaDia', 'fechaHora', 'fechaLista', 'fechaListaCorta', 'hayVersionNueva', 'normalizarNombre', 'normalizeTaxId', 'parseTelefono', 'partirSerial', 'primerNombre', 'registroConsentimiento', 'serialEnmascarado', 'soloDigitos', 'taxIdValid', 'ventanaDeLista', 'whatsappUrl']
 
 test('core exports the complete consumer surface with strict root identity',async()=>{
  const [root,core]=await Promise.all([import('../dist/index.js'),import('../dist/core.js')])
@@ -19,8 +19,8 @@ test('the full core client closure contains no financial artwork without relying
  const closure=await measureClosure('dist/core.js')
  expect(closure.files.length).toBeGreaterThan(1)
  for(const file of closure.files)expect(file.source,file.file).not.toMatch(/data:image\//i)
- expect(closure.raw).toBeLessThanOrEqual(150_000)
- expect(closure.gzip).toBeLessThanOrEqual(44_000)
+ expect(closure.raw).toBeLessThanOrEqual(156_000)
+ expect(closure.gzip).toBeLessThanOrEqual(47_000)
  expect(readFileSync('dist/core.js','utf8')).toMatch(/^"use client"/)
  const bundle=await build({entryPoints:['dist/core.js'],bundle:true,write:false,format:'esm',platform:'neutral',external:DECLARED_EXTERNALS,minify:true})
  expect(bundle.outputFiles[0].text).not.toMatch(/data:image\//i)

@@ -1,0 +1,1 @@
+{"version":3,"sources":["financial-group:pagos/mastercard"],"sourcesContent":["import a0 from \"/workspace/owncoding-ui/src/assets/financial/pagos/mastercard-marca.svg\";export default {\"pagos/mastercard-marca.svg\":a0}"],"mappings":";sCAAyF,IAAO,mBAAQ,CAAC,6BAA6B,UAAE","names":[]}

@@ -22,6 +22,8 @@ export {
   ListGridToggle,
   MENSAJE_RUC,
   MenuDesplegable,
+  dialogFocusContains,
+  dialogFocusableElements,
   MoneyInput,
   Nota,
   PaletaComandos,
