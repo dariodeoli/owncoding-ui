@@ -572,3 +572,5 @@ export { mapOwnDataRucResponse, mapOwnDataRucError, createOwnDataRucProvider } f
 
 // Primitivas RAW opt-in; no reemplazan Input, PercentField ni MoneyInput.
 export {InputBase,TextareaBase,NumericControl,NumberInput,PercentageInput,numberInputProblem,numberInputValid,nativeNumberSettings} from './numeric/index.js'
+
+export {dialogFocusContains, dialogFocusableElements} from './utils/dialogFocusScope.js'

@@ -193,3 +193,28 @@ A real Chromium consumer decoded Continental. Its institution group transferred
 with exactly their four original variants and no other institutions. These are
 consumer-group bytes, not the full React application or production Next timing.
 See docs/FINANCIAL-LAZY.md and scripts/financial-lazy-browser.mjs.
+
+## Safe opt-in menu portals (#63 / Scale #311)
+
+The canonical MenuDesplegable adds opt-in body portals, viewport collision and
+clipping checks, inherited theme tokens, keyboard navigation and safe dialog
+focus ownership. The same private registry serves both the library Modal and
+consumer dialogs through two additive public helpers. Inline menus remain the
+default. No second menu engine or runtime dependency is introduced.
+
+Measured against tracked dist at base 7cf63ad (0.68.19), using the same complete
+reachable ESM closure including dynamic imports:
+
+| Closure | Baseline raw / gzip B | Portal implementation raw / gzip B | New cap raw / gzip B |
+| --- | ---: | ---: | ---: |
+| Core | 146,965 / 43,821 | 155,223 / 46,459 | 156,000 / 47,000 |
+| Root | 3,183,260 / 1,978,920 | 3,191,518 / 1,981,566 | 3,262,000 / 1,983,000 |
+
+The integrator explicitly approved these bounded changes for the attributable
+accessibility and portal behavior. They replace core's 150,000 / 44,000 caps and
+root's gzip cap of 1,981,000; root raw and all unrelated closure/package caps
+remain unchanged. The full closure growth is 8,258 raw / 2,638 gzip B for core
+and 8,258 raw / 2,646 gzip B for root. No import or generated chunk is excluded
+from measurement and no asynchronous split conceals the cost. These are the final source-freeze build measurements. The package measures
+5,153,948 B packed / 9,815,086 B unpacked before the final changelog note, below
+the unchanged complete-package caps; the check prints exact resulting bytes.

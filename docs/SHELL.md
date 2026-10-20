@@ -325,3 +325,19 @@ Verificación en Chromium real (4 capturas en el directorio temporal): iniciar
 `node scripts/qa-dialog-mobile-safety.mjs` con Playwright disponible. El script
 comprueba fuentes calculadas, ancho de página, carrusel X y foco/Esc anidado;
 `QA_GALLERY_URL` y `PLAYWRIGHT_MODULE` permiten usar el entorno de QA existente.
+
+
+## Menú de acciones fuera del recorte (opt-in, #63)
+
+`<MenuDesplegable portal ariaLabel="Acciones del cliente" ... />` mantiene el
+objeto, estilos y teclado canónicos. Sin `portal`, conserva el montaje inline
+existente. Con el opt-in, React monta el menú bajo body con coordenadas de
+viewport; no depende de `showPopover`, por lo que funciona también cuando esa
+API no existe. Respeta el tema/tokens del disparador, cambia de lado al faltar
+espacio, ajusta ancho/alto y se cierra cuando el ancla sale del área visible.
+
+Los diálogos propios adoptan `dialogFocusContains(panel, target)` y
+`dialogFocusableElements(panel, selector?)` de `owncoding-ui/core` para incluir
+sólo portales registrados dentro de su ámbito; no se aceptan atributos DOM
+como autorización de foco. `useDialogFocusTrap` ya comparte ese registro.
+No copiar otro motor de posición ni desactivar la trampa para admitir el menú.

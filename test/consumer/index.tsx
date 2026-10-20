@@ -8,6 +8,9 @@ import {
   Input,
   Money,
   MoneyInput,
+  MenuDesplegable,
+  dialogFocusContains,
+  dialogFocusableElements,
   PercentField,
   ProductFooter,
   ProductPrefooter,
@@ -26,6 +29,7 @@ import {
   sugerenciasDeMarcaPago,
   type RelacionFinanciera,
 } from 'owncoding-ui/financial-metadata'
+import { dialogFocusContains as coreFocusContains, dialogFocusableElements as coreFocusableElements } from 'owncoding-ui/core'
 import { compararVersiones } from 'owncoding-ui/app-identity'
 import { crearCorreoTransaccional, renderCorreoHtml } from 'owncoding-ui/email'
 
@@ -208,3 +212,10 @@ import {BancoLogoLazy, BancoComboboxLazy, cargarAssetFinanciero} from 'owncoding
 const deferredAsset: Promise<string | null> = cargarAssetFinanciero('bancos/continental-compacto.png')
 deferredAsset
 export const LazyFinancialFixture = () => <><BancoLogoLazy banco="Banco Continental" variante="compacto" /><BancoComboboxLazy value="Banco Continental" onChange={value => String(value)} /></>
+
+const panelMenu = createRef<HTMLDivElement>()
+dialogFocusContains(panelMenu.current, document.activeElement)
+dialogFocusableElements(panelMenu.current).forEach(node => node.focus())
+coreFocusContains(panelMenu.current, null)
+coreFocusableElements(panelMenu.current, 'summary, [contenteditable], [tabindex]')
+export const MenuPortalTyped = <MenuDesplegable portal trigger="Acciones" items={[{label: 'Editar'}]}/>

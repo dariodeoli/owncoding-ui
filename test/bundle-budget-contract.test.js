@@ -6,8 +6,8 @@ const budgets = Object.fromEntries([...source.matchAll(/'([^']+)': \{ raw: ([\d_
 
 test('shared original artwork and pure metadata have finite measured closure ceilings', () => {
   expect(budgets).toEqual({
-    'dist/core.js': { raw: 150000, gzip: 44000 },
-    'dist/index.js': { raw: 3262000, gzip: 1981000 },
+    'dist/core.js': { raw: 156000, gzip: 47000 },
+    'dist/index.js': { raw: 3262000, gzip: 1983000 },
     'dist/financial.js': { raw: 2669000, gzip: 1844000 },
     'dist/utils.js': { raw: 168702, gzip: 40949 },
     'dist/ia.js': { raw: 20000, gzip: 6000 },
