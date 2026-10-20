@@ -25,3 +25,5 @@ export {fechaHora, fechaDia, fechaLista, fechaListaCorta, diasHasta} from '../ut
 export {partirSerial, serialEnmascarado} from '../utils/serial.js'
 export {extractTokenFromUrl, esToken} from '../utils/token.js'
 export {parseTelefono, componerTelefono, whatsappUrl, soloDigitos} from '../utils/telefono.js'
+
+export {dialogFocusContains, dialogFocusableElements} from '../utils/dialogFocusScope.js'

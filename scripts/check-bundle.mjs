@@ -2,8 +2,8 @@ import { measureClosure } from './bundle-closure.mjs'
 import { execNpmSync } from './npm-command.mjs'
 
 const budgets = {
-  'dist/core.js': { raw: 150_000, gzip: 44_000 },
-  'dist/index.js': { raw: 3_262_000, gzip: 1_981_000 },
+  'dist/core.js': { raw: 156_000, gzip: 47_000 },
+  'dist/index.js': { raw: 3_262_000, gzip: 1_983_000 },
   'dist/utils.js': { raw: 168_702, gzip: 40_949 },
   'dist/ia.js': { raw: 20_000, gzip: 6_000 },
   'dist/phone.js': { raw: 35_000, gzip: 11_000 },

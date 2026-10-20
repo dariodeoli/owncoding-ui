@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { crearPilaCapas } from '../utils/pilaOverlays.js'
+import { dialogFocusContains, dialogFocusableElements } from '../utils/dialogFocusScope.js'
 
 // Trampa de foco de diálogos (Modal, Drawer y cualquier overlay propio):
 // bloquea el scroll del documento, enfoca al abrir, cicla Tab, cierra con Esc
@@ -11,8 +12,7 @@ import { crearPilaCapas } from '../utils/pilaOverlays.js'
 // cerrarse, el foco vuelve a lo que la abrió (o a la capa que queda debajo).
 // `busy` bloquea el cierre interactivo (Esc) mientras el overlay guarda.
 
-export const SELECTOR_ENFOCABLES =
-  'button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href], [tabindex="0"]'
+export { SELECTOR_ENFOCABLES } from '../utils/dialogFocusScope.js'
 
 // Decisión del ciclo de Tab, aislada del DOM para poder probarla: devuelve a
 // qué extremo saltar (o null si el navegador se encarga).
@@ -85,7 +85,7 @@ export default function useDialogFocusTrap(open, onClose, ref, { initialFocus, b
     if (pila.esSuperior(id)) inicial?.focus?.()
 
     const alTeclear = (evento) => {
-      if (!pila.esSuperior(id)) return
+      if (!pila.esSuperior(id) || evento.defaultPrevented) return
       if (evento.key === 'Escape') {
         // Un select nativo abierto se queda con Esc; el estado no es visible.
         if (evento.isComposing || evento.repeat || evento.target?.tagName === 'SELECT') return
@@ -94,7 +94,7 @@ export default function useDialogFocusTrap(open, onClose, ref, { initialFocus, b
         return
       }
       if (evento.key !== 'Tab' || !contenedor) return
-      const nodos = [...contenedor.querySelectorAll(SELECTOR_ENFOCABLES)].filter((el) => el.getClientRects().length)
+      const nodos = dialogFocusableElements(contenedor)
       if (!nodos.length) {
         evento.preventDefault()
         contenedor.focus?.()
@@ -106,7 +106,7 @@ export default function useDialogFocusTrap(open, onClose, ref, { initialFocus, b
         primero: nodos[0],
         ultimo: nodos[nodos.length - 1],
         contenedor,
-        fuera: !contenedor.contains(document.activeElement),
+        fuera: !dialogFocusContains(contenedor, document.activeElement),
       })
       if (destino) {
         evento.preventDefault()
@@ -115,7 +115,7 @@ export default function useDialogFocusTrap(open, onClose, ref, { initialFocus, b
     }
     const alEnfocar = (evento) => {
       if (!pila.esSuperior(id) || !contenedor) return
-      if (evento.target instanceof Node && contenedor.contains(evento.target)) return
+      if (dialogFocusContains(contenedor, evento.target)) return
       const primero = opciones.current.initialFocus?.() ?? contenedor
       primero?.focus?.()
     }

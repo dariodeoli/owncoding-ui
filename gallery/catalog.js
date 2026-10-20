@@ -3388,6 +3388,18 @@ export const CATALOGO_EXPORTS = [
     "presentacion": null
   },
   {
+    "nombre": "dialogFocusContains",
+    "tipo": "api",
+    "categoria": "API y modelos",
+    "presentacion": null
+  },
+  {
+    "nombre": "dialogFocusableElements",
+    "tipo": "api",
+    "categoria": "API y modelos",
+    "presentacion": null
+  },
+  {
     "nombre": "useDialogFocusTrap",
     "tipo": "api",
     "categoria": "API y modelos",

@@ -18,6 +18,25 @@ Consumers building a compatible field can use the returned `inputProps`, `listbo
 
 `MenuDesplegable` follows the ARIA menu pattern: one roving Tab stop, Arrow Up/Down, Home/End, Escape, and focus restoration to the trigger. Separators use `role="separator"`.
 
+`portal={true}` is additive: the popup uses a real React portal under `document.body`,
+independent of the Popover API, so overflow/transform ancestors do not clip it.
+The viewport determines flipping/clamping; scroll and resize reposition it, and
+an anchor outside the visible viewport/scroll region closes it. In this mode
+`ariaLabel` also names the trigger (use the visible label or a meaningful icon
+name). Tab/Shift+Tab close the menu and continue beside its trigger. Escape closes
+only the menu; an action opening another dialog keeps that dialog's focus.
+
+`dialogFocusContains(container, target)` and
+`dialogFocusableElements(container, selector?)` are exported from the root and
+`core` entrypoints. A custom dialog uses them instead of copying portal ownership
+logic. Only connected library portals anchored in that container count; a fake
+`data-oc-menu-portal` attribute or a menu from another dialog does not. The helper
+returns DOM order with portal controls inserted after their anchor, preserving a
+single roving menu stop by default. A custom selector can preserve summary,
+contenteditable or positive tabindex controls; its caller retains its own order
+policy. Closing/unmounting unregisters the scope. The canonical dialog hook already
+uses these helpers and respects `defaultPrevented` from child controls.
+
 `CampanaAvisos` is a non-modal dialog rather than a menu because its content can mix links, buttons, empty states, and footer actions. It moves focus into the panel, closes with Escape, and returns focus to its trigger. The trigger's accessible name includes the unread count.
 
 ## Tabs

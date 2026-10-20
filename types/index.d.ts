@@ -1012,7 +1012,7 @@ export function SelectorEspacio(props: {
   lado?: 'abajo' | 'arriba'
   className?: string
 }): ReactElement
-export function MenuDesplegable(props: Record<string, any> & { trigger?: ReactNode; items?: any[]; ariaLabel?: string; alineacion?: 'left' | 'right'; className?: string }): ReactElement
+export function MenuDesplegable(props: Record<string, any> & { trigger?: ReactNode; items?: any[]; ariaLabel?: string; alineacion?: 'left' | 'right'; portal?: boolean; className?: string }): ReactElement
 
 // ── Ajustes, impresión y bancos ────────────────────────────────────────────
 
@@ -2055,3 +2055,7 @@ export function createOwnDataRucProvider(options: { lookup: (ruc: string) => Pro
 
 // Primitivas RAW opt-in (#55).
 export * from './numeric.js'
+
+/** Includes only connected library portals anchored inside this dialog. */
+export function dialogFocusContains(container: HTMLElement | null, target: Node | null): boolean
+export function dialogFocusableElements(container: HTMLElement | null, selector?: string): HTMLElement[]

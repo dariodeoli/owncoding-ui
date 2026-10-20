@@ -4,6 +4,10 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
+## Unreleased
+
+- **Menús portales opt-in (#63, Scale #311):** `MenuDesplegable portal` usa un portal React real con colisión de viewport, cierre al salir el ancla de su área visible, conservación de tema y navegación de teclado. Funciona sin Popover API y dentro de contenedores con overflow/transform. Los nuevos helpers `dialogFocusContains` y `dialogFocusableElements` permiten integrar el alcance seguro del portal en diálogos del consumidor; Modal respeta Escape ya consumido por su menú. El comportamiento inline sigue siendo el predeterminado. Coste y presupuestos acotados documentados en BUNDLE-BUDGETS.
+
 ## v0.68.19 — 2026-10-17
 
 - **Recursos financieros diferidos (#61, Scale #254):** entrada opt-in `financial-lazy` con BancoLogoLazy y BancoComboboxLazy. Conserva el motor del selector y los activos originales compartidos; carga sólo las variantes de una institución visible, con fallback SSR, control de respuestas tardías y error terminal. No altera las APIs ni los datos de root/financial ni amplía presupuestos de bundle. Véase docs/FINANCIAL-LAZY.md.
