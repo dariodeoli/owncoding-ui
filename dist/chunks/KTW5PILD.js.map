@@ -1,0 +1,1 @@
+{"version":3,"sources":["financial-group:bancos/citi"],"sourcesContent":["import a0 from \"/workspace/owncoding-ui/src/assets/financial/bancos/citi-horizontal.svg\";export default {\"bancos/citi-horizontal.svg\":a0}"],"mappings":";uCAAyF,IAAO,aAAQ,CAAC,6BAA6B,WAAE","names":[]}

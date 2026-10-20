@@ -4,7 +4,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es/1.0.0/). Versionado
 0.x: mientras la biblioteca se forma, un objeto puede cambiar de nombre (se
 documenta acá y en el README).
 
-## Unreleased
+## v0.68.20 — 2026-10-20
 
 - **Menús portales opt-in (#63, Scale #311):** `MenuDesplegable portal` usa un portal React real con colisión de viewport, cierre al salir el ancla de su área visible, conservación de tema y navegación de teclado. Funciona sin Popover API y dentro de contenedores con overflow/transform. Los nuevos helpers `dialogFocusContains` y `dialogFocusableElements` permiten integrar el alcance seguro del portal en diálogos del consumidor; Modal respeta Escape ya consumido por su menú. El comportamiento inline sigue siendo el predeterminado. Coste y presupuestos acotados documentados en BUNDLE-BUDGETS.
 

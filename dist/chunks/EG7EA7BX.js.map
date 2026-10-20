@@ -1,0 +1,1 @@
+{"version":3,"sources":["financial-group:pagos/cabal"],"sourcesContent":["import a0 from \"/workspace/owncoding-ui/src/assets/financial/pagos/cabal-horizontal.png\";export default {\"pagos/cabal-horizontal.png\":a0}"],"mappings":";uCAAyF,IAAO,cAAQ,CAAC,6BAA6B,WAAE","names":[]}
