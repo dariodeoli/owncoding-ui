@@ -109,6 +109,66 @@ notificaciones) sigue en `docs/REGLAS.md`.
 - Dominios nuevos requieren DNS, HTTPS, OAuth, cookies, webhooks, recovery email y staging.
 - No romper links antiguos al cambiar dominio.
 
+### 10.1 Regla Universal N.º 1: monetización y retención de suscripciones
+
+Toda app que ofrezca una suscripción debe aumentar el valor percibido sin
+confundir, presionar ni dificultar la salida. La UI presenta una oferta
+autorizada por la app; el backend/servicio de billing calcula, autoriza y
+registra el cobro. La biblioteca no crea suscripciones, no factura y no declara
+éxito local.
+
+- **Planes y ciclo anual:** mostrar precio total del período, equivalente
+  mensual solo como referencia, moneda, impuestos o cargos aplicables, fecha del
+  próximo cobro, renovación automática y condiciones de cambio o cancelación.
+  El plan anual no puede ocultar que el compromiso y el cobro corresponden al
+  año completo; el ahorro comparativo debe usar una base verificable.
+- **Promociones:** cada promoción muestra elegibilidad, precio anterior y
+  promocional, porcentaje o importe de ahorro, duración, fecha de vencimiento,
+  ciclo posterior, renovación y límites de uso. No se inventan descuentos,
+  urgencia, stock ni contadores. Al terminar una promoción, se informa el
+  precio que regirá antes de cobrar.
+- **Retención al cancelar:** el flujo de cancelación debe ser visible,
+  alcanzable y reversible hasta la confirmación final. Antes de cancelar puede
+  ofrecerse, como máximo, una alternativa contextual y no preseleccionada
+  (por ejemplo, pausa, cambio de plan o descuento temporal) con precio, duración,
+  renovación y condiciones completas. Rechazarla debe dejar cancelar sin
+  degradación, bloqueo ni contacto obligatorio.
+- **Upsells poscompra:** después de una compra confirmada puede mostrarse una
+  mejora relacionada con el uso, nunca como requisito para acceder al producto
+  comprado. Debe indicar precio, frecuencia, impuestos, inicio del cargo,
+  período de prueba si existe y cómo rechazarla. No se agrega al carrito, no se
+  activa por defecto y no se presenta como parte de la compra original.
+- **Facturación y estados:** el servidor es la fuente de verdad. Todo cobro
+  pasa por webhook firmado, validado e idempotente, con auditoría y estados
+  explícitos: borrador, pendiente, pagado, fallido, reembolsado, cancelado y
+  abandonado. El cliente puede ver plan, importe, moneda, período, próximo
+  cobro, método de pago enmascarado, comprobantes y estado; un error o
+  aceptación HTTP no se presenta como pago exitoso.
+- **Controles del suscriptor:** ofrecer cambio de plan, pausa cuando exista,
+  cancelación efectiva, actualización del método de pago y consulta de
+  facturas/comprobantes sin depender de soporte. La cancelación indica fecha y
+  efecto, conserva el acceso prometido hasta el fin del período pagado y no
+  realiza cargos posteriores salvo una nueva autorización visible.
+- **Analítica y privacidad:** medir exposición, selección, compra, activación,
+  uso, renovación, cancelación, motivo declarado, oferta mostrada, aceptación
+  o rechazo, reembolso y recuperación, con versión de la oferta y timestamps.
+  Aplicar finalidad, minimización, consentimiento cuando corresponda,
+  retención definida y acceso por rol; no enviar números completos de tarjeta,
+  secretos ni PII innecesaria a analítica. Los experimentos deben ser
+  auditables, no cambiar las condiciones aprobadas sin control y no excluir
+  artificialmente la ruta de cancelación.
+- **Responsabilidad y transparencia:** registrar quién autorizó precio,
+  promoción, descuento, texto, período y segmento; mantener historial de la
+  oferta mostrada y de la decisión del usuario. Las condiciones completas
+  deben estar disponibles antes de la confirmación y también después en el
+  comprobante o historial.
+
+La aplicación debe probar, como mínimo, compra, renovación, pago fallido,
+reintento, cancelación, pausa o cambio de plan, oferta de retención aceptada y
+rechazada, upsell rechazado, vencimiento de promoción, reembolso y ausencia de
+cobro posterior a la cancelación. En demos se usan precios y resultados
+ficticios claramente marcados y nunca proveedores ni datos de pago reales.
+
 ## 11. Demos, RUC, admin y UX
 
 - Demos aisladas: sin correos, cobros ni datos reales.
