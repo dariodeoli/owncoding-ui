@@ -11,6 +11,33 @@ se crea en `owncoding-ui` y se adopta en todas las apps.
 > **interfaz**; el anexo es igual de obligatorio y aplica a todas las apps del
 > grupo.
 
+## Índice de reglas de interfaz
+
+1. Campos de formulario
+2. Botones y acciones
+2 bis. Acceso (login/registro)
+2 ter. Ciclo de guardado
+3. Avisos, estados y vacíos
+4. Datos y tablas
+5. Diálogos y overlays
+6. Identidad y personas
+7. Dinero, fechas y formatos
+8. Tokens y estilo
+8 bis. Operación de equipos
+8 ter. Pipeline, documentos y avance
+9. Cómo se fija una regla
+10. Agenda, filtros, shell e identidad
+11. Configuración: tarjetas, solapas y encabezados
+11 ter. Unificar entidades
+12. Abastecimiento F1: demanda y tablero
+13. Abastecimiento F2–F5: compra, lote, etiqueta y recepción
+14. Pie institucional
+15. Reglas transversales
+16. Formato de notificaciones
+17. Compactación de escritorio
+18. Carga con IA
+19. Fronteras de paquete, control y compatibilidad
+
 ## 1. Campos de formulario
 
 ### Tabla por tipo de dato
