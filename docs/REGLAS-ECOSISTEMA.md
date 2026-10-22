@@ -23,6 +23,31 @@ notificaciones) sigue en `docs/REGLAS.md`.
   notificaciones (§16)** y **reglas transversales (§15)**; las referencias
   cruzadas están al final.
 
+## Índice de reglas
+
+1. Acceso y cuentas
+2. Permisos y datos
+3. Eliminación y privacidad
+4. Seguridad técnica
+5. Diseño, marca y publicación
+6. Versionado y pendientes
+7. Reutilización
+8. Infraestructura OwnCoding Hub
+9. Correo WEEM
+10. SaaS, pagos y dominios
+   - 10.1 Regla Universal N.º 1: monetización y retención de suscripciones
+11. Demos, RUC, admin y UX
+12. Protección de datos personales
+   - 12.1 Finalidad, base legal y consentimiento
+   - 12.2 Transparencia
+   - 12.3 Seguridad y privacidad por defecto
+   - 12.4 Derechos del titular
+   - 12.5 Encargados, retención y destrucción
+   - 12.6 Privacidad por diseño en la interfaz
+13. Memoria persistente de agentes
+14. AEX (referencia opcional)
+15. Referencias cruzadas con la biblioteca
+
 ---
 
 ## 1. Acceso y cuentas
@@ -321,7 +346,7 @@ correo y demos; el encuadre legal de cada negocio lo valida su asesoría.
 
 ---
 
-## AEX (referencia opcional)
+## 14. AEX (referencia opcional)
 
 Solo para las apps que **integren AEX**: sandbox, claves protegidas, webhooks y
 paso controlado a producción. Guía canónica: *AEX — API de integraciones*
@@ -330,7 +355,7 @@ apps.
 
 ---
 
-## Referencias cruzadas con la biblioteca
+## 15. Referencias cruzadas con la biblioteca
 
 | Regla del ecosistema | Dónde vive en la biblioteca / docs |
 | --- | --- |
